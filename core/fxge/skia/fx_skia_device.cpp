@@ -1124,9 +1124,10 @@ bool CFX_SkiaDeviceDriver::DrawPath(const CFX_Path& cfx_path,
   }
   int stroke_alpha = FXARGB_A(stroke_color);
   if (stroke_alpha) {
-    const CFX_GraphStateData& graph_state =
+    const CFX_GraphStateData stroke_options_copy =
         stroke_options ? *stroke_options : CFX_GraphStateData();
-    SetupStrokePaint(&path_paint, &graph_state, transform_matrix, fill_options);
+    SetupStrokePaint(&path_paint, &stroke_options_copy, transform_matrix,
+                     fill_options);
   }
 
   SkAutoCanvasRestore scoped_save_restore(canvas_, /*doSave=*/true);
