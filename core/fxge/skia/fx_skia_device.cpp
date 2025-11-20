@@ -523,13 +523,13 @@ void ClipAngledGradient(pdfium::span<const SkPoint, 2> pts,
   clip->lineTo(IntersectSides(rect_pts[maxBounds], slope, startEdgePt));
 }
 
-// Converts a stroking path to scanlines
-void PaintStroke(SkPaint* spaint,
-                 const CFX_GraphStateData* graph_state,
-                 const SkMatrix& matrix,
-                 const CFX_FillRenderOptions& fill_options) {
+// Converts CFX_GraphStateData+CFX_FillRenderOptions into SkPaint
+void SetupStrokePaint(SkPaint* stroke_paint,
+                      const CFX_GraphStateData* stroke_options,
+                      const SkMatrix& transform_matrix,
+                      const CFX_FillRenderOptions& fill_options) {
   SkPaint::Cap cap;
-  switch (graph_state->line_cap()) {
+  switch (stroke_options->line_cap()) {
     case CFX_GraphStateData::LineCap::kRound:
       cap = SkPaint::kRound_Cap;
       break;
@@ -541,7 +541,7 @@ void PaintStroke(SkPaint* spaint,
       break;
   }
   SkPaint::Join join;
-  switch (graph_state->line_join()) {
+  switch (stroke_options->line_join()) {
     case CFX_GraphStateData::LineJoin::kRound:
       join = SkPaint::kRound_Join;
       break;
@@ -553,20 +553,21 @@ void PaintStroke(SkPaint* spaint,
       break;
   }
   SkMatrix inverse;
-  if (!matrix.invert(&inverse)) {
-    return;  // give up if the matrix is degenerate, and not invertable
+  if (!transform_matrix.invert(&inverse)) {
+    // give up if the transform_matrix is degenerate, and not invertable
+    return;
   }
   inverse.set(SkMatrix::kMTransX, 0);
   inverse.set(SkMatrix::kMTransY, 0);
-  SkVector deviceUnits[2] = {{0, 1}, {1, 0}};
-  inverse.mapPoints(deviceUnits);
+  SkVector device_units[2] = {{0, 1}, {1, 0}};
+  inverse.mapPoints(device_units);
 
   float width = fill_options.zero_area
                     ? 0.0f
-                    : std::max(graph_state->line_width(),
-                               std::min(deviceUnits[0].length(),
-                                        deviceUnits[1].length()));
-  const std::vector<float>& dash_array = graph_state->dash_array();
+                    : std::max(stroke_options->line_width(),
+                               std::min(device_units[0].length(),
+                                        device_units[1].length()));
+  const std::vector<float>& dash_array = stroke_options->dash_array();
   if (!dash_array.empty()) {
     size_t count = (dash_array.size() + 1) / 2;
     DataVector<float> intervals(count * 2);
@@ -581,15 +582,15 @@ void PaintStroke(SkPaint* spaint,
       intervals[i * 2] = on;
       intervals[i * 2 + 1] = off;
     }
-    spaint->setPathEffect(
-        SkDashPathEffect::Make(intervals, graph_state->dash_phase()));
+    stroke_paint->setPathEffect(
+        SkDashPathEffect::Make(intervals, stroke_options->dash_phase()));
   }
-  spaint->setStyle(SkPaint::kStroke_Style);
-  spaint->setAntiAlias(!fill_options.aliased_path);
-  spaint->setStrokeWidth(width);
-  spaint->setStrokeMiter(graph_state->miter_limit());
-  spaint->setStrokeCap(cap);
-  spaint->setStrokeJoin(join);
+  stroke_paint->setStyle(SkPaint::kStroke_Style);
+  stroke_paint->setAntiAlias(!fill_options.aliased_path);
+  stroke_paint->setStrokeWidth(width);
+  stroke_paint->setStrokeMiter(stroke_options->miter_limit());
+  stroke_paint->setStrokeCap(cap);
+  stroke_paint->setStrokeJoin(join);
 }
 
 void SetBitmapMatrix(const CFX_Matrix& m,
@@ -1094,7 +1095,7 @@ bool CFX_SkiaDeviceDriver::SetClip_PathStroke(
   SkPath skPath = BuildAndFinishPath(path);
   SkMatrix skMatrix = ToSkMatrix(*pObject2Device);
   SkPaint skPaint;
-  PaintStroke(&skPaint, pGraphState, skMatrix, CFX_FillRenderOptions());
+  SetupStrokePaint(&skPaint, pGraphState, skMatrix, CFX_FillRenderOptions());
   SkPathBuilder dst_path;
   skpathutils::FillPathWithPaint(skPath, skPaint, &dst_path);
   dst_path.transform(skMatrix);
@@ -1103,66 +1104,67 @@ bool CFX_SkiaDeviceDriver::SetClip_PathStroke(
   return true;
 }
 
-bool CFX_SkiaDeviceDriver::DrawPath(const CFX_Path& path,
-                                    const CFX_Matrix* pObject2Device,
-                                    const CFX_GraphStateData* pGraphState,
+bool CFX_SkiaDeviceDriver::DrawPath(const CFX_Path& cfx_path,
+                                    const CFX_Matrix* cfx_transform_matrix,
+                                    const CFX_GraphStateData* stroke_options,
                                     uint32_t fill_color,
                                     uint32_t stroke_color,
                                     const CFX_FillRenderOptions& fill_options) {
   fill_options_ = fill_options;
 
-  SkPath skia_path = BuildAndFinishPath(path);
-  skia_path.setFillType(GetAlternateOrWindingFillType(fill_options));
+  SkPath path = BuildAndFinishPath(cfx_path);
+  path.setFillType(GetAlternateOrWindingFillType(fill_options));
 
-  SkMatrix skMatrix = pObject2Device ? ToSkMatrix(*pObject2Device) : SkMatrix();
-  SkPaint skPaint;
-  skPaint.setAntiAlias(!fill_options.aliased_path);
+  SkMatrix transform_matrix =
+      cfx_transform_matrix ? ToSkMatrix(*cfx_transform_matrix) : SkMatrix();
+  SkPaint path_paint;
+  path_paint.setAntiAlias(!fill_options.aliased_path);
   if (fill_options.full_cover) {
-    skPaint.setBlendMode(SkBlendMode::kPlus);
+    path_paint.setBlendMode(SkBlendMode::kPlus);
   }
   int stroke_alpha = FXARGB_A(stroke_color);
   if (stroke_alpha) {
     const CFX_GraphStateData& graph_state =
-        pGraphState ? *pGraphState : CFX_GraphStateData();
-    PaintStroke(&skPaint, &graph_state, skMatrix, fill_options);
+        stroke_options ? *stroke_options : CFX_GraphStateData();
+    SetupStrokePaint(&path_paint, &graph_state, transform_matrix, fill_options);
   }
 
   SkAutoCanvasRestore scoped_save_restore(canvas_, /*doSave=*/true);
-  canvas_->concat(skMatrix);
+  canvas_->concat(transform_matrix);
   bool do_stroke = true;
   if (fill_options.fill_type != CFX_FillRenderOptions::FillType::kNoFill &&
       fill_color) {
-    SkPath strokePath;
-    const SkPath* fillPath = &skia_path;
+    SkPath path_outline;
+    const SkPath* fill_path = &path;
     if (stroke_alpha) {
       if (group_knockout_) {
-        skpathutils::FillPathWithPaint(skia_path, skPaint, &strokePath);
+        skpathutils::FillPathWithPaint(path, path_paint, &path_outline);
         if (stroke_color == fill_color &&
-            Op(skia_path, strokePath, SkPathOp::kUnion_SkPathOp, &strokePath)) {
-          fillPath = &strokePath;
+            Op(path, path_outline, SkPathOp::kUnion_SkPathOp, &path_outline)) {
+          fill_path = &path_outline;
           do_stroke = false;
-        } else if (Op(skia_path, strokePath, SkPathOp::kDifference_SkPathOp,
-                      &strokePath)) {
-          fillPath = &strokePath;
+        } else if (Op(path, path_outline, SkPathOp::kDifference_SkPathOp,
+                      &path_outline)) {
+          fill_path = &path_outline;
         }
       }
     }
-    skPaint.setStyle(SkPaint::kFill_Style);
-    skPaint.setColor(fill_color);
-    DrawPathImpl(*fillPath, skPaint);
+    path_paint.setStyle(SkPaint::kFill_Style);
+    path_paint.setColor(fill_color);
+    DrawPathImpl(*fill_path, path_paint);
   }
   if (stroke_alpha && do_stroke) {
-    skPaint.setStyle(SkPaint::kStroke_Style);
-    skPaint.setColor(stroke_color);
-    if (!skia_path.isLastContourClosed() && IsPathAPoint(skia_path)) {
-      DCHECK_GE(skia_path.countPoints(), 1);
-      canvas_->drawPoint(skia_path.getPoint(0), skPaint);
-    } else if (IsPathAPoint(skia_path) &&
-               skPaint.getStrokeCap() != SkPaint::kRound_Cap) {
+    path_paint.setStyle(SkPaint::kStroke_Style);
+    path_paint.setColor(stroke_color);
+    if (!path.isLastContourClosed() && IsPathAPoint(path)) {
+      DCHECK_GE(path.countPoints(), 1);
+      canvas_->drawPoint(path.getPoint(0), path_paint);
+    } else if (IsPathAPoint(path) &&
+               path_paint.getStrokeCap() != SkPaint::kRound_Cap) {
       // Do nothing. A closed 0-length closed path can be rendered only if
       // its line cap type is round.
     } else {
-      DrawPathImpl(skia_path, skPaint);
+      DrawPathImpl(path, path_paint);
     }
   }
   return true;
