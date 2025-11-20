@@ -1,0 +1,211 @@
+{{header}}
+{{object 1 0}} <<
+  /Type /Catalog
+  /Pages 2 0 R
+>>
+endobj
+{{object 2 0}} <<
+  /Type /Pages
+  /Count 1
+  /Kids [3 0 R]
+>>
+endobj
+{{object 3 0}} <<
+  /Type /Page
+  /Parent 2 0 R
+  /Contents 4 0 R
+  /Annots [5 0 R]
+  /MediaBox [0 0 200 200]
+  /Resources <<
+    /ExtGState <<
+      /GS <<
+        /Type /ExtGState
+        /CA 0.5
+        /ca 0.5
+      >>
+    >>
+  >>
+>>
+endobj
+{{object 4 0}} <<
+  {{streamlen}}
+>>
+stream
+q
+/GS gs
+255 0 0 rg
+
+% Stroke painting rules for single paths is defined in
+% Section 8.5.3.2 of ISO 32000-1:2008 (the last paragraph)
+
+% Butt cap paths, stroked only (none should be painted)
+0 J
+5 w
+0 0 255 RG
+10 10 m
+S
+4 w
+0 255 0 RG
+50 50 m
+50 50 l
+S
+3 w
+255 0 0 RG
+150 150 m
+150 150 l
+s
+255 0 0 RG
+160 160 m
+s
+
+% Round cap paths, stroked only (some should be painted)
+1 J
+% "A single-point open subpath (specified by a trailing m operator) shall
+% produce no output"
+5 w
+255 255 0 RG
+20 20 m
+S
+% Open single point path. Should be drawn.
+4 w
+255 0 255 RG
+50 150 m
+50 150 l
+S
+% Closed single point path. Should be drawn.
+3 w
+0 255 255 RG
+150 50 m
+150 50 l
+s
+% This path is closed by the s operator so it is drawn.
+0 255 255 RG
+160 60 m
+s
+% Open single point path with extra points. Should be drawn.
+4 w
+255 0 255 RG
+40 140 m
+40 140 l
+40 140 l
+40 140 l
+40 140 l
+40 140 l
+S
+
+% Projecting square cap paths, stroked only (none should be painted)
+2 J
+5 w
+0 0 255 RG
+30 30 m
+S
+4 w
+0 255 0 RG
+25 25 m
+25 25 l
+S
+3 w
+255 0 0 RG
+125 125 m
+125 125 l
+s
+255 0 0 RG
+135 135 m
+s
+
+% Fill painting rules for single point paths is defined in
+% Section 8.5.3.3.1 of ISO 32000-1:2008
+%
+% All paths that contain the l operator should fill a single device pixel
+% regardless of cap style. This pixel goes under the stroke, and is part of the
+% knockout group. So the pixel should only visible in cases where the stroke is
+% not drawn.
+
+% Butt cap paths, stroked & filled
+0 J
+5 w
+0 0 255 RG
+190 190 m
+B
+4 w
+0 255 0 RG
+75 75 m
+75 75 l
+B
+3 w
+255 0 0 RG
+175 175 m
+175 175 l
+b
+255 0 0 RG
+185 185 m
+b
+
+% Round cap paths, stroked & filled
+1 J
+5 w
+255 255 0 RG
+180 180 m
+B
+4 w
+255 0 255 RG
+75 175 m
+75 175 l
+B
+3 w
+0 255 255 RG
+175 75 m
+175 75 l
+b
+% This path is closed by the b operator so it is drawn.
+0 255 255 RG
+185 85 m
+b
+
+% Separated stroke and fill operators means the single pixel and the stroke are
+% not in a knockout group so the single pixel fill should be visible under the
+% transparent stroke
+4 w
+0 255 0 RG
+85 175 m
+85 175 l
+f
+85 175 m
+85 175 l
+S
+
+% Projecting square cap paths, stroked & filled
+2 J
+5 w
+0 0 255 RG
+170 170 m
+B
+4 w
+0 255 0 RG
+175 100 m
+175 100 l
+B
+3 w
+255 0 0 RG
+100 175 m
+100 175 l
+b
+255 0 0 RG
+110 185 m
+b
+
+Q
+endstream
+endobj
+{{object 5 0}} <<
+  % An "Ink Dot", a single point Ink annotation
+  /Type /Annot
+  /Subtype /Ink
+  /C [1 0 1]
+  /InkList [[100 100]]
+  /Rect [90 90 110 110]
+>>
+{{xref}}
+{{trailer}}
+{{startxref}}
+%%EOF
