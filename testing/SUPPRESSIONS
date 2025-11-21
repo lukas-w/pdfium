@@ -348,6 +348,7 @@ en_fqa.pdf mac_x86 * * skia
 example_042.pdf mac_x86 * * skia
 font_1_embedded_font_en_feature.pdf mac_x86 * * skia
 font_2_embedded_font_en_size14.pdf mac_x86 * * skia
+transparent1.pdf mac_x86 * * skia
 xfermodes.pdf mac_x86 * * skia
 xfermodes2.pdf mac_x86 * * skia
 xfermodes3.pdf mac_x86 * * skia
@@ -817,4 +818,5 @@ smask_blend.in * * * gdi
 # rendering that fuzzy matching is not enough for it to match. The difference
 # looks like it may be due to several rounding errors combining for a bigger
 # than normal pixel value difference.
+bug_1430333.in mac_x86 * * skia
 bug_1746.in mac_x86 * * skia
