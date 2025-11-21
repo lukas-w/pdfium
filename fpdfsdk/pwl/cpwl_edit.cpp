@@ -550,6 +550,7 @@ bool CPWL_Edit::OnCharInternal(uint16_t nChar, Mask<FWL_EVENTFLAG> nFlag) {
   switch (nChar) {
     case pdfium::ascii::kNewline:
     case pdfium::ascii::kEscape:
+    case pdfium::ascii::kDelete:  // Delete is handled in OnKeyDown
       return false;
     default:
       break;
