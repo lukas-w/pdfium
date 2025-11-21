@@ -301,6 +301,27 @@ unsigned long FTStreamRead(FXFT_StreamRec* stream,
 }
 void FTStreamClose(FXFT_StreamRec* stream) {}
 #endif
+
+FX_RECT FXRectFromFTPos(FT_Pos left, FT_Pos top, FT_Pos right, FT_Pos bottom) {
+  return FX_RECT(pdfium::checked_cast<int32_t>(left),
+                 pdfium::checked_cast<int32_t>(top),
+                 pdfium::checked_cast<int32_t>(right),
+                 pdfium::checked_cast<int32_t>(bottom));
+}
+
+FX_RECT ScaledFXRectFromFTPos(FT_Pos left,
+                              FT_Pos top,
+                              FT_Pos right,
+                              FT_Pos bottom,
+                              int x_scale,
+                              int y_scale) {
+  if (x_scale == 0 || y_scale == 0) {
+    return FXRectFromFTPos(left, top, right, bottom);
+  }
+
+  return FXRectFromFTPos(left * 1000 / x_scale, top * 1000 / y_scale,
+                         right * 1000 / x_scale, bottom * 1000 / y_scale);
+}
 }  // namespace
 
 // static
@@ -701,6 +722,11 @@ std::unique_ptr<CFX_Path> CFX_Face::LoadGlyphPath(
   return pPath;
 }
 
+int CFX_Face::GetGlyphTTWidth() const {
+  const auto* fontglyph = GetRec()->glyph;
+  return NormalizeFontMetric(fontglyph->metrics.horiAdvance, GetUnitsPerEm());
+}
+
 int CFX_Face::GetGlyphWidth(uint32_t glyph_index,
                             int dest_width,
                             int weight,
@@ -746,6 +772,59 @@ int CFX_Face::LoadGlyph(uint32_t glyph_index, bool scale) {
     args |= FT_LOAD_NO_SCALE;
   }
   return FT_Load_Glyph(GetRec(), glyph_index, args);
+}
+
+ByteString CFX_Face::GetPostscriptName() {
+  return FT_Get_Postscript_Name(GetRec());
+}
+
+CFX_Size CFX_Face::GetPixelSize() const {
+  int pixel_size_x = GetRec()->size->metrics.x_ppem;
+  int pixel_size_y = GetRec()->size->metrics.y_ppem;
+  return {pixel_size_x, pixel_size_y};
+}
+
+std::optional<FX_RECT> CFX_Face::GetFontGlyphBBox(uint32_t glyph_index) {
+  if (IsTricky()) {
+    int error = FT_Set_Char_Size(GetRec(), 0, 1000 * 64, 72, 72);
+    if (error) {
+      return std::nullopt;
+    }
+
+    error = LoadGlyph(glyph_index, /*scale=*/true);
+    if (error) {
+      return std::nullopt;
+    }
+
+    FT_Glyph glyph;
+    error = FT_Get_Glyph(GetRec()->glyph, &glyph);
+    if (error) {
+      return std::nullopt;
+    }
+
+    FT_BBox cbox;
+    FT_Glyph_Get_CBox(glyph, FT_GLYPH_BBOX_PIXELS, &cbox);
+    CFX_Size pixelSize = GetPixelSize();
+    FX_RECT result =
+        ScaledFXRectFromFTPos(cbox.xMin, cbox.yMax, cbox.xMax, cbox.yMin,
+                              pixelSize.width, pixelSize.height);
+    result.top = std::min(result.top, static_cast<int>(GetAscender()));
+    result.bottom = std::max(result.bottom, static_cast<int>(GetDescender()));
+    FT_Done_Glyph(glyph);
+    if (!SetPixelSize(0, 64)) {
+      return std::nullopt;
+    }
+    return result;
+  }
+  if (LoadGlyph(glyph_index, /*scale=*/false) != 0) {
+    return std::nullopt;
+  }
+  int em = GetUnitsPerEm();
+  return ScaledFXRectFromFTPos(
+      GetRec()->glyph->metrics.horiBearingX,
+      GetRec()->glyph->metrics.horiBearingY - GetRec()->glyph->metrics.height,
+      GetRec()->glyph->metrics.horiBearingX + GetRec()->glyph->metrics.width,
+      GetRec()->glyph->metrics.horiBearingY, em, em);
 }
 
 FX_RECT CFX_Face::GetCharBBox(uint32_t code, int glyph_index) {

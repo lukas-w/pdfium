@@ -92,10 +92,8 @@ void CPDF_SimpleFont::LoadCharMetrics(int charcode) {
   }
 
   char_bbox_[charcode] = face->GetGlyphBBox();
-  FXFT_FaceRec* face_rec = face->GetRec();
   if (use_font_width_) {
-    int TT_Width = NormalizeFontMetric(face_rec->glyph->metrics.horiAdvance,
-                                       face->GetUnitsPerEm());
+    int TT_Width = face->GetGlyphTTWidth();
     if (char_width_[charcode] == 0xffff) {
       char_width_[charcode] = TT_Width;
     } else if (TT_Width && !IsEmbedded()) {

@@ -51,27 +51,6 @@ const CFX_Font::CharsetFontMap kDefaultTTFMap[] = {
     // FPDF_GetDefaultTTFMap() gets removed.
     {-1, nullptr}};
 
-FX_RECT FXRectFromFTPos(FT_Pos left, FT_Pos top, FT_Pos right, FT_Pos bottom) {
-  return FX_RECT(pdfium::checked_cast<int32_t>(left),
-                 pdfium::checked_cast<int32_t>(top),
-                 pdfium::checked_cast<int32_t>(right),
-                 pdfium::checked_cast<int32_t>(bottom));
-}
-
-FX_RECT ScaledFXRectFromFTPos(FT_Pos left,
-                              FT_Pos top,
-                              FT_Pos right,
-                              FT_Pos bottom,
-                              int x_scale,
-                              int y_scale) {
-  if (x_scale == 0 || y_scale == 0) {
-    return FXRectFromFTPos(left, top, right, bottom);
-  }
-
-  return FXRectFromFTPos(left * 1000 / x_scale, top * 1000 / y_scale,
-                         right * 1000 / x_scale, bottom * 1000 / y_scale);
-}
-
 bool ShouldAppendStyle(const ByteString& style) {
   return !style.IsEmpty() && style != "Regular";
 }
@@ -276,50 +255,7 @@ std::optional<FX_RECT> CFX_Font::GetGlyphBBox(uint32_t glyph_index) {
   if (!face_) {
     return std::nullopt;
   }
-
-  if (face_->IsTricky()) {
-    int error = FT_Set_Char_Size(face_->GetRec(), 0, 1000 * 64, 72, 72);
-    if (error) {
-      return std::nullopt;
-    }
-
-    error = face_->LoadGlyph(glyph_index, /*scale=*/true);
-    if (error) {
-      return std::nullopt;
-    }
-
-    FT_Glyph glyph;
-    error = FT_Get_Glyph(face_->GetRec()->glyph, &glyph);
-    if (error) {
-      return std::nullopt;
-    }
-
-    FT_BBox cbox;
-    FT_Glyph_Get_CBox(glyph, FT_GLYPH_BBOX_PIXELS, &cbox);
-    int pixel_size_x = face_->GetRec()->size->metrics.x_ppem;
-    int pixel_size_y = face_->GetRec()->size->metrics.y_ppem;
-    FX_RECT result = ScaledFXRectFromFTPos(
-        cbox.xMin, cbox.yMax, cbox.xMax, cbox.yMin, pixel_size_x, pixel_size_y);
-    result.top = std::min(result.top, static_cast<int>(face_->GetAscender()));
-    result.bottom =
-        std::max(result.bottom, static_cast<int>(face_->GetDescender()));
-    FT_Done_Glyph(glyph);
-    if (!face_->SetPixelSize(0, 64)) {
-      return std::nullopt;
-    }
-    return result;
-  }
-  if (face_->LoadGlyph(glyph_index, /*scale=*/false) != 0) {
-    return std::nullopt;
-  }
-  int em = face_->GetUnitsPerEm();
-  return ScaledFXRectFromFTPos(face_->GetRec()->glyph->metrics.horiBearingX,
-                               face_->GetRec()->glyph->metrics.horiBearingY -
-                                   face_->GetRec()->glyph->metrics.height,
-                               face_->GetRec()->glyph->metrics.horiBearingX +
-                                   face_->GetRec()->glyph->metrics.width,
-                               face_->GetRec()->glyph->metrics.horiBearingY, em,
-                               em);
+  return face_->GetFontGlyphBBox(glyph_index);
 }
 
 bool CFX_Font::IsItalic() const {
@@ -356,7 +292,7 @@ ByteString CFX_Font::GetPsName() const {
     return ByteString();
   }
 
-  ByteString psName = FT_Get_Postscript_Name(face_->GetRec());
+  ByteString psName = face_->GetPostscriptName();
   if (psName.IsEmpty()) {
     psName = kUntitledFontName;
   }
