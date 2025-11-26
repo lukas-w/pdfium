@@ -20,6 +20,7 @@
 #include "core/fxcrt/retain_ptr.h"
 #include "core/fxcrt/span.h"
 #include "core/fxge/freetype/fx_freetype.h"
+#include "core/fxge/fx_font.h"
 
 namespace fxge {
 enum class FontEncoding : uint32_t;
@@ -115,7 +116,7 @@ class CFX_Face final : public Retainable, public Observable {
                                                bool bFontStyle,
                                                const CFX_Matrix& matrix,
                                                int dest_width,
-                                               int anti_alias);
+                                               FontAntiAliasingMode anti_alias);
   std::unique_ptr<CFX_Path> LoadGlyphPath(uint32_t glyph_index,
                                           int dest_width,
                                           bool is_vertical,

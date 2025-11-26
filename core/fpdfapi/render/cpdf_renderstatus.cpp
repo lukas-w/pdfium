@@ -1089,7 +1089,7 @@ bool CPDF_RenderStatus::ProcessType3Text(CPDF_TextObject* textobj,
     return true;
   }
 
-  FX_RECT rect = GetGlyphsBBox(glyphs, 0);
+  FX_RECT rect = GetGlyphsBBox(glyphs, FontAntiAliasingMode::kNormal);
   auto bitmap = pdfium::MakeRetain<CFX_DIBitmap>();
   if (!bitmap->Create(rect.Width(), rect.Height(), FXDIB_Format::k8bppMask)) {
     return true;

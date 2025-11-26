@@ -22,6 +22,7 @@
 #include "core/fxge/cfx_renderdevice.h"
 #include "core/fxge/cfx_substfont.h"
 #include "core/fxge/dib/cfx_dibitmap.h"
+#include "core/fxge/fx_font.h"
 #include "core/fxge/text_char_pos.h"
 
 namespace {
@@ -181,7 +182,7 @@ std::unique_ptr<CFX_GlyphBitmap> CFX_GlyphCache::RenderGlyph_Nativetext(
     uint32_t glyph_index,
     const CFX_Matrix& matrix,
     int dest_width,
-    int anti_alias) {
+    FontAntiAliasingMode anti_alias) {
   return nullptr;
 }
 

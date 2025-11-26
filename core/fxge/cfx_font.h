@@ -22,10 +22,7 @@
 #include "core/fxcrt/span.h"
 #include "core/fxcrt/unowned_ptr_exclusion.h"
 #include "core/fxge/cfx_face.h"
-
-#if defined(PDF_USE_SKIA)
 #include "core/fxge/fx_font.h"
-#endif
 
 class CFX_GlyphBitmap;
 class CFX_GlyphCache;
@@ -91,7 +88,7 @@ class CFX_Font {
       bool bFontStyle,
       const CFX_Matrix& matrix,
       int dest_width,
-      int anti_alias,
+      FontAntiAliasingMode anti_alias,
       CFX_TextRenderOptions* text_options) const;
   const CFX_Path* LoadGlyphPath(uint32_t glyph_index, int dest_width) const;
   int GetGlyphWidth(uint32_t glyph_index) const;

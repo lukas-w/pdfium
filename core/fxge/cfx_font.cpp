@@ -386,7 +386,7 @@ const CFX_GlyphBitmap* CFX_Font::LoadGlyphBitmap(
     bool bFontStyle,
     const CFX_Matrix& matrix,
     int dest_width,
-    int anti_alias,
+    FontAntiAliasingMode anti_alias,
     CFX_TextRenderOptions* text_options) const {
   return GetOrCreateGlyphCache()->LoadGlyphBitmap(this, glyph_index, bFontStyle,
                                                   matrix, dest_width,
