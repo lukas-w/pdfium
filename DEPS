@@ -2,11 +2,18 @@ use_relative_paths = True
 
 gclient_gn_args_file = 'build/config/gclient_args.gni'
 gclient_gn_args = [
+  'build_with_chromium',
   'checkout_android',
   'checkout_skia',
 ]
 
 vars = {
+  # Variable that can be used to support multiple build scenarios, like having
+  # Chromium specific targets in a client project's GN file or sync dependencies
+  # conditionally etc.
+  # Standalone PDFium, by definition, does not build with Chromium.
+  'build_with_chromium': False,
+
   # By default, we should check out everything needed to run on the main
   # pdfium waterfalls. This var can be also be set to 'small', in order to skip
   # things are not strictly needed to build pdfium for development purposes,
