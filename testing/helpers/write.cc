@@ -22,6 +22,7 @@
 #include "testing/image_diff/image_diff_png.h"
 
 #ifdef PDF_ENABLE_SKIA
+#include "third_party/skia/include/core/SkData.h"         // nogncheck
 #include "third_party/skia/include/core/SkImage.h"        // nogncheck
 #include "third_party/skia/include/core/SkPicture.h"      // nogncheck
 #include "third_party/skia/include/core/SkPixmap.h"       // nogncheck
@@ -639,7 +640,7 @@ std::string WriteSkp(const char* pdf_name, int num, const SkPicture& picture) {
     return "";
   }
   SkSerialProcs procs;
-  procs.fImageProc = [](SkImage* img, void*) -> sk_sp<SkData> {
+  procs.fImageProc = [](SkImage* img, void*) -> SkSerialReturnType {
 #ifdef PDF_ENABLE_RUST_PNG
     return SkPngRustEncoder::Encode(nullptr, img, /*options=*/{});
 #else

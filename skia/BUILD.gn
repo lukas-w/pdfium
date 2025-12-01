@@ -56,6 +56,36 @@ if (pdf_enable_rust_png) {
   # are present in Chromium's //skia/BUILD.gn` and here in PDFium's
   # `//skia/BUILD.gn`).
 
+  rust_static_library("rust_common_ffi") {
+    visibility = [ ":*" ]
+    crate_name = "skia_rust_common"
+    allow_unsafe = true  # For FFI
+    crate_root = skia_rust_common_ffi_crate_root
+    sources = skia_rust_common_ffi_rs_srcs
+    cxx_bindings = skia_rust_common_ffi_cxx_bridge_srcs
+    public_deps = [ ":rust_common_ffi_cpp" ]
+    configs -= [ "//build/config/compiler:chromium_code" ]
+    configs += [
+      ":skia_config",
+      "//build/config/compiler:no_chromium_code",
+    ]
+  }
+
+  source_set("rust_common_ffi_cpp") {
+    visibility = [ ":*" ]
+    sources = skia_rust_common_ffi_cpp_srcs
+    public = skia_rust_common_ffi_cpp_hdrs
+    public_deps = [ "//build/rust:cxx_cppdeps" ]
+    configs -= [ "//build/config/compiler:chromium_code" ]
+    configs += [
+      ":skia_config",
+      "//build/config/compiler:no_chromium_code",
+    ]
+
+    # This uses Skia files, but can't depend on :skia w/o introducing a cycle
+    check_includes = false
+  }
+
   rust_static_library("rust_png_ffi") {
     visibility = [ ":*" ]
     allow_unsafe = true  # For FFI
@@ -63,7 +93,10 @@ if (pdf_enable_rust_png) {
     sources = skia_codec_rust_png_ffi_rs_srcs
     cxx_bindings = skia_codec_rust_png_ffi_cxx_bridge_srcs
     public_deps = [ ":rust_png_ffi_cpp" ]
-    deps = [ "//third_party/rust/png/v0_18:lib" ]
+    deps = [
+      ":rust_common_ffi",
+      "//third_party/rust/png/v0_18:lib",
+    ]
     edition = "2021"
     configs -= [ "//build/config/compiler:chromium_code" ]
     configs += [
@@ -401,7 +434,10 @@ component("skia") {
     sources += skia_codec_rust_png_public
     sources += skia_encode_rust_png_public
     sources += skia_encode_rust_png_srcs
-    deps += [ ":rust_png_ffi" ]
+    deps += [
+      ":rust_common_ffi",
+      ":rust_png_ffi",
+    ]
   } else {
     sources += skia_codec_libpng_srcs
     sources += skia_encode_libpng_srcs
