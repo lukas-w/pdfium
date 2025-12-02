@@ -313,14 +313,11 @@ void RasterizeStroke(agg::rasterizer_scanline_aa* rasterizer,
   if (!dash_array.empty()) {
     using DashConverter = agg::conv_dash<agg::path_storage>;
     DashConverter dash(*path_data);
-    for (size_t i = 0; i < (dash_array.size() + 1) / 2; i++) {
-      float on = dash_array[i * 2];
-      if (on <= 0.000001f) {
-        on = 0.1f;
+    for (float dash_len : dash_array) {
+      if (dash_len <= 0.000001f) {
+        dash_len = 0.1f;
       }
-      float off = i * 2 + 1 == dash_array.size() ? on : dash_array[i * 2 + 1];
-      off = std::max(off, 0.0f);
-      dash.add_dash(fabs(on * scale), fabs(off * scale));
+      dash.add_dash(fabs(dash_len * scale));
     }
     dash.dash_start(pGraphState->dash_phase() * scale);
     using DashStroke = agg::conv_stroke<DashConverter>;
