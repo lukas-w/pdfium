@@ -569,18 +569,21 @@ void SetupStrokePaint(SkPaint* stroke_paint,
                                         device_units[1].length()));
   const std::vector<float>& dash_array = stroke_options->dash_array();
   if (!dash_array.empty()) {
-    size_t count = (dash_array.size() + 1) / 2;
-    DataVector<float> intervals(count * 2);
-    // Set dash pattern
-    for (size_t i = 0; i < count; i++) {
-      float on = dash_array[i * 2];
-      if (on <= 0.000001f) {
-        on = 0.1f;
+    // `SkDashPathEffect` only takes even-sized interval arrays. Support
+    // odd-sized arrays by just doubling the size of `dash_array` and repeating
+    // its contents, e.g. [2, 1, 3] becomes [2, 1, 3, 2, 1, 3].
+    size_t count = dash_array.size();
+    bool is_even_sized = count % 2 == 0;
+    DataVector<float> intervals;
+    intervals.reserve(is_even_sized ? count : count * 2);
+    for (float dash_len : dash_array) {
+      if (dash_len <= 0.000001f) {
+        dash_len = 0.1f;
       }
-      float off = i * 2 + 1 == dash_array.size() ? on : dash_array[i * 2 + 1];
-      off = std::max(off, 0.0f);
-      intervals[i * 2] = on;
-      intervals[i * 2 + 1] = off;
+      intervals.push_back(dash_len);
+    }
+    if (!is_even_sized) {
+      intervals.insert(intervals.end(), intervals.begin(), intervals.end());
     }
     stroke_paint->setPathEffect(
         SkDashPathEffect::Make(intervals, stroke_options->dash_phase()));
