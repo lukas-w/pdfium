@@ -225,14 +225,8 @@ bool CFPF_SkiaFontMgr::InitFTLibrary() {
     return true;
   }
 
-  FXFT_LibraryRec* library = nullptr;
-  FT_Init_FreeType(&library);
-  if (!library) {
-    return false;
-  }
-
-  ft_library_.reset(library);
-  return true;
+  ft_library_ = InitializeFreeType();
+  return !!ft_library_;
 }
 
 void CFPF_SkiaFontMgr::LoadFonts(const char** user_paths) {
