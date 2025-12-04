@@ -19,7 +19,6 @@
 #include "core/fxcrt/span_util.h"
 #include "core/fxge/cfx_fontmapper.h"
 #include "core/fxge/cfx_gemodule.h"
-#include "core/fxge/freetype/fx_freetype.h"
 #include "core/fxge/fx_font.h"
 
 #if BUILDFLAG(IS_APPLE)
