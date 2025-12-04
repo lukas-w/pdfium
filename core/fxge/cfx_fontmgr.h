@@ -75,9 +75,6 @@ class CFX_FontMgr {
   bool FTLibrarySupportsHinting() const { return ft_library_supports_hinting_; }
 
  private:
-  bool FreeTypeVersionSupportsHinting() const;
-  bool SetLcdFilterMode() const;
-
   // Must come before |builtin_mapper_| and |face_map_|.
   ScopedFXFTLibraryRec const ft_library_;
   std::unique_ptr<CFX_FontMapper> builtin_mapper_;

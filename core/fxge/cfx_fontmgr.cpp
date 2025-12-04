@@ -43,12 +43,6 @@ constexpr std::array<pdfium::span<const uint8_t>,
 constexpr pdfium::span<const uint8_t> kGenericSansFont = kFoxitSansMMFontData;
 constexpr pdfium::span<const uint8_t> kGenericSerifFont = kFoxitSerifMMFontData;
 
-FXFT_LibraryRec* FTLibraryInitHelper() {
-  FXFT_LibraryRec* pLibrary = nullptr;
-  FT_Init_FreeType(&pLibrary);
-  return pLibrary;
-}
-
 }  // namespace
 
 CFX_FontMgr::FontDesc::FontDesc(FixedSizeDataVector<uint8_t> data)
@@ -67,10 +61,11 @@ CFX_Face* CFX_FontMgr::FontDesc::GetFace(size_t index) const {
 }
 
 CFX_FontMgr::CFX_FontMgr()
-    : ft_library_(FTLibraryInitHelper()),
+    : ft_library_(InitializeFreeType()),
       builtin_mapper_(std::make_unique<CFX_FontMapper>(this)),
-      ft_library_supports_hinting_(SetLcdFilterMode() ||
-                                   FreeTypeVersionSupportsHinting()) {}
+      ft_library_supports_hinting_(
+          FreeTypeSetLcdFilterMode(ft_library_.get()) ||
+          FreeTypeVersionSupportsHinting(ft_library_.get())) {}
 
 CFX_FontMgr::~CFX_FontMgr() = default;
 
@@ -135,20 +130,4 @@ pdfium::span<const uint8_t> CFX_FontMgr::GetGenericSansFont() {
 // static
 pdfium::span<const uint8_t> CFX_FontMgr::GetGenericSerifFont() {
   return kGenericSerifFont;
-}
-
-bool CFX_FontMgr::FreeTypeVersionSupportsHinting() const {
-  FT_Int major;
-  FT_Int minor;
-  FT_Int patch;
-  FT_Library_Version(ft_library_.get(), &major, &minor, &patch);
-  // Freetype versions >= 2.8.1 support hinting even if subpixel rendering is
-  // disabled. https://sourceforge.net/projects/freetype/files/freetype2/2.8.1/
-  return major > 2 || (major == 2 && minor > 8) ||
-         (major == 2 && minor == 8 && patch >= 1);
-}
-
-bool CFX_FontMgr::SetLcdFilterMode() const {
-  return FT_Library_SetLcdFilter(ft_library_.get(), FT_LCD_FILTER_DEFAULT) !=
-         FT_Err_Unimplemented_Feature;
 }
