@@ -977,6 +977,7 @@ class BitmapPageRenderer : public PageRenderer {
           .width = renderer.width(),
           .height = renderer.height(),
           .stride = FPDFBitmap_GetStride(renderer.bitmap()),
+          .has_alpha = !!FPDFPage_HasTransparency(renderer.page()),
       };
       void* buffer = FPDFBitmap_GetBuffer(renderer.bitmap());
       std::string image_file_name =

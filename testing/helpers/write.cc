@@ -468,9 +468,10 @@ std::string WritePng(const char* pdf_name,
   auto input = pdfium::span(
       static_cast<uint8_t*>(buffer),
       static_cast<size_t>(bitmap_attributes.stride) * bitmap_attributes.height);
-  std::vector<uint8_t> png_encoding =
-      EncodePng(input, bitmap_attributes.width, bitmap_attributes.height,
-                bitmap_attributes.stride, FPDFBitmap_BGRA);
+  std::vector<uint8_t> png_encoding = EncodePng(
+      input, bitmap_attributes.width, bitmap_attributes.height,
+      bitmap_attributes.stride,
+      bitmap_attributes.has_alpha ? FPDFBitmap_BGRA : FPDFBitmap_BGRx);
   if (png_encoding.empty()) {
     fprintf(stderr, "Failed to convert bitmap to PNG\n");
     return "";

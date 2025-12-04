@@ -19,6 +19,7 @@ struct BitmapAttributes {
   int width;
   int height;
   int stride;
+  bool has_alpha;
 };
 
 std::string WritePpm(const char* pdf_name,
