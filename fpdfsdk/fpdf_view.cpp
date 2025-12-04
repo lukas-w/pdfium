@@ -128,19 +128,16 @@ void SetRendererType(FPDF_RENDERER_TYPE public_type) {
   // value might not be meaningful for a particular build configuration, which
   // would mean use of that value is an error for that build.
 
-  // AGG is always present in a build. |FPDF_RENDERERTYPE_SKIA| is valid to use
+  // AGG is always present in a build. `FPDF_RENDERERTYPE_SKIA` is valid to use
   // only if it is included in the build.
 #if defined(PDF_USE_SKIA)
   // This build configuration has the option for runtime renderer selection.
-  if (public_type == FPDF_RENDERERTYPE_AGG ||
-      public_type == FPDF_RENDERERTYPE_SKIA) {
-    CFX_DefaultRenderDevice::SetRendererType(
-        static_cast<CFX_DefaultRenderDevice::RendererType>(public_type));
-    return;
-  }
-  CHECK(false);
+  CHECK(public_type == FPDF_RENDERERTYPE_AGG ||
+        public_type == FPDF_RENDERERTYPE_SKIA);
+  CFX_DefaultRenderDevice::SetRendererType(
+      static_cast<CFX_DefaultRenderDevice::RendererType>(public_type));
 #else
-  // `FPDF_RENDERERTYPE_AGG` is used for fully AGG builds.
+  // AGG-only builds should always use `FPDF_RENDERERTYPE_AGG`.
   CHECK_EQ(public_type, FPDF_RENDERERTYPE_AGG);
 #endif
 }
