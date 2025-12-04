@@ -267,14 +267,13 @@ std::string GenerateImageOutputFilename(const char* pdf_name,
 std::string WritePpm(const char* pdf_name,
                      int num,
                      void* buffer_void,
-                     int stride,
-                     int width,
-                     int height) {
-  if (!CheckDimensions(stride, width, height)) {
+                     const BitmapAttributes& bitmap_attributes) {
+  if (!CheckDimensions(bitmap_attributes.stride, bitmap_attributes.width,
+                       bitmap_attributes.height)) {
     return "";
   }
 
-  int out_len = width * height;
+  int out_len = bitmap_attributes.width * bitmap_attributes.height;
   if (out_len > INT_MAX / 3) {
     return "";
   }
@@ -290,15 +289,16 @@ std::string WritePpm(const char* pdf_name,
     return std::string();
   }
 
-  fprintf(fp, "P6\n# PDF test render\n%d %d\n255\n", width, height);
+  fprintf(fp, "P6\n# PDF test render\n%d %d\n255\n", bitmap_attributes.width,
+          bitmap_attributes.height);
   // Source data is B, G, R, unused.
   // Dest data is R, G, B.
   const uint8_t* buffer = reinterpret_cast<const uint8_t*>(buffer_void);
   std::vector<uint8_t> result(out_len);
-  for (int h = 0; h < height; ++h) {
-    const uint8_t* src_line = buffer + (stride * h);
-    uint8_t* dest_line = result.data() + (width * h * 3);
-    for (int w = 0; w < width; ++w) {
+  for (int h = 0; h < bitmap_attributes.height; ++h) {
+    const uint8_t* src_line = buffer + (bitmap_attributes.stride * h);
+    uint8_t* dest_line = result.data() + (bitmap_attributes.width * h * 3);
+    for (int w = 0; w < bitmap_attributes.width; ++w) {
       // R
       dest_line[w * 3] = src_line[(w * 4) + 2];
       // G
@@ -459,17 +459,18 @@ void WriteAnnot(FPDF_PAGE page, const char* pdf_name, int num) {
 std::string WritePng(const char* pdf_name,
                      int num,
                      void* buffer,
-                     int stride,
-                     int width,
-                     int height) {
-  if (!CheckDimensions(stride, width, height)) {
+                     const BitmapAttributes& bitmap_attributes) {
+  if (!CheckDimensions(bitmap_attributes.stride, bitmap_attributes.width,
+                       bitmap_attributes.height)) {
     return "";
   }
 
-  auto input = pdfium::span(static_cast<uint8_t*>(buffer),
-                            static_cast<size_t>(stride) * height);
+  auto input = pdfium::span(
+      static_cast<uint8_t*>(buffer),
+      static_cast<size_t>(bitmap_attributes.stride) * bitmap_attributes.height);
   std::vector<uint8_t> png_encoding =
-      EncodePng(input, width, height, stride, FPDFBitmap_BGRA);
+      EncodePng(input, bitmap_attributes.width, bitmap_attributes.height,
+                bitmap_attributes.stride, FPDFBitmap_BGRA);
   if (png_encoding.empty()) {
     fprintf(stderr, "Failed to convert bitmap to PNG\n");
     return "";
@@ -499,14 +500,13 @@ std::string WritePng(const char* pdf_name,
 std::string WriteBmp(const char* pdf_name,
                      int num,
                      void* buffer,
-                     int stride,
-                     int width,
-                     int height) {
-  if (!CheckDimensions(stride, width, height)) {
+                     const BitmapAttributes& bitmap_attributes) {
+  if (!CheckDimensions(bitmap_attributes.stride, bitmap_attributes.width,
+                       bitmap_attributes.height)) {
     return std::string();
   }
 
-  int out_len = stride * height;
+  int out_len = bitmap_attributes.stride * bitmap_attributes.height;
   if (out_len > INT_MAX / 3) {
     return std::string();
   }
@@ -522,8 +522,8 @@ std::string WriteBmp(const char* pdf_name,
 
   BITMAPINFO bmi = {};
   bmi.bmiHeader.biSize = sizeof(bmi) - sizeof(RGBQUAD);
-  bmi.bmiHeader.biWidth = width;
-  bmi.bmiHeader.biHeight = -height;  // top-down image
+  bmi.bmiHeader.biWidth = bitmap_attributes.width;
+  bmi.bmiHeader.biHeight = -bitmap_attributes.height;  // top-down image
   bmi.bmiHeader.biPlanes = 1;
   bmi.bmiHeader.biBitCount = 32;
   bmi.bmiHeader.biCompression = BI_RGB;

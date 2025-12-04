@@ -970,16 +970,17 @@ class BitmapPageRenderer : public PageRenderer {
       std::string (*bitmap_writer)(const char* pdf_name,
                                    int num,
                                    void* buffer,
-                                   int stride,
-                                   int width,
-                                   int height)) {
+                                   const BitmapAttributes& bitmap_attributes)) {
     return [bitmap_writer](BitmapPageRenderer& renderer,
                            const std::string& name, int page_index, bool md5) {
-      int stride = FPDFBitmap_GetStride(renderer.bitmap());
+      const BitmapAttributes bitmap_attributes = {
+          .width = renderer.width(),
+          .height = renderer.height(),
+          .stride = FPDFBitmap_GetStride(renderer.bitmap()),
+      };
       void* buffer = FPDFBitmap_GetBuffer(renderer.bitmap());
-      std::string image_file_name = bitmap_writer(
-          name.c_str(), page_index, buffer, /*stride=*/stride,
-          /*width=*/renderer.width(), /*height=*/renderer.height());
+      std::string image_file_name =
+          bitmap_writer(name.c_str(), page_index, buffer, bitmap_attributes);
       if (image_file_name.empty()) {
         return false;
       }
@@ -989,7 +990,8 @@ class BitmapPageRenderer : public PageRenderer {
         OutputMD5Hash(image_file_name.c_str(),
                       UNSAFE_TODO(pdfium::span(
                           static_cast<const uint8_t*>(buffer),
-                          static_cast<size_t>(stride) * renderer.height())));
+                          static_cast<size_t>(bitmap_attributes.stride) *
+                              bitmap_attributes.height)));
       }
       return true;
     };
