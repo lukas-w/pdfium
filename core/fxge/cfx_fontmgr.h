@@ -32,8 +32,8 @@ class CFX_FontMgr {
     CONSTRUCT_VIA_MAKE_RETAIN;
 
     pdfium::span<const uint8_t> FontData() const { return font_data_; }
-    void SetFace(size_t index, CFX_Face* face);
-    CFX_Face* GetFace(size_t index) const;
+    void SetFace(uint32_t face_index, CFX_Face* face);
+    CFX_Face* GetFace(uint32_t face_index) const;
 
    private:
     explicit FontDesc(FixedSizeDataVector<uint8_t> data);
@@ -66,7 +66,7 @@ class CFX_FontMgr {
 
   RetainPtr<CFX_Face> NewFixedFace(RetainPtr<FontDesc> pDesc,
                                    pdfium::span<const uint8_t> span,
-                                   size_t face_index);
+                                   uint32_t face_index);
 
   // Always present.
   CFX_FontMapper* GetBuiltinMapper() const { return builtin_mapper_.get(); }

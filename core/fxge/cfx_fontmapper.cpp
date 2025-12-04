@@ -916,7 +916,7 @@ RetainPtr<CFX_Face> CFX_FontMapper::GetCachedTTCFace(void* font_handle,
                                                 std::move(font_data));
   }
   size_t font_offset = ttc_size - data_size;
-  size_t face_index =
+  uint32_t face_index =
       GetTTCIndex(font_desc->FontData().first(ttc_size), font_offset);
   RetainPtr<CFX_Face> face(font_desc->GetFace(face_index));
   if (face) {
