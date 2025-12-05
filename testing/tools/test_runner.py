@@ -196,6 +196,11 @@ class TestRunner:
         help='Sets whether to use the oneshot renderer.')
 
     parser.add_argument(
+        '--render-premultiplied',
+        action='store_true',
+        help='Sets whether to render using premultiplied alpha.')
+
+    parser.add_argument(
         '--run-skia-gold',
         action='store_true',
         default=False,
@@ -742,6 +747,9 @@ class _TestCaseRunner:
 
     if self.options.render_oneshot:
       cmd_to_run.append('--render-oneshot')
+
+    if self.options.render_premultiplied:
+      cmd_to_run.append('--render-premultiplied')
 
     if self.options.reverse_byte_order:
       cmd_to_run.append('--reverse-byte-order')
