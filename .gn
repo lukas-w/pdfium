@@ -43,6 +43,9 @@ default_args = {
 
   # PDFium bots only have 14.x. Override Chromium's 15.x requirement.
   mac_sdk_min = "14"
+
+  # PDFium must stay in C++20 for now.
+  use_cxx23 = false
 }
 
 no_check_targets = [
