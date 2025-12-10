@@ -64,7 +64,7 @@ class CFX_FontMgr {
                                            uint32_t checksum,
                                            FixedSizeDataVector<uint8_t> data);
 
-  RetainPtr<CFX_Face> NewFixedFace(RetainPtr<FontDesc> pDesc,
+  RetainPtr<CFX_Face> NewFixedFace(RetainPtr<FontDesc> desc,
                                    pdfium::span<const uint8_t> span,
                                    uint32_t face_index);
 

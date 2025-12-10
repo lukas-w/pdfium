@@ -62,15 +62,15 @@ class CFX_Face final : public Retainable, public Observable {
   static constexpr CharMapId kWindowsUnicodeCmapId{3, 1};
 
   static RetainPtr<CFX_Face> New(FT_Library library,
-                                 RetainPtr<Retainable> pDesc,
-                                 pdfium::span<const FT_Byte> data,
-                                 FT_Long face_index);
+                                 RetainPtr<Retainable> desc,
+                                 pdfium::span<const uint8_t> data,
+                                 uint32_t face_index);
 
 #if defined(PDF_ENABLE_XFA)
   static RetainPtr<CFX_Face> OpenFromStream(
       FT_Library library,
       const RetainPtr<IFX_SeekableReadStream>& font_stream,
-      FT_Long face_index);
+      uint32_t face_index);
 #endif
 #if BUILDFLAG(IS_ANDROID)
   static RetainPtr<CFX_Face> OpenFromFilePath(FT_Library library,
@@ -174,7 +174,7 @@ private:
 #if BUILDFLAG(IS_ANDROID) || defined(PDF_ENABLE_XFA)
   static RetainPtr<CFX_Face> Open(FT_Library library,
                                   const FT_Open_Args* args,
-                                  FT_Long face_index);
+                                  uint32_t face_index);
 #endif
 
   // `owned_font_stream_` must outlive `owned_stream_rec_`.

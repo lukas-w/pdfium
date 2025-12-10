@@ -326,34 +326,35 @@ FX_RECT ScaledFXRectFromFTPos(FT_Pos left,
 
 // static
 RetainPtr<CFX_Face> CFX_Face::New(FT_Library library,
-                                  RetainPtr<Retainable> pDesc,
-                                  pdfium::span<const FT_Byte> data,
-                                  FT_Long face_index) {
-  FXFT_FaceRec* pRec = nullptr;
-  if (FT_New_Memory_Face(library, data.data(),
-                         pdfium::checked_cast<FT_Long>(data.size()), face_index,
-                         &pRec) != 0) {
+                                  RetainPtr<Retainable> desc,
+                                  pdfium::span<const uint8_t> data,
+                                  uint32_t face_index) {
+  FXFT_FaceRec* face_rec = nullptr;
+  if (FT_New_Memory_Face(
+          library, data.data(), pdfium::checked_cast<FT_Long>(data.size()),
+          pdfium::checked_cast<FT_Long>(face_index), &face_rec) != 0) {
     return nullptr;
   }
   // Private ctor.
-  return pdfium::WrapRetain(new CFX_Face(pRec, std::move(pDesc)));
+  return pdfium::WrapRetain(new CFX_Face(face_rec, std::move(desc)));
 }
 
 #if BUILDFLAG(IS_ANDROID) || defined(PDF_ENABLE_XFA)
 // static
 RetainPtr<CFX_Face> CFX_Face::Open(FT_Library library,
                                    const FT_Open_Args* args,
-                                   FT_Long face_index) {
+                                   uint32_t face_index) {
   if (!library) {
     return nullptr;
   }
-  FXFT_FaceRec* pRec = nullptr;
-  if (FT_Open_Face(library, args, face_index, &pRec) != 0) {
+  FXFT_FaceRec* face_rec = nullptr;
+  if (FT_Open_Face(library, args, pdfium::checked_cast<FT_Long>(face_index),
+                   &face_rec) != 0) {
     return nullptr;
   }
 
   // Private ctor.
-  return pdfium::WrapRetain(new CFX_Face(pRec, nullptr));
+  return pdfium::WrapRetain(new CFX_Face(face_rec, nullptr));
 }
 #endif
 
@@ -385,7 +386,7 @@ RetainPtr<CFX_Face> CFX_Face::OpenFromFilePath(FT_Library library,
 RetainPtr<CFX_Face> CFX_Face::OpenFromStream(
     FT_Library library,
     const RetainPtr<IFX_SeekableReadStream>& font_stream,
-    FT_Long face_index) {
+    uint32_t face_index) {
   if (!font_stream) {
     return nullptr;
   }
