@@ -336,7 +336,12 @@ RetainPtr<CFX_Face> CFX_Face::New(FT_Library library,
     return nullptr;
   }
   // Private ctor.
-  return pdfium::WrapRetain(new CFX_Face(face_rec, std::move(desc)));
+  auto face = pdfium::WrapRetain(new CFX_Face(face_rec, std::move(desc)));
+  if (!face->SetPixelSize(64, 64)) {
+    return nullptr;
+  }
+
+  return face;
 }
 
 #if BUILDFLAG(IS_ANDROID) || defined(PDF_ENABLE_XFA)

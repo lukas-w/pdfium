@@ -148,7 +148,6 @@ class CFX_Face final : public Retainable, public Observable {
   void SetCharMap(CharMap map);
   void SetCharMapByIndex(size_t index);
   bool SelectCharMap(fxge::FontEncoding encoding);
-  bool SetPixelSize(uint32_t width, uint32_t height);
 
 #if defined(PDF_ENABLE_XFA)
   int GetNumFaces() const;
@@ -169,8 +168,11 @@ private:
   FXFT_FaceRec* GetRec() { return rec_.get(); }
   const FXFT_FaceRec* GetRec() const { return rec_.get(); }
 
+  bool SetPixelSize(uint32_t width, uint32_t height);
+
   void AdjustVariationParams(int glyph_index, int dest_width, int weight);
   std::optional<std::array<uint8_t, 2>> GetOs2Panose();
+
 #if BUILDFLAG(IS_ANDROID) || defined(PDF_ENABLE_XFA)
   static RetainPtr<CFX_Face> Open(FT_Library library,
                                   const FT_Open_Args* args,

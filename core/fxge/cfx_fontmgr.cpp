@@ -107,13 +107,7 @@ RetainPtr<CFX_FontMgr::FontDesc> CFX_FontMgr::AddCachedTTCFontDesc(
 RetainPtr<CFX_Face> CFX_FontMgr::NewFixedFace(RetainPtr<FontDesc> desc,
                                               pdfium::span<const uint8_t> span,
                                               uint32_t face_index) {
-  RetainPtr<CFX_Face> face =
-      CFX_Face::New(ft_library_.get(), std::move(desc), span, face_index);
-  if (!face || !face->SetPixelSize(64, 64)) {
-    return nullptr;
-  }
-
-  return face;
+  return CFX_Face::New(ft_library_.get(), std::move(desc), span, face_index);
 }
 
 // static
