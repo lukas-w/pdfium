@@ -73,7 +73,6 @@ class CFX_Face final : public Retainable, public Observable {
 #endif
   bool HasGlyphNames() const;
   bool IsTtOt() const;
-  bool IsTricky() const;
   bool IsFixedWidth() const;
 
   bool IsItalic() const;
@@ -92,8 +91,6 @@ class CFX_Face final : public Retainable, public Observable {
   // Returns the size of the data, or 0 on failure. Only write into `buffer` if
   // it is large enough to hold the data.
   size_t GetSfntTable(uint32_t table, pdfium::span<uint8_t> buffer);
-
-  std::optional<std::array<uint32_t, 4>> GetOs2UnicodeRange();
 
   int GetGlyphCount() const;
   // TODO(crbug.com/pdfium/2037): Can this method be private?
@@ -147,6 +144,7 @@ class CFX_Face final : public Retainable, public Observable {
 #if defined(PDF_ENABLE_XFA)
   bool IsScalable() const;
   int GetNumFaces() const;
+  std::optional<std::array<uint32_t, 4>> GetOs2UnicodeRange();
 #endif
 
 #if BUILDFLAG(IS_WIN)
@@ -164,12 +162,15 @@ private:
   FXFT_FaceRec* GetRec() { return rec_.get(); }
   const FXFT_FaceRec* GetRec() const { return rec_.get(); }
 
+  bool IsTricky() const;
+
   bool SetPixelSize(uint32_t width, uint32_t height);
 
   void AdjustVariationParams(int glyph_index, int dest_width, int weight);
-  std::optional<std::array<uint8_t, 2>> GetOs2Panose();
 
 #if BUILDFLAG(IS_ANDROID) || defined(PDF_ENABLE_XFA)
+  std::optional<std::array<uint8_t, 2>> GetOs2Panose();
+
   static RetainPtr<CFX_Face> Open(FT_Library library,
                                   const FT_Open_Args* args,
                                   uint32_t face_index);

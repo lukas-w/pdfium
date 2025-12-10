@@ -503,6 +503,7 @@ size_t CFX_Face::GetSfntTable(uint32_t table, pdfium::span<uint8_t> buffer) {
   return pdfium::checked_cast<size_t>(length);
 }
 
+#if defined(PDF_ENABLE_XFA)
 std::optional<std::array<uint32_t, 4>> CFX_Face::GetOs2UnicodeRange() {
   auto* os2 = static_cast<TT_OS2*>(FT_Get_Sfnt_Table(GetRec(), FT_SFNT_OS2));
   if (!os2) {
@@ -513,6 +514,7 @@ std::optional<std::array<uint32_t, 4>> CFX_Face::GetOs2UnicodeRange() {
                                  static_cast<uint32_t>(os2->ulUnicodeRange3),
                                  static_cast<uint32_t>(os2->ulUnicodeRange4)};
 }
+#endif  // defined(PDF_ENABLE_XFA)
 
 #if defined(PDF_ENABLE_XFA) || BUILDFLAG(IS_ANDROID)
 std::optional<std::array<uint32_t, 2>> CFX_Face::GetOs2CodePageRange() {
@@ -523,7 +525,6 @@ std::optional<std::array<uint32_t, 2>> CFX_Face::GetOs2CodePageRange() {
   return std::array<uint32_t, 2>{static_cast<uint32_t>(os2->ulCodePageRange1),
                                  static_cast<uint32_t>(os2->ulCodePageRange2)};
 }
-#endif  // defined(PDF_ENABLE_XFA) || BUILDFLAG(IS_ANDROID)
 
 std::optional<std::array<uint8_t, 2>> CFX_Face::GetOs2Panose() {
   auto* os2 = static_cast<TT_OS2*>(FT_Get_Sfnt_Table(GetRec(), FT_SFNT_OS2));
@@ -533,6 +534,7 @@ std::optional<std::array<uint8_t, 2>> CFX_Face::GetOs2Panose() {
   // SAFETY: required from library.
   return UNSAFE_BUFFERS(std::array<uint8_t, 2>{os2->panose[0], os2->panose[1]});
 }
+#endif  // defined(PDF_ENABLE_XFA) || BUILDFLAG(IS_ANDROID)
 
 int CFX_Face::GetGlyphCount() const {
   return pdfium::checked_cast<int>(GetRec()->num_glyphs);
