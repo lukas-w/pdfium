@@ -40,12 +40,6 @@ class CFX_Face final : public Retainable, public Observable {
     uint32_t glyph_index;
   };
 
-  struct FontStyleInfo {
-    // Style utilizes enum FontStyle values
-    uint32_t style;
-    uint32_t os2_codepage_mask;
-  };
-
   // Note that this corresponds to the cmap header in fonts, and not the cmap
   // data in PDFs.
   struct CharMapId {
@@ -82,13 +76,8 @@ class CFX_Face final : public Retainable, public Observable {
   bool IsTricky() const;
   bool IsFixedWidth() const;
 
-#if defined(PDF_ENABLE_XFA)
-  bool IsScalable() const;
-#endif
-
   bool IsItalic() const;
   bool IsBold() const;
-  FontStyleInfo GetFontStyleInfo();
 
   ByteString GetFamilyName() const;
   ByteString GetStyleName() const;
@@ -105,7 +94,6 @@ class CFX_Face final : public Retainable, public Observable {
   size_t GetSfntTable(uint32_t table, pdfium::span<uint8_t> buffer);
 
   std::optional<std::array<uint32_t, 4>> GetOs2UnicodeRange();
-  std::optional<std::array<uint32_t, 2>> GetOs2CodePageRange();
 
   int GetGlyphCount() const;
   // TODO(crbug.com/pdfium/2037): Can this method be private?
@@ -149,7 +137,15 @@ class CFX_Face final : public Retainable, public Observable {
   void SetCharMapByIndex(size_t index);
   bool SelectCharMap(fxge::FontEncoding encoding);
 
+#if defined(PDF_ENABLE_XFA) || BUILDFLAG(IS_ANDROID)
+  // Returns enum FontStyle values.
+  uint32_t GetFontStyle();
+
+  std::optional<std::array<uint32_t, 2>> GetOs2CodePageRange();
+#endif
+
 #if defined(PDF_ENABLE_XFA)
+  bool IsScalable() const;
   int GetNumFaces() const;
 #endif
 

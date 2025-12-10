@@ -386,10 +386,12 @@ std::unique_ptr<CFPF_SkiaPathFont> CFPF_SkiaFontMgr::ReportFace(
     RetainPtr<CFX_Face> face,
     const ByteString& file,
     int face_index) {
-  CFX_Face::FontStyleInfo fontinfo = face->GetFontStyleInfo();
-  uint32_t charset =
-      SKIACHARSET_Default | SkiaGetFaceCharset(fontinfo.os2_codepage_mask);
+  uint32_t charset = SKIACHARSET_Default;
+  std::optional<std::array<uint32_t, 2>> cp_range = face->GetOs2CodePageRange();
+  if (cp_range.has_value()) {
+    charset |= SkiaGetFaceCharset(cp_range.value()[0]);
+  }
   return std::make_unique<CFPF_SkiaPathFont>(file, face->GetFamilyName(),
-                                             fontinfo.style, face_index,
+                                             face->GetFontStyle(), face_index,
                                              charset, face->GetGlyphCount());
 }

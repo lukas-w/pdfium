@@ -514,6 +514,7 @@ std::optional<std::array<uint32_t, 4>> CFX_Face::GetOs2UnicodeRange() {
                                  static_cast<uint32_t>(os2->ulUnicodeRange4)};
 }
 
+#if defined(PDF_ENABLE_XFA) || BUILDFLAG(IS_ANDROID)
 std::optional<std::array<uint32_t, 2>> CFX_Face::GetOs2CodePageRange() {
   auto* os2 = static_cast<TT_OS2*>(FT_Get_Sfnt_Table(GetRec(), FT_SFNT_OS2));
   if (!os2) {
@@ -522,6 +523,7 @@ std::optional<std::array<uint32_t, 2>> CFX_Face::GetOs2CodePageRange() {
   return std::array<uint32_t, 2>{static_cast<uint32_t>(os2->ulCodePageRange1),
                                  static_cast<uint32_t>(os2->ulCodePageRange2)};
 }
+#endif  // defined(PDF_ENABLE_XFA) || BUILDFLAG(IS_ANDROID)
 
 std::optional<std::array<uint8_t, 2>> CFX_Face::GetOs2Panose() {
   auto* os2 = static_cast<TT_OS2*>(FT_Get_Sfnt_Table(GetRec(), FT_SFNT_OS2));
@@ -1034,7 +1036,8 @@ void CFX_Face::AdjustVariationParams(int glyph_index,
   FT_Set_MM_Design_Coordinates(rec, 2, coords);
 }
 
-CFX_Face::FontStyleInfo CFX_Face::GetFontStyleInfo() {
+#if defined(PDF_ENABLE_XFA) || BUILDFLAG(IS_ANDROID)
+uint32_t CFX_Face::GetFontStyle() {
   uint32_t style = 0;
   if (IsBold()) {
     style |= pdfium::kFontStyleForceBold;
@@ -1046,12 +1049,10 @@ CFX_Face::FontStyleInfo CFX_Face::GetFontStyleInfo() {
     style |= pdfium::kFontStyleFixedPitch;
   }
 
-  uint32_t os2_codepage_mask = 0;
   std::optional<std::array<uint32_t, 2>> code_page_range =
       GetOs2CodePageRange();
   if (code_page_range.has_value() && (code_page_range.value()[0] & (1 << 31))) {
     style |= pdfium::kFontStyleSymbolic;
-    os2_codepage_mask = code_page_range.value()[0];
   }
 
   std::optional<std::array<uint8_t, 2>> panose = GetOs2Panose();
@@ -1061,5 +1062,6 @@ CFX_Face::FontStyleInfo CFX_Face::GetFontStyleInfo() {
       style |= pdfium::kFontStyleSerif;
     }
   }
-  return {style, os2_codepage_mask};
+  return style;
 }
+#endif  // defined(PDF_ENABLE_XFA) || BUILDFLAG(IS_ANDROID)

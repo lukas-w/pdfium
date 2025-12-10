@@ -460,11 +460,6 @@ std::vector<WideString> GetNames(pdfium::span<const uint8_t> name_table) {
   return results;
 }
 
-uint32_t GetFlags(const RetainPtr<CFX_Face>& face) {
-  CFX_Face::FontStyleInfo fontinfo = face->GetFontStyleInfo();
-  return fontinfo.style;
-}
-
 RetainPtr<IFX_SeekableReadStream> CreateFontStream(CFX_FontMapper* font_mapper,
                                                    size_t index) {
   FixedSizeDataVector<uint8_t> buffer = font_mapper->RawBytesForIndex(index);
@@ -712,7 +707,7 @@ void CFGAS_FontMgr::RegisterFace(RetainPtr<CFX_Face> face,
   }
 
   auto font = std::make_unique<CFGAS_FontDescriptor>();
-  font->font_styles_ |= GetFlags(face);
+  font->font_styles_ |= face->GetFontStyle();
 
   std::optional<std::array<uint32_t, 4>> unicode_range =
       face->GetOs2UnicodeRange();
