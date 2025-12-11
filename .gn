@@ -46,6 +46,9 @@ default_args = {
 
   # PDFium must stay in C++20 for now.
   use_cxx23 = false
+
+  # Use Siso instead of Ninja.
+  use_siso = true
 }
 
 no_check_targets = [
