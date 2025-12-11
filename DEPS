@@ -127,7 +127,7 @@ vars = {
   # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling GN CIPD package version
   # and whatever else without interference from each other.
-  'gn_version': 'git_revision:07d3c6f4dc290fae5ca6152ebcb37d6815c411ab',
+  'gn_version': 'git_revision:4e0818fd86bffc0b4a4b61d3295a6732ba08d715',
   # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling goldctl CIPD package version
   # and whatever else without interference from each other.
@@ -213,7 +213,7 @@ vars = {
   # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling siso
   # and whatever else without interference from each other.
-  'siso_version': 'git_revision:0915813c4c786240e12d03aa3018c02bab4df14f',
+  'siso_version': 'git_revision:6839895535a2a5e91fb3ddfae03e95aded998244',
   # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling skia
   # and whatever else without interference from each other.
