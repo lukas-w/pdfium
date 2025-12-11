@@ -930,27 +930,30 @@ CFX_Face::CharMapId CFX_Face::GetCharMapIdByIndex(size_t index) const {
 }
 
 int CFX_Face::GetCharMapPlatformIdByIndex(size_t index) const {
-  CHECK_LT(index, GetCharMapCount());
-  // SAFETY: required from library as enforced by check above.
-  return UNSAFE_BUFFERS(GetRec()->charmaps[index]->platform_id);
+  return GetCharMaps()[index]->platform_id;
 }
 
 int CFX_Face::GetCharMapEncodingIdByIndex(size_t index) const {
-  CHECK_LT(index, GetCharMapCount());
-  // SAFETY: required from library as enforced by check above.
-  return UNSAFE_BUFFERS(GetRec()->charmaps[index]->encoding_id);
+  return GetCharMaps()[index]->encoding_id;
 }
 
 fxge::FontEncoding CFX_Face::GetCharMapEncodingByIndex(size_t index) const {
-  CHECK_LT(index, GetCharMapCount());
-  // SAFETY: required from library as enforced by check above.
-  return ToFontEncoding(UNSAFE_BUFFERS(GetRec()->charmaps[index]->encoding));
+  return ToFontEncoding(GetCharMaps()[index]->encoding);
 }
 
 size_t CFX_Face::GetCharMapCount() const {
   return GetRec()->charmaps
              ? pdfium::checked_cast<size_t>(GetRec()->num_charmaps)
              : 0;
+}
+
+pdfium::span<const FT_CharMap> CFX_Face::GetCharMaps() const {
+  size_t count = GetCharMapCount();
+  if (count == 0) {
+    return {};
+  }
+  // SAFETY: required from library to provide correct count.
+  return UNSAFE_BUFFERS({GetRec()->charmaps, count});
 }
 
 void CFX_Face::SetCharMap(CharMap map) {
@@ -997,7 +1000,7 @@ CFX_Face::~CFX_Face() = default;
 void CFX_Face::AdjustVariationParams(int glyph_index,
                                      int dest_width,
                                      int weight) {
-  DCHECK(dest_width >= 0);
+  DCHECK_GE(dest_width, 0);
 
   FXFT_FaceRec* rec = GetRec();
   ScopedFXFTMMVar variation_desc(rec);

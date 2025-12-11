@@ -168,6 +168,8 @@ private:
 
   void AdjustVariationParams(int glyph_index, int dest_width, int weight);
 
+  pdfium::span<const FT_CharMap> GetCharMaps() const;
+
 #if BUILDFLAG(IS_ANDROID) || defined(PDF_ENABLE_XFA)
   std::optional<std::array<uint8_t, 2>> GetOs2Panose();
 
