@@ -310,8 +310,8 @@ class TestRunner:
       # Clear out and create top level gold output directory before starting
       skia_gold.clear_gold_output_dir(self.options.gold_output_dir)
 
-    # TODO(crbug.com/461544934): Check timezone behavior on other platforms.
-    if common.os_name() == 'linux':
+    # TODO(crbug.com/461544934): Check timezone behavior on Windows.
+    if common.os_name() != 'win':
       os.environ['TZ'] = TEST_DEFAULT_TIMEZONE
 
     with multiprocessing.Pool(
