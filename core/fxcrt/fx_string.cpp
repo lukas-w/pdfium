@@ -100,9 +100,9 @@ IntType StringToIntImpl(StringViewType str) {
 }
 
 // Intended to work for the cases where `ReturnType` is float or double, and
-// `InputType` is ByteStringView or WideStringView.
-template <class ReturnType, class InputType>
-ReturnType StringToFloatImpl(InputType strc) {
+// `StringViewType` is ByteStringView or WideStringView.
+template <class ReturnType, class StringViewType>
+ReturnType StringToFloatImpl(StringViewType strc) {
   // Skip leading whitespaces.
   size_t start = 0;
   size_t len = strc.GetLength();
@@ -110,7 +110,7 @@ ReturnType StringToFloatImpl(InputType strc) {
     ++start;
   }
 
-  InputType sub_strc = strc.Substr(start, len - start);
+  StringViewType sub_strc = strc.Substr(start, len - start);
 
   ReturnType value;
   auto result =
