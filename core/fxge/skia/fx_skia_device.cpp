@@ -682,6 +682,19 @@ bool HasRSX(pdfium::span<const TextCharPos> char_pos,
   return oneAtATime ? false : useRSXform;
 }
 
+SkFont SkFontFromCFXFont(const CFX_Font* cfx_font,
+                         float font_size,
+                         const CFX_TextRenderOptions& options) {
+  SkFont font;
+  font.setEmbolden(cfx_font->IsSubstFontBold());
+  font.setHinting(SkFontHinting::kNone);
+  font.setSkewX(tanf(cfx_font->GetSubstFontItalicAngle() * FXSYS_PI / 180.0));
+  font.setSize(SkTAbs(font_size));
+  font.setSubpixel(true);
+  font.setEdging(GetFontEdgingType(options));
+  return font;
+}
+
 }  // namespace
 
 // static
@@ -810,14 +823,8 @@ bool CFX_SkiaDeviceDriver::DrawDeviceText(
   paint.setAntiAlias(true);
   paint.setColor(color);
 
-  SkFont font;
+  SkFont font = SkFontFromCFXFont(pFont, font_size, options);
   font.setTypeface(typeface);
-  font.setEmbolden(pFont->IsSubstFontBold());
-  font.setHinting(SkFontHinting::kNone);
-  font.setSize(SkTAbs(font_size));
-  font.setSubpixel(true);
-  font.setSkewX(tanf(pFont->GetSubstFontItalicAngle() * FXSYS_PI / 180.0));
-  font.setEdging(GetFontEdgingType(options));
 
   SkAutoCanvasRestore scoped_save_restore(canvas_, /*doSave=*/true);
   const float horizontal_flip = font_size < 0 ? -1.f : 1.f;
@@ -876,7 +883,7 @@ bool CFX_SkiaDeviceDriver::DrawDeviceText(
   return true;
 }
 
-// TODO(crbug.com/pdfium/1999): Merge with `DrawDeviceText()` and refactor
+// TODO(crbug.com/42271005): Merge with `DrawDeviceText()` and refactor
 // common logic.
 // TODO(crbug.com/pdfium/1774): Sometimes the thickness of the glyphs is not
 // ideal. Improve text rendering results regarding different font weight.
@@ -937,17 +944,11 @@ bool CFX_SkiaDeviceDriver::TryDrawText(pdfium::span<const TextCharPos> char_pos,
   skPaint.setAntiAlias(true);
   skPaint.setColor(color);
 
-  SkFont font;
+  SkFont font = SkFontFromCFXFont(pFont, font_size, options);
   if (pFont->HasFaceRec()) {  // exclude placeholder test fonts
     font.setTypeface(sk_ref_sp(pFont->GetDeviceCache()));
   }
-  font.setEmbolden(pFont->IsSubstFontBold());
-  font.setHinting(SkFontHinting::kNone);
   font.setScaleX(scaleX);
-  font.setSkewX(tanf(pFont->GetSubstFontItalicAngle() * FXSYS_PI / 180.0));
-  font.setSize(SkTAbs(font_size));
-  font.setSubpixel(true);
-  font.setEdging(GetFontEdgingType(options));
 
   SkAutoCanvasRestore scoped_save_restore(canvas_, /*doSave=*/true);
   canvas_->concat(ToFlippedSkMatrix(matrix, horizontal_flip));
