@@ -186,33 +186,12 @@ const CFX_GlyphBitmap* CFX_GlyphCache::LoadGlyphBitmap(
 #if BUILDFLAG(IS_APPLE)
   DCHECK(!CFX_DefaultRenderDevice::UseSkiaRenderer());
 
-  std::unique_ptr<CFX_GlyphBitmap> pGlyphBitmap;
   auto it = size_map_.find(FaceGlyphsKey);
   if (it != size_map_.end()) {
-    SizeGlyphCache* pSizeCache = &(it->second);
-    auto it2 = pSizeCache->find(glyph_index);
-    if (it2 != pSizeCache->end()) {
-      return it2->second.get();
-    }
-
-    pGlyphBitmap = RenderGlyph_Nativetext(font, glyph_index, matrix, dest_width,
-                                          anti_alias);
-    if (pGlyphBitmap) {
-      CFX_GlyphBitmap* pResult = pGlyphBitmap.get();
-      (*pSizeCache)[glyph_index] = std::move(pGlyphBitmap);
-      return pResult;
-    }
-  } else {
-    pGlyphBitmap = RenderGlyph_Nativetext(font, glyph_index, matrix, dest_width,
-                                          anti_alias);
-    if (pGlyphBitmap) {
-      CFX_GlyphBitmap* pResult = pGlyphBitmap.get();
-
-      SizeGlyphCache cache;
-      cache[glyph_index] = std::move(pGlyphBitmap);
-
-      size_map_[FaceGlyphsKey] = std::move(cache);
-      return pResult;
+    SizeGlyphCache& size_glyph_cache = it->second;
+    auto size_glyph_it = size_glyph_cache.find(glyph_index);
+    if (size_glyph_it != size_glyph_cache.end()) {
+      return size_glyph_it->second.get();
     }
   }
   UniqueKeyGen keygen2(font, matrix, dest_width, anti_alias,
