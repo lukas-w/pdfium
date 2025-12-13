@@ -322,6 +322,20 @@ FX_RECT ScaledFXRectFromFTPos(FT_Pos left,
   return FXRectFromFTPos(left * 1000 / x_scale, top * 1000 / y_scale,
                          right * 1000 / x_scale, bottom * 1000 / y_scale);
 }
+
+FT_Render_Mode FtRenderModeFromFontAntiAliasingMode(
+    FontAntiAliasingMode anti_alias) {
+  switch (anti_alias) {
+    case FontAntiAliasingMode::kNormal:
+      return FT_RENDER_MODE_NORMAL;
+    case FontAntiAliasingMode::kMono:
+      return FT_RENDER_MODE_MONO;
+    case FontAntiAliasingMode::kLcd:
+      return FT_RENDER_MODE_LCD;
+  }
+  NOTREACHED();
+}
+
 }  // namespace
 
 // static
@@ -620,7 +634,8 @@ std::unique_ptr<CFX_GlyphBitmap> CFX_Face::RenderGlyph(
   }
   FT_Library_SetLcdFilter(CFX_GEModule::Get()->GetFontMgr()->GetFTLibrary(),
                           FT_LCD_FILTER_DEFAULT);
-  error = FT_Render_Glyph(glyph, static_cast<FT_Render_Mode>(anti_alias));
+  error =
+      FT_Render_Glyph(glyph, FtRenderModeFromFontAntiAliasingMode(anti_alias));
   if (error) {
     return nullptr;
   }
