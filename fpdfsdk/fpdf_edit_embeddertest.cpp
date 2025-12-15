@@ -339,9 +339,9 @@ const char kExpectedPDF[] =
 TEST_F(FPDFEditEmbedderTest, EmbedNotoSansSCFont) {
   CreateEmptyDocument();
   ScopedFPDFPage page(FPDFPage_New(document(), 0, 400, 400));
-  std::string font_path;
-  ASSERT_TRUE(PathService::GetThirdPartyFilePath(
-      "NotoSansCJK/NotoSansSC-Regular.subset.otf", &font_path));
+  std::string font_path = PathService::GetThirdPartyFilePath(
+      "NotoSansCJK/NotoSansSC-Regular.subset.otf");
+  ASSERT_FALSE(font_path.empty());
 
   std::vector<uint8_t> font_data = GetFileContents(font_path.c_str());
   ASSERT_FALSE(font_data.empty());
@@ -374,9 +374,9 @@ TEST_F(FPDFEditEmbedderTest, EmbedNotoSansSCFont) {
 TEST_F(FPDFEditEmbedderTest, EmbedNotoSansSCFontWithCharcodes) {
   CreateEmptyDocument();
   ScopedFPDFPage page(FPDFPage_New(document(), 0, 400, 400));
-  std::string font_path;
-  ASSERT_TRUE(PathService::GetThirdPartyFilePath(
-      "NotoSansCJK/NotoSansSC-Regular.subset.otf", &font_path));
+  std::string font_path = PathService::GetThirdPartyFilePath(
+      "NotoSansCJK/NotoSansSC-Regular.subset.otf");
+  ASSERT_FALSE(font_path.empty());
 
   std::vector<uint8_t> font_data = GetFileContents(font_path.c_str());
   ASSERT_FALSE(font_data.empty());
@@ -3801,9 +3801,9 @@ TEST_F(FPDFEditEmbedderTest, LoadCidType2FontCustom) {
   // of the font data is provided by the caller, instead of being generated.
   CreateEmptyDocument();
   ScopedFPDFPage page(FPDFPage_New(document(), 0, 400, 400));
-  std::string font_path;
-  ASSERT_TRUE(PathService::GetThirdPartyFilePath(
-      "NotoSansCJK/NotoSansSC-Regular.subset.otf", &font_path));
+  std::string font_path = PathService::GetThirdPartyFilePath(
+      "NotoSansCJK/NotoSansSC-Regular.subset.otf");
+  ASSERT_FALSE(font_path.empty());
 
   std::vector<uint8_t> font_data = GetFileContents(font_path.c_str());
   ASSERT_FALSE(font_data.empty());
@@ -3870,9 +3870,9 @@ end
 
 TEST_F(FPDFEditEmbedderTest, LoadCidType2FontCustomGeneratedWidths) {
   CreateEmptyDocument();
-  std::string font_path;
-  ASSERT_TRUE(PathService::GetThirdPartyFilePath(
-      "NotoSansCJK/NotoSansSC-Regular.subset.otf", &font_path));
+  std::string font_path = PathService::GetThirdPartyFilePath(
+      "NotoSansCJK/NotoSansSC-Regular.subset.otf");
+  ASSERT_FALSE(font_path.empty());
 
   std::vector<uint8_t> font_data = GetFileContents(font_path.c_str());
   ASSERT_FALSE(font_data.empty());

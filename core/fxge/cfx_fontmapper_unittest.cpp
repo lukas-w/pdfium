@@ -225,9 +225,9 @@ TEST_F(CFXFontMapperSystemFontInfoTest, GetCachedFaceFailToGetData) {
 }
 
 TEST_F(CFXFontMapperSystemFontInfoTest, SetSubstFontNameWhenGetFaceNameFails) {
-  std::string font_path;
-  ASSERT_TRUE(PathService::GetThirdPartyFilePath(
-      "NotoSansCJK/NotoSansSC-Regular.subset.otf", &font_path));
+  std::string font_path = PathService::GetThirdPartyFilePath(
+      "NotoSansCJK/NotoSansSC-Regular.subset.otf");
+  ASSERT_FALSE(font_path.empty());
   const std::vector<uint8_t> font_data = GetFileContents(font_path.c_str());
   ASSERT_FALSE(font_data.empty());
 
