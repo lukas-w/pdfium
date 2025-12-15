@@ -773,11 +773,10 @@ void EmbedderTest::VerifySavedRendering(FPDF_PAGE page,
 }
 
 void EmbedderTest::VerifySavedDocument(int width, int height, const char* md5) {
-  ASSERT_TRUE(OpenSavedDocument());
-  FPDF_PAGE page = LoadSavedPage(0);
-  VerifySavedRendering(page, width, height, md5);
-  CloseSavedPage(page);
-  CloseSavedDocument();
+  ScopedSavedDoc saved_doc = OpenScopedSavedDocument();
+  ASSERT_TRUE(saved_doc);
+  ScopedSavedPage page = LoadScopedSavedPage(0);
+  VerifySavedRendering(page.get(), width, height, md5);
 }
 
 void EmbedderTest::SetWholeFileAvailable() {
