@@ -2180,13 +2180,18 @@ TEST_F(FPDFViewEmbedderTest, RenderTransparencyOnWhiteBackground) {
   EXPECT_EQ(kWidth, static_cast<int>(FPDF_GetPageWidthF(page.get())));
   EXPECT_EQ(kHeight, static_cast<int>(FPDF_GetPageHeightF(page.get())));
   EXPECT_TRUE(FPDFPage_HasTransparency(page.get()));
+
+  // PDFium does not render pages with transparencies correctly if it is
+  // painting into a bitmap that is all white. Thus the output is expected to
+  // be blank. Whereas painting into a transparent bitmap works correctly. If
+  // the background needs to be white, the embedder can separately composite
+  // the transparent bitmap onto an all white bitmap.
   ScopedFPDFBitmap bitmap(FPDFBitmap_Create(kWidth, kHeight, /*alpha=*/true));
   ASSERT_TRUE(
       FPDFBitmap_FillRect(bitmap.get(), 0, 0, kWidth, kHeight, 0xFFFFFFFF));
   FPDF_RenderPageBitmap(bitmap.get(), page.get(), /*start_x=*/0,
                         /*start_y=*/0, kWidth, kHeight, /*rotate=*/0,
                         /*flags=*/0);
-  // TODO(crbug.com/1302355): This page should not render blank.
   EXPECT_EQ(pdfium::kBlankPage200By200Checksum, HashBitmap(bitmap.get()));
 }
 
