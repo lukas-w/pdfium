@@ -41,6 +41,7 @@
 #include "core/fxcrt/span.h"
 #include "core/fxcrt/span_util.h"
 #include "core/fxcrt/stl_util.h"
+#include "core/fxcrt/unowned_ptr.h"
 #include "fpdfsdk/cpdfsdk_helpers.h"
 #include "public/fpdf_formfill.h"
 
@@ -168,7 +169,7 @@ RetainPtr<const CPDF_Object> GetParamObject(void* out_value,
 
 struct ParamsAndObject {
   RetainPtr<CPDF_Dictionary> params;
-  raw_ptr<CPDF_PageObject> page_obj;
+  UnownedPtr<CPDF_PageObject> page_obj;
 };
 
 ParamsAndObject SetParamValueHelper(FPDF_DOCUMENT document,
