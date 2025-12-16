@@ -76,11 +76,13 @@ class TRIVIAL_ABI GSL_POINTER UnownedPtr {
  public:
   constexpr UnownedPtr() noexcept = default;
 
-  // Deliberately implicit to allow returning nullptrs.
+  // Deliberately implicit to allow initialzing with nullptrs.
   // NOLINTNEXTLINE(runtime/explicit)
   constexpr UnownedPtr(std::nullptr_t ptr) {}
 
-  explicit constexpr UnownedPtr(T* pObj) noexcept : obj_(pObj) {}
+  // Deliberately implicit to allow initialzing with raw pointers.
+  // NOLINTNEXTLINE(runtime/explicit)
+  constexpr UnownedPtr(T* pObj) noexcept : obj_(pObj) {}
 
   // Copy-construct an UnownedPtr.
   // Required in addition to copy conversion constructor below.
