@@ -109,6 +109,9 @@ def get_properties_by_name(name):
     if name.find("skia") != -1:
         properties.update({"skia": True})
 
+    if name.find("no_partition_alloc") != -1:
+        properties.update({"partition_alloc": False})
+
     renderers = []
     if "gdi" in name:
         renderers.append("gdi")
@@ -486,6 +489,7 @@ add_entries_for_builder(name = "android_no_v8_32", category = "no v8", short_nam
 add_entries_for_builder(name = "linux", category = "main|linux", swarm_tests = True)
 add_entries_for_builder(name = "linux_asan_lsan", category = "main|linux", short_name = "asan", swarm_tests = True)
 add_entries_for_builder(name = "linux_msan", category = "main|linux", short_name = "msan", swarm_tests = True)
+add_entries_for_builder(name = "linux_no_partition_alloc", category = "main|linux", swarm_tests = True)
 add_entries_for_builder(name = "linux_no_v8", category = "no v8", short_name = "linux", swarm_tests = True)
 add_entries_for_builder(name = "linux_skia", category = "skia|linux", swarm_tests = True)
 add_entries_for_builder(name = "linux_skia_asan_lsan", category = "skia|linux", short_name = "asan", swarm_tests = True)
@@ -499,10 +503,11 @@ add_entries_for_builder(name = "linux_xfa_component", category = "xfa|linux", sh
 add_entries_for_builder(name = "linux_xfa_msan", category = "xfa|linux", short_name = "msan", swarm_tests = True)
 add_entries_for_builder(name = "linux_xfa_rel", category = "xfa|linux", short_name = "rel", swarm_tests = True)
 add_entries_for_builder(name = "linux_xfa_skia", category = "skia|linux", short_name = "xfa", swarm_tests = True)
-add_entries_for_builder(name = "linux_xfa_skia_cxx23", category = "skia|linux", short_name = "cxx23", swarm_tests = True)
 add_entries_for_builder(name = "linux_xfa_skia_asan_lsan", category = "skia|linux", short_name = "asan", swarm_tests = True)
 add_entries_for_builder(name = "linux_xfa_skia_component", category = "skia|linux", short_name = "comp", swarm_tests = True)
+add_entries_for_builder(name = "linux_xfa_skia_cxx23", category = "skia|linux", short_name = "cxx23", swarm_tests = True)
 add_entries_for_builder(name = "linux_xfa_skia_msan", category = "skia|linux", short_name = "msan", swarm_tests = True)
+add_entries_for_builder(name = "linux_xfa_skia_no_partition_alloc", category = "skia|linux", swarm_tests = True)
 add_entries_for_builder(name = "linux_xfa_skia_ubsan", category = "skia|linux", short_name = "ubsan", swarm_tests = True)
 add_entries_for_builder(name = "linux_xfa_ubsan", category = "xfa|linux", short_name = "ubsan", swarm_tests = True)
 add_entries_for_builder(name = "mac", category = "main|mac", swarm_tests = True)
