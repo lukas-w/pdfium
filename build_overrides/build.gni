@@ -21,11 +21,6 @@ enable_safe_libcxx = true
 # enable its own hardening checks.
 enable_safe_libstdcxx = true
 
-# Whether to use the neon FPU instruction set or not.
-if (current_cpu == "arm") {
-  arm_use_neon = true
-}
-
 # PDFium just uses the Chromium suppression files for now.
 asan_suppressions_file = "//build/sanitizers/asan_suppressions.cc"
 lsan_suppressions_file = "//build/sanitizers/lsan_suppressions.cc"
