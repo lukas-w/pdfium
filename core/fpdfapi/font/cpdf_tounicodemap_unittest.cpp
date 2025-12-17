@@ -318,7 +318,7 @@ TEST(CPDFToUnicodeMapTest, HandleBeginBFRangeGoodCount) {
   EXPECT_EQ(0u, map.GetUnicodeCountByCharcodeForTesting(6u));
 }
 
-TEST(CPDFToUnicodeMapTest, InsertIntoMultimap) {
+TEST(CPDFToUnicodeMapTest, InsertIntoMaps) {
   {
     // Both the CIDs and the unicodes are different.
     static constexpr uint8_t kInput1[] =
@@ -342,7 +342,7 @@ TEST(CPDFToUnicodeMapTest, InsertIntoMultimap) {
   }
   {
     // Duplicate mappings of CID 0 to unicode "A". There should be only 1 entry
-    // in `multimap_`.
+    // in `reverse_map_`.
     static constexpr uint8_t kInput3[] =
         "1 beginbfrange<0><0>[<0041>]endbfrange\n"
         "1 beginbfchar<0><0041>endbfchar";
