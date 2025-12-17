@@ -159,10 +159,7 @@ source_set("unit_test_support") {
         "fxgc_unittest.cpp",
         "fxgc_unittest.h",
       ]
-      deps += [
-        "../fxjs:gc",
-        "//testing/gtest",
-      ]
+      deps += [ "../fxjs:gc" ]
     }
   }
 }
@@ -271,10 +268,10 @@ executable("pdfium_test") {
   # test program does not set a good example, and depends on PDFium internals,
   # as well as test support code, for convenience.
   deps = [
+    ":test_support",
     "../:pdfium_public_headers",
     "../fpdfsdk",
-    "../testing:test_support",
-    "../testing/image_diff",
+    "image_diff",
     "//build/win:default_exe_manifest",
   ]
   configs += [
