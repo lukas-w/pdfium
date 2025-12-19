@@ -29,6 +29,17 @@ vars = {
   # TODO(crbug.com/875037): Remove this once the bug in gclient is fixed.
   'checkout_android': False,
 
+  # Fetch the prebuilt binaries for llvm-cov and llvm-profdata. Needed to
+  # process the raw profiles produced by instrumented targets (built with
+  # the gn arg 'use_clang_coverage').
+  'checkout_clang_coverage_tools': 'False',
+
+  # Fetch clang-tidy into the same bin/ directory as the clang binary.
+  'checkout_clang_tidy': 'False',
+
+  # Fetch clangd into the same bin/ directory as the clang binary.
+  'checkout_clangd': 'False',
+
   # Pull in Android native toolchain dependencies, so we can build ARC++
   # support libraries.
   'checkout_android_native_support': 'checkout_android',
@@ -433,11 +444,33 @@ deps = {
     'bucket': 'chromium-browser-clang',
     'objects': [
       {
+        # The Android libclang_rt.builtins libraries are currently only included in the Linux clang package.
         'object_name': 'Linux_x64/clang-llvmorg-22-init-14273-gea10026b-4.tar.xz',
         'sha256sum': 'ffe73a5c64fceaf874b745a6c9ba2260652e588afad77671abfce0af1eb850f7',
         'size_bytes': 56865780,
         'generation': 1764962592646125,
         'condition': '(host_os == "linux" or checkout_android) and non_git_source',
+      },
+      {
+        'object_name': 'Linux_x64/clang-tidy-llvmorg-22-init-14273-gea10026b-4.tar.xz',
+        'sha256sum': '0be7a772f06c471336507ba75216231c77881d68d4398f3b22080803ec9b0e54',
+        'size_bytes': 14258320,
+        'generation': 1764962592633111,
+        'condition': 'host_os == "linux" and checkout_clang_tidy and non_git_source',
+      },
+      {
+        'object_name': 'Linux_x64/clangd-llvmorg-22-init-14273-gea10026b-4.tar.xz',
+        'sha256sum': '63c3889a59d445ab45938e44f396ecdb9e70b145c94d4ae4a6933185ded2ee56',
+        'size_bytes': 14457076,
+        'generation': 1764962592642080,
+        'condition': 'host_os == "linux" and checkout_clangd and non_git_source',
+      },
+      {
+        'object_name': 'Linux_x64/llvm-code-coverage-llvmorg-22-init-14273-gea10026b-4.tar.xz',
+        'sha256sum': '19a86d0aa44228f18d093b65a9a5659c21c6a3291f01d9ff493d143a97f3d047',
+        'size_bytes': 2307300,
+        'generation': 1764962592666228,
+        'condition': 'host_os == "linux" and checkout_clang_coverage_tools and non_git_source',
       },
       {
         'object_name': 'Linux_x64/llvmobjdump-llvmorg-22-init-14273-gea10026b-4.tar.xz',
@@ -461,6 +494,27 @@ deps = {
         'condition': 'checkout_mac and not host_os == "mac"',
       },
       {
+        'object_name': 'Mac/clang-tidy-llvmorg-22-init-14273-gea10026b-4.tar.xz',
+        'sha256sum': 'bc8a1d47d9c2a045ec7a541aec093f89733c89dc966e88190dca3c7d6845988c',
+        'size_bytes': 14290476,
+        'generation': 1764962594557521,
+        'condition': 'host_os == "mac" and host_cpu == "x64" and checkout_clang_tidy',
+      },
+      {
+        'object_name': 'Mac/clangd-llvmorg-22-init-14273-gea10026b-4.tar.xz',
+        'sha256sum': '666d1b70ba0886ccd7b13dab7c261d69d39a3f1089e2dd3e75910e6f7cda57e4',
+        'size_bytes': 15829000,
+        'generation': 1764962594553029,
+        'condition': 'host_os == "mac" and host_cpu == "x64" and checkout_clangd',
+      },
+      {
+        'object_name': 'Mac/llvm-code-coverage-llvmorg-22-init-14273-gea10026b-4.tar.xz',
+        'sha256sum': 'aab3775b65b61d8ebc184c3c6176a473daa651a139a541afcd671a00ecb036a1',
+        'size_bytes': 2333980,
+        'generation': 1764962594619380,
+        'condition': 'host_os == "mac" and host_cpu == "x64" and checkout_clang_coverage_tools',
+      },
+      {
         'object_name': 'Mac/llvmobjdump-llvmorg-22-init-14273-gea10026b-4.tar.xz',
         'sha256sum': 'a59b86631da0805fac5e3626bd0e768c7846dcf397d0f5770a8986e547b27279',
         'size_bytes': 5595800,
@@ -473,6 +527,27 @@ deps = {
         'size_bytes': 45145120,
         'generation': 1764962603414549,
         'condition': 'host_os == "mac" and host_cpu == "arm64"',
+      },
+      {
+        'object_name': 'Mac_arm64/clang-tidy-llvmorg-22-init-14273-gea10026b-4.tar.xz',
+        'sha256sum': 'ab9cac9e5389189573866600b711651854faa991f2e34ebc668d60f59c71ad51',
+        'size_bytes': 12301016,
+        'generation': 1764962603424117,
+        'condition': 'host_os == "mac" and host_cpu == "arm64" and checkout_clang_tidy',
+      },
+      {
+        'object_name': 'Mac_arm64/clangd-llvmorg-22-init-14273-gea10026b-4.tar.xz',
+        'sha256sum': '6f5331d693b52cab33f3a31ffa44a63ea2c54ac54f63c4692c77bac0017500b5',
+        'size_bytes': 12677224,
+        'generation': 1764962603434816,
+        'condition': 'host_os == "mac" and host_cpu == "arm64" and checkout_clangd',
+      },
+      {
+        'object_name': 'Mac_arm64/llvm-code-coverage-llvmorg-22-init-14273-gea10026b-4.tar.xz',
+        'sha256sum': '32308ad2726adee7d09a48cb6b63cbfd1daeb806ddd69e09edd7ca1a59276e7f',
+        'size_bytes': 1966796,
+        'generation': 1764962603518750,
+        'condition': 'host_os == "mac" and host_cpu == "arm64" and checkout_clang_coverage_tools',
       },
       {
         'object_name': 'Mac_arm64/llvmobjdump-llvmorg-22-init-14273-gea10026b-4.tar.xz',
@@ -489,11 +564,32 @@ deps = {
         'condition': 'host_os == "win"',
       },
       {
+        'object_name': 'Win/clang-tidy-llvmorg-22-init-14273-gea10026b-4.tar.xz',
+        'sha256sum': '0436f87e5ffe8eda9d5fee2e44cb3b8202c72b793322990b923c0b52a193b294',
+        'size_bytes': 14222580,
+        'generation': 1764962612641484,
+        'condition': 'host_os == "win" and checkout_clang_tidy',
+      },
+      {
         'object_name': 'Win/clang-win-runtime-library-llvmorg-22-init-14273-gea10026b-4.tar.xz',
         'sha256sum': 'ee53a11a2448b9b2109cc2b7f7b809f0f39cc958c20b91a8d56e78ea0ad7f627',
         'size_bytes': 2522476,
         'generation': 1764962619734488,
         'condition': 'checkout_win and not host_os == "win"',
+      },
+      {
+        'object_name': 'Win/clangd-llvmorg-22-init-14273-gea10026b-4.tar.xz',
+        'sha256sum': '0b1035753aa723161e532d28a17f52ed81fd91228f6af6558704dab077caa788',
+        'size_bytes': 14636832,
+        'generation': 1764962612641080,
+       'condition': 'host_os == "win" and checkout_clangd',
+      },
+      {
+        'object_name': 'Win/llvm-code-coverage-llvmorg-22-init-14273-gea10026b-4.tar.xz',
+        'sha256sum': '1edfcb9237100398a85c049d003b2812f681a2c97c6b6486f08008e2c9b13825',
+        'size_bytes': 2385744,
+        'generation': 1764962612687234,
+        'condition': 'host_os == "win" and checkout_clang_coverage_tools',
       },
       {
         'object_name': 'Win/llvmobjdump-llvmorg-22-init-14273-gea10026b-4.tar.xz',
