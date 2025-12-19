@@ -301,16 +301,11 @@ ByteStringView CPDF_ToUnicodeMap::HandleBeginBFRange(
 
     WideString destcode = StringToWideString(start);
     if (destcode.GetLength() == 1) {
-      std::optional<uint32_t> value_or_error = StringToCode(start);
-      if (!value_or_error.has_value()) {
-        is_valid = false;
-        continue;
-      }
-
-      ranges.push_back(
-          MultimapSingleDestRange{.low_code = lowcode,
-                                  .high_code = highcode,
-                                  .start_value = value_or_error.value()});
+      uint32_t start_value = pdfium::checked_cast<uint32_t>(destcode[0]);
+      CHECK_LE(start_value, 0xffff);
+      ranges.push_back(MultimapSingleDestRange{.low_code = lowcode,
+                                               .high_code = highcode,
+                                               .start_value = start_value});
     } else {
       MultimapMultiDestRange range;
       range.low_code = lowcode;
