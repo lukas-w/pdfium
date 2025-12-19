@@ -153,7 +153,7 @@ class CFX_Face final : public Retainable, public Observable {
 
   bool HasFaceRec() const { return !!GetRec(); }
 
-private:
+ private:
   friend class ScopedFontTransform;
 
   CFX_Face(FXFT_FaceRec* pRec, RetainPtr<Retainable> pDesc);

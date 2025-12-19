@@ -91,9 +91,7 @@ ProgressiveDecoder::ProgressiveDecoder() = default;
 ProgressiveDecoder::~ProgressiveDecoder() = default;
 
 #ifdef PDF_ENABLE_XFA_PNG
-bool ProgressiveDecoder::PngReadHeader(int width,
-                                       int height,
-                                       double* gamma) {
+bool ProgressiveDecoder::PngReadHeader(int width, int height, double* gamma) {
   if (!device_bitmap_) {
     got_png_metadata_ = true;
     src_width_ = width;

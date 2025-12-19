@@ -59,7 +59,8 @@ TEST(CPDFToUnicodeMapTest, StringToWideString) {
   EXPECT_EQ(res, CPDF_ToUnicodeMap::StringToWideString("<c2ab FaAb>"));
   EXPECT_EQ(res, CPDF_ToUnicodeMap::StringToWideString("<c2ab FaAb12>"));
   EXPECT_EQ(res, CPDF_ToUnicodeMap::StringToWideString("<c2ab FaAb 12>"));
-  EXPECT_EQ(res, CPDF_ToUnicodeMap::StringToWideString("< c 2 a b  F a A b  1 2 >"));
+  EXPECT_EQ(res,
+            CPDF_ToUnicodeMap::StringToWideString("< c 2 a b  F a A b  1 2 >"));
 }
 
 TEST(CPDFToUnicodeMapTest, HandleBeginBFCharBadCount) {
