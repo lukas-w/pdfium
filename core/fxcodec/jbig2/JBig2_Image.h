@@ -46,6 +46,9 @@ class CJBig2_Image {
   bool has_data() const { return static_cast<bool>(data_); }
   uint8_t* data() const { return data_.Get(); }
 
+  // Callers must check has_data() first.
+  pdfium::span<uint8_t> span();
+
   int GetPixel(int32_t x, int32_t y) const;
   void SetPixel(int32_t x, int32_t y, int v);
 

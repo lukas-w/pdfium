@@ -104,6 +104,14 @@ bool CJBig2_Image::IsValidImageSize(int32_t w, int32_t h) {
   return w > 0 && w <= kJBig2MaxImageSize && h > 0 && h <= kJBig2MaxImageSize;
 }
 
+pdfium::span<uint8_t> CJBig2_Image::span() {
+  // SAFETY: If `data_` is owned, then `this` must have allocate the right
+  // amount. If `data_` is not owned, then safety requires correctness from the
+  // caller that constructed `this`. Also requires caller to check has_data()
+  // returns true.
+  return UNSAFE_BUFFERS(pdfium::span(data(), Fx2DSizeOrDie(stride_, height_)));
+}
+
 int CJBig2_Image::GetPixel(int32_t x, int32_t y) const {
   if (!has_data()) {
     return 0;
