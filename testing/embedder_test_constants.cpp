@@ -26,8 +26,6 @@ const char* AnnotationStampWithApChecksum() {
 #endif
 }
 
-const char kBlankPage200By200Checksum[] = "eee4600ac08b458ac7ac2320e225674c";
-
 const char kBlankPage612By792Checksum[] = "1940568c9ba33bac5d0b1ee9558c76b3";
 
 const char* Bug890322Checksum() {
@@ -35,23 +33,6 @@ const char* Bug890322Checksum() {
     return "793689536cf64fe792c2f241888c0cf3";
   }
   return "6c674642154408e877d88c6c082d67e9";
-}
-
-const char* HelloWorldChecksum() {
-  if (CFX_DefaultRenderDevice::UseSkiaRenderer()) {
-#if BUILDFLAG(IS_WIN)
-    return "6023c7d8b7258cc686a1d1dbd0f4d6d0";
-#elif BUILDFLAG(IS_APPLE)
-    return "b110924c4af6e87232249ea2a564f0e4";
-#else
-    return "d1decde2de1c07b5274cc8cb44f92427";
-#endif
-  }
-#if BUILDFLAG(IS_APPLE)
-  return "6eef7237f7591f07616e238422086737";
-#else
-  return "c1c548442e0e0f949c5550d89bf8ae3b";
-#endif
 }
 
 const char* HelloWorldRemovedChecksum() {

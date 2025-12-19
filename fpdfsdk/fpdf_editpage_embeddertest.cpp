@@ -583,7 +583,6 @@ TEST_F(FPDFEditPageEmbedderTest, PageObjectActiveState) {
 
 TEST_F(FPDFEditPageEmbedderTest, Bug378120423) {
   const char kChecksum[] = "b53fb03e2bc41ef18d4ba61f0f681365";
-  const char kBlankChecksum[] = "eee4600ac08b458ac7ac2320e225674c";
 
   ASSERT_TRUE(OpenDocument("bug_378120423.pdf"));
   ScopedPage page = LoadScopedPage(0);
@@ -604,7 +603,7 @@ TEST_F(FPDFEditPageEmbedderTest, Bug378120423) {
   EXPECT_TRUE(FPDFPage_GenerateContent(page.get()));
   {
     ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-    CompareBitmap(bitmap.get(), page_width, page_height, kBlankChecksum);
+    CompareBitmapToPng(bitmap.get(), pdfium::kBlankPage200x200Png);
     // `page_obj` can still be found. It is just deactivated.
     EXPECT_EQ(1, FPDFPage_CountObjects(page.get()));
   }
@@ -617,7 +616,7 @@ TEST_F(FPDFEditPageEmbedderTest, Bug378120423) {
     ASSERT_TRUE(saved_page);
 
     ScopedFPDFBitmap bitmap = RenderSavedPage(saved_page);
-    CompareBitmap(bitmap.get(), page_width, page_height, kBlankChecksum);
+    CompareBitmapToPng(bitmap.get(), pdfium::kBlankPage200x200Png);
     // `page_obj` did not get written out to the saved PDF.
     EXPECT_EQ(0, FPDFPage_CountObjects(saved_page));
 

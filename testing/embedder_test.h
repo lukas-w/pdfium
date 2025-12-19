@@ -11,6 +11,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "build/build_config.h"
@@ -304,7 +305,30 @@ class EmbedderTest : public ::testing::Test,
   // Write `bitmap` as a PNG to `filename`.
   static void WriteBitmapToPng(FPDF_BITMAP bitmap, const std::string& filename);
 
+  // Check `bitmap` matches `expectation_png_name`, where `expectation_png_name`
+  // is the name of testing/resources/embedder_tests/expectation_png_name.png.
+  static void CompareBitmapToPng(FPDF_BITMAP bitmap,
+                                 std::string_view expectation_png_name);
+
+  // Like CompareBitmap(), except instead of just adding ".png" to
+  // `expectation_png_name`, this method will look for the expectation PNG using
+  // several suffixes in order: "_$renderer_$os.png", "_$renderer.png",
+  // "_$os.png".
+  //
+  // For example, with "hello_world", using Skia on Windows, the list of
+  // expectation PNGs are:
+  // - hello_world_skia_win.png
+  // - hello_world_skia.png
+  // - hello_world_win.png
+  // - hello_world.png
+  //
+  // This is similar to the behavior in testing/tools/pngdiffer.py.
+  static void CompareBitmapToPngWithExpectationSuffix(
+      FPDF_BITMAP bitmap,
+      std::string_view expectation_png_name);
+
   // Check `bitmap` to make sure it has the right dimensions and content.
+  // TODO(crbug.com/468228360): Switch to the CompareBitmap() overload above.
   static void CompareBitmap(FPDF_BITMAP bitmap,
                             int expected_width,
                             int expected_height,
@@ -327,10 +351,20 @@ class EmbedderTest : public ::testing::Test,
   FPDF_PAGE LoadSavedPage(int page_index);
   void CloseSavedPage(FPDF_PAGE page);
 
+  // See comments for CompareBitmap(), CompareBitmapToPng(), and
+  // CompareBitmapToPngWithExpectationSuffix() above.
+  void VerifySavedRenderingToPng(FPDF_PAGE page,
+                                 std::string_view expectation_png_name);
+  void VerifySavedRenderingToPngWithExpectationSuffix(
+      FPDF_PAGE page,
+      std::string_view expectation_png_name);
   void VerifySavedRendering(FPDF_PAGE page,
                             int width,
                             int height,
                             const char* md5);
+  void VerifySavedDocumentToPng(std::string_view expectation_png_name);
+  void VerifySavedDocumentToPngWithExpectationSuffix(
+      std::string_view expectation_png_name);
   void VerifySavedDocument(int width, int height, const char* md5);
 
   void SetWholeFileAvailable();
@@ -361,6 +395,9 @@ class EmbedderTest : public ::testing::Test,
 
   void UnloadPageCommon(FPDF_PAGE page, bool do_events);
   FPDF_PAGE LoadPageCommon(int page_index, bool do_events);
+
+  ScopedFPDFBitmap VerifySavedRenderingCommon(FPDF_PAGE page);
+  ScopedFPDFBitmap VerifySavedDocumentCommon();
 
   std::unique_ptr<Delegate> default_delegate_;
   Delegate* delegate_;

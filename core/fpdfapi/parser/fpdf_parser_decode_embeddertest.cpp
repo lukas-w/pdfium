@@ -40,6 +40,5 @@ TEST_F(FPDFParserDecodeEmbedderTest, Bug455199) {
   ScopedPage page = LoadScopedPage(0);
   ASSERT_TRUE(page);
   ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-
-  CompareBitmap(bitmap.get(), 200, 200, pdfium::HelloWorldChecksum());
+  CompareBitmapToPngWithExpectationSuffix(bitmap.get(), pdfium::kHelloWorldPng);
 }

@@ -608,7 +608,7 @@ TEST_F(FPDFPPOEmbedderTest, ImportWithZeroLengthStream) {
   ASSERT_TRUE(page);
 
   ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-  CompareBitmap(bitmap.get(), 200, 200, pdfium::HelloWorldChecksum());
+  CompareBitmapToPngWithExpectationSuffix(bitmap.get(), pdfium::kHelloWorldPng);
 
   ScopedFPDFDocument new_doc(FPDF_CreateNewDocument());
   ASSERT_TRUE(new_doc);
@@ -621,7 +621,8 @@ TEST_F(FPDFPPOEmbedderTest, ImportWithZeroLengthStream) {
   ScopedFPDFPage new_page(FPDF_LoadPage(new_doc.get(), 0));
   ASSERT_TRUE(new_page);
   ScopedFPDFBitmap new_bitmap = RenderPage(new_page.get());
-  CompareBitmap(new_bitmap.get(), 200, 200, pdfium::HelloWorldChecksum());
+  CompareBitmapToPngWithExpectationSuffix(new_bitmap.get(),
+                                          pdfium::kHelloWorldPng);
 }
 
 TEST_F(FPDFPPOEmbedderTest, ImportIntoDestDocWithoutInfo) {

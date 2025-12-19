@@ -172,16 +172,22 @@ class FPDFViewEmbedderTest : public EmbedderTest {
     CompareBitmap(bitmap.get(), bitmap_width, bitmap_height, expected_checksum);
   }
 
+  void TestRenderPageBitmapWithFlagsToPng(
+      FPDF_PAGE page,
+      int flags,
+      std::string_view expectation_png_name) {
+    ScopedFPDFBitmap bitmap = TestRenderPageBitmapWithFlagsImpl(page, flags);
+    ASSERT_TRUE(bitmap);
+    CompareBitmapToPngWithExpectationSuffix(bitmap.get(), expectation_png_name);
+  }
+
   void TestRenderPageBitmapWithFlags(FPDF_PAGE page,
                                      int flags,
                                      const char* expected_checksum) {
     int bitmap_width = static_cast<int>(FPDF_GetPageWidth(page));
     int bitmap_height = static_cast<int>(FPDF_GetPageHeight(page));
-    ScopedFPDFBitmap bitmap(FPDFBitmap_Create(bitmap_width, bitmap_height, 0));
-    ASSERT_TRUE(FPDFBitmap_FillRect(bitmap.get(), 0, 0, bitmap_width,
-                                    bitmap_height, 0xFFFFFFFF));
-    FPDF_RenderPageBitmap(bitmap.get(), page, 0, 0, bitmap_width, bitmap_height,
-                          0, flags);
+    ScopedFPDFBitmap bitmap = TestRenderPageBitmapWithFlagsImpl(page, flags);
+    ASSERT_TRUE(bitmap);
     CompareBitmap(bitmap.get(), bitmap_width, bitmap_height, expected_checksum);
   }
 
@@ -251,6 +257,20 @@ class FPDFViewEmbedderTest : public EmbedderTest {
 #endif  // defined(PDF_USE_SKIA)
 
  private:
+  ScopedFPDFBitmap TestRenderPageBitmapWithFlagsImpl(FPDF_PAGE page,
+                                                     int flags) {
+    int bitmap_width = static_cast<int>(FPDF_GetPageWidth(page));
+    int bitmap_height = static_cast<int>(FPDF_GetPageHeight(page));
+    ScopedFPDFBitmap bitmap(FPDFBitmap_Create(bitmap_width, bitmap_height, 0));
+    if (!FPDFBitmap_FillRect(bitmap.get(), 0, 0, bitmap_width, bitmap_height,
+                             0xFFFFFFFF)) {
+      return nullptr;
+    }
+    FPDF_RenderPageBitmap(bitmap.get(), page, 0, 0, bitmap_width, bitmap_height,
+                          0, flags);
+    return bitmap;
+  }
+
   void TestRenderPageBitmapWithExternalMemoryImpl(
       FPDF_PAGE page,
       int format,
@@ -1687,21 +1707,20 @@ TEST_F(FPDFViewEmbedderTest, RenderHelloWorldWithFlags) {
   ScopedPage page = LoadScopedPage(0);
   ASSERT_TRUE(page);
 
-  using pdfium::HelloWorldChecksum;
-  TestRenderPageBitmapWithFlags(page.get(), 0, HelloWorldChecksum());
-  TestRenderPageBitmapWithFlags(page.get(), FPDF_ANNOT, HelloWorldChecksum());
-  TestRenderPageBitmapWithFlags(page.get(), FPDF_GRAYSCALE,
-                                HelloWorldChecksum());
-  TestRenderPageBitmapWithFlags(page.get(), FPDF_RENDER_LIMITEDIMAGECACHE,
-                                HelloWorldChecksum());
-  TestRenderPageBitmapWithFlags(page.get(), FPDF_RENDER_FORCEHALFTONE,
-                                HelloWorldChecksum());
-  TestRenderPageBitmapWithFlags(page.get(), FPDF_PRINTING,
-                                HelloWorldChecksum());
-  TestRenderPageBitmapWithFlags(page.get(), FPDF_RENDER_NO_SMOOTHIMAGE,
-                                HelloWorldChecksum());
-  TestRenderPageBitmapWithFlags(page.get(), FPDF_RENDER_NO_SMOOTHPATH,
-                                HelloWorldChecksum());
+  using pdfium::kHelloWorldPng;
+  TestRenderPageBitmapWithFlagsToPng(page.get(), 0, kHelloWorldPng);
+  TestRenderPageBitmapWithFlagsToPng(page.get(), FPDF_ANNOT, kHelloWorldPng);
+  TestRenderPageBitmapWithFlagsToPng(page.get(), FPDF_GRAYSCALE,
+                                     kHelloWorldPng);
+  TestRenderPageBitmapWithFlagsToPng(page.get(), FPDF_RENDER_LIMITEDIMAGECACHE,
+                                     kHelloWorldPng);
+  TestRenderPageBitmapWithFlagsToPng(page.get(), FPDF_RENDER_FORCEHALFTONE,
+                                     kHelloWorldPng);
+  TestRenderPageBitmapWithFlagsToPng(page.get(), FPDF_PRINTING, kHelloWorldPng);
+  TestRenderPageBitmapWithFlagsToPng(page.get(), FPDF_RENDER_NO_SMOOTHIMAGE,
+                                     kHelloWorldPng);
+  TestRenderPageBitmapWithFlagsToPng(page.get(), FPDF_RENDER_NO_SMOOTHPATH,
+                                     kHelloWorldPng);
 
   const char* lcd_text_checksum = []() {
     if (CFX_DefaultRenderDevice::UseSkiaRenderer()) {
@@ -2192,7 +2211,7 @@ TEST_F(FPDFViewEmbedderTest, RenderTransparencyOnWhiteBackground) {
   FPDF_RenderPageBitmap(bitmap.get(), page.get(), /*start_x=*/0,
                         /*start_y=*/0, kWidth, kHeight, /*rotate=*/0,
                         /*flags=*/0);
-  EXPECT_EQ(pdfium::kBlankPage200By200Checksum, HashBitmap(bitmap.get()));
+  CompareBitmapToPng(bitmap.get(), pdfium::kBlankPage200x200Png);
 }
 
 TEST_F(FPDFViewEmbedderTest, Bug2112) {

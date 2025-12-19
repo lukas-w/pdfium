@@ -10,8 +10,8 @@ namespace pdfium {
 // MD5 hash for rendering annotation_stamp_with_ap.pdf with annotations.
 const char* AnnotationStampWithApChecksum();
 
-// MD5 hash for rendering a 200x200 blank page.
-extern const char kBlankPage200By200Checksum[];
+// Expectation file basename for rendering a 200x200 blank page.
+inline constexpr char kBlankPage200x200Png[] = "blank_200x200";
 
 // MD5 hash for rendering a 612x792 blank page.
 extern const char kBlankPage612By792Checksum[];
@@ -19,8 +19,8 @@ extern const char kBlankPage612By792Checksum[];
 // MD5 hash for rendering bug_890322.pdf.
 const char* Bug890322Checksum();
 
-// MD5 hash for rendering hello_world.pdf or bug_455199.pdf.
-const char* HelloWorldChecksum();
+// Expectation file basename for rendering hello_world.pdf or bug_455199.pdf.
+inline constexpr char kHelloWorldPng[] = "hello_world";
 
 // MD5 hash for rendering hello_world.pdf after removing "Goodbye, world!".
 const char* HelloWorldRemovedChecksum();

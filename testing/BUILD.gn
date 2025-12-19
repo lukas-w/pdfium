@@ -187,6 +187,7 @@ source_set("embedder_test_support") {
     "../core/fdrm",
     "../core/fxge",
     "../fpdfsdk",
+    "image_diff",
     "//testing/gmock",
     "//testing/gtest",
   ]
