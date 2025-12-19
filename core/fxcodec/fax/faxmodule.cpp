@@ -130,29 +130,35 @@ void FaxG4FindB1B2(pdfium::span<const uint8_t> ref_buf,
   *b2 = FindBit(ref_buf, columns, *b1 + 1, first_bit);
 }
 
-void FaxFillBits(uint8_t* dest_buf, int columns, int startpos, int endpos) {
+void FaxFillBits(pdfium::span<uint8_t> dest_buf,
+                 int columns,
+                 int startpos,
+                 int endpos) {
   startpos = std::max(startpos, 0);
   endpos = std::clamp(endpos, 0, columns);
   if (startpos >= endpos) {
     return;
   }
-  int first_byte = startpos / 8;
-  int last_byte = (endpos - 1) / 8;
+  const uint32_t first_byte = startpos / 8;
+  const uint32_t last_byte = (endpos - 1) / 8;
+  uint8_t& first_dest = dest_buf[first_byte];
   if (first_byte == last_byte) {
     for (int i = startpos % 8; i <= (endpos - 1) % 8; ++i) {
-      UNSAFE_TODO(dest_buf[first_byte] -= 1 << (7 - i));
+      first_dest -= 1 << (7 - i);
     }
     return;
   }
+
   for (int i = startpos % 8; i < 8; ++i) {
-    UNSAFE_TODO(dest_buf[first_byte] -= 1 << (7 - i));
+    first_dest -= 1 << (7 - i);
   }
+  uint8_t& last_dest = dest_buf[last_byte];
   for (int i = 0; i <= (endpos - 1) % 8; ++i) {
-    UNSAFE_TODO(dest_buf[last_byte] -= 1 << (7 - i));
+    last_dest -= 1 << (7 - i);
   }
   if (last_byte > first_byte + 1) {
-    UNSAFE_TODO(
-        FXSYS_memset(dest_buf + first_byte + 1, 0, last_byte - first_byte - 1));
+    std::ranges::fill(
+        dest_buf.subspan(first_byte + 1, last_byte - first_byte - 1), 0);
   }
 }
 
@@ -367,7 +373,7 @@ void FaxG4GetRow(const uint8_t* src_buf,
 
         a1 = a0 + run_len1;
         if (!a0color) {
-          FaxFillBits(dest_buf.data(), columns, a0, a1);
+          FaxFillBits(dest_buf, columns, a0, a1);
         }
 
         int run_len2 = 0;
@@ -388,7 +394,7 @@ void FaxG4GetRow(const uint8_t* src_buf,
         }
         a2 = a1 + run_len2;
         if (a0color) {
-          FaxFillBits(dest_buf.data(), columns, a1, a2);
+          FaxFillBits(dest_buf, columns, a1, a2);
         }
 
         a0 = a2;
@@ -405,7 +411,7 @@ void FaxG4GetRow(const uint8_t* src_buf,
         if (NextBit(src_buf, bitpos)) {
           // Mode "Pass".
           if (!a0color) {
-            FaxFillBits(dest_buf.data(), columns, a0, b2);
+            FaxFillBits(dest_buf, columns, a0, b2);
           }
 
           if (b2 >= columns) {
@@ -455,7 +461,7 @@ void FaxG4GetRow(const uint8_t* src_buf,
     }
     a1 = b1 + v_delta;
     if (!a0color) {
-      FaxFillBits(dest_buf.data(), columns, a0, a1);
+      FaxFillBits(dest_buf, columns, a0, a1);
     }
 
     if (a1 >= columns) {
@@ -519,7 +525,7 @@ void FaxGet1DLine(const uint8_t* src_buf,
       }
     }
     if (!color) {
-      FaxFillBits(dest_buf.data(), columns, startpos, startpos + run_len);
+      FaxFillBits(dest_buf, columns, startpos, startpos + run_len);
     }
 
     startpos += run_len;
