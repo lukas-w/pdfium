@@ -135,7 +135,7 @@ std::unique_ptr<CJBig2_Image> CJBig2_HTRDProc::DecodeMMR(
 std::unique_ptr<CJBig2_Image> CJBig2_HTRDProc::DecodeImage(
     const std::vector<std::unique_ptr<CJBig2_Image>>& GSPLANES) {
   auto HTREG = std::make_unique<CJBig2_Image>(HBW, HBH);
-  if (!HTREG->data()) {
+  if (!HTREG->has_data()) {
     return nullptr;
   }
 

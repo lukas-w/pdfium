@@ -43,6 +43,7 @@ class CJBig2_Image {
   int32_t height() const { return height_; }
   int32_t stride() const { return stride_; }
 
+  bool has_data() const { return static_cast<bool>(data_); }
   uint8_t* data() const { return data_.Get(); }
 
   int GetPixel(int32_t x, int32_t y) const;

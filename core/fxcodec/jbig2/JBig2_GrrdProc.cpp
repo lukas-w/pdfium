@@ -44,7 +44,7 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRRDProc::DecodeTemplate0Unopt(
     CJBig2_ArithDecoder* pArithDecoder,
     pdfium::span<JBig2ArithCtx> grContexts) {
   auto GRREG = std::make_unique<CJBig2_Image>(GRW, GRH);
-  if (!GRREG->data()) {
+  if (!GRREG->has_data()) {
     return nullptr;
   }
 
@@ -155,14 +155,14 @@ void CJBig2_GRRDProc::DecodeTemplate0UnoptSetPixel(CJBig2_Image* GRREG,
 std::unique_ptr<CJBig2_Image> CJBig2_GRRDProc::DecodeTemplate0Opt(
     CJBig2_ArithDecoder* pArithDecoder,
     pdfium::span<JBig2ArithCtx> grContexts) {
-  if (!GRREFERENCE->data()) {
+  if (!GRREFERENCE->has_data()) {
     return nullptr;
   }
 
   int32_t iGRW = static_cast<int32_t>(GRW);
   int32_t iGRH = static_cast<int32_t>(GRH);
   auto GRREG = std::make_unique<CJBig2_Image>(iGRW, iGRH);
-  if (!GRREG->data()) {
+  if (!GRREG->has_data()) {
     return nullptr;
   }
 
@@ -314,7 +314,7 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRRDProc::DecodeTemplate1Unopt(
     CJBig2_ArithDecoder* pArithDecoder,
     pdfium::span<JBig2ArithCtx> grContexts) {
   auto GRREG = std::make_unique<CJBig2_Image>(GRW, GRH);
-  if (!GRREG->data()) {
+  if (!GRREG->has_data()) {
     return nullptr;
   }
 
@@ -423,14 +423,14 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRRDProc::DecodeTemplate1Unopt(
 std::unique_ptr<CJBig2_Image> CJBig2_GRRDProc::DecodeTemplate1Opt(
     CJBig2_ArithDecoder* pArithDecoder,
     pdfium::span<JBig2ArithCtx> grContexts) {
-  if (!GRREFERENCE->data()) {
+  if (!GRREFERENCE->has_data()) {
     return nullptr;
   }
 
   int32_t iGRW = static_cast<int32_t>(GRW);
   int32_t iGRH = static_cast<int32_t>(GRH);
   auto GRREG = std::make_unique<CJBig2_Image>(iGRW, iGRH);
-  if (!GRREG->data()) {
+  if (!GRREG->has_data()) {
     return nullptr;
   }
 

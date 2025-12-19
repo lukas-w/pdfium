@@ -53,7 +53,7 @@ std::unique_ptr<CJBig2_Image> CJBig2_TRDProc::DecodeHuffman(
     CJBig2_BitStream* pStream,
     pdfium::span<JBig2ArithCtx> grContexts) {
   auto SBREG = std::make_unique<CJBig2_Image>(SBW, SBH);
-  if (!SBREG->data()) {
+  if (!SBREG->has_data()) {
     return nullptr;
   }
 
@@ -251,7 +251,7 @@ std::unique_ptr<CJBig2_Image> CJBig2_TRDProc::DecodeArith(
     pdfium::span<JBig2ArithCtx> grContexts,
     JBig2IntDecoderState* pIDS) {
   auto SBREG = std::make_unique<CJBig2_Image>(SBW, SBH);
-  if (!SBREG->data()) {
+  if (!SBREG->has_data()) {
     return nullptr;
   }
 

@@ -90,7 +90,7 @@ CJBig2_Image::CJBig2_Image(int32_t w,
 
 CJBig2_Image::CJBig2_Image(const CJBig2_Image& other)
     : width_(other.width_), height_(other.height_), stride_(other.stride_) {
-  if (other.data_) {
+  if (other.has_data()) {
     data_.Reset(std::unique_ptr<uint8_t, FxFreeDeleter>(
         FX_Alloc2D(uint8_t, stride_, height_)));
     UNSAFE_TODO(FXSYS_memcpy(data(), other.data(), stride_ * height_));
@@ -105,7 +105,7 @@ bool CJBig2_Image::IsValidImageSize(int32_t w, int32_t h) {
 }
 
 int CJBig2_Image::GetPixel(int32_t x, int32_t y) const {
-  if (!data_) {
+  if (!has_data()) {
     return 0;
   }
 
@@ -124,7 +124,7 @@ int CJBig2_Image::GetPixel(int32_t x, int32_t y) const {
 }
 
 void CJBig2_Image::SetPixel(int32_t x, int32_t y, int v) {
-  if (!data_) {
+  if (!has_data()) {
     return;
   }
 
@@ -147,7 +147,7 @@ void CJBig2_Image::SetPixel(int32_t x, int32_t y, int v) {
 }
 
 void CJBig2_Image::CopyLine(int32_t hTo, int32_t hFrom) {
-  if (!data_) {
+  if (!has_data()) {
     return;
   }
 
@@ -167,7 +167,7 @@ void CJBig2_Image::CopyLine(int32_t hTo, int32_t hFrom) {
 }
 
 void CJBig2_Image::Fill(bool v) {
-  if (!data_) {
+  if (!has_data()) {
     return;
   }
 
@@ -211,7 +211,7 @@ std::unique_ptr<CJBig2_Image> CJBig2_Image::SubImage(int32_t x,
                                                      int32_t w,
                                                      int32_t h) {
   auto pImage = std::make_unique<CJBig2_Image>(w, h);
-  if (!pImage->data() || !data_) {
+  if (!pImage->has_data() || !has_data()) {
     return pImage;
   }
 
@@ -271,7 +271,7 @@ void CJBig2_Image::SubImageSlow(int32_t x,
 }
 
 void CJBig2_Image::Expand(int32_t h, bool v) {
-  if (!data_ || h <= height_ || h > kMaxImageBytes / stride_) {
+  if (!has_data() || h <= height_ || h > kMaxImageBytes / stride_) {
     return;
   }
 

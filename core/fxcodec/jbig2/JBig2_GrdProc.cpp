@@ -103,7 +103,7 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRDProc::DecodeArithOpt3(
     pdfium::span<JBig2ArithCtx> gbContexts,
     int OPT) {
   auto GBREG = std::make_unique<CJBig2_Image>(GBW, GBH);
-  if (!GBREG->data()) {
+  if (!GBREG->has_data()) {
     return nullptr;
   }
 
@@ -219,7 +219,7 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRDProc::DecodeArithTemplateUnopt(
     pdfium::span<JBig2ArithCtx> gbContexts,
     int UNOPT) {
   auto GBREG = std::make_unique<CJBig2_Image>(GBW, GBH);
-  if (!GBREG->data()) {
+  if (!GBREG->has_data()) {
     return nullptr;
   }
 
@@ -286,7 +286,7 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRDProc::DecodeArithTemplate3Opt3(
     CJBig2_ArithDecoder* pArithDecoder,
     pdfium::span<JBig2ArithCtx> gbContexts) {
   auto GBREG = std::make_unique<CJBig2_Image>(GBW, GBH);
-  if (!GBREG->data()) {
+  if (!GBREG->has_data()) {
     return nullptr;
   }
 
@@ -379,7 +379,7 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRDProc::DecodeArithTemplate3Unopt(
     CJBig2_ArithDecoder* pArithDecoder,
     pdfium::span<JBig2ArithCtx> gbContexts) {
   auto GBREG = std::make_unique<CJBig2_Image>(GBW, GBH);
-  if (!GBREG->data()) {
+  if (!GBREG->has_data()) {
     return nullptr;
   }
 
@@ -435,7 +435,7 @@ FXCODEC_STATUS CJBig2_GRDProc::StartDecodeArith(
   if (!*pImage) {
     *pImage = std::make_unique<CJBig2_Image>(GBW, GBH);
   }
-  if (!(*pImage)->data()) {
+  if (!(*pImage)->has_data()) {
     *pImage = nullptr;
     progressive_status_ = FXCODEC_STATUS::kError;
     return FXCODEC_STATUS::kError;
@@ -494,7 +494,7 @@ FXCODEC_STATUS CJBig2_GRDProc::StartDecodeMMR(
     std::unique_ptr<CJBig2_Image>* pImage,
     CJBig2_BitStream* pStream) {
   auto image = std::make_unique<CJBig2_Image>(GBW, GBH);
-  if (!image->data()) {
+  if (!image->has_data()) {
     *pImage = nullptr;
     progressive_status_ = FXCODEC_STATUS::kError;
     return progressive_status_;

@@ -84,7 +84,7 @@ TEST(fxcodec, JBig2ImageCreateTooBig) {
   CJBig2_Image img(kWidthPixels, kTooLargeHeightLines);
   EXPECT_EQ(0, img.width());
   EXPECT_EQ(0, img.height());
-  EXPECT_FALSE(img.data());
+  EXPECT_FALSE(img.has_data());
 }
 
 TEST(fxcodec, JBig2ImageCreateExternal) {
@@ -103,7 +103,7 @@ TEST(fxcodec, JBig2ImageCreateExternalTooBig) {
   CJBig2_Image img(kWidthPixels, kTooLargeHeightLines, kStrideBytes, buf);
   EXPECT_EQ(0, img.width());
   EXPECT_EQ(0, img.height());
-  EXPECT_FALSE(img.data());
+  EXPECT_FALSE(img.has_data());
 }
 
 TEST(fxcodec, JBig2ImageCreateExternalBadStride) {
@@ -111,7 +111,7 @@ TEST(fxcodec, JBig2ImageCreateExternalBadStride) {
   CJBig2_Image img(kWidthPixels, kTooLargeHeightLines, kStrideBytes - 1, buf);
   EXPECT_EQ(0, img.width());
   EXPECT_EQ(0, img.height());
-  EXPECT_FALSE(img.data());
+  EXPECT_FALSE(img.has_data());
 }
 
 TEST(fxcodec, JBig2ImageExpand) {

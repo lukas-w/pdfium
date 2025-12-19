@@ -373,7 +373,7 @@ JBig2_Result CJBig2_Context::ProcessingParseSegmentData(
         page_ = std::make_unique<CJBig2_Image>(pPageInfo->width_, height);
       }
 
-      if (!page_->data()) {
+      if (!page_->has_data()) {
         processing_status_ = FXCODEC_STATUS::kError;
         return JBig2_Result::kFailure;
       }
