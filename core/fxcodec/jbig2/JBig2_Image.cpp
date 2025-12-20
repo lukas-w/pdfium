@@ -85,6 +85,7 @@ CJBig2_Image::CJBig2_Image(int32_t w, int32_t h) {
   width_ = w;
   height_ = h;
   stride_ = stride_pixels / 8;
+  CHECK_GE(stride_, 0);
   data_.Reset(std::unique_ptr<uint8_t, FxFreeDeleter>(
       FX_Alloc2D(uint8_t, stride_, height_)));
 }
@@ -114,6 +115,7 @@ CJBig2_Image::CJBig2_Image(int32_t w,
   width_ = w;
   height_ = h;
   stride_ = stride;
+  CHECK_GE(stride_, 0);
   data_.Reset(pBuf.data());
 }
 
@@ -149,65 +151,67 @@ pdfium::span<uint8_t> CJBig2_Image::span() {
 }
 
 int CJBig2_Image::GetPixel(int32_t x, int32_t y) const {
-  if (!has_data()) {
-    return 0;
-  }
-
   if (x < 0 || x >= width_) {
     return 0;
   }
 
-  const uint8_t* pLine = GetLinePtr(y);
-  if (!pLine) {
+  pdfium::span<const uint8_t> line = GetLine(y);
+  if (line.empty()) {
     return 0;
   }
 
   int32_t m = BitIndexToByte(x);
   int32_t n = x & 7;
-  return UNSAFE_TODO((pLine[m] >> (7 - n)) & 1);
+  return (line[m] >> (7 - n)) & 1;
 }
 
 void CJBig2_Image::SetPixel(int32_t x, int32_t y, int v) {
-  if (!has_data()) {
-    return;
-  }
-
   if (x < 0 || x >= width_) {
     return;
   }
 
-  uint8_t* pLine = GetLinePtr(y);
-  if (!pLine) {
+  pdfium::span<uint8_t> line = GetLine(y);
+  if (line.empty()) {
     return;
   }
 
   int32_t m = BitIndexToByte(x);
   int32_t n = 1 << (7 - (x & 7));
   if (v) {
-    UNSAFE_TODO(pLine[m]) |= n;
+    line[m] |= n;
   } else {
-    UNSAFE_TODO(pLine[m]) &= ~n;
+    line[m] &= ~n;
   }
 }
 
-void CJBig2_Image::CopyLine(int32_t hTo, int32_t hFrom) {
-  if (!has_data()) {
+pdfium::span<const uint8_t> CJBig2_Image::GetLine(int32_t y) const {
+  std::optional<size_t> offset = GetLineOffset(y);
+  if (!offset.has_value()) {
+    return {};
+  }
+  return span().subspan(offset.value(), static_cast<size_t>(stride_));
+}
+
+pdfium::span<uint8_t> CJBig2_Image::GetLine(int32_t y) {
+  std::optional<size_t> offset = GetLineOffset(y);
+  if (!offset.has_value()) {
+    return {};
+  }
+  return span().subspan(offset.value(), static_cast<size_t>(stride_));
+}
+
+void CJBig2_Image::CopyLine(int32_t dest_y, int32_t src_y) {
+  pdfium::span<uint8_t> dest = GetLine(dest_y);
+  if (dest.empty()) {
     return;
   }
 
-  uint8_t* pDst = GetLinePtr(hTo);
-  if (!pDst) {
+  pdfium::span<const uint8_t> src = GetLine(src_y);
+  if (src.empty()) {
+    std::ranges::fill(dest, 0);
     return;
   }
-
-  const uint8_t* pSrc = GetLinePtr(hFrom);
-  UNSAFE_TODO({
-    if (!pSrc) {
-      FXSYS_memset(pDst, 0, stride_);
-      return;
-    }
-    FXSYS_memcpy(pDst, pSrc, stride_);
-  });
+  fxcrt::spancpy(dest, src);
 }
 
 void CJBig2_Image::Fill(bool v) {
@@ -266,6 +270,16 @@ std::unique_ptr<CJBig2_Image> CJBig2_Image::SubImage(int32_t x,
   }
 
   return pImage;
+}
+
+std::optional<size_t> CJBig2_Image::GetLineOffset(int32_t y) const {
+  if (!has_data() || y < 0 || y >= height_) {
+    return std::nullopt;
+  }
+
+  FX_SAFE_SIZE_T size = stride_;
+  size *= y;
+  return size.ValueOrDie();
 }
 
 void CJBig2_Image::SubImageFast(int32_t x,

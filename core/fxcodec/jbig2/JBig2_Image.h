@@ -7,9 +7,11 @@
 #ifndef CORE_FXCODEC_JBIG2_JBIG2_IMAGE_H_
 #define CORE_FXCODEC_JBIG2_JBIG2_IMAGE_H_
 
+#include <stddef.h>
 #include <stdint.h>
 
 #include <memory>
+#include <optional>
 
 #include "core/fxcodec/jbig2/JBig2_Define.h"
 #include "core/fxcrt/compiler_specific.h"
@@ -63,7 +65,11 @@ class CJBig2_Image {
     return (y >= 0 && y < height_) ? UNSAFE_BUFFERS(GetLineUnsafe(y)) : nullptr;
   }
 
-  void CopyLine(int32_t hTo, int32_t hFrom);
+  // Returns an empty span if `y` is out of bounds, or if there is no data.
+  pdfium::span<const uint8_t> GetLine(int32_t y) const;
+  pdfium::span<uint8_t> GetLine(int32_t y);
+
+  void CopyLine(int32_t dest_y, int32_t src_y);
   void Fill(bool v);
 
   bool ComposeFrom(int64_t x, int64_t y, CJBig2_Image* pSrc, JBig2ComposeOp op);
@@ -87,6 +93,8 @@ class CJBig2_Image {
                          JBig2ComposeOp op);
 
  private:
+  std::optional<size_t> GetLineOffset(int32_t y) const;
+
   void SubImageFast(int32_t x,
                     int32_t y,
                     int32_t w,
