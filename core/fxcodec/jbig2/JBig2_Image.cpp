@@ -19,6 +19,7 @@
 #include "core/fxcrt/fx_memcpy_wrappers.h"
 #include "core/fxcrt/fx_memory.h"
 #include "core/fxcrt/fx_safe_types.h"
+#include "core/fxcrt/span_util.h"
 
 #define JBIG2_GETDWORD(buf)                  \
   ((static_cast<uint32_t>((buf)[0]) << 24) | \
@@ -94,11 +95,14 @@ CJBig2_Image::CJBig2_Image(int32_t w,
 
 CJBig2_Image::CJBig2_Image(const CJBig2_Image& other)
     : width_(other.width_), height_(other.height_), stride_(other.stride_) {
-  if (other.has_data()) {
-    data_.Reset(std::unique_ptr<uint8_t, FxFreeDeleter>(
-        FX_Alloc2D(uint8_t, stride_, height_)));
-    UNSAFE_TODO(FXSYS_memcpy(data(), other.data(), stride_ * height_));
+  auto other_span = other.span();
+  if (other_span.empty()) {
+    return;
   }
+
+  data_.Reset(std::unique_ptr<uint8_t, FxFreeDeleter>(
+      FX_Alloc2D(uint8_t, stride_, height_)));
+  fxcrt::spancpy(span(), other_span);
 }
 
 CJBig2_Image::~CJBig2_Image() = default;
@@ -108,10 +112,15 @@ bool CJBig2_Image::IsValidImageSize(int32_t w, int32_t h) {
   return w > 0 && w <= kJBig2MaxImageSize && h > 0 && h <= kJBig2MaxImageSize;
 }
 
-pdfium::span<uint8_t> CJBig2_Image::span() {
+pdfium::span<const uint8_t> CJBig2_Image::span() const {
   // SAFETY: If `data_` is owned, then `this` must have allocate the right
   // amount. If `data_` is not owned, then safety requires correctness from the
   // caller that constructed `this`.
+  return UNSAFE_BUFFERS(pdfium::span(data(), Fx2DSizeOrDie(stride_, height_)));
+}
+
+pdfium::span<uint8_t> CJBig2_Image::span() {
+  // SAFETY: Same as const-version of span() above.
   return UNSAFE_BUFFERS(pdfium::span(data(), Fx2DSizeOrDie(stride_, height_)));
 }
 
@@ -178,12 +187,7 @@ void CJBig2_Image::CopyLine(int32_t hTo, int32_t hFrom) {
 }
 
 void CJBig2_Image::Fill(bool v) {
-  if (!has_data()) {
-    return;
-  }
-
-  UNSAFE_TODO(
-      FXSYS_memset(data(), v ? 0xff : 0, Fx2DSizeOrDie(stride_, height_)));
+  std::ranges::fill(span(), v ? 0xff : 0);
 }
 
 bool CJBig2_Image::ComposeTo(CJBig2_Image* pDst,
@@ -294,14 +298,16 @@ void CJBig2_Image::Expand(int32_t h, bool v) {
     data_.Reset(std::unique_ptr<uint8_t, FxFreeDeleter>(
         FX_Realloc(uint8_t, data_.ReleaseAndClear().release(), desired_size)));
   } else {
-    uint8_t* pExternalBuffer = data();
+    pdfium::span<const uint8_t> external_buffer = span();
     data_.Reset(std::unique_ptr<uint8_t, FxFreeDeleter>(
         FX_Alloc(uint8_t, desired_size)));
-    UNSAFE_TODO(FXSYS_memcpy(data(), pExternalBuffer, current_size));
+    fxcrt::spancpy(span(), external_buffer);
   }
-  UNSAFE_TODO(FXSYS_memset(data() + current_size, v ? 0xff : 0,
-                           desired_size - current_size));
+  // NOTE: Must update `height_` first, so a subsequent span() call will create
+  // a span that includes the expanded portion of memory, which needs to be
+  // filled. Do not reuse other spans here.
   height_ = h;
+  std::ranges::fill(span().subspan(current_size), v ? 0xff : 0);
 }
 
 bool CJBig2_Image::ComposeToInternal(CJBig2_Image* pDst,
