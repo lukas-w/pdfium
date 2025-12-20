@@ -494,14 +494,15 @@ FXCODEC_STATUS CJBig2_GRDProc::StartDecodeMMR(
     std::unique_ptr<CJBig2_Image>* pImage,
     CJBig2_BitStream* pStream) {
   auto image = std::make_unique<CJBig2_Image>(GBW, GBH);
-  if (!image->has_data()) {
+  auto image_span = image->span();
+  if (image_span.empty()) {
     *pImage = nullptr;
     progressive_status_ = FXCODEC_STATUS::kError;
     return progressive_status_;
   }
   int bitpos = static_cast<int>(pStream->getBitPos());
   bitpos = FaxModule::FaxG4Decode(pStream->getBufSpan(), bitpos, GBW, GBH,
-                                  image->stride(), image->span());
+                                  image->stride(), image_span);
   pStream->setBitPos(bitpos);
   for (uint32_t i = 0; i < image->stride() * GBH; ++i) {
     UNSAFE_TODO(image->data()[i] = ~image->data()[i]);

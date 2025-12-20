@@ -82,6 +82,10 @@ CJBig2_Image::CJBig2_Image(int32_t w,
     return;
   }
 
+  if (stride > 0 && h > 0 && pBuf.empty()) {
+    return;
+  }
+
   width_ = w;
   height_ = h;
   stride_ = stride;
@@ -107,8 +111,7 @@ bool CJBig2_Image::IsValidImageSize(int32_t w, int32_t h) {
 pdfium::span<uint8_t> CJBig2_Image::span() {
   // SAFETY: If `data_` is owned, then `this` must have allocate the right
   // amount. If `data_` is not owned, then safety requires correctness from the
-  // caller that constructed `this`. Also requires caller to check has_data()
-  // returns true.
+  // caller that constructed `this`.
   return UNSAFE_BUFFERS(pdfium::span(data(), Fx2DSizeOrDie(stride_, height_)));
 }
 
