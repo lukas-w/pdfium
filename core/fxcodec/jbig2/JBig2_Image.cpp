@@ -157,7 +157,7 @@ int CJBig2_Image::GetPixel(int32_t x, int32_t y) const {
     return 0;
   }
 
-  const uint8_t* pLine = GetLine(y);
+  const uint8_t* pLine = GetLinePtr(y);
   if (!pLine) {
     return 0;
   }
@@ -176,7 +176,7 @@ void CJBig2_Image::SetPixel(int32_t x, int32_t y, int v) {
     return;
   }
 
-  uint8_t* pLine = GetLine(y);
+  uint8_t* pLine = GetLinePtr(y);
   if (!pLine) {
     return;
   }
@@ -195,12 +195,12 @@ void CJBig2_Image::CopyLine(int32_t hTo, int32_t hFrom) {
     return;
   }
 
-  uint8_t* pDst = GetLine(hTo);
+  uint8_t* pDst = GetLinePtr(hTo);
   if (!pDst) {
     return;
   }
 
-  const uint8_t* pSrc = GetLine(hFrom);
+  const uint8_t* pSrc = GetLinePtr(hFrom);
   UNSAFE_TODO({
     if (!pSrc) {
       FXSYS_memset(pDst, 0, stride_);

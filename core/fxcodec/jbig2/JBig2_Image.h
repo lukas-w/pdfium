@@ -58,7 +58,7 @@ class CJBig2_Image {
     return UNSAFE_BUFFERS(data() + y * stride_);
   }
 
-  uint8_t* GetLine(int32_t y) const {
+  uint8_t* GetLinePtr(int32_t y) const {
     // SAFETY: height_ valid lines in image.
     return (y >= 0 && y < height_) ? UNSAFE_BUFFERS(GetLineUnsafe(y)) : nullptr;
   }
