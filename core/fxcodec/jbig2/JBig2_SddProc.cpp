@@ -125,12 +125,6 @@ std::unique_ptr<CJBig2_SymbolDict> CJBig2_SDDProc::DecodeArith(
           pDecoder->SBNUMINSTANCES = REFAGGNINST;
           pDecoder->SBSTRIPS = 1;
           pDecoder->SBNUMSYMS = SDNUMINSYMS + NSYMSDECODED;
-          uint32_t nTmp = 0;
-          while ((uint32_t)(1 << nTmp) < pDecoder->SBNUMSYMS) {
-            nTmp++;
-          }
-          uint8_t SBSYMCODELEN = static_cast<uint8_t>(nTmp);
-          pDecoder->SBSYMCODELEN = SBSYMCODELEN;
           std::vector<UnownedPtr<CJBig2_Image>> SBSYMS(pDecoder->SBNUMSYMS);
           fxcrt::Copy(pdfium::span(SDINSYMS).first(SDNUMINSYMS),
                       pdfium::span(SBSYMS));
