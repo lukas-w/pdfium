@@ -35,22 +35,13 @@ std::unique_ptr<CJBig2_SymbolDict> CJBig2_SDDProc::DecodeArith(
   auto IADH = std::make_unique<CJBig2_ArithIntDecoder>();
   auto IADW = std::make_unique<CJBig2_ArithIntDecoder>();
   auto IAAI = std::make_unique<CJBig2_ArithIntDecoder>();
-  auto IARDX = std::make_unique<CJBig2_ArithIntDecoder>();
-  auto IARDY = std::make_unique<CJBig2_ArithIntDecoder>();
   auto IAEX = std::make_unique<CJBig2_ArithIntDecoder>();
-  auto IADT = std::make_unique<CJBig2_ArithIntDecoder>();
-  auto IAFS = std::make_unique<CJBig2_ArithIntDecoder>();
-  auto IADS = std::make_unique<CJBig2_ArithIntDecoder>();
-  auto IAIT = std::make_unique<CJBig2_ArithIntDecoder>();
-  auto IARI = std::make_unique<CJBig2_ArithIntDecoder>();
-  auto IARDW = std::make_unique<CJBig2_ArithIntDecoder>();
-  auto IARDH = std::make_unique<CJBig2_ArithIntDecoder>();
 
   uint32_t SBSYMCODELENA = 0;
   while ((uint32_t)(1 << SBSYMCODELENA) < (SDNUMINSYMS + SDNUMNEWSYMS)) {
     SBSYMCODELENA++;
   }
-  auto IAID = std::make_unique<CJBig2_ArithIaidDecoder>((uint8_t)SBSYMCODELENA);
+  JBig2IntDecoderState ids(static_cast<uint8_t>(SBSYMCODELENA));
 
   std::vector<std::unique_ptr<CJBig2_Image>> SDNEWSYMS(SDNUMNEWSYMS);
   uint32_t HCHEIGHT = 0;
@@ -150,25 +141,14 @@ std::unique_ptr<CJBig2_SymbolDict> CJBig2_SDDProc::DecodeArith(
           pDecoder->SBRAT[1] = SDRAT[1];
           pDecoder->SBRAT[2] = SDRAT[2];
           pDecoder->SBRAT[3] = SDRAT[3];
-          JBig2IntDecoderState ids;
-          ids.IADT = IADT.get();
-          ids.IAFS = IAFS.get();
-          ids.IADS = IADS.get();
-          ids.IAIT = IAIT.get();
-          ids.IARI = IARI.get();
-          ids.IARDW = IARDW.get();
-          ids.IARDH = IARDH.get();
-          ids.IARDX = IARDX.get();
-          ids.IARDY = IARDY.get();
-          ids.IAID = IAID.get();
-          BS = pDecoder->DecodeArith(pArithDecoder, grContexts, &ids);
+          BS = pDecoder->DecodeArith(pArithDecoder, grContexts, ids);
           if (!BS) {
             return nullptr;
           }
         } else if (REFAGGNINST == 1) {
           uint32_t SBNUMSYMS = SDNUMINSYMS + NSYMSDECODED;
           uint32_t IDI;
-          IAID->Decode(pArithDecoder, &IDI);
+          ids.IAID->Decode(pArithDecoder, &IDI);
           if (IDI >= SBNUMSYMS) {
             return nullptr;
           }
@@ -180,8 +160,8 @@ std::unique_ptr<CJBig2_SymbolDict> CJBig2_SDDProc::DecodeArith(
 
           int32_t RDXI;
           int32_t RDYI;
-          IARDX->Decode(pArithDecoder, &RDXI);
-          IARDY->Decode(pArithDecoder, &RDYI);
+          ids.IARDX->Decode(pArithDecoder, &RDXI);
+          ids.IARDY->Decode(pArithDecoder, &RDYI);
 
           auto pGRRD = std::make_unique<CJBig2_GRRDProc>();
           pGRRD->GRW = SYMWIDTH;

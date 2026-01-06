@@ -706,6 +706,7 @@ JBig2_Result CJBig2_Context::ParseTextRegion(CJBig2_Segment* pSegment) {
   }
   pTRD->SBSYMS = std::move(SBSYMS);
 
+  uint8_t SBSYMCODELEN = 0;
   if (pTRD->SBHUFF) {
     std::vector<JBig2HuffmanCode> SBSYMCODES =
         DecodeSymbolIDHuffmanTable(pTRD->SBNUMSYMS);
@@ -720,7 +721,7 @@ JBig2_Result CJBig2_Context::ParseTextRegion(CJBig2_Segment* pSegment) {
     while ((uint32_t)(1 << dwTemp) < pTRD->SBNUMSYMS) {
       ++dwTemp;
     }
-    pTRD->SBSYMCODELEN = (uint8_t)dwTemp;
+    SBSYMCODELEN = static_cast<uint8_t>(dwTemp);
   }
 
   if (pTRD->SBHUFF) {
@@ -850,8 +851,8 @@ JBig2_Result CJBig2_Context::ParseTextRegion(CJBig2_Segment* pSegment) {
     stream_->alignByte();
   } else {
     auto pArithDecoder = std::make_unique<CJBig2_ArithDecoder>(stream_.get());
-    pSegment->image_ =
-        pTRD->DecodeArith(pArithDecoder.get(), grContexts, nullptr);
+    JBig2IntDecoderState ids(SBSYMCODELEN);
+    pSegment->image_ = pTRD->DecodeArith(pArithDecoder.get(), grContexts, ids);
     if (!pSegment->image_) {
       return JBig2_Result::kFailure;
     }

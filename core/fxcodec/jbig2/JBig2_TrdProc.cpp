@@ -41,7 +41,17 @@ std::optional<int32_t> CheckTRDReferenceDimension(int32_t dimension,
 
 }  // namespace
 
-JBig2IntDecoderState::JBig2IntDecoderState() = default;
+JBig2IntDecoderState::JBig2IntDecoderState(uint8_t SBSYMCODELEN)
+    : IADT(std::make_unique<CJBig2_ArithIntDecoder>()),
+      IAFS(std::make_unique<CJBig2_ArithIntDecoder>()),
+      IADS(std::make_unique<CJBig2_ArithIntDecoder>()),
+      IAIT(std::make_unique<CJBig2_ArithIntDecoder>()),
+      IARI(std::make_unique<CJBig2_ArithIntDecoder>()),
+      IARDW(std::make_unique<CJBig2_ArithIntDecoder>()),
+      IARDH(std::make_unique<CJBig2_ArithIntDecoder>()),
+      IARDX(std::make_unique<CJBig2_ArithIntDecoder>()),
+      IARDY(std::make_unique<CJBig2_ArithIntDecoder>()),
+      IAID(std::make_unique<CJBig2_ArithIaidDecoder>(SBSYMCODELEN)) {}
 
 JBig2IntDecoderState::~JBig2IntDecoderState() = default;
 
@@ -249,53 +259,27 @@ std::unique_ptr<CJBig2_Image> CJBig2_TRDProc::DecodeHuffman(
 std::unique_ptr<CJBig2_Image> CJBig2_TRDProc::DecodeArith(
     CJBig2_ArithDecoder* pArithDecoder,
     pdfium::span<JBig2ArithCtx> grContexts,
-    JBig2IntDecoderState* pIDS) {
+    JBig2IntDecoderState& state) {
   auto SBREG = std::make_unique<CJBig2_Image>(SBW, SBH);
   if (!SBREG->has_data()) {
     return nullptr;
   }
 
-  MaybeOwned<CJBig2_ArithIntDecoder> pIADT;
-  if (pIDS) {
-    pIADT = pIDS->IADT;
-  } else {
-    pIADT = std::make_unique<CJBig2_ArithIntDecoder>();
-  }
+  CJBig2_ArithIntDecoder* pIADT = state.IADT.get();
   int32_t INITIAL_STRIPT;
   if (!pIADT->Decode(pArithDecoder, &INITIAL_STRIPT)) {
     return nullptr;
   }
 
-  MaybeOwned<CJBig2_ArithIntDecoder> pIAFS;
-  MaybeOwned<CJBig2_ArithIntDecoder> pIADS;
-  MaybeOwned<CJBig2_ArithIntDecoder> pIAIT;
-  MaybeOwned<CJBig2_ArithIntDecoder> pIARI;
-  MaybeOwned<CJBig2_ArithIntDecoder> pIARDW;
-  MaybeOwned<CJBig2_ArithIntDecoder> pIARDH;
-  MaybeOwned<CJBig2_ArithIntDecoder> pIARDX;
-  MaybeOwned<CJBig2_ArithIntDecoder> pIARDY;
-  MaybeOwned<CJBig2_ArithIaidDecoder> pIAID;
-  if (pIDS) {
-    pIAFS = pIDS->IAFS;
-    pIADS = pIDS->IADS;
-    pIAIT = pIDS->IAIT;
-    pIARI = pIDS->IARI;
-    pIARDW = pIDS->IARDW;
-    pIARDH = pIDS->IARDH;
-    pIARDX = pIDS->IARDX;
-    pIARDY = pIDS->IARDY;
-    pIAID = pIDS->IAID;
-  } else {
-    pIAFS = std::make_unique<CJBig2_ArithIntDecoder>();
-    pIADS = std::make_unique<CJBig2_ArithIntDecoder>();
-    pIAIT = std::make_unique<CJBig2_ArithIntDecoder>();
-    pIARI = std::make_unique<CJBig2_ArithIntDecoder>();
-    pIARDW = std::make_unique<CJBig2_ArithIntDecoder>();
-    pIARDH = std::make_unique<CJBig2_ArithIntDecoder>();
-    pIARDX = std::make_unique<CJBig2_ArithIntDecoder>();
-    pIARDY = std::make_unique<CJBig2_ArithIntDecoder>();
-    pIAID = std::make_unique<CJBig2_ArithIaidDecoder>(SBSYMCODELEN);
-  }
+  CJBig2_ArithIntDecoder* pIAFS = state.IAFS.get();
+  CJBig2_ArithIntDecoder* pIADS = state.IADS.get();
+  CJBig2_ArithIntDecoder* pIAIT = state.IAIT.get();
+  CJBig2_ArithIntDecoder* pIARI = state.IARI.get();
+  CJBig2_ArithIntDecoder* pIARDW = state.IARDW.get();
+  CJBig2_ArithIntDecoder* pIARDH = state.IARDH.get();
+  CJBig2_ArithIntDecoder* pIARDX = state.IARDX.get();
+  CJBig2_ArithIntDecoder* pIARDY = state.IARDY.get();
+  CJBig2_ArithIaidDecoder* pIAID = state.IAID.get();
 
   SBREG->Fill(SBDEFPIXEL);
 
