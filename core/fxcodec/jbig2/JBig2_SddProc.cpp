@@ -368,9 +368,8 @@ std::unique_ptr<CJBig2_SymbolDict> CJBig2_SDDProc::DecodeHuffman(
           }
 
         } else if (REFAGGNINST == 1) {
-          uint32_t SBNUMSYMS = SDNUMINSYMS + SDNUMNEWSYMS;
           uint32_t nTmp = 1;
-          while ((uint32_t)(1 << nTmp) < SBNUMSYMS) {
+          while ((uint32_t)(1 << nTmp) < SDNUMINSYMS + SDNUMNEWSYMS) {
             nTmp++;
           }
           uint8_t SBSYMCODELEN = (uint8_t)nTmp;
@@ -383,6 +382,7 @@ std::unique_ptr<CJBig2_SymbolDict> CJBig2_SDDProc::DecodeHuffman(
             IDI = (IDI << 1) | nTmp;
           }
 
+          uint32_t SBNUMSYMS = SDNUMINSYMS + NSYMSDECODED;
           if (IDI >= SBNUMSYMS) {
             return nullptr;
           }
