@@ -38,11 +38,11 @@ size_t GetRefAggContextSize(bool val) {
   return val ? 1024 : 8192;
 }
 
-JBig2ComposeOp GetRegionInfoComposeOp(const JBig2RegionInfo& ri) {
-  if ((ri.flags & 0x07) == 4) {
+JBig2ComposeOp GetComposeOp(uint8_t flags) {
+  if ((flags & 0x07) == 4) {
     return JBig2ComposeOp::JBIG2_COMPOSE_REPLACE;
   }
-  return static_cast<JBig2ComposeOp>(ri.flags & 0x03);
+  return static_cast<JBig2ComposeOp>(flags & 0x03);
 }
 
 }  // namespace
@@ -639,7 +639,7 @@ JBig2_Result CJBig2_Context::ParseTextRegion(CJBig2_Segment* pSegment) {
   pTRD->SBSTRIPS = 1 << dwTemp;
   pTRD->REFCORNER = (JBig2Corner)((wFlags >> 4) & 0x0003);
   pTRD->TRANSPOSED = (wFlags >> 6) & 0x0001;
-  pTRD->SBCOMBOP = (JBig2ComposeOp)((wFlags >> 7) & 0x0003);
+  pTRD->SBCOMBOP = static_cast<JBig2ComposeOp>((wFlags >> 7) & 0x0003);
   pTRD->SBDEFPIXEL = (wFlags >> 9) & 0x0001;
   pTRD->SBDSOFFSET = (wFlags >> 10) & 0x001f;
   if (pTRD->SBDSOFFSET >= 0x0010) {
@@ -866,7 +866,7 @@ JBig2_Result CJBig2_Context::ParseTextRegion(CJBig2_Segment* pSegment) {
       }
     }
     page_->ComposeFrom(ri.x, ri.y, pSegment->image_.get(),
-                       GetRegionInfoComposeOp(ri));
+                       GetComposeOp(ri.flags));
     pSegment->image_.reset();
   }
   return JBig2_Result::kSuccess;
@@ -940,7 +940,7 @@ JBig2_Result CJBig2_Context::ParseHalftoneRegion(CJBig2_Segment* pSegment,
   pHRD->HMMR = cFlags & 0x01;
   pHRD->HTEMPLATE = (cFlags >> 1) & 0x03;
   pHRD->HENABLESKIP = (cFlags >> 3) & 0x01;
-  pHRD->HCOMBOP = (JBig2ComposeOp)((cFlags >> 4) & 0x07);
+  pHRD->HCOMBOP = GetComposeOp(cFlags >> 4);
   pHRD->HDEFPIXEL = (cFlags >> 7) & 0x01;
   if (pSegment->referred_to_segment_count_ != 1) {
     return JBig2_Result::kFailure;
@@ -989,7 +989,7 @@ JBig2_Result CJBig2_Context::ParseHalftoneRegion(CJBig2_Segment* pSegment,
       }
     }
     page_->ComposeFrom(ri.x, ri.y, pSegment->image_.get(),
-                       GetRegionInfoComposeOp(ri));
+                       GetComposeOp(ri.flags));
     pSegment->image_.reset();
   }
   return JBig2_Result::kSuccess;
@@ -1069,7 +1069,7 @@ JBig2_Result CJBig2_Context::ParseGenericRegion(CJBig2_Segment* pSegment,
           const FX_RECT& rect = grd_->GetReplaceRect();
           page_->ComposeFromWithRect(ri_.x + rect.left, ri_.y + rect.top,
                                      pSegment->image_.get(), rect,
-                                     GetRegionInfoComposeOp(ri_));
+                                     GetComposeOp(ri_.flags));
         }
         return JBig2_Result::kSuccess;
       }
@@ -1094,7 +1094,7 @@ JBig2_Result CJBig2_Context::ParseGenericRegion(CJBig2_Segment* pSegment,
     const FX_RECT& rect = grd_->GetReplaceRect();
     page_->ComposeFromWithRect(ri_.x + rect.left, ri_.y + rect.top,
                                pSegment->image_.get(), rect,
-                               GetRegionInfoComposeOp(ri_));
+                               GetComposeOp(ri_.flags));
     pSegment->image_.reset();
   }
   grd_.reset();
@@ -1170,7 +1170,7 @@ JBig2_Result CJBig2_Context::ParseGenericRefinementRegion(
       }
     }
     page_->ComposeFrom(ri.x, ri.y, pSegment->image_.get(),
-                       GetRegionInfoComposeOp(ri));
+                       GetComposeOp(ri.flags));
     pSegment->image_.reset();
   }
   return JBig2_Result::kSuccess;
