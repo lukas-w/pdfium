@@ -26,8 +26,6 @@ const char* AnnotationStampWithApChecksum() {
 #endif
 }
 
-const char kBlankPage612By792Checksum[] = "1940568c9ba33bac5d0b1ee9558c76b3";
-
 const char* Bug890322Checksum() {
   if (CFX_DefaultRenderDevice::UseSkiaRenderer()) {
     return "793689536cf64fe792c2f241888c0cf3";

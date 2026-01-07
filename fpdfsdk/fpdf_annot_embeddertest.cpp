@@ -1356,7 +1356,7 @@ TEST_F(FPDFAnnotEmbedderTest, ModifyAnnotationFlags) {
     {
       ScopedFPDFBitmap bitmap =
           RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-      CompareBitmap(bitmap.get(), 612, 792, pdfium::kBlankPage612By792Checksum);
+      CompareBitmapToPng(bitmap.get(), pdfium::kBlankPage612By792Png);
     }
 
     // Unset the HIDDEN flag.

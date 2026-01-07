@@ -11,7 +11,6 @@
 #include "testing/test_support.h"
 
 using FPDFParserDecodeEmbedderTest = EmbedderTest;
-using pdfium::kBlankPage612By792Checksum;
 
 TEST_F(FPDFParserDecodeEmbedderTest, Bug552046) {
   // Tests specifying multiple image filters for a stream. Should not cause a
@@ -20,7 +19,7 @@ TEST_F(FPDFParserDecodeEmbedderTest, Bug552046) {
   ScopedPage page = LoadScopedPage(0);
   ASSERT_TRUE(page);
   ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-  CompareBitmap(bitmap.get(), 612, 792, kBlankPage612By792Checksum);
+  CompareBitmapToPng(bitmap.get(), pdfium::kBlankPage612By792Png);
 }
 
 TEST_F(FPDFParserDecodeEmbedderTest, Bug555784) {
@@ -30,7 +29,7 @@ TEST_F(FPDFParserDecodeEmbedderTest, Bug555784) {
   ScopedPage page = LoadScopedPage(0);
   ASSERT_TRUE(page);
   ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-  CompareBitmap(bitmap.get(), 612, 792, kBlankPage612By792Checksum);
+  CompareBitmapToPng(bitmap.get(), pdfium::kBlankPage612By792Png);
 }
 
 TEST_F(FPDFParserDecodeEmbedderTest, Bug455199) {
