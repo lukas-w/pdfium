@@ -20,6 +20,7 @@
 #include "core/fxcrt/numerics/checked_math.h"
 #include "core/fxcrt/numerics/safe_conversions.h"
 #include "core/fxge/cfx_defaultrenderdevice.h"
+#include "core/fxge/dib/fx_dib.h"
 #include "fpdfsdk/cpdfsdk_helpers.h"
 #include "public/cpp/fpdf_scopers.h"
 #include "public/fpdf_dataavail.h"
@@ -352,6 +353,25 @@ int CompareBGRxBitmapToPng(pdfium::span<const uint8_t> bitmap_span,
   return pixels_different;
 }
 
+#ifdef PDF_USE_SKIA
+int CompareBGRxPremultBitmapToPng(pdfium::span<const uint8_t> bitmap_span,
+                                  size_t bitmap_stride,
+                                  const DecodedPng& decoded_png) {
+  std::vector<uint8_t> bitmap_data(bitmap_span.begin(), bitmap_span.end());
+  pdfium::span<uint8_t> converted_bitmap_span{bitmap_data};
+
+  for (int h = 0; h < decoded_png.height; ++h) {
+    auto bitmap_row = fxcrt::reinterpret_span<FX_BGRA_STRUCT<uint8_t>>(
+        converted_bitmap_span.first(bitmap_stride));
+    converted_bitmap_span = converted_bitmap_span.subspan(bitmap_stride);
+    for (int w = 0; w < decoded_png.width; ++w) {
+      bitmap_row[w] = UnPreMultiplyColor(bitmap_row[w]);
+    }
+  }
+  return CompareBGRxBitmapToPng(bitmap_span, bitmap_stride, decoded_png);
+}
+#endif  // PDF_USE_SKIA
+
 void CompareBitmapToPngData(FPDF_BITMAP bitmap,
                             pdfium::span<const uint8_t> png_data) {
   DecodedPng decoded_png = DecodePngData(png_data);
@@ -380,6 +400,12 @@ void CompareBitmapToPngData(FPDF_BITMAP bitmap,
           CompareBGRxBitmapToPng(bitmap_span, stride, decoded_png);
       break;
     }
+#ifdef PDF_USE_SKIA
+    case FPDFBitmap_BGRA_Premul:
+      pixels_different =
+          CompareBGRxPremultBitmapToPng(bitmap_span, stride, decoded_png);
+      break;
+#endif  // PDF_USE_SKIA
     default:
       // Support other formats as-needed.
       NOTREACHED();

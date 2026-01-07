@@ -303,7 +303,8 @@ TEST_F(FPDFPPOEmbedderTest, ImportPageToXObjectWithSameDoc) {
 
   {
     ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-    CompareBitmap(bitmap.get(), 200, 300, pdfium::RectanglesChecksum());
+    CompareBitmapToPngWithExpectationSuffix(bitmap.get(),
+                                            pdfium::kRectanglesPng);
   }
 
   FPDF_PAGEOBJECT page_object = FPDF_NewFormObjectFromXObject(xobject);

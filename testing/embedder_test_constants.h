@@ -25,11 +25,11 @@ inline constexpr char kHelloWorldPng[] = "hello_world";
 // MD5 hash for rendering hello_world.pdf after removing "Goodbye, world!".
 const char* HelloWorldRemovedChecksum();
 
-// MD5 hash for rendering many_rectangles.pdf.
-const char* ManyRectanglesChecksum();
+// Expectation file basename for rendering many_rectangles.pdf.
+inline constexpr char kManyRectanglesPng[] = "many_rectangles";
 
-// MD5 hash for rendering rectangles.pdf.
-const char* RectanglesChecksum();
+// Expectation file basename for rendering rectangles.pdf.
+inline constexpr char kRectanglesPng[] = "rectangles";
 
 // MD5 hash for rendering text_form.pdf.
 const char* TextFormChecksum();

@@ -50,20 +50,6 @@ const char* HelloWorldRemovedChecksum() {
 #endif
 }
 
-const char* ManyRectanglesChecksum() {
-  if (CFX_DefaultRenderDevice::UseSkiaRenderer()) {
-    return "4e7e280c1597222afcb0ee3bb90ec119";
-  }
-  return "b0170c575b65ecb93ebafada0ff0f038";
-}
-
-const char* RectanglesChecksum() {
-  if (CFX_DefaultRenderDevice::UseSkiaRenderer()) {
-    return "b4e411a6b5ffa59a50efede2efece597";
-  }
-  return "0a90de37f52127619c3dfb642b5fa2fe";
-}
-
 const char* TextFormChecksum() {
   if (CFX_DefaultRenderDevice::UseSkiaRenderer()) {
 #if BUILDFLAG(IS_WIN)

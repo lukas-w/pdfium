@@ -2382,10 +2382,11 @@ TEST_F(FPDFEditEmbedderTest, InsertAndRemoveLargeFile) {
   ScopedPage page = LoadScopedPage(0);
   ASSERT_TRUE(page);
 
-  using pdfium::ManyRectanglesChecksum;
+  using pdfium::kManyRectanglesPng;
   {
     ScopedFPDFBitmap page_bitmap = RenderPage(page.get());
-    CompareBitmap(page_bitmap.get(), 200, 300, ManyRectanglesChecksum());
+    CompareBitmapToPngWithExpectationSuffix(page_bitmap.get(),
+                                            kManyRectanglesPng);
   }
 
   // Add a black rectangle.
@@ -2429,7 +2430,8 @@ TEST_F(FPDFEditEmbedderTest, InsertAndRemoveLargeFile) {
   FPDFPageObj_Destroy(added_object);
   {
     ScopedFPDFBitmap page_bitmap = RenderPage(saved_page);
-    CompareBitmap(page_bitmap.get(), 200, 300, ManyRectanglesChecksum());
+    CompareBitmapToPngWithExpectationSuffix(page_bitmap.get(),
+                                            kManyRectanglesPng);
   }
   EXPECT_EQ(kOriginalObjectCount, FPDFPage_CountObjects(saved_page));
 
@@ -2448,7 +2450,8 @@ TEST_F(FPDFEditEmbedderTest, InsertAndRemoveLargeFile) {
   EXPECT_EQ(kOriginalObjectCount, FPDFPage_CountObjects(saved_page));
   {
     ScopedFPDFBitmap page_bitmap = RenderPage(saved_page);
-    CompareBitmap(page_bitmap.get(), 200, 300, ManyRectanglesChecksum());
+    CompareBitmapToPngWithExpectationSuffix(page_bitmap.get(),
+                                            kManyRectanglesPng);
   }
 
   CloseSavedPage(saved_page);
