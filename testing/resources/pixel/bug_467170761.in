@@ -1,0 +1,53 @@
+{{header}}
+{{object 1 0}} <<
+  /Type /Catalog
+  /Pages 2 0 R
+>>
+endobj
+{{object 2 0}} <<
+  /Type /Pages
+  /Count 1
+  /Kids [3 0 R]
+>>
+endobj
+{{object 3 0}} <<
+  /Type /Page
+  /Parent 2 0 R
+  /Contents 4 0 R
+  /MediaBox [0 0 200 200]
+>>
+endobj
+{{object 4 0}} <<
+  {{streamlen}}
+>>
+stream
+q
+  % Set line width to 10
+  10 w
+
+  % Dash entry equal to Skia clamp threshold (1e-6)
+  [0.000001, 0.000001] 0 d
+  20 80 m
+  180 80 l
+  S
+
+  % Key point: Set an extremely small dash pattern
+  % Before the fix, this would cause AGG to attempt
+  % drawing 160 / 0.00003 approx 5.33 million loops
+  [0.000015 0.000015] 0 d
+  20 100 m
+  180 100 l
+  S
+
+  % Exactly at threshold
+  [0.05 0.05] 0 d
+  20 120 m
+  180 120 l
+  S
+Q
+endstream
+endobj
+{{xref}}
+{{trailer}}
+{{startxref}}
+%%EOF
