@@ -8,7 +8,6 @@
 
 #include <stdint.h>
 
-#include "core/fxcrt/compiler_specific.h"
 #include "testing/gtest/include/gtest/gtest.h"
 
 namespace {
@@ -46,9 +45,9 @@ TEST(fxcodec, EmptyImage) {
   EXPECT_EQ(empty.GetPixel(0, 0), 0);
   EXPECT_EQ(empty.GetPixel(1, 1), 0);
 
-  // Out-of-bounds GetLinePtr() returns null.
-  EXPECT_EQ(empty.GetLinePtr(0), nullptr);
-  EXPECT_EQ(empty.GetLinePtr(1), nullptr);
+  // Out-of-bounds GetLine() returns empty.
+  EXPECT_TRUE(empty.GetLine(0).empty());
+  EXPECT_TRUE(empty.GetLine(1).empty());
 }
 
 TEST(fxcodec, JBig2ImageCreate) {
@@ -56,17 +55,19 @@ TEST(fxcodec, JBig2ImageCreate) {
   EXPECT_EQ(kWidthPixels, img.width());
   EXPECT_EQ(kHeightLines, img.height());
   EXPECT_EQ(0, img.GetPixel(0, 0));
-  EXPECT_EQ(0, img.GetLinePtr(0)[0]);
-  EXPECT_EQ(0, img.GetPixel(kWidthPixels - 1, kHeightLines - 1));
-  EXPECT_EQ(0, UNSAFE_TODO(img.GetLinePtr(kHeightLines - 1)[kWidthBytes - 1]));
+  pdfium::span<const uint8_t> line0 = img.GetLine(0);
+  ASSERT_EQ(static_cast<size_t>(kStrideBytes), line0.size());
+  EXPECT_EQ(0, line0[0]);
+  pdfium::span<const uint8_t> line_last = img.GetLine(kHeightLines - 1);
+  ASSERT_EQ(static_cast<size_t>(kStrideBytes), line_last.size());
+  EXPECT_EQ(0, line_last[kWidthBytes - 1]);
 
   img.SetPixel(0, 0, true);
   img.SetPixel(kWidthPixels - 1, kHeightLines - 1, true);
   EXPECT_EQ(1, img.GetPixel(0, 0));
   EXPECT_EQ(1, img.GetPixel(kWidthPixels - 1, kHeightLines - 1));
-  EXPECT_EQ(0x80, img.GetLinePtr(0)[0]);
-  EXPECT_EQ(0x01,
-            UNSAFE_TODO(img.GetLinePtr(kHeightLines - 1)[kWidthBytes - 1]));
+  EXPECT_EQ(0x80, line0[0]);
+  EXPECT_EQ(0x01, line_last[kWidthBytes - 1]);
 
   // Out-of-bounds SetPixel() is silent no-op.
   img.SetPixel(-1, 1, true);
@@ -76,9 +77,9 @@ TEST(fxcodec, JBig2ImageCreate) {
   EXPECT_EQ(0, img.GetPixel(-1, -1));
   EXPECT_EQ(0, img.GetPixel(kWidthPixels, kHeightLines));
 
-  // Out-of-bounds GetLinePtr() returns null.
-  EXPECT_FALSE(img.GetLinePtr(-1));
-  EXPECT_FALSE(img.GetLinePtr(kHeightLines));
+  // Out-of-bounds GetLine() returns empty.
+  EXPECT_TRUE(img.GetLine(-1).empty());
+  EXPECT_TRUE(img.GetLine(kHeightLines).empty());
 }
 
 TEST(fxcodec, JBig2ImageCreateTooBig) {
