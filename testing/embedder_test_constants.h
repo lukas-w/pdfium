@@ -16,8 +16,8 @@ inline constexpr char kBlankPage200x200Png[] = "blank_200x200";
 // Expectation file basename for rendering a 612x792 blank page.
 inline constexpr char kBlankPage612By792Png[] = "blank_612x792";
 
-// MD5 hash for rendering bug_890322.pdf.
-const char* Bug890322Checksum();
+// Expectation file basename for rendering bug_890322.pdf.
+inline constexpr char kBug890322Png[] = "bug_890322";
 
 // Expectation file basename for rendering hello_world.pdf or bug_455199.pdf.
 inline constexpr char kHelloWorldPng[] = "hello_world";

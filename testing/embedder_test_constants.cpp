@@ -26,13 +26,6 @@ const char* AnnotationStampWithApChecksum() {
 #endif
 }
 
-const char* Bug890322Checksum() {
-  if (CFX_DefaultRenderDevice::UseSkiaRenderer()) {
-    return "793689536cf64fe792c2f241888c0cf3";
-  }
-  return "6c674642154408e877d88c6c082d67e9";
-}
-
 const char* HelloWorldRemovedChecksum() {
   if (CFX_DefaultRenderDevice::UseSkiaRenderer()) {
 #if BUILDFLAG(IS_WIN)

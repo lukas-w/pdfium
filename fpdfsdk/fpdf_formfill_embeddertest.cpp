@@ -1471,7 +1471,8 @@ TEST_F(FPDFFormFillEmbedderTest, Bug1281) {
   ASSERT_TRUE(page);
 
   ScopedFPDFBitmap bitmap_normal = RenderLoadedPage(page.get());
-  CompareBitmap(bitmap_normal.get(), 200, 200, pdfium::Bug890322Checksum());
+  CompareBitmapToPngWithExpectationSuffix(bitmap_normal.get(),
+                                          pdfium::kBug890322Png);
 
   ScopedFPDFBitmap bitmap_reverse_byte_order =
       RenderLoadedPageWithFlags(page.get(), FPDF_REVERSE_BYTE_ORDER);

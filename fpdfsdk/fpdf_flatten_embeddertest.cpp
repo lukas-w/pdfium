@@ -7,6 +7,7 @@
 #include "public/fpdf_flatten.h"
 #include "public/fpdfview.h"
 #include "testing/embedder_test.h"
+#include "testing/embedder_test_constants.h"
 #include "testing/gmock/include/gmock/gmock.h"
 #include "testing/gtest/include/gtest/gtest.h"
 
@@ -146,23 +147,17 @@ TEST_F(FPDFFlattenEmbedderTest, Bug889099) {
 }
 
 TEST_F(FPDFFlattenEmbedderTest, Bug890322) {
-  const char* checksum = []() {
-    if (CFX_DefaultRenderDevice::UseSkiaRenderer()) {
-      return "793689536cf64fe792c2f241888c0cf3";
-    }
-    return "6c674642154408e877d88c6c082d67e9";
-  }();
   ASSERT_TRUE(OpenDocument("bug_890322.pdf"));
   ScopedPage page = LoadScopedPage(0);
   ASSERT_TRUE(page);
 
   ScopedFPDFBitmap bitmap = RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-  CompareBitmap(bitmap.get(), 200, 200, checksum);
+  CompareBitmapToPngWithExpectationSuffix(bitmap.get(), pdfium::kBug890322Png);
 
   EXPECT_EQ(FLATTEN_SUCCESS, FPDFPage_Flatten(page.get(), FLAT_PRINT));
   EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
 
-  VerifySavedDocument(200, 200, checksum);
+  VerifySavedDocumentToPngWithExpectationSuffix(pdfium::kBug890322Png);
 }
 
 TEST_F(FPDFFlattenEmbedderTest, Bug896366) {
