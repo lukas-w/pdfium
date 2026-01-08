@@ -77,7 +77,7 @@
 #include "third_party/skia/include/core/SkTileMode.h"
 #include "third_party/skia/include/core/SkTypeface.h"
 #include "third_party/skia/include/effects/SkDashPathEffect.h"
-#include "third_party/skia/include/effects/SkGradientShader.h"
+#include "third_party/skia/include/effects/SkGradient.h"
 #include "third_party/skia/include/pathops/SkPathOps.h"
 
 namespace {
@@ -284,9 +284,24 @@ SkBlendMode GetSkiaBlendMode(BlendMode blend_type) {
   }
 }
 
-// Clamps and scales a float in range [0.0, 1.0] to 0-255.
-uint8_t ClampFloatToByte(float f) {
-  return static_cast<uint8_t>(std::clamp(f, 0.0f, 1.0f) * 255.f + 0.5f);
+SkColor4f MakeColor4f(float r, float g, float b) {
+  r = std::clamp(r, 0.0f, 1.0f);
+  g = std::clamp(g, 0.0f, 1.0f);
+  b = std::clamp(b, 0.0f, 1.0f);
+
+  // For temporary compatibility with the previous implementation, we round
+  // the color components to a byte, and then redivide back to a normalized
+  // float. When we can update the expected images in the test suite, this
+  // rounding step should be eliminated, since it only throws away
+  // information from the PDF (and is slower).
+  auto legacy_round = [](float x) {
+    return std::floor(x * 255.f + 0.5f) * (1.0f / 255);
+  };
+  r = legacy_round(r);
+  g = legacy_round(g);
+  b = legacy_round(b);
+
+  return {r, g, b, 1};
 }
 
 // Add begin & end colors into `colors` array for each gradient transition.
@@ -295,7 +310,7 @@ uint8_t ClampFloatToByte(float f) {
 // has an Encode array, and the matching pair of encode values for `func` are
 // in decreasing order.
 bool AddColors(const CPDF_ExpIntFunc* func,
-               DataVector<SkColor>& colors,
+               DataVector<SkColor4f>& colors,
                bool is_encode_reversed) {
   if (func->InputCount() != 1) {
     return false;
@@ -313,24 +328,14 @@ bool AddColors(const CPDF_ExpIntFunc* func,
     std::swap(begin_values, end_values);
   }
 
-  colors.push_back(SkColorSetRGB(ClampFloatToByte(begin_values[0]),
-                                 ClampFloatToByte(begin_values[1]),
-                                 ClampFloatToByte(begin_values[2])));
-  colors.push_back(SkColorSetRGB(ClampFloatToByte(end_values[0]),
-                                 ClampFloatToByte(end_values[1]),
-                                 ClampFloatToByte(end_values[2])));
+  colors.push_back(
+      MakeColor4f(begin_values[0], begin_values[1], begin_values[2]));
+  colors.push_back(MakeColor4f(end_values[0], end_values[1], end_values[2]));
   return true;
 }
 
-// Scale a float in range [0.0, 1.0] to 0-255.
-uint8_t FloatToByte(float f) {
-  DCHECK(f >= 0);
-  DCHECK(f <= 1);
-  return static_cast<uint8_t>(f * 255.99f);
-}
-
 bool AddSamples(const CPDF_SampledFunc* func,
-                DataVector<SkColor>& colors,
+                DataVector<SkColor4f>& colors,
                 DataVector<float>& pos) {
   if (func->InputCount() != 1) {
     return false;
@@ -374,16 +379,14 @@ bool AddSamples(const CPDF_SampledFunc* func,
       float_colors[j] =
           colors_min[j] + (colors_max[j] - colors_min[j]) * interp;
     }
-    colors.push_back(SkColorSetRGB(FloatToByte(float_colors[0]),
-                                   FloatToByte(float_colors[1]),
-                                   FloatToByte(float_colors[2])));
+    colors.push_back({float_colors[0], float_colors[1], float_colors[2], 1});
     pos.push_back(static_cast<float>(i) / (sample_count - 1));
   }
   return true;
 }
 
 bool AddStitching(const CPDF_StitchFunc* func,
-                  DataVector<SkColor>& colors,
+                  DataVector<SkColor4f>& colors,
                   DataVector<float>& pos) {
   float bounds_start = func->GetDomain(0);
 
@@ -1241,7 +1244,7 @@ bool CFX_SkiaDeviceDriver::DrawShading(const CPDF_ShadingPattern& pattern,
   }
   // TODO(caryclark) Respect Domain[0], Domain[1]. (Don't know what they do
   // yet.)
-  DataVector<SkColor> sk_colors;
+  DataVector<SkColor4f> sk_colors;
   DataVector<float> sk_pos;
   for (size_t j = 0; j < nFuncs; j++) {
     if (!pFuncs[j]) {
@@ -1288,9 +1291,8 @@ bool CFX_SkiaDeviceDriver::DrawShading(const CPDF_ShadingPattern& pattern,
     float end_y = pCoords->GetFloatAt(3);
     SkPoint pts[] = {{start_x, start_y}, {end_x, end_y}};
     skMatrix.mapPoints(pts);
-    paint.setShader(SkGradientShader::MakeLinear(
-        pts, sk_colors.data(), sk_pos.data(),
-        fxcrt::CollectionSize<int>(sk_colors), SkTileMode::kClamp));
+    paint.setShader(SkShaders::LinearGradient(
+        pts, {{sk_colors, sk_pos, SkTileMode::kClamp}, {}}));
     if (clipStart || clipEnd) {
       // if the gradient is horizontal or vertical, modify the draw rectangle
       if (pts[0].fX == pts[1].fX) {  // vertical
@@ -1327,23 +1329,20 @@ bool CFX_SkiaDeviceDriver::DrawShading(const CPDF_ShadingPattern& pattern,
     skMatrix.setIdentity();
   } else {
     CHECK_EQ(shading_type, kRadialShading);
-    float start_x = pCoords->GetFloatAt(0);
-    float start_y = pCoords->GetFloatAt(1);
+    SkPoint start = {pCoords->GetFloatAt(0), pCoords->GetFloatAt(1)};
     float start_r = pCoords->GetFloatAt(2);
-    float end_x = pCoords->GetFloatAt(3);
-    float end_y = pCoords->GetFloatAt(4);
+    SkPoint end = {pCoords->GetFloatAt(3), pCoords->GetFloatAt(4)};
     float end_r = pCoords->GetFloatAt(5);
-    SkPoint pts[] = {{start_x, start_y}, {end_x, end_y}};
 
-    paint.setShader(SkGradientShader::MakeTwoPointConical(
-        pts[0], start_r, pts[1], end_r, sk_colors.data(), sk_pos.data(),
-        fxcrt::CollectionSize<int>(sk_colors), SkTileMode::kClamp));
+    paint.setShader(SkShaders::TwoPointConicalGradient(
+        start, start_r, end, end_r,
+        {{sk_colors, sk_pos, SkTileMode::kClamp}, {}}));
     if (clipStart || clipEnd) {
       if (clipStart && start_r) {
-        skClip.addCircle(pts[0].fX, pts[0].fY, start_r);
+        skClip.addCircle(start.fX, start.fY, start_r);
       }
       if (clipEnd) {
-        skClip.addCircle(pts[1].fX, pts[1].fY, end_r, SkPathDirection::kCCW);
+        skClip.addCircle(end.fX, end.fY, end_r, SkPathDirection::kCCW);
       } else {
         skClip.setFillType(SkPathFillType::kInverseWinding);
       }
