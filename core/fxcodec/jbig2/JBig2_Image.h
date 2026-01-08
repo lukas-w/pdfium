@@ -77,7 +77,7 @@ class CJBig2_Image {
   std::unique_ptr<CJBig2_Image> SubImage(int32_t x,
                                          int32_t y,
                                          int32_t w,
-                                         int32_t h);
+                                         int32_t h) const;
   void Expand(int32_t h, bool v);
 
   bool ComposeTo(CJBig2_Image* pDst, int64_t x, int64_t y, JBig2ComposeOp op);
@@ -94,12 +94,12 @@ class CJBig2_Image {
                     int32_t y,
                     int32_t w,
                     int32_t h,
-                    CJBig2_Image* pImage);
+                    CJBig2_Image* image) const;
   void SubImageSlow(int32_t x,
                     int32_t y,
                     int32_t w,
                     int32_t h,
-                    CJBig2_Image* pImage);
+                    CJBig2_Image* image) const;
   bool ComposeToInternal(CJBig2_Image* pDst,
                          int64_t x_in,
                          int64_t y_in,
