@@ -6,6 +6,7 @@
 
 #include "core/fxcodec/jbig2/JBig2_GrrdProc.h"
 
+#include <array>
 #include <memory>
 
 #include "core/fxcodec/jbig2/JBig2_ArithDecoder.h"
@@ -57,7 +58,7 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRRDProc::DecodeTemplate0Unopt(
       }
       LTP = LTP ^ pArithDecoder->Decode(&grContexts[0x0010]);
     }
-    uint32_t lines[5];
+    std::array<uint32_t, 5> lines;
     lines[0] = GRREG->GetPixel(1, h - 1);
     lines[0] |= GRREG->GetPixel(0, h - 1) << 1;
     lines[1] = 0;
@@ -112,44 +113,39 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRRDProc::DecodeTemplate0Unopt(
 
 uint32_t CJBig2_GRRDProc::DecodeTemplate0UnoptCalculateContext(
     const CJBig2_Image& GRREG,
-    const uint32_t* lines,
+    pdfium::span<const uint32_t, 5> lines,
     uint32_t w,
     uint32_t h) const {
-  UNSAFE_TODO({
-    uint32_t CONTEXT = lines[4];
-    CONTEXT |= lines[3] << 3;
-    CONTEXT |= lines[2] << 6;
-    CONTEXT |= GRREFERENCE->GetPixel(w - GRREFERENCEDX + GRAT[2],
-                                     h - GRREFERENCEDY + GRAT[3])
-               << 8;
-    CONTEXT |= lines[1] << 9;
-    CONTEXT |= lines[0] << 10;
-    CONTEXT |= GRREG.GetPixel(w + GRAT[0], h + GRAT[1]) << 12;
-    return CONTEXT;
-  });
+  uint32_t CONTEXT = lines[4];
+  CONTEXT |= lines[3] << 3;
+  CONTEXT |= lines[2] << 6;
+  CONTEXT |= GRREFERENCE->GetPixel(w - GRREFERENCEDX + GRAT[2],
+                                   h - GRREFERENCEDY + GRAT[3])
+             << 8;
+  CONTEXT |= lines[1] << 9;
+  CONTEXT |= lines[0] << 10;
+  CONTEXT |= GRREG.GetPixel(w + GRAT[0], h + GRAT[1]) << 12;
+  return CONTEXT;
 }
 
-void CJBig2_GRRDProc::DecodeTemplate0UnoptSetPixel(CJBig2_Image* GRREG,
-                                                   uint32_t* lines,
-                                                   uint32_t w,
-                                                   uint32_t h,
-                                                   int bVal) {
+void CJBig2_GRRDProc::DecodeTemplate0UnoptSetPixel(
+    CJBig2_Image* GRREG,
+    pdfium::span<uint32_t, 5> lines,
+    uint32_t w,
+    uint32_t h,
+    int bVal) {
   GRREG->SetPixel(w, h, bVal);
-  UNSAFE_TODO({
-    lines[0] = ((lines[0] << 1) | GRREG->GetPixel(w + 2, h - 1)) & 0x03;
-    lines[1] = ((lines[1] << 1) | bVal) & 0x01;
-    lines[2] =
-        ((lines[2] << 1) |
-         GRREFERENCE->GetPixel(w - GRREFERENCEDX + 2, h - GRREFERENCEDY - 1)) &
-        0x03;
-    lines[3] = ((lines[3] << 1) | GRREFERENCE->GetPixel(w - GRREFERENCEDX + 2,
-                                                        h - GRREFERENCEDY)) &
-               0x07;
-    lines[4] =
-        ((lines[4] << 1) |
-         GRREFERENCE->GetPixel(w - GRREFERENCEDX + 2, h - GRREFERENCEDY + 1)) &
-        0x07;
-  });
+  const int w_dx = w - GRREFERENCEDX + 2;
+  lines[0] = ((lines[0] << 1) | GRREG->GetPixel(w + 2, h - 1)) & 0x03;
+  lines[1] = ((lines[1] << 1) | bVal) & 0x01;
+  lines[2] =
+      ((lines[2] << 1) | GRREFERENCE->GetPixel(w_dx, h - GRREFERENCEDY - 1)) &
+      0x03;
+  lines[3] =
+      ((lines[3] << 1) | GRREFERENCE->GetPixel(w_dx, h - GRREFERENCEDY)) & 0x07;
+  lines[4] =
+      ((lines[4] << 1) | GRREFERENCE->GetPixel(w_dx, h - GRREFERENCEDY + 1)) &
+      0x07;
 }
 
 std::unique_ptr<CJBig2_Image> CJBig2_GRRDProc::DecodeTemplate0Opt(
@@ -328,60 +324,59 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRRDProc::DecodeTemplate1Unopt(
       LTP = LTP ^ pArithDecoder->Decode(&grContexts[0x0008]);
     }
     if (!LTP) {
-      uint32_t line1 = GRREG->GetPixel(1, h - 1);
-      line1 |= GRREG->GetPixel(0, h - 1) << 1;
-      line1 |= GRREG->GetPixel(-1, h - 1) << 2;
-      uint32_t line2 = 0;
-      uint32_t line3 =
-          GRREFERENCE->GetPixel(-GRREFERENCEDX, h - GRREFERENCEDY - 1);
-      uint32_t line4 =
-          GRREFERENCE->GetPixel(-GRREFERENCEDX + 1, h - GRREFERENCEDY);
-      line4 |= GRREFERENCE->GetPixel(-GRREFERENCEDX, h - GRREFERENCEDY) << 1;
-      line4 |= GRREFERENCE->GetPixel(-GRREFERENCEDX - 1, h - GRREFERENCEDY)
-               << 2;
-      uint32_t line5 =
+      std::array<uint32_t, 5> lines;
+      lines[0] = GRREG->GetPixel(1, h - 1);
+      lines[0] |= GRREG->GetPixel(0, h - 1) << 1;
+      lines[0] |= GRREG->GetPixel(-1, h - 1) << 2;
+      lines[1] = 0;
+      lines[2] = GRREFERENCE->GetPixel(-GRREFERENCEDX, h - GRREFERENCEDY - 1);
+      lines[3] = GRREFERENCE->GetPixel(-GRREFERENCEDX + 1, h - GRREFERENCEDY);
+      lines[3] |= GRREFERENCE->GetPixel(-GRREFERENCEDX, h - GRREFERENCEDY) << 1;
+      lines[3] |= GRREFERENCE->GetPixel(-GRREFERENCEDX - 1, h - GRREFERENCEDY)
+                  << 2;
+      lines[4] =
           GRREFERENCE->GetPixel(-GRREFERENCEDX + 1, h - GRREFERENCEDY + 1);
-      line5 |= GRREFERENCE->GetPixel(-GRREFERENCEDX, h - GRREFERENCEDY + 1)
-               << 1;
+      lines[4] |= GRREFERENCE->GetPixel(-GRREFERENCEDX, h - GRREFERENCEDY + 1)
+                  << 1;
       for (uint32_t w = 0; w < GRW; w++) {
-        uint32_t CONTEXT = line5;
-        CONTEXT |= line4 << 2;
-        CONTEXT |= line3 << 5;
-        CONTEXT |= line2 << 6;
-        CONTEXT |= line1 << 7;
+        uint32_t CONTEXT = lines[4];
+        CONTEXT |= lines[3] << 2;
+        CONTEXT |= lines[2] << 5;
+        CONTEXT |= lines[1] << 6;
+        CONTEXT |= lines[0] << 7;
         if (pArithDecoder->IsComplete()) {
           return nullptr;
         }
         int bVal = pArithDecoder->Decode(&grContexts[CONTEXT]);
         GRREG->SetPixel(w, h, bVal);
-        line1 = ((line1 << 1) | GRREG->GetPixel(w + 2, h - 1)) & 0x07;
-        line2 = ((line2 << 1) | bVal) & 0x01;
-        line3 = ((line3 << 1) | GRREFERENCE->GetPixel(w - GRREFERENCEDX + 1,
-                                                      h - GRREFERENCEDY - 1)) &
-                0x01;
-        line4 = ((line4 << 1) | GRREFERENCE->GetPixel(w - GRREFERENCEDX + 2,
-                                                      h - GRREFERENCEDY)) &
-                0x07;
-        line5 = ((line5 << 1) | GRREFERENCE->GetPixel(w - GRREFERENCEDX + 2,
-                                                      h - GRREFERENCEDY + 1)) &
-                0x03;
+        const int w_dx = w - GRREFERENCEDX + 1;
+        lines[0] = ((lines[0] << 1) | GRREG->GetPixel(w + 2, h - 1)) & 0x07;
+        lines[1] = ((lines[1] << 1) | bVal) & 0x01;
+        lines[2] = ((lines[2] << 1) |
+                    GRREFERENCE->GetPixel(w_dx, h - GRREFERENCEDY - 1)) &
+                   0x01;
+        lines[3] = ((lines[3] << 1) |
+                    GRREFERENCE->GetPixel(w_dx + 1, h - GRREFERENCEDY)) &
+                   0x07;
+        lines[4] = ((lines[4] << 1) |
+                    GRREFERENCE->GetPixel(w_dx + 1, h - GRREFERENCEDY + 1)) &
+                   0x03;
       }
     } else {
-      uint32_t line1 = GRREG->GetPixel(1, h - 1);
-      line1 |= GRREG->GetPixel(0, h - 1) << 1;
-      line1 |= GRREG->GetPixel(-1, h - 1) << 2;
-      uint32_t line2 = 0;
-      uint32_t line3 =
-          GRREFERENCE->GetPixel(-GRREFERENCEDX, h - GRREFERENCEDY - 1);
-      uint32_t line4 =
-          GRREFERENCE->GetPixel(-GRREFERENCEDX + 1, h - GRREFERENCEDY);
-      line4 |= GRREFERENCE->GetPixel(-GRREFERENCEDX, h - GRREFERENCEDY) << 1;
-      line4 |= GRREFERENCE->GetPixel(-GRREFERENCEDX - 1, h - GRREFERENCEDY)
-               << 2;
-      uint32_t line5 =
+      std::array<uint32_t, 5> lines;
+      lines[0] = GRREG->GetPixel(1, h - 1);
+      lines[0] |= GRREG->GetPixel(0, h - 1) << 1;
+      lines[0] |= GRREG->GetPixel(-1, h - 1) << 2;
+      lines[1] = 0;
+      lines[2] = GRREFERENCE->GetPixel(-GRREFERENCEDX, h - GRREFERENCEDY - 1);
+      lines[3] = GRREFERENCE->GetPixel(-GRREFERENCEDX + 1, h - GRREFERENCEDY);
+      lines[3] |= GRREFERENCE->GetPixel(-GRREFERENCEDX, h - GRREFERENCEDY) << 1;
+      lines[3] |= GRREFERENCE->GetPixel(-GRREFERENCEDX - 1, h - GRREFERENCEDY)
+                  << 2;
+      lines[4] =
           GRREFERENCE->GetPixel(-GRREFERENCEDX + 1, h - GRREFERENCEDY + 1);
-      line5 |= GRREFERENCE->GetPixel(-GRREFERENCEDX, h - GRREFERENCEDY + 1)
-               << 1;
+      lines[4] |= GRREFERENCE->GetPixel(-GRREFERENCEDX, h - GRREFERENCEDY + 1)
+                  << 1;
       for (uint32_t w = 0; w < GRW; w++) {
         int bVal = GRREFERENCE->GetPixel(w, h);
         if (!(TPGRON && (bVal == GRREFERENCE->GetPixel(w - 1, h - 1)) &&
@@ -392,28 +387,29 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRRDProc::DecodeTemplate1Unopt(
               (bVal == GRREFERENCE->GetPixel(w - 1, h + 1)) &&
               (bVal == GRREFERENCE->GetPixel(w, h + 1)) &&
               (bVal == GRREFERENCE->GetPixel(w + 1, h + 1)))) {
-          uint32_t CONTEXT = line5;
-          CONTEXT |= line4 << 2;
-          CONTEXT |= line3 << 5;
-          CONTEXT |= line2 << 6;
-          CONTEXT |= line1 << 7;
+          uint32_t CONTEXT = lines[4];
+          CONTEXT |= lines[3] << 2;
+          CONTEXT |= lines[2] << 5;
+          CONTEXT |= lines[1] << 6;
+          CONTEXT |= lines[0] << 7;
           if (pArithDecoder->IsComplete()) {
             return nullptr;
           }
           bVal = pArithDecoder->Decode(&grContexts[CONTEXT]);
         }
         GRREG->SetPixel(w, h, bVal);
-        line1 = ((line1 << 1) | GRREG->GetPixel(w + 2, h - 1)) & 0x07;
-        line2 = ((line2 << 1) | bVal) & 0x01;
-        line3 = ((line3 << 1) | GRREFERENCE->GetPixel(w - GRREFERENCEDX + 1,
-                                                      h - GRREFERENCEDY - 1)) &
-                0x01;
-        line4 = ((line4 << 1) | GRREFERENCE->GetPixel(w - GRREFERENCEDX + 2,
-                                                      h - GRREFERENCEDY)) &
-                0x07;
-        line5 = ((line5 << 1) | GRREFERENCE->GetPixel(w - GRREFERENCEDX + 2,
-                                                      h - GRREFERENCEDY + 1)) &
-                0x03;
+        const int w_dx = w - GRREFERENCEDX + 1;
+        lines[0] = ((lines[0] << 1) | GRREG->GetPixel(w + 2, h - 1)) & 0x07;
+        lines[1] = ((lines[1] << 1) | bVal) & 0x01;
+        lines[2] = ((lines[2] << 1) |
+                    GRREFERENCE->GetPixel(w_dx, h - GRREFERENCEDY - 1)) &
+                   0x01;
+        lines[3] = ((lines[3] << 1) |
+                    GRREFERENCE->GetPixel(w_dx + 1, h - GRREFERENCEDY)) &
+                   0x07;
+        lines[4] = ((lines[4] << 1) |
+                    GRREFERENCE->GetPixel(w_dx + 1, h - GRREFERENCEDY + 1)) &
+                   0x03;
       }
     }
   }

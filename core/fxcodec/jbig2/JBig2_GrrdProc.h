@@ -37,12 +37,13 @@ class CJBig2_GRRDProc {
   std::array<int8_t, 4> GRAT;
 
  private:
-  uint32_t DecodeTemplate0UnoptCalculateContext(const CJBig2_Image& GRREG,
-                                                const uint32_t* lines,
-                                                uint32_t w,
-                                                uint32_t h) const;
+  uint32_t DecodeTemplate0UnoptCalculateContext(
+      const CJBig2_Image& GRREG,
+      pdfium::span<const uint32_t, 5> lines,
+      uint32_t w,
+      uint32_t h) const;
   void DecodeTemplate0UnoptSetPixel(CJBig2_Image* GRREG,
-                                    uint32_t* lines,
+                                    pdfium::span<uint32_t, 5> lines,
                                     uint32_t w,
                                     uint32_t h,
                                     int bVal);
