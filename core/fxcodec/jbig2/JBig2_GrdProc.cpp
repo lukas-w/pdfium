@@ -240,41 +240,59 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRDProc::DecodeArithTemplateUnopt(
       GBREG->CopyLine(h, h - 1);
       continue;
     }
-    uint32_t line1 = GBREG->GetPixel(1 + MOD2, h - 2);
-    line1 |= GBREG->GetPixel(MOD2, h - 2) << 1;
-    if (UNOPT == 1) {
-      line1 |= GBREG->GetPixel(0, h - 2) << 2;
+
+    pdfium::span<uint8_t> row_write = GBREG->GetLine(h);
+    pdfium::span<const uint8_t> row_prev2 = GBREG->GetLine(h - 2);
+    pdfium::span<const uint8_t> row_prev1 = GBREG->GetLine(h - 1);
+    pdfium::span<const uint8_t> row_skip;
+    if (USESKIP) {
+      row_skip = SKIP->GetLine(h);
     }
-    uint32_t line2 = GBREG->GetPixel(2 - DIV2, h - 1);
-    line2 |= GBREG->GetPixel(1 - DIV2, h - 1) << 1;
+    pdfium::span<const uint8_t> row_gbat0 = GBREG->GetLine(h + GBAT[1]);
+    pdfium::span<const uint8_t> row_gbat1;
+    pdfium::span<const uint8_t> row_gbat2;
+    pdfium::span<const uint8_t> row_gbat3;
+    if (UNOPT == 0) {
+      row_gbat1 = GBREG->GetLine(h + GBAT[3]);
+      row_gbat2 = GBREG->GetLine(h + GBAT[5]);
+      row_gbat3 = GBREG->GetLine(h + GBAT[7]);
+    }
+
+    uint32_t line1 = GBREG->GetPixel(1 + MOD2, row_prev2);
+    line1 |= GBREG->GetPixel(MOD2, row_prev2) << 1;
+    if (UNOPT == 1) {
+      line1 |= GBREG->GetPixel(0, row_prev2) << 2;
+    }
+    uint32_t line2 = GBREG->GetPixel(2 - DIV2, row_prev1);
+    line2 |= GBREG->GetPixel(1 - DIV2, row_prev1) << 1;
     if (UNOPT < 2) {
-      line2 |= GBREG->GetPixel(0, h - 1) << 2;
+      line2 |= GBREG->GetPixel(0, row_prev1) << 2;
     }
     uint32_t line3 = 0;
     for (uint32_t w = 0; w < GBW; w++) {
       int bVal = 0;
-      if (!USESKIP || !SKIP->GetPixel(w, h)) {
+      if (!USESKIP || !SKIP->GetPixel(w, row_skip)) {
         if (pArithDecoder->IsComplete()) {
           return nullptr;
         }
 
         uint32_t CONTEXT = line3;
-        CONTEXT |= GBREG->GetPixel(w + GBAT[0], h + GBAT[1]) << SHIFT;
+        CONTEXT |= GBREG->GetPixel(w + GBAT[0], row_gbat0) << SHIFT;
         CONTEXT |= line2 << (SHIFT + 1);
         CONTEXT |= line1 << kOptConstant9[UNOPT];
         if (UNOPT == 0) {
-          CONTEXT |= GBREG->GetPixel(w + GBAT[2], h + GBAT[3]) << 10;
-          CONTEXT |= GBREG->GetPixel(w + GBAT[4], h + GBAT[5]) << 11;
-          CONTEXT |= GBREG->GetPixel(w + GBAT[6], h + GBAT[7]) << 15;
+          CONTEXT |= GBREG->GetPixel(w + GBAT[2], row_gbat1) << 10;
+          CONTEXT |= GBREG->GetPixel(w + GBAT[4], row_gbat2) << 11;
+          CONTEXT |= GBREG->GetPixel(w + GBAT[6], row_gbat3) << 15;
         }
         bVal = pArithDecoder->Decode(&gbContexts[CONTEXT]);
         if (bVal) {
-          GBREG->SetPixel(w, h, bVal);
+          GBREG->SetPixel(w, row_write, bVal);
         }
       }
-      line1 = ((line1 << 1) | GBREG->GetPixel(w + 2 + MOD2, h - 2)) &
+      line1 = ((line1 << 1) | GBREG->GetPixel(w + 2 + MOD2, row_prev2)) &
               kOptConstant10[UNOPT];
-      line2 = ((line2 << 1) | GBREG->GetPixel(w + 3 - DIV2, h - 1)) &
+      line2 = ((line2 << 1) | GBREG->GetPixel(w + 3 - DIV2, row_prev1)) &
               kOptConstant11[UNOPT];
       line3 = ((line3 << 1) | bVal) & kOptConstant12[UNOPT];
     }
@@ -396,16 +414,24 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRDProc::DecodeArithTemplate3Unopt(
     if (LTP == 1) {
       GBREG->CopyLine(h, h - 1);
     } else {
-      uint32_t line1 = GBREG->GetPixel(1, h - 1);
-      line1 |= GBREG->GetPixel(0, h - 1) << 1;
+      pdfium::span<uint8_t> row_write = GBREG->GetLine(h);
+      pdfium::span<const uint8_t> row_prev = GBREG->GetLine(h - 1);
+      pdfium::span<const uint8_t> row_skip;
+      if (USESKIP) {
+        row_skip = SKIP->GetLine(h);
+      }
+      pdfium::span<const uint8_t> row_gbat = GBREG->GetLine(h + GBAT[1]);
+
+      uint32_t line1 = GBREG->GetPixel(1, row_prev);
+      line1 |= GBREG->GetPixel(0, row_prev) << 1;
       uint32_t line2 = 0;
       for (uint32_t w = 0; w < GBW; w++) {
         int bVal;
-        if (USESKIP && SKIP->GetPixel(w, h)) {
+        if (USESKIP && SKIP->GetPixel(w, row_skip)) {
           bVal = 0;
         } else {
           uint32_t CONTEXT = line2;
-          CONTEXT |= GBREG->GetPixel(w + GBAT[0], h + GBAT[1]) << 4;
+          CONTEXT |= GBREG->GetPixel(w + GBAT[0], row_gbat) << 4;
           CONTEXT |= line1 << 5;
           if (pArithDecoder->IsComplete()) {
             return nullptr;
@@ -414,9 +440,9 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRDProc::DecodeArithTemplate3Unopt(
           bVal = pArithDecoder->Decode(&gbContexts[CONTEXT]);
         }
         if (bVal) {
-          GBREG->SetPixel(w, h, bVal);
+          GBREG->SetPixel(w, row_write, bVal);
         }
-        line1 = ((line1 << 1) | GBREG->GetPixel(w + 2, h - 1)) & 0x1f;
+        line1 = ((line1 << 1) | GBREG->GetPixel(w + 2, row_prev)) & 0x1f;
         line2 = ((line2 << 1) | bVal) & 0x0f;
       }
     }
@@ -657,24 +683,40 @@ FXCODEC_STATUS CJBig2_GRDProc::ProgressiveDecodeArithTemplate0Unopt(
     if (ltp_) {
       pImage->CopyLine(loop_index_, loop_index_ - 1);
     } else {
-      uint32_t line1 = pImage->GetPixel(1, loop_index_ - 2);
-      line1 |= pImage->GetPixel(0, loop_index_ - 2) << 1;
-      uint32_t line2 = pImage->GetPixel(2, loop_index_ - 1);
-      line2 |= pImage->GetPixel(1, loop_index_ - 1) << 1;
-      line2 |= pImage->GetPixel(0, loop_index_ - 1) << 2;
+      pdfium::span<uint8_t> row_write = pImage->GetLine(loop_index_);
+      pdfium::span<const uint8_t> row_prev2 = pImage->GetLine(loop_index_ - 2);
+      pdfium::span<const uint8_t> row_prev1 = pImage->GetLine(loop_index_ - 1);
+      pdfium::span<const uint8_t> row_skip;
+      if (USESKIP) {
+        row_skip = SKIP->GetLine(loop_index_);
+      }
+      pdfium::span<const uint8_t> row_gbat0 =
+          pImage->GetLine(loop_index_ + GBAT[1]);
+      pdfium::span<const uint8_t> row_gbat1 =
+          pImage->GetLine(loop_index_ + GBAT[3]);
+      pdfium::span<const uint8_t> row_gbat2 =
+          pImage->GetLine(loop_index_ + GBAT[5]);
+      pdfium::span<const uint8_t> row_gbat3 =
+          pImage->GetLine(loop_index_ + GBAT[7]);
+
+      uint32_t line1 = pImage->GetPixel(1, row_prev2);
+      line1 |= pImage->GetPixel(0, row_prev2) << 1;
+      uint32_t line2 = pImage->GetPixel(2, row_prev1);
+      line2 |= pImage->GetPixel(1, row_prev1) << 1;
+      line2 |= pImage->GetPixel(0, row_prev1) << 2;
       uint32_t line3 = 0;
       for (uint32_t w = 0; w < GBW; w++) {
         int bVal;
-        if (USESKIP && SKIP->GetPixel(w, loop_index_)) {
+        if (USESKIP && SKIP->GetPixel(w, row_skip)) {
           bVal = 0;
         } else {
           uint32_t CONTEXT = line3;
-          CONTEXT |= pImage->GetPixel(w + GBAT[0], loop_index_ + GBAT[1]) << 4;
+          CONTEXT |= pImage->GetPixel(w + GBAT[0], row_gbat0) << 4;
           CONTEXT |= line2 << 5;
-          CONTEXT |= pImage->GetPixel(w + GBAT[2], loop_index_ + GBAT[3]) << 10;
-          CONTEXT |= pImage->GetPixel(w + GBAT[4], loop_index_ + GBAT[5]) << 11;
+          CONTEXT |= pImage->GetPixel(w + GBAT[2], row_gbat1) << 10;
+          CONTEXT |= pImage->GetPixel(w + GBAT[4], row_gbat2) << 11;
           CONTEXT |= line1 << 12;
-          CONTEXT |= pImage->GetPixel(w + GBAT[6], loop_index_ + GBAT[7]) << 15;
+          CONTEXT |= pImage->GetPixel(w + GBAT[6], row_gbat3) << 15;
           if (pArithDecoder->IsComplete()) {
             return FXCODEC_STATUS::kError;
           }
@@ -682,12 +724,10 @@ FXCODEC_STATUS CJBig2_GRDProc::ProgressiveDecodeArithTemplate0Unopt(
           bVal = pArithDecoder->Decode(&gbContexts[CONTEXT]);
         }
         if (bVal) {
-          pImage->SetPixel(w, loop_index_, bVal);
+          pImage->SetPixel(w, row_write, bVal);
         }
-        line1 =
-            ((line1 << 1) | pImage->GetPixel(w + 2, loop_index_ - 2)) & 0x07;
-        line2 =
-            ((line2 << 1) | pImage->GetPixel(w + 3, loop_index_ - 1)) & 0x1f;
+        line1 = ((line1 << 1) | pImage->GetPixel(w + 2, row_prev2)) & 0x07;
+        line2 = ((line2 << 1) | pImage->GetPixel(w + 3, row_prev1)) & 0x1f;
         line3 = ((line3 << 1) | bVal) & 0x0f;
       }
     }
@@ -995,18 +1035,28 @@ FXCODEC_STATUS CJBig2_GRDProc::ProgressiveDecodeArithTemplate2Unopt(
     if (ltp_) {
       pImage->CopyLine(loop_index_, loop_index_ - 1);
     } else {
-      uint32_t line1 = pImage->GetPixel(1, loop_index_ - 2);
-      line1 |= pImage->GetPixel(0, loop_index_ - 2) << 1;
-      uint32_t line2 = pImage->GetPixel(1, loop_index_ - 1);
-      line2 |= pImage->GetPixel(0, loop_index_ - 1) << 1;
+      pdfium::span<uint8_t> row_write = pImage->GetLine(loop_index_);
+      pdfium::span<const uint8_t> row_prev2 = pImage->GetLine(loop_index_ - 2);
+      pdfium::span<const uint8_t> row_prev1 = pImage->GetLine(loop_index_ - 1);
+      pdfium::span<const uint8_t> row_skip;
+      if (USESKIP) {
+        row_skip = SKIP->GetLine(loop_index_);
+      }
+      pdfium::span<const uint8_t> row_gbat =
+          pImage->GetLine(loop_index_ + GBAT[1]);
+
+      uint32_t line1 = pImage->GetPixel(1, row_prev2);
+      line1 |= pImage->GetPixel(0, row_prev2) << 1;
+      uint32_t line2 = pImage->GetPixel(1, row_prev1);
+      line2 |= pImage->GetPixel(0, row_prev1) << 1;
       uint32_t line3 = 0;
       for (uint32_t w = 0; w < GBW; w++) {
         int bVal;
-        if (USESKIP && SKIP->GetPixel(w, loop_index_)) {
+        if (USESKIP && SKIP->GetPixel(w, row_skip)) {
           bVal = 0;
         } else {
           uint32_t CONTEXT = line3;
-          CONTEXT |= pImage->GetPixel(w + GBAT[0], loop_index_ + GBAT[1]) << 2;
+          CONTEXT |= pImage->GetPixel(w + GBAT[0], row_gbat) << 2;
           CONTEXT |= line2 << 3;
           CONTEXT |= line1 << 7;
           if (pArithDecoder->IsComplete()) {
@@ -1016,12 +1066,10 @@ FXCODEC_STATUS CJBig2_GRDProc::ProgressiveDecodeArithTemplate2Unopt(
           bVal = pArithDecoder->Decode(&gbContexts[CONTEXT]);
         }
         if (bVal) {
-          pImage->SetPixel(w, loop_index_, bVal);
+          pImage->SetPixel(w, row_write, bVal);
         }
-        line1 =
-            ((line1 << 1) | pImage->GetPixel(w + 2, loop_index_ - 2)) & 0x07;
-        line2 =
-            ((line2 << 1) | pImage->GetPixel(w + 2, loop_index_ - 1)) & 0x0f;
+        line1 = ((line1 << 1) | pImage->GetPixel(w + 2, row_prev2)) & 0x07;
+        line2 = ((line2 << 1) | pImage->GetPixel(w + 2, row_prev1)) & 0x0f;
         line3 = ((line3 << 1) | bVal) & 0x03;
       }
     }
@@ -1146,16 +1194,25 @@ FXCODEC_STATUS CJBig2_GRDProc::ProgressiveDecodeArithTemplate3Unopt(
     if (ltp_) {
       pImage->CopyLine(loop_index_, loop_index_ - 1);
     } else {
-      uint32_t line1 = pImage->GetPixel(1, loop_index_ - 1);
-      line1 |= pImage->GetPixel(0, loop_index_ - 1) << 1;
+      pdfium::span<uint8_t> row_write = pImage->GetLine(loop_index_);
+      pdfium::span<const uint8_t> row_prev = pImage->GetLine(loop_index_ - 1);
+      pdfium::span<const uint8_t> row_skip;
+      if (USESKIP) {
+        row_skip = SKIP->GetLine(loop_index_);
+      }
+      pdfium::span<const uint8_t> row_gbat =
+          pImage->GetLine(loop_index_ + GBAT[1]);
+
+      uint32_t line1 = pImage->GetPixel(1, row_prev);
+      line1 |= pImage->GetPixel(0, row_prev) << 1;
       uint32_t line2 = 0;
       for (uint32_t w = 0; w < GBW; w++) {
         int bVal;
-        if (USESKIP && SKIP->GetPixel(w, loop_index_)) {
+        if (USESKIP && SKIP->GetPixel(w, row_skip)) {
           bVal = 0;
         } else {
           uint32_t CONTEXT = line2;
-          CONTEXT |= pImage->GetPixel(w + GBAT[0], loop_index_ + GBAT[1]) << 4;
+          CONTEXT |= pImage->GetPixel(w + GBAT[0], row_gbat) << 4;
           CONTEXT |= line1 << 5;
           if (pArithDecoder->IsComplete()) {
             return FXCODEC_STATUS::kError;
@@ -1164,10 +1221,9 @@ FXCODEC_STATUS CJBig2_GRDProc::ProgressiveDecodeArithTemplate3Unopt(
           bVal = pArithDecoder->Decode(&gbContexts[CONTEXT]);
         }
         if (bVal) {
-          pImage->SetPixel(w, loop_index_, bVal);
+          pImage->SetPixel(w, row_write, bVal);
         }
-        line1 =
-            ((line1 << 1) | pImage->GetPixel(w + 2, loop_index_ - 1)) & 0x1f;
+        line1 = ((line1 << 1) | pImage->GetPixel(w + 2, row_prev)) & 0x1f;
         line2 = ((line2 << 1) | bVal) & 0x0f;
       }
     }
