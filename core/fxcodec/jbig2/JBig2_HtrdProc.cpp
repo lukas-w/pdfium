@@ -27,15 +27,16 @@ std::unique_ptr<CJBig2_Image> CJBig2_HTRDProc::DecodeArith(
     HSKIP = std::make_unique<CJBig2_Image>(HGW, HGH);
     for (uint32_t mg = 0; mg < HGH; ++mg) {
       pdfium::span<uint8_t> row_write = HSKIP->GetLine(mg);
+      // See comment in the inner-loop below re: casting.
+      const int64_t row_x = HGX + static_cast<int64_t>(mg) * HRY;
+      const int64_t row_y = HGY + static_cast<int64_t>(mg) * HRX;
       for (uint32_t ng = 0; ng < HGW; ++ng) {
         // The `>> 8` is an arithmetic shift per spec.  Cast mg, ng to int,
         // else implicit conversions would evaluate it as unsigned shift.
         // HGX / HGY are 32 bit, HRX / HRY 16, mg / ng 32.
         // The result after >> 8 fits in about 42 bit; int64_t suffices.
-        auto mg_int = static_cast<int64_t>(mg);
-        auto ng_int = static_cast<int64_t>(ng);
-        int64_t x = (HGX + mg_int * HRY + ng_int * HRX) >> 8;
-        int64_t y = (HGY + mg_int * HRX - ng_int * HRY) >> 8;
+        int64_t x = (row_x + static_cast<int64_t>(ng) * HRX) >> 8;
+        int64_t y = (row_y - static_cast<int64_t>(ng) * HRY) >> 8;
 
         bool out_of_bounds = (x + HPW <= 0) | (x >= static_cast<int32_t>(HBW)) |
                              (y + HPH <= 0) | (y >= static_cast<int32_t>(HBH));
@@ -145,6 +146,9 @@ std::unique_ptr<CJBig2_Image> CJBig2_HTRDProc::DecodeImage(
       row = plane->GetLine(mg);
     }
 
+    // See comment in the inner-loop below re: casting.
+    const int64_t row_x = HGX + static_cast<int64_t>(mg) * HRY;
+    const int64_t row_y = HGY + static_cast<int64_t>(mg) * HRX;
     for (uint32_t ng = 0; ng < HGW; ++ng) {
       uint32_t gsval = 0;
       for (uint8_t i = 0; i < GSPLANES.size(); ++i) {
@@ -155,10 +159,8 @@ std::unique_ptr<CJBig2_Image> CJBig2_HTRDProc::DecodeImage(
       // else implicit conversions would evaluate it as unsigned shift.
       // HGX / HGY are 32 bit, HRX / HRY 16, mg / ng 32.
       // The result after >> 8 fits in about 42 bit; int64_t suffices.
-      auto mg_int = static_cast<int64_t>(mg);
-      auto ng_int = static_cast<int64_t>(ng);
-      int64_t x = (HGX + mg_int * HRY + ng_int * HRX) >> 8;
-      int64_t y = (HGY + mg_int * HRX - ng_int * HRY) >> 8;
+      int64_t x = (row_x + static_cast<int64_t>(ng) * HRX) >> 8;
+      int64_t y = (row_y - static_cast<int64_t>(ng) * HRY) >> 8;
       (*HPATS)[pat_index]->ComposeTo(HTREG.get(), x, y, HCOMBOP);
     }
   }
