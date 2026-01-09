@@ -12,6 +12,7 @@
 #include "core/fxcodec/jbig2/JBig2_BitStream.h"
 #include "core/fxcodec/jbig2/JBig2_GrdProc.h"
 #include "core/fxcodec/jbig2/JBig2_Image.h"
+#include "core/fxcrt/zip.h"
 
 CJBig2_HTRDProc::CJBig2_HTRDProc() = default;
 
@@ -25,6 +26,7 @@ std::unique_ptr<CJBig2_Image> CJBig2_HTRDProc::DecodeArith(
   if (HENABLESKIP == 1) {
     HSKIP = std::make_unique<CJBig2_Image>(HGW, HGH);
     for (uint32_t mg = 0; mg < HGH; ++mg) {
+      pdfium::span<uint8_t> row_write = HSKIP->GetLine(mg);
       for (uint32_t ng = 0; ng < HGW; ++ng) {
         // The `>> 8` is an arithmetic shift per spec.  Cast mg, ng to int,
         // else implicit conversions would evaluate it as unsigned shift.
@@ -35,12 +37,9 @@ std::unique_ptr<CJBig2_Image> CJBig2_HTRDProc::DecodeArith(
         int64_t x = (HGX + mg_int * HRY + ng_int * HRX) >> 8;
         int64_t y = (HGY + mg_int * HRX - ng_int * HRY) >> 8;
 
-        if ((x + HPW <= 0) | (x >= static_cast<int32_t>(HBW)) | (y + HPH <= 0) |
-            (y >= static_cast<int32_t>(HBH))) {
-          HSKIP->SetPixel(ng, mg, 1);
-        } else {
-          HSKIP->SetPixel(ng, mg, 0);
-        }
+        bool out_of_bounds = (x + HPW <= 0) | (x >= static_cast<int32_t>(HBW)) |
+                             (y + HPH <= 0) | (y >= static_cast<int32_t>(HBH));
+        HSKIP->SetPixel(ng, row_write, out_of_bounds ? 1 : 0);
       }
     }
   }
@@ -141,10 +140,15 @@ std::unique_ptr<CJBig2_Image> CJBig2_HTRDProc::DecodeImage(
 
   HTREG->Fill(HDEFPIXEL);
   for (uint32_t mg = 0; mg < HGH; ++mg) {
+    std::vector<pdfium::span<uint8_t>> rows(GSPLANES.size());
+    for (auto [plane, row] : fxcrt::Zip(GSPLANES, rows)) {
+      row = plane->GetLine(mg);
+    }
+
     for (uint32_t ng = 0; ng < HGW; ++ng) {
       uint32_t gsval = 0;
       for (uint8_t i = 0; i < GSPLANES.size(); ++i) {
-        gsval |= GSPLANES[i]->GetPixel(ng, mg) << i;
+        gsval |= GSPLANES[i]->GetPixel(ng, rows[i]) << i;
       }
       uint32_t pat_index = std::min(gsval, HNUMPATS - 1);
       // The `>> 8` is an arithmetic shift per spec.  Cast mg, ng to int,

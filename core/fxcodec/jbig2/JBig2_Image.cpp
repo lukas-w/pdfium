@@ -143,12 +143,15 @@ pdfium::span<uint8_t> CJBig2_Image::span() {
 }
 
 int CJBig2_Image::GetPixel(int32_t x, int32_t y) const {
-  if (x < 0 || x >= width_) {
-    return 0;
-  }
+  return GetPixel(x, GetLine(y));
+}
 
-  pdfium::span<const uint8_t> line = GetLine(y);
-  if (line.empty()) {
+void CJBig2_Image::SetPixel(int32_t x, int32_t y, int v) {
+  SetPixel(x, GetLine(y), v);
+}
+
+int CJBig2_Image::GetPixel(int32_t x, pdfium::span<const uint8_t> line) const {
+  if (line.empty() || x < 0 || x >= width_) {
     return 0;
   }
 
@@ -157,13 +160,8 @@ int CJBig2_Image::GetPixel(int32_t x, int32_t y) const {
   return (line[m] >> (7 - n)) & 1;
 }
 
-void CJBig2_Image::SetPixel(int32_t x, int32_t y, int v) {
-  if (x < 0 || x >= width_) {
-    return;
-  }
-
-  pdfium::span<uint8_t> line = GetLine(y);
-  if (line.empty()) {
+void CJBig2_Image::SetPixel(int32_t x, pdfium::span<uint8_t> line, int v) {
+  if (line.empty() || x < 0 || x >= width_) {
     return;
   }
 
