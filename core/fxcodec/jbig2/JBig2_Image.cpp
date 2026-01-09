@@ -412,46 +412,76 @@ bool CJBig2_Image::ComposeToInternal(CJBig2_Image* pDst,
       pdfium::checked_cast<size_t>(BitIndexToAlignedByte(xd0));
   const int32_t lineLeft = stride_ - BitIndexToAlignedByte(xs0);
 
+  enum class ComposeToOp {
+    kDestAlignedSrcAlignedSrcGreaterThanDest,
+    kDestAlignedSrcAlignedSrcLessThanEqualDest,
+    kDestAlignedSrcNotAligned,
+    kDestNotAlignedSrcGreaterThanDest,
+    kDestNotAlignedSrcEqualToDest,
+    kDestNotAlignedSrcLessThanDest
+  };
+
+  ComposeToOp compose_to_op;
   if ((xd0 & ~31) == ((xd1 - 1) & ~31)) {
     if ((xs0 & ~31) == ((xs1 - 1) & ~31)) {
-      if (s1 > d1) {
-        const uint32_t shift = s1 - d1;
-        for (int32_t i = 0; i < h; ++i) {
-          pdfium::span<const uint8_t> src = GetLine(src_start_line + i);
-          pdfium::span<uint8_t> dest = pDst->GetLine(dest_start_line + i);
-          if (src.empty() || dest.empty()) {
-            return false;
-          }
-
-          const uint8_t* lineSrc = src.subspan(src_offset).data();
-          uint8_t* lineDst = dest.subspan(dest_offset).data();
-          UNSAFE_TODO({
-            uint32_t tmp1 = JBIG2_GETDWORD(lineSrc) << shift;
-            uint32_t tmp2 = JBIG2_GETDWORD(lineDst);
-            uint32_t tmp = DoComposeWithMask(op, tmp1, tmp2, maskM);
-            JBIG2_PUTDWORD(lineDst, tmp);
-          });
-        }
-      } else {
-        const uint32_t shift = d1 - s1;
-        for (int32_t i = 0; i < h; ++i) {
-          pdfium::span<const uint8_t> src = GetLine(src_start_line + i);
-          pdfium::span<uint8_t> dest = pDst->GetLine(dest_start_line + i);
-          if (src.empty() || dest.empty()) {
-            return false;
-          }
-
-          const uint8_t* lineSrc = src.subspan(src_offset).data();
-          uint8_t* lineDst = dest.subspan(dest_offset).data();
-          UNSAFE_TODO({
-            uint32_t tmp1 = JBIG2_GETDWORD(lineSrc) >> shift;
-            uint32_t tmp2 = JBIG2_GETDWORD(lineDst);
-            uint32_t tmp = DoComposeWithMask(op, tmp1, tmp2, maskM);
-            JBIG2_PUTDWORD(lineDst, tmp);
-          });
-        }
-      }
+      compose_to_op =
+          s1 > d1 ? ComposeToOp::kDestAlignedSrcAlignedSrcGreaterThanDest
+                  : ComposeToOp::kDestAlignedSrcAlignedSrcLessThanEqualDest;
     } else {
+      compose_to_op = ComposeToOp::kDestAlignedSrcNotAligned;
+    }
+  } else {
+    if (s1 > d1) {
+      compose_to_op = ComposeToOp::kDestNotAlignedSrcGreaterThanDest;
+    } else if (s1 == d1) {
+      compose_to_op = ComposeToOp::kDestNotAlignedSrcEqualToDest;
+    } else {
+      compose_to_op = ComposeToOp::kDestNotAlignedSrcLessThanDest;
+    }
+  }
+
+  switch (compose_to_op) {
+    case ComposeToOp::kDestAlignedSrcAlignedSrcGreaterThanDest: {
+      const uint32_t shift = s1 - d1;
+      for (int32_t i = 0; i < h; ++i) {
+        pdfium::span<const uint8_t> src = GetLine(src_start_line + i);
+        pdfium::span<uint8_t> dest = pDst->GetLine(dest_start_line + i);
+        if (src.empty() || dest.empty()) {
+          return false;
+        }
+
+        const uint8_t* lineSrc = src.subspan(src_offset).data();
+        uint8_t* lineDst = dest.subspan(dest_offset).data();
+        UNSAFE_TODO({
+          uint32_t tmp1 = JBIG2_GETDWORD(lineSrc) << shift;
+          uint32_t tmp2 = JBIG2_GETDWORD(lineDst);
+          uint32_t tmp = DoComposeWithMask(op, tmp1, tmp2, maskM);
+          JBIG2_PUTDWORD(lineDst, tmp);
+        });
+      }
+      return true;
+    }
+    case ComposeToOp::kDestAlignedSrcAlignedSrcLessThanEqualDest: {
+      const uint32_t shift = d1 - s1;
+      for (int32_t i = 0; i < h; ++i) {
+        pdfium::span<const uint8_t> src = GetLine(src_start_line + i);
+        pdfium::span<uint8_t> dest = pDst->GetLine(dest_start_line + i);
+        if (src.empty() || dest.empty()) {
+          return false;
+        }
+
+        const uint8_t* lineSrc = src.subspan(src_offset).data();
+        uint8_t* lineDst = dest.subspan(dest_offset).data();
+        UNSAFE_TODO({
+          uint32_t tmp1 = JBIG2_GETDWORD(lineSrc) >> shift;
+          uint32_t tmp2 = JBIG2_GETDWORD(lineDst);
+          uint32_t tmp = DoComposeWithMask(op, tmp1, tmp2, maskM);
+          JBIG2_PUTDWORD(lineDst, tmp);
+        });
+      }
+      return true;
+    }
+    case ComposeToOp::kDestAlignedSrcNotAligned: {
       const uint32_t shift1 = s1 - d1;
       const uint32_t shift2 = 32 - shift1;
       for (int32_t i = 0; i < h; ++i) {
@@ -471,9 +501,9 @@ bool CJBig2_Image::ComposeToInternal(CJBig2_Image* pDst,
           JBIG2_PUTDWORD(lineDst, tmp);
         });
       }
+      return true;
     }
-  } else {
-    if (s1 > d1) {
+    case ComposeToOp::kDestNotAlignedSrcGreaterThanDest: {
       const uint32_t shift1 = s1 - d1;
       const uint32_t shift2 = 32 - shift1;
       const int32_t middleDwords = (xd1 >> 5) - ((xd0 + 31) >> 5);
@@ -522,7 +552,9 @@ bool CJBig2_Image::ComposeToInternal(CJBig2_Image* pDst,
           });
         }
       }
-    } else if (s1 == d1) {
+      return true;
+    }
+    case ComposeToOp::kDestNotAlignedSrcEqualToDest: {
       const int32_t middleDwords = (xd1 >> 5) - ((xd0 + 31) >> 5);
       for (int32_t i = 0; i < h; ++i) {
         pdfium::span<const uint8_t> src = GetLine(src_start_line + i);
@@ -564,7 +596,9 @@ bool CJBig2_Image::ComposeToInternal(CJBig2_Image* pDst,
           });
         }
       }
-    } else {
+      return true;
+    }
+    case ComposeToOp::kDestNotAlignedSrcLessThanDest: {
       const uint32_t shift1 = d1 - s1;
       const uint32_t shift2 = 32 - shift1;
       const int32_t middleDwords = (xd1 >> 5) - ((xd0 + 31) >> 5);
@@ -611,7 +645,8 @@ bool CJBig2_Image::ComposeToInternal(CJBig2_Image* pDst,
           });
         }
       }
+      return true;
     }
   }
-  return true;
+  NOTREACHED();
 }
