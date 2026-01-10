@@ -415,36 +415,37 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRDProc::DecodeArithTemplate3Unopt(
     }
     if (LTP == 1) {
       GBREG->CopyLine(h, h - 1);
-    } else {
-      pdfium::span<uint8_t> row_write = GBREG->GetLine(h);
-      pdfium::span<const uint8_t> row_prev = GBREG->GetLine(h - 1);
-      pdfium::span<const uint8_t> row_skip;
-      if (USESKIP) {
-        row_skip = SKIP->GetLine(h);
-      }
-      pdfium::span<const uint8_t> row_gbat = GBREG->GetLine(h + GBAT[1]);
+      continue;
+    }
 
-      uint32_t val_prev = GBREG->GetPixel(1, row_prev);
-      val_prev |= GBREG->GetPixel(0, row_prev) << 1;
-      uint32_t val_current = 0;
-      for (uint32_t w = 0; w < GBW; w++) {
-        int bVal = 0;
-        if (!USESKIP || !SKIP->GetPixel(w, row_skip)) {
-          uint32_t CONTEXT = val_current;
-          CONTEXT |= GBREG->GetPixel(w + GBAT[0], row_gbat) << 4;
-          CONTEXT |= val_prev << 5;
-          if (pArithDecoder->IsComplete()) {
-            return nullptr;
-          }
+    pdfium::span<uint8_t> row_write = GBREG->GetLine(h);
+    pdfium::span<const uint8_t> row_prev = GBREG->GetLine(h - 1);
+    pdfium::span<const uint8_t> row_skip;
+    if (USESKIP) {
+      row_skip = SKIP->GetLine(h);
+    }
+    pdfium::span<const uint8_t> row_gbat = GBREG->GetLine(h + GBAT[1]);
 
-          bVal = pArithDecoder->Decode(&gbContexts[CONTEXT]);
+    uint32_t val_prev = GBREG->GetPixel(1, row_prev);
+    val_prev |= GBREG->GetPixel(0, row_prev) << 1;
+    uint32_t val_current = 0;
+    for (uint32_t w = 0; w < GBW; w++) {
+      int bVal = 0;
+      if (!USESKIP || !SKIP->GetPixel(w, row_skip)) {
+        uint32_t CONTEXT = val_current;
+        CONTEXT |= GBREG->GetPixel(w + GBAT[0], row_gbat) << 4;
+        CONTEXT |= val_prev << 5;
+        if (pArithDecoder->IsComplete()) {
+          return nullptr;
         }
-        if (bVal) {
-          GBREG->SetPixel(w, row_write, bVal);
-        }
-        val_prev = ((val_prev << 1) | GBREG->GetPixel(w + 2, row_prev)) & 0x1f;
-        val_current = ((val_current << 1) | bVal) & 0x0f;
+
+        bVal = pArithDecoder->Decode(&gbContexts[CONTEXT]);
       }
+      if (bVal) {
+        GBREG->SetPixel(w, row_write, bVal);
+      }
+      val_prev = ((val_prev << 1) | GBREG->GetPixel(w + 2, row_prev)) & 0x1f;
+      val_current = ((val_current << 1) | bVal) & 0x0f;
     }
   }
   return GBREG;
