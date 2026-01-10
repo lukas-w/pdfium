@@ -426,10 +426,8 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRDProc::DecodeArithTemplate3Unopt(
       line1 |= GBREG->GetPixel(0, row_prev) << 1;
       uint32_t line2 = 0;
       for (uint32_t w = 0; w < GBW; w++) {
-        int bVal;
-        if (USESKIP && SKIP->GetPixel(w, row_skip)) {
-          bVal = 0;
-        } else {
+        int bVal = 0;
+        if (!USESKIP || !SKIP->GetPixel(w, row_skip)) {
           uint32_t CONTEXT = line2;
           CONTEXT |= GBREG->GetPixel(w + GBAT[0], row_gbat) << 4;
           CONTEXT |= line1 << 5;
@@ -706,10 +704,8 @@ FXCODEC_STATUS CJBig2_GRDProc::ProgressiveDecodeArithTemplate0Unopt(
       line2 |= pImage->GetPixel(0, row_prev1) << 2;
       uint32_t line3 = 0;
       for (uint32_t w = 0; w < GBW; w++) {
-        int bVal;
-        if (USESKIP && SKIP->GetPixel(w, row_skip)) {
-          bVal = 0;
-        } else {
+        int bVal = 0;
+        if (!USESKIP || !SKIP->GetPixel(w, row_skip)) {
           uint32_t CONTEXT = line3;
           CONTEXT |= pImage->GetPixel(w + GBAT[0], row_gbat0) << 4;
           CONTEXT |= line2 << 5;
@@ -875,10 +871,8 @@ FXCODEC_STATUS CJBig2_GRDProc::ProgressiveDecodeArithTemplate1Unopt(
       line2 |= pImage->GetPixel(0, loop_index_ - 1) << 2;
       uint32_t line3 = 0;
       for (uint32_t w = 0; w < GBW; w++) {
-        int bVal;
-        if (USESKIP && SKIP->GetPixel(w, loop_index_)) {
-          bVal = 0;
-        } else {
+        int bVal = 0;
+        if (!USESKIP || !SKIP->GetPixel(w, loop_index_)) {
           uint32_t CONTEXT = line3;
           CONTEXT |= pImage->GetPixel(w + GBAT[0], loop_index_ + GBAT[1]) << 3;
           CONTEXT |= line2 << 4;
@@ -1051,10 +1045,8 @@ FXCODEC_STATUS CJBig2_GRDProc::ProgressiveDecodeArithTemplate2Unopt(
       line2 |= pImage->GetPixel(0, row_prev1) << 1;
       uint32_t line3 = 0;
       for (uint32_t w = 0; w < GBW; w++) {
-        int bVal;
-        if (USESKIP && SKIP->GetPixel(w, row_skip)) {
-          bVal = 0;
-        } else {
+        int bVal = 0;
+        if (!USESKIP || !SKIP->GetPixel(w, row_skip)) {
           uint32_t CONTEXT = line3;
           CONTEXT |= pImage->GetPixel(w + GBAT[0], row_gbat) << 2;
           CONTEXT |= line2 << 3;
@@ -1207,10 +1199,8 @@ FXCODEC_STATUS CJBig2_GRDProc::ProgressiveDecodeArithTemplate3Unopt(
       line1 |= pImage->GetPixel(0, row_prev) << 1;
       uint32_t line2 = 0;
       for (uint32_t w = 0; w < GBW; w++) {
-        int bVal;
-        if (USESKIP && SKIP->GetPixel(w, row_skip)) {
-          bVal = 0;
-        } else {
+        int bVal = 0;
+        if (!USESKIP || !SKIP->GetPixel(w, row_skip)) {
           uint32_t CONTEXT = line2;
           CONTEXT |= pImage->GetPixel(w + GBAT[0], row_gbat) << 4;
           CONTEXT |= line1 << 5;
