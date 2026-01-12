@@ -12,7 +12,6 @@
 
 #include "build/build_config.h"
 #include "core/fxcrt/fx_codepage.h"
-#include "core/fxcrt/fx_memcpy_wrappers.h"
 #include "core/fxcrt/span.h"
 #include "core/fxge/cfx_defaultrenderdevice.h"
 #include "core/fxge/cfx_font.h"
