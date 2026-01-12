@@ -108,110 +108,112 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRDProc::DecodeArithOpt3(
   }
 
   int LTP = 0;
-  uint8_t* pLine = GBREG->data();
-  int32_t nStride = GBREG->stride();
-  int32_t nStride2 = nStride << 1;
-  int32_t nLineBytes = ((GBW + 7) >> 3) - 1;
-  int32_t nBitsLeft = GBW - (nLineBytes << 3);
+  const int32_t nLineBytes = ((GBW + 7) >> 3) - 1;
+  const int32_t nBitsLeft = GBW - (nLineBytes << 3);
   // TODO(npm): Why is the height only trimmed when OPT is 0?
-  uint32_t height = OPT == 0 ? GBH & 0x7fffffff : GBH;
-  UNSAFE_TODO({
-    for (uint32_t h = 0; h < height; ++h) {
-      if (TPGDON) {
+  const uint32_t height = OPT == 0 ? GBH & 0x7fffffff : GBH;
+  for (uint32_t h = 0; h < height; ++h) {
+    if (TPGDON) {
+      if (pArithDecoder->IsComplete()) {
+        return nullptr;
+      }
+
+      LTP = LTP ^ pArithDecoder->Decode(&gbContexts[kOptConstant1[OPT]]);
+    }
+    if (LTP) {
+      GBREG->CopyLine(h, h - 1);
+      continue;
+    }
+
+    pdfium::span<uint8_t> row_write = GBREG->GetLine(h);
+    if (h > 1) {
+      pdfium::span<const uint8_t> row_prev2 = GBREG->GetLine(h - 2);
+      uint32_t val_prev2 = row_prev2.take_first_elem() << kOptConstant2[OPT];
+      pdfium::span<const uint8_t> row_prev1 = GBREG->GetLine(h - 1);
+      uint32_t val_prev1 = row_prev1.take_first_elem();
+      uint32_t CONTEXT =
+          (val_prev2 & kOptConstant3[OPT]) |
+          ((val_prev1 >> kOptConstant4[OPT]) & kOptConstant5[OPT]);
+      for (int32_t cc = 0; cc < nLineBytes; ++cc) {
+        val_prev2 = (val_prev2 << 8) |
+                    (row_prev2.take_first_elem() << kOptConstant2[OPT]);
+        val_prev1 = (val_prev1 << 8) | row_prev1.take_first_elem();
+        uint8_t cVal = 0;
+        for (int32_t k = 7; k >= 0; --k) {
+          if (pArithDecoder->IsComplete()) {
+            return nullptr;
+          }
+
+          int bVal = pArithDecoder->Decode(&gbContexts[CONTEXT]);
+          cVal |= bVal << k;
+          CONTEXT =
+              (((CONTEXT & kOptConstant6[OPT]) << 1) | bVal |
+               ((val_prev2 >> k) & kOptConstant7[OPT]) |
+               ((val_prev1 >> (k + kOptConstant4[OPT])) & kOptConstant8[OPT]));
+        }
+        row_write[cc] = cVal;
+      }
+      val_prev2 <<= 8;
+      val_prev1 <<= 8;
+      uint8_t cVal1 = 0;
+      for (int32_t k = 0; k < nBitsLeft; ++k) {
         if (pArithDecoder->IsComplete()) {
           return nullptr;
         }
 
-        LTP = LTP ^ pArithDecoder->Decode(&gbContexts[kOptConstant1[OPT]]);
+        int bVal = pArithDecoder->Decode(&gbContexts[CONTEXT]);
+        cVal1 |= bVal << (7 - k);
+        CONTEXT = (((CONTEXT & kOptConstant6[OPT]) << 1) | bVal |
+                   ((val_prev2 >> (7 - k)) & kOptConstant7[OPT]) |
+                   ((val_prev1 >> (7 + kOptConstant4[OPT] - k)) &
+                    kOptConstant8[OPT]));
       }
-      if (LTP) {
-        GBREG->CopyLine(h, h - 1);
-      } else {
-        if (h > 1) {
-          uint8_t* pLine1 = pLine - nStride2;
-          uint8_t* pLine2 = pLine - nStride;
-          uint32_t line1 = (*pLine1++) << kOptConstant2[OPT];
-          uint32_t line2 = *pLine2++;
-          uint32_t CONTEXT =
-              (line1 & kOptConstant3[OPT]) |
-              ((line2 >> kOptConstant4[OPT]) & kOptConstant5[OPT]);
-          for (int32_t cc = 0; cc < nLineBytes; ++cc) {
-            line1 = (line1 << 8) | ((*pLine1++) << kOptConstant2[OPT]);
-            line2 = (line2 << 8) | (*pLine2++);
-            uint8_t cVal = 0;
-            for (int32_t k = 7; k >= 0; --k) {
-              if (pArithDecoder->IsComplete()) {
-                return nullptr;
-              }
-
-              int bVal = pArithDecoder->Decode(&gbContexts[CONTEXT]);
-              cVal |= bVal << k;
-              CONTEXT =
-                  (((CONTEXT & kOptConstant6[OPT]) << 1) | bVal |
-                   ((line1 >> k) & kOptConstant7[OPT]) |
-                   ((line2 >> (k + kOptConstant4[OPT])) & kOptConstant8[OPT]));
-            }
-            pLine[cc] = cVal;
-          }
-          line1 <<= 8;
-          line2 <<= 8;
-          uint8_t cVal1 = 0;
-          for (int32_t k = 0; k < nBitsLeft; ++k) {
-            if (pArithDecoder->IsComplete()) {
-              return nullptr;
-            }
-
-            int bVal = pArithDecoder->Decode(&gbContexts[CONTEXT]);
-            cVal1 |= bVal << (7 - k);
-            CONTEXT = (((CONTEXT & kOptConstant6[OPT]) << 1) | bVal |
-                       ((line1 >> (7 - k)) & kOptConstant7[OPT]) |
-                       ((line2 >> (7 + kOptConstant4[OPT] - k)) &
-                        kOptConstant8[OPT]));
-          }
-          pLine[nLineBytes] = cVal1;
-        } else {
-          uint8_t* pLine2 = pLine - nStride;
-          uint32_t line2 = (h & 1) ? (*pLine2++) : 0;
-          uint32_t CONTEXT =
-              ((line2 >> kOptConstant4[OPT]) & kOptConstant5[OPT]);
-          for (int32_t cc = 0; cc < nLineBytes; ++cc) {
-            if (h & 1) {
-              line2 = (line2 << 8) | (*pLine2++);
-            }
-            uint8_t cVal = 0;
-            for (int32_t k = 7; k >= 0; --k) {
-              if (pArithDecoder->IsComplete()) {
-                return nullptr;
-              }
-
-              int bVal = pArithDecoder->Decode(&gbContexts[CONTEXT]);
-              cVal |= bVal << k;
-              CONTEXT =
-                  (((CONTEXT & kOptConstant6[OPT]) << 1) | bVal |
-                   ((line2 >> (k + kOptConstant4[OPT])) & kOptConstant8[OPT]));
-            }
-            pLine[cc] = cVal;
-          }
-          line2 <<= 8;
-          uint8_t cVal1 = 0;
-          for (int32_t k = 0; k < nBitsLeft; ++k) {
-            if (pArithDecoder->IsComplete()) {
-              return nullptr;
-            }
-
-            int bVal = pArithDecoder->Decode(&gbContexts[CONTEXT]);
-            cVal1 |= bVal << (7 - k);
-            CONTEXT = (((CONTEXT & kOptConstant6[OPT]) << 1) | bVal |
-                       (((line2 >> (7 + kOptConstant4[OPT] - k))) &
-                        kOptConstant8[OPT]));
-          }
-          pLine[nLineBytes] = cVal1;
-        }
-      }
-      pLine += nStride;
+      row_write[nLineBytes] = cVal1;
+      continue;
     }
-    return GBREG;
-  });
+
+    const bool is_second_line = h > 0;
+    pdfium::span<const uint8_t> row_prev;
+    uint32_t val_prev = 0;
+    if (is_second_line) {
+      row_prev = GBREG->GetLine(h - 1);
+      val_prev = row_prev.take_first_elem();
+    }
+    uint32_t CONTEXT = ((val_prev >> kOptConstant4[OPT]) & kOptConstant5[OPT]);
+    for (int32_t cc = 0; cc < nLineBytes; ++cc) {
+      if (is_second_line) {
+        val_prev = (val_prev << 8) | row_prev.take_first_elem();
+      }
+      uint8_t cVal = 0;
+      for (int32_t k = 7; k >= 0; --k) {
+        if (pArithDecoder->IsComplete()) {
+          return nullptr;
+        }
+
+        int bVal = pArithDecoder->Decode(&gbContexts[CONTEXT]);
+        cVal |= bVal << k;
+        CONTEXT =
+            (((CONTEXT & kOptConstant6[OPT]) << 1) | bVal |
+             ((val_prev >> (k + kOptConstant4[OPT])) & kOptConstant8[OPT]));
+      }
+      row_write[cc] = cVal;
+    }
+    val_prev <<= 8;
+    uint8_t cVal1 = 0;
+    for (int32_t k = 0; k < nBitsLeft; ++k) {
+      if (pArithDecoder->IsComplete()) {
+        return nullptr;
+      }
+
+      int bVal = pArithDecoder->Decode(&gbContexts[CONTEXT]);
+      cVal1 |= bVal << (7 - k);
+      CONTEXT =
+          (((CONTEXT & kOptConstant6[OPT]) << 1) | bVal |
+           (((val_prev >> (7 + kOptConstant4[OPT] - k))) & kOptConstant8[OPT]));
+    }
+    row_write[nLineBytes] = cVal1;
+  }
+  return GBREG;
 }
 
 std::unique_ptr<CJBig2_Image> CJBig2_GRDProc::DecodeArithTemplateUnopt(
