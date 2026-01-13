@@ -86,6 +86,7 @@ std::unique_ptr<CJBig2_Image> CJBig2_HTRDProc::DecodeArith(
     while (status == FXCODEC_STATUS::kDecodeToBeContinued) {
       status = GRD.ContinueDecode(&state);
     }
+    GRD.FinishDecode();
     if (!pImage) {
       return nullptr;
     }

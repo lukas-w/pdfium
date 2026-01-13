@@ -1075,6 +1075,7 @@ JBig2_Result CJBig2_Context::ParseGenericRegion(CJBig2_Segment* pSegment,
         return JBig2_Result::kSuccess;
       }
     }
+    grd_->FinishDecode();
     arith_decoder_.reset();
     gb_contexts_.clear();
     if (!pSegment->image_) {

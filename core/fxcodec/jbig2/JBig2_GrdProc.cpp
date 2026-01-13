@@ -469,7 +469,9 @@ FXCODEC_STATUS CJBig2_GRDProc::StartDecodeArith(
   pImage->get()->Fill(false);
   decode_type_ = 1;
   ltp_ = 0;
-  line_ = nullptr;
+  line_prev2_ = {};
+  line_prev1_ = {};
+  line_ = {};
   loop_index_ = 0;
   return ProgressiveDecodeArith(pState);
 }
@@ -556,20 +558,24 @@ FXCODEC_STATUS CJBig2_GRDProc::ContinueDecode(
   return ProgressiveDecodeArith(pState);
 }
 
+void CJBig2_GRDProc::FinishDecode() {
+  line_prev2_ = {};
+  line_prev1_ = {};
+  line_ = {};
+}
+
 FXCODEC_STATUS CJBig2_GRDProc::ProgressiveDecodeArithTemplate0Opt3(
     ProgressiveArithDecodeState* pState) {
   CJBig2_Image* pImage = pState->pImage->get();
   pdfium::span<JBig2ArithCtx> gbContexts = pState->gbContexts;
   CJBig2_ArithDecoder* pArithDecoder = pState->pArithDecoder;
-  if (!line_) {
-    line_ = pImage->data();
+  if (line_.empty()) {
+    line_ = pImage->span();
   }
-  int32_t nStride = pImage->stride();
-  int32_t nStride2 = nStride << 1;
-  int32_t nLineBytes = ((GBW + 7) >> 3) - 1;
-  int32_t nBitsLeft = GBW - (nLineBytes << 3);
-  uint32_t height = GBH & 0x7fffffff;
 
+  const int32_t nLineBytes = ((GBW + 7) >> 3) - 1;
+  const int32_t nBitsLeft = GBW - (nLineBytes << 3);
+  const uint32_t height = GBH & 0x7fffffff;
   UNSAFE_TODO({
     for (; loop_index_ < height; loop_index_++) {
       if (TPGDON) {
@@ -583,8 +589,8 @@ FXCODEC_STATUS CJBig2_GRDProc::ProgressiveDecodeArithTemplate0Opt3(
         pImage->CopyLine(loop_index_, loop_index_ - 1);
       } else {
         if (loop_index_ > 1) {
-          uint8_t* pLine1 = line_ - nStride2;
-          uint8_t* pLine2 = line_ - nStride;
+          uint8_t* pLine1 = line_prev2_.data();
+          uint8_t* pLine2 = line_prev1_.data();
           uint32_t line1 = (*pLine1++) << 6;
           uint32_t line2 = *pLine2++;
           uint32_t CONTEXT = ((line1 & 0xf800) | (line2 & 0x07f0));
@@ -620,7 +626,7 @@ FXCODEC_STATUS CJBig2_GRDProc::ProgressiveDecodeArithTemplate0Opt3(
           }
           line_[nLineBytes] = cVal1;
         } else {
-          uint8_t* pLine2 = line_ - nStride;
+          uint8_t* pLine2 = line_prev1_.data();
           uint32_t line2 = (loop_index_ & 1) ? (*pLine2++) : 0;
           uint32_t CONTEXT = (line2 & 0x07f0);
           for (int32_t cc = 0; cc < nLineBytes; cc++) {
@@ -655,7 +661,7 @@ FXCODEC_STATUS CJBig2_GRDProc::ProgressiveDecodeArithTemplate0Opt3(
           line_[nLineBytes] = cVal1;
         }
       }
-      line_ += nStride;
+      AdvanceLine(pImage);
       if (pState->pPause && pState->pPause->NeedToPauseNow()) {
         loop_index_++;
         progressive_status_ = FXCODEC_STATUS::kDecodeToBeContinued;
@@ -746,14 +752,12 @@ FXCODEC_STATUS CJBig2_GRDProc::ProgressiveDecodeArithTemplate1Opt3(
   CJBig2_Image* pImage = pState->pImage->get();
   pdfium::span<JBig2ArithCtx> gbContexts = pState->gbContexts;
   CJBig2_ArithDecoder* pArithDecoder = pState->pArithDecoder;
-  if (!line_) {
-    line_ = pImage->data();
+  if (line_.empty()) {
+    line_ = pImage->span();
   }
-  int32_t nStride = pImage->stride();
-  int32_t nStride2 = nStride << 1;
-  int32_t nLineBytes = ((GBW + 7) >> 3) - 1;
-  int32_t nBitsLeft = GBW - (nLineBytes << 3);
 
+  const int32_t nLineBytes = ((GBW + 7) >> 3) - 1;
+  const int32_t nBitsLeft = GBW - (nLineBytes << 3);
   UNSAFE_TODO({
     for (; loop_index_ < GBH; loop_index_++) {
       if (TPGDON) {
@@ -767,8 +771,8 @@ FXCODEC_STATUS CJBig2_GRDProc::ProgressiveDecodeArithTemplate1Opt3(
         pImage->CopyLine(loop_index_, loop_index_ - 1);
       } else {
         if (loop_index_ > 1) {
-          uint8_t* pLine1 = line_ - nStride2;
-          uint8_t* pLine2 = line_ - nStride;
+          uint8_t* pLine1 = line_prev2_.data();
+          uint8_t* pLine2 = line_prev1_.data();
           uint32_t line1 = (*pLine1++) << 4;
           uint32_t line2 = *pLine2++;
           uint32_t CONTEXT = (line1 & 0x1e00) | ((line2 >> 1) & 0x01f8);
@@ -804,7 +808,7 @@ FXCODEC_STATUS CJBig2_GRDProc::ProgressiveDecodeArithTemplate1Opt3(
           }
           line_[nLineBytes] = cVal1;
         } else {
-          uint8_t* pLine2 = line_ - nStride;
+          uint8_t* pLine2 = line_prev1_.data();
           uint32_t line2 = (loop_index_ & 1) ? (*pLine2++) : 0;
           uint32_t CONTEXT = (line2 >> 1) & 0x01f8;
           for (int32_t cc = 0; cc < nLineBytes; cc++) {
@@ -839,7 +843,7 @@ FXCODEC_STATUS CJBig2_GRDProc::ProgressiveDecodeArithTemplate1Opt3(
           line_[nLineBytes] = cVal1;
         }
       }
-      line_ += nStride;
+      AdvanceLine(pImage);
       if (pState->pPause && pState->pPause->NeedToPauseNow()) {
         loop_index_++;
         progressive_status_ = FXCODEC_STATUS::kDecodeToBeContinued;
@@ -922,13 +926,12 @@ FXCODEC_STATUS CJBig2_GRDProc::ProgressiveDecodeArithTemplate2Opt3(
   CJBig2_Image* pImage = pState->pImage->get();
   pdfium::span<JBig2ArithCtx> gbContexts = pState->gbContexts;
   CJBig2_ArithDecoder* pArithDecoder = pState->pArithDecoder;
-  if (!line_) {
-    line_ = pImage->data();
+  if (line_.empty()) {
+    line_ = pImage->span();
   }
-  int32_t nStride = pImage->stride();
-  int32_t nStride2 = nStride << 1;
-  int32_t nLineBytes = ((GBW + 7) >> 3) - 1;
-  int32_t nBitsLeft = GBW - (nLineBytes << 3);
+
+  const int32_t nLineBytes = ((GBW + 7) >> 3) - 1;
+  const int32_t nBitsLeft = GBW - (nLineBytes << 3);
   UNSAFE_TODO({
     for (; loop_index_ < GBH; loop_index_++) {
       if (TPGDON) {
@@ -942,8 +945,8 @@ FXCODEC_STATUS CJBig2_GRDProc::ProgressiveDecodeArithTemplate2Opt3(
         pImage->CopyLine(loop_index_, loop_index_ - 1);
       } else {
         if (loop_index_ > 1) {
-          uint8_t* pLine1 = line_ - nStride2;
-          uint8_t* pLine2 = line_ - nStride;
+          uint8_t* pLine1 = line_prev2_.data();
+          uint8_t* pLine2 = line_prev1_.data();
           uint32_t line1 = (*pLine1++) << 1;
           uint32_t line2 = *pLine2++;
           uint32_t CONTEXT = (line1 & 0x0380) | ((line2 >> 3) & 0x007c);
@@ -979,7 +982,7 @@ FXCODEC_STATUS CJBig2_GRDProc::ProgressiveDecodeArithTemplate2Opt3(
           }
           line_[nLineBytes] = cVal1;
         } else {
-          uint8_t* pLine2 = line_ - nStride;
+          uint8_t* pLine2 = line_prev1_.data();
           uint32_t line2 = (loop_index_ & 1) ? (*pLine2++) : 0;
           uint32_t CONTEXT = (line2 >> 3) & 0x007c;
           for (int32_t cc = 0; cc < nLineBytes; cc++) {
@@ -1014,7 +1017,7 @@ FXCODEC_STATUS CJBig2_GRDProc::ProgressiveDecodeArithTemplate2Opt3(
           line_[nLineBytes] = cVal1;
         }
       }
-      line_ += nStride;
+      AdvanceLine(pImage);
       if (pState->pPause && loop_index_ % 50 == 0 &&
           pState->pPause->NeedToPauseNow()) {
         loop_index_++;
@@ -1096,12 +1099,12 @@ FXCODEC_STATUS CJBig2_GRDProc::ProgressiveDecodeArithTemplate3Opt3(
   CJBig2_Image* pImage = pState->pImage->get();
   pdfium::span<JBig2ArithCtx> gbContexts = pState->gbContexts;
   CJBig2_ArithDecoder* pArithDecoder = pState->pArithDecoder;
-  if (!line_) {
-    line_ = pImage->data();
+  if (line_.empty()) {
+    line_ = pImage->span();
   }
-  int32_t nStride = pImage->stride();
-  int32_t nLineBytes = ((GBW + 7) >> 3) - 1;
-  int32_t nBitsLeft = GBW - (nLineBytes << 3);
+
+  const int32_t nLineBytes = ((GBW + 7) >> 3) - 1;
+  const int32_t nBitsLeft = GBW - (nLineBytes << 3);
   UNSAFE_TODO({
     for (; loop_index_ < GBH; loop_index_++) {
       if (TPGDON) {
@@ -1115,7 +1118,7 @@ FXCODEC_STATUS CJBig2_GRDProc::ProgressiveDecodeArithTemplate3Opt3(
         pImage->CopyLine(loop_index_, loop_index_ - 1);
       } else {
         if (loop_index_ > 0) {
-          uint8_t* pLine1 = line_ - nStride;
+          uint8_t* pLine1 = line_prev1_.data();
           uint32_t line1 = *pLine1++;
           uint32_t CONTEXT = (line1 >> 1) & 0x03f0;
           for (int32_t cc = 0; cc < nLineBytes; cc++) {
@@ -1174,7 +1177,7 @@ FXCODEC_STATUS CJBig2_GRDProc::ProgressiveDecodeArithTemplate3Opt3(
           line_[nLineBytes] = cVal1;
         }
       }
-      line_ += nStride;
+      AdvanceLine(pImage);
       if (pState->pPause && pState->pPause->NeedToPauseNow()) {
         loop_index_++;
         progressive_status_ = FXCODEC_STATUS::kDecodeToBeContinued;
@@ -1241,4 +1244,10 @@ FXCODEC_STATUS CJBig2_GRDProc::ProgressiveDecodeArithTemplate3Unopt(
   }
   progressive_status_ = FXCODEC_STATUS::kDecodeFinished;
   return FXCODEC_STATUS::kDecodeFinished;
+}
+
+void CJBig2_GRDProc::AdvanceLine(CJBig2_Image* image) {
+  line_prev2_ = std::move(line_prev1_);
+  line_prev1_ = std::move(line_);
+  line_ = line_prev1_.subspan(static_cast<size_t>(image->stride()));
 }

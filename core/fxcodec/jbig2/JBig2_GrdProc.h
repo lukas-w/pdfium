@@ -14,9 +14,9 @@
 
 #include "core/fxcodec/fx_codec_def.h"
 #include "core/fxcrt/fx_coordinates.h"
+#include "core/fxcrt/raw_span.h"
 #include "core/fxcrt/span.h"
 #include "core/fxcrt/unowned_ptr.h"
-#include "core/fxcrt/unowned_ptr_exclusion.h"
 
 class CJBig2_ArithDecoder;
 class CJBig2_BitStream;
@@ -48,6 +48,8 @@ class CJBig2_GRDProc {
   FXCODEC_STATUS StartDecodeMMR(std::unique_ptr<CJBig2_Image>* pImage,
                                 CJBig2_BitStream* pStream);
   FXCODEC_STATUS ContinueDecode(ProgressiveArithDecodeState* pState);
+  void FinishDecode();
+
   const FX_RECT& GetReplaceRect() const { return replace_rect_; }
 
   bool MMR;
@@ -82,6 +84,8 @@ class CJBig2_GRDProc {
   FXCODEC_STATUS ProgressiveDecodeArithTemplate3Unopt(
       ProgressiveArithDecodeState* pState);
 
+  void AdvanceLine(CJBig2_Image* image);
+
   std::unique_ptr<CJBig2_Image> DecodeArithOpt3(
       CJBig2_ArithDecoder* pArithDecoder,
       pdfium::span<JBig2ArithCtx> gbContexts,
@@ -98,7 +102,9 @@ class CJBig2_GRDProc {
       pdfium::span<JBig2ArithCtx> gbContexts);
 
   uint32_t loop_index_ = 0;
-  UNOWNED_PTR_EXCLUSION uint8_t* line_ = nullptr;
+  pdfium::raw_span<uint8_t> line_prev2_;
+  pdfium::raw_span<uint8_t> line_prev1_;
+  pdfium::raw_span<uint8_t> line_;
   FXCODEC_STATUS progressive_status_;
   uint16_t decode_type_ = 0;
   int ltp_ = 0;
