@@ -163,8 +163,8 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRRDProc::DecodeTemplate0Opt(
   }
 
   int LTP = 0;
-  uint8_t* pLine = GRREG->data();
-  uint8_t* pLineR = GRREFERENCE->data();
+  uint8_t* pLine = GRREG->span().data();
+  uint8_t* pLineR = GRREFERENCE->span().data();
   intptr_t nStride = GRREG->stride();
   intptr_t nStrideR = GRREFERENCE->stride();
   int32_t GRWR = GRREFERENCE->width();
@@ -431,8 +431,8 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRRDProc::DecodeTemplate1Opt(
   }
 
   int LTP = 0;
-  uint8_t* pLine = GRREG->data();
-  uint8_t* pLineR = GRREFERENCE->data();
+  uint8_t* pLine = GRREG->span().data();
+  uint8_t* pLineR = GRREFERENCE->span().data();
   intptr_t nStride = GRREG->stride();
   intptr_t nStrideR = GRREFERENCE->stride();
   int32_t GRWR = GRREFERENCE->width();

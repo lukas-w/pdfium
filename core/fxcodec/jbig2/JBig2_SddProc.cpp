@@ -20,8 +20,8 @@
 #include "core/fxcodec/jbig2/JBig2_HuffmanTable.h"
 #include "core/fxcodec/jbig2/JBig2_SymbolDict.h"
 #include "core/fxcodec/jbig2/JBig2_TrdProc.h"
-#include "core/fxcrt/fx_memcpy_wrappers.h"
 #include "core/fxcrt/fx_safe_types.h"
+#include "core/fxcrt/span_util.h"
 #include "core/fxcrt/stl_util.h"
 
 CJBig2_SDDProc::CJBig2_SDDProc() = default;
@@ -440,8 +440,7 @@ std::unique_ptr<CJBig2_SymbolDict> CJBig2_SDDProc::DecodeHuffman(
 
         BHC = std::make_unique<CJBig2_Image>(TOTWIDTH, HCHEIGHT);
         for (uint32_t i = 0; i < HCHEIGHT; ++i) {
-          UNSAFE_TODO(FXSYS_memcpy(BHC->data() + i * BHC->stride(),
-                                   pStream->getPointer(), stride));
+          fxcrt::spancpy(BHC->GetLine(i), pStream->getCurrentSpan(stride));
           pStream->addOffset(stride);
         }
       } else {
