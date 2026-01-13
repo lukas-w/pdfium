@@ -102,8 +102,8 @@ class CJBig2_GRDProc {
       pdfium::span<JBig2ArithCtx> gbContexts);
 
   uint32_t loop_index_ = 0;
-  pdfium::raw_span<uint8_t> line_prev2_;
-  pdfium::raw_span<uint8_t> line_prev1_;
+  pdfium::raw_span<const uint8_t> line_prev2_;
+  pdfium::raw_span<const uint8_t> line_prev1_;
   pdfium::raw_span<uint8_t> line_;
   FXCODEC_STATUS progressive_status_;
   uint16_t decode_type_ = 0;
