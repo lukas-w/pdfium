@@ -17,6 +17,7 @@
 #include <tuple>
 #include <utility>
 
+#include "build/build_config.h"
 #include "core/fxcrt/check_op.h"
 #include "core/fxcrt/compiler_specific.h"
 #include "core/fxcrt/fx_memcpy_wrappers.h"
@@ -139,7 +140,11 @@ int GetBytesPerPixelForBitmapFormat(int bitmap_format) {
 }
 
 bool CheckImageSize(int width, int height, int bitmap_format) {
+#if defined(ARCH_CPU_64_BITS)
   static constexpr uint32_t kMemLimitBytes = 1024 * 1024 * 1024;  // 1 GB.
+#else
+  static constexpr uint32_t kMemLimitBytes = 512 * 1024 * 1024;  // 512 MB.
+#endif
   FX_SAFE_UINT32 mem = width;
   mem *= height;
   mem *= GetBytesPerPixelForBitmapFormat(bitmap_format);
