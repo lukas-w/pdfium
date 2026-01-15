@@ -372,6 +372,30 @@ int CompareBGRxPremultBitmapToPng(pdfium::span<const uint8_t> bitmap_span,
 }
 #endif  // PDF_USE_SKIA
 
+int CompareBGRBitmapToPng(pdfium::span<const uint8_t> bitmap_span,
+                          size_t bitmap_stride,
+                          const DecodedPng& decoded_png) {
+  const int width = decoded_png.width;
+  const size_t dest_row_width = static_cast<size_t>(width);
+  const int height = decoded_png.height;
+  const size_t bgrx_stride = width * sizeof(FX_BGRA_STRUCT<uint8_t>);
+  std::vector<uint8_t> bgrx_buffer(bgrx_stride * height);
+  auto bgrx_span = fxcrt::reinterpret_span<FX_BGRA_STRUCT<uint8_t>>(
+      pdfium::span<uint8_t>(bgrx_buffer));
+  for (int h = 0; h < height; ++h) {
+    auto src_row = fxcrt::reinterpret_span<const FX_BGR_STRUCT<uint8_t>>(
+        bitmap_span.subspan(h * bitmap_stride, bitmap_stride));
+    auto dest_row = bgrx_span.take_first(dest_row_width);
+    for (int w = 0; w < width; ++w) {
+      dest_row[w].blue = src_row[w].blue;
+      dest_row[w].green = src_row[w].green;
+      dest_row[w].red = src_row[w].red;
+      dest_row[w].alpha = 255;
+    }
+  }
+  return CompareBGRxBitmapToPng(bgrx_buffer, bgrx_stride, decoded_png);
+}
+
 void CompareBitmapToPngData(FPDF_BITMAP bitmap,
                             pdfium::span<const uint8_t> png_data) {
   DecodedPng decoded_png = DecodePngData(png_data);
@@ -406,6 +430,10 @@ void CompareBitmapToPngData(FPDF_BITMAP bitmap,
           CompareBGRxPremultBitmapToPng(bitmap_span, stride, decoded_png);
       break;
 #endif  // PDF_USE_SKIA
+    case FPDFBitmap_BGR:
+      pixels_different =
+          CompareBGRBitmapToPng(bitmap_span, stride, decoded_png);
+      break;
     default:
       // Support other formats as-needed.
       NOTREACHED();
