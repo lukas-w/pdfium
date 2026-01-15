@@ -774,7 +774,7 @@ bool ParseCommandLine(const std::vector<std::string>& args,
   if (options->render_premultiplied_alpha &&
       options->use_renderer_type != RendererType::kSkia) {
     fprintf(stderr,
-            "Cannot use --render_premultiplied_alpha with selected renderer\n");
+            "Cannot use --render_premultiplied with selected renderer\n");
     return false;
   }
 #endif  // defined(PDF_ENABLE_SKIA)
@@ -1133,6 +1133,7 @@ class ProgressiveBitmapPageRenderer : public BitmapPageRenderer {
       return false;
     }
 
+    original_bitmap_format_ = FPDFBitmap_GetFormat(bitmap());
     if (FPDF_RenderPageBitmapWithColorScheme_Start(
             bitmap(), page(), /*start_x=*/0, /*start_y=*/0, /*size_x=*/width(),
             /*size_y=*/height(), /*rotate=*/0, /*flags=*/flags(), color_scheme_,
@@ -1154,11 +1155,13 @@ class ProgressiveBitmapPageRenderer : public BitmapPageRenderer {
     BitmapPageRenderer::Finish(form);
     FPDF_RenderPage_Close(page());
     Idle();
+    CHECK_EQ(original_bitmap_format_, FPDFBitmap_GetFormat(bitmap()));
   }
 
  private:
   const FPDF_COLORSCHEME* color_scheme_;
   IFSDK_PAUSE pause_;
+  int original_bitmap_format_ = -1;
   bool to_be_continued_ = false;
 };
 
