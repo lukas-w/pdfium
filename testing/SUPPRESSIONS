@@ -656,6 +656,9 @@ resolve_nodes_1.pdf * * * *
 # Pixel tests
 #
 
+# TODO(crbug.com/475874968): Remove after the bug is fixed
+alpha_composite.in * * * gdi
+
 # TODO(crbug.com/40643646): Remove after associated bug is fixed
 bug_40643646.in * * * *
 

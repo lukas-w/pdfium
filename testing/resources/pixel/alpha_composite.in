@@ -1,0 +1,59 @@
+{{header}}
+{{object 1 0}} <<
+  /Type /Catalog
+  /Pages 2 0 R
+>>
+endobj
+{{object 2 0}} <<
+  /Type /Pages
+  /Count 1
+  /Kids [3 0 R]
+>>
+endobj
+{{object 3 0}} <<
+  /Type /Page
+  /Resources <<
+    /ExtGState <<
+      /GS1 5 0 R
+      /GS2 6 0 R
+    >>
+  >>
+  /Parent 2 0 R
+  /MediaBox [0 0 450 600]
+  /Contents [4 0 R]
+>>
+endobj
+{{object 4 0}} <<
+  {{streamlen}}
+>>
+stream
+q
+/GS2 gs
+1 0 0 rg
+1 0 0 1 150 275 cm
+0 0 50 50 re f
+Q
+q
+/GS1 gs
+1 0 0 1 175 250 cm
+0 1 1 rg
+0 0 100 100 re f
+Q
+endstream
+endobj
+{{object 5 0}} <<
+  /Type /ExtGState
+  /BM /Screen
+  /ca 0.75
+>>
+endobj
+{{object 6 0}} <<
+  /Type /ExtGState
+  /BM /Normal
+  /ca 0.5
+>>
+endobj
+{{xref}}
+{{trailer}}
+{{startxref}}
+%%EOF
