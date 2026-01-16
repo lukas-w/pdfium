@@ -4043,3 +4043,45 @@ TEST_F(FPDFAnnotEmbedderTest, SetFormFieldFlags) {
 
   UnloadPage(page);
 }
+
+TEST_F(FPDFAnnotEmbedderTest, SharedFormXObjectMatrix) {
+  ASSERT_TRUE(OpenDocument("shared_form_xobject_matrix.pdf"));
+  ScopedPage page = LoadScopedPage(0);
+  ASSERT_TRUE(page);
+  ASSERT_EQ(2, FPDFPage_GetAnnotCount(page.get()));
+
+  // The first annotation directly accesses a shared form XObject. Retrieve the
+  // page object to trigger crbug.com/475719025.
+  ScopedFPDFAnnotation annotation1(FPDFPage_GetAnnot(page.get(), 0));
+  FPDF_PAGEOBJECT page_object1 = FPDFAnnot_GetObject(annotation1.get(), 0);
+  ASSERT_TRUE(page_object1);
+
+  FS_MATRIX matrix1;
+  ASSERT_TRUE(FPDFPageObj_GetMatrix(page_object1, &matrix1));
+  EXPECT_FLOAT_EQ(1.0f, matrix1.a);
+  EXPECT_FLOAT_EQ(0.0f, matrix1.b);
+  EXPECT_FLOAT_EQ(0.0f, matrix1.c);
+  EXPECT_FLOAT_EQ(1.0f, matrix1.d);
+  EXPECT_FLOAT_EQ(156.1774f, matrix1.e);
+  EXPECT_FLOAT_EQ(681.1501f, matrix1.f);
+
+  // The second annotation indirectly accesses the shared form XObject through a
+  // wrapper XObject.
+  ScopedFPDFAnnotation annotation2(FPDFPage_GetAnnot(page.get(), 1));
+  ASSERT_TRUE(annotation2);
+  FPDF_PAGEOBJECT page_object2 = FPDFAnnot_GetObject(annotation2.get(), 0);
+  ASSERT_TRUE(page_object2);
+  FPDF_PAGEOBJECT form_object2 = FPDFFormObj_GetObject(page_object2, 0);
+  ASSERT_TRUE(form_object2);
+
+  FS_MATRIX matrix2;
+  ASSERT_TRUE(FPDFPageObj_GetMatrix(form_object2, &matrix2));
+  EXPECT_FLOAT_EQ(1.0f, matrix2.a);
+  EXPECT_FLOAT_EQ(0.0f, matrix2.b);
+  EXPECT_FLOAT_EQ(0.0f, matrix2.c);
+  EXPECT_FLOAT_EQ(1.0f, matrix2.d);
+  // TODO(crbug.com/475719025): Should be -10.395f.
+  EXPECT_FLOAT_EQ(156.1774f, matrix2.e);
+  // TODO(crbug.com/475719025): Should be -5.42212f.
+  EXPECT_FLOAT_EQ(681.1501f, matrix2.f);
+}
