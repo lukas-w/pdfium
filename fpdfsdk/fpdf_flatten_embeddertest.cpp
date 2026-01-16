@@ -161,21 +161,15 @@ TEST_F(FPDFFlattenEmbedderTest, Bug890322) {
 }
 
 TEST_F(FPDFFlattenEmbedderTest, Bug896366) {
-  const char* checksum = []() {
-    if (CFX_DefaultRenderDevice::UseSkiaRenderer()) {
-      return "c3cccfadc4c5249e6aa0675e511fa4c3";
-    }
-    return "f71ab085c52c8445ae785eca3ec858b1";
-  }();
   ASSERT_TRUE(OpenDocument("bug_896366.pdf"));
   ScopedPage page = LoadScopedPage(0);
   ASSERT_TRUE(page);
 
   ScopedFPDFBitmap bitmap = RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-  CompareBitmap(bitmap.get(), 612, 792, checksum);
+  CompareBitmapToPngWithExpectationSuffix(bitmap.get(), "bug_896366");
 
   EXPECT_EQ(FLATTEN_SUCCESS, FPDFPage_Flatten(page.get(), FLAT_PRINT));
   EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
 
-  VerifySavedDocument(612, 792, checksum);
+  VerifySavedDocumentToPngWithExpectationSuffix("bug_896366");
 }
