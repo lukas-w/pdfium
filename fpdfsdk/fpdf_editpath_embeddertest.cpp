@@ -14,14 +14,7 @@ using FPDFEditPathEmbedderTest = EmbedderTest;
 
 namespace {
 
-constexpr int kExpectedRectangleWidth = 200;
-constexpr int kExpectedRectangleHeight = 300;
-
-const char* RectanglesAndTriangleChecksum() {
-  return CFX_DefaultRenderDevice::UseSkiaRenderer()
-             ? "89b85ca2749a98320518531cf365b010"
-             : "8bb78ca28f1e0ab9d36c0745ae0f58bb";
-}
+constexpr char kRectanglesAndTrianglePng[] = "rectangles_and_triangle";
 
 ScopedFPDFPageObject CreateBlackTriangle() {
   ScopedFPDFPageObject path(FPDFPageObj_CreateNewPath(100, 50));
@@ -210,8 +203,8 @@ TEST_F(FPDFEditPathEmbedderTest, AddPathToRectangles) {
 
   {
     ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-    CompareBitmap(bitmap.get(), kExpectedRectangleWidth,
-                  kExpectedRectangleHeight, RectanglesAndTriangleChecksum());
+    CompareBitmapToPngWithExpectationSuffix(bitmap.get(),
+                                            kRectanglesAndTrianglePng);
   }
 
   EXPECT_TRUE(FPDFPage_GenerateContent(page.get()));
@@ -219,12 +212,11 @@ TEST_F(FPDFEditPathEmbedderTest, AddPathToRectangles) {
 
   {
     ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-    CompareBitmap(bitmap.get(), kExpectedRectangleWidth,
-                  kExpectedRectangleHeight, RectanglesAndTriangleChecksum());
+    CompareBitmapToPngWithExpectationSuffix(bitmap.get(),
+                                            kRectanglesAndTrianglePng);
   }
 
-  VerifySavedDocument(kExpectedRectangleWidth, kExpectedRectangleHeight,
-                      RectanglesAndTriangleChecksum());
+  VerifySavedDocumentToPngWithExpectationSuffix(kRectanglesAndTrianglePng);
 }
 
 TEST_F(FPDFEditPathEmbedderTest, AddPathToRectanglesWithLeakyCTM) {
@@ -244,8 +236,8 @@ TEST_F(FPDFEditPathEmbedderTest, AddPathToRectanglesWithLeakyCTM) {
 
   {
     ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-    CompareBitmap(bitmap.get(), kExpectedRectangleWidth,
-                  kExpectedRectangleHeight, RectanglesAndTriangleChecksum());
+    CompareBitmapToPngWithExpectationSuffix(bitmap.get(),
+                                            kRectanglesAndTrianglePng);
   }
 
   EXPECT_TRUE(FPDFPage_GenerateContent(page.get()));
@@ -253,10 +245,9 @@ TEST_F(FPDFEditPathEmbedderTest, AddPathToRectanglesWithLeakyCTM) {
 
   {
     ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-    CompareBitmap(bitmap.get(), kExpectedRectangleWidth,
-                  kExpectedRectangleHeight, RectanglesAndTriangleChecksum());
+    CompareBitmapToPngWithExpectationSuffix(bitmap.get(),
+                                            kRectanglesAndTrianglePng);
   }
 
-  VerifySavedDocument(kExpectedRectangleWidth, kExpectedRectangleHeight,
-                      RectanglesAndTriangleChecksum());
+  VerifySavedDocumentToPngWithExpectationSuffix(kRectanglesAndTrianglePng);
 }
