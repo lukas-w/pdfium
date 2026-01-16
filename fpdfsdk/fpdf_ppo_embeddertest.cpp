@@ -49,17 +49,11 @@ int FakeBlockWriter(FPDF_FILEWRITE* pThis,
 
 constexpr int kRectanglesMultiPagesPageCount = 2;
 
-const char* RectanglesMultiPagesExpectedChecksum(int page_index) {
-  if (CFX_DefaultRenderDevice::UseSkiaRenderer()) {
-    static constexpr std::array<const char*, kRectanglesMultiPagesPageCount>
-        kChecksums = {{"07606a12487bd0c28a88f23fa00fc313",
-                       "94ea6e1eef220833a3ec14d6a1c612b0"}};
-    return kChecksums[page_index];
-  }
+const char* RectanglesMultiPagesPagePath(int page_index) {
   static constexpr std::array<const char*, kRectanglesMultiPagesPageCount>
-      kChecksums = {{"72d0d7a19a2f40e010ca6a1133b33e1e",
-                     "fb18142190d770cfbc329d2b071aee4d"}};
-  return kChecksums[page_index];
+      kFileNames = {
+          {"rectangles_multi_pages_3_in_1", "rectangles_multi_pages_2_in_1"}};
+  return kFileNames[page_index];
 }
 
 const char* Bug750568PageHash(int page_index) {
@@ -177,8 +171,8 @@ TEST_F(FPDFPPOEmbedderTest, NupRenderImage) {
     ScopedFPDFBitmap bitmap = RenderPage(page.get());
     EXPECT_EQ(792, FPDFBitmap_GetWidth(bitmap.get()));
     EXPECT_EQ(612, FPDFBitmap_GetHeight(bitmap.get()));
-    EXPECT_EQ(RectanglesMultiPagesExpectedChecksum(i),
-              HashBitmap(bitmap.get()));
+    CompareBitmapToPngWithExpectationSuffix(bitmap.get(),
+                                            RectanglesMultiPagesPagePath(i));
   }
 }
 
