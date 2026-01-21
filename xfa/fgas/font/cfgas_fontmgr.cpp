@@ -606,6 +606,14 @@ CFGAS_FontMgr::CFGAS_FontMgr() = default;
 
 CFGAS_FontMgr::~CFGAS_FontMgr() = default;
 
+void CFGAS_FontMgr::EnsureFontsEnumerated() {
+  if (fonts_enumerated_) {
+    return;
+  }
+  fonts_enumerated_ = true;
+  EnumFontsFromFontMapper();
+}
+
 bool CFGAS_FontMgr::EnumFontsFromFontMapper() {
   CFX_FontMapper* font_mapper =
       CFX_GEModule::Get()->GetFontMgr()->GetBuiltinMapper();
@@ -683,6 +691,7 @@ std::vector<CFGAS_FontDescriptorInfo> CFGAS_FontMgr::MatchFonts(
     uint32_t dwFontStyles,
     const WideString& FontName,
     wchar_t wcUnicode) {
+  EnsureFontsEnumerated();
   std::vector<CFGAS_FontDescriptorInfo> matched_fonts;
   for (const auto& font : installed_fonts_) {
     int32_t nPenalty =

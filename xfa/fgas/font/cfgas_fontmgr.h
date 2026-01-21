@@ -104,6 +104,8 @@ class CFGAS_FontMgr {
                                    FX_CodePage wCodePage);
 
  private:
+  friend class CFGASFontMgr_LazyEnumeration_Test;
+
   RetainPtr<CFGAS_GEFont> GetFontByUnicodeImpl(wchar_t wUnicode,
                                                uint32_t dwFontStyles,
                                                const wchar_t* pszFontFamily,
@@ -132,6 +134,7 @@ class CFGAS_FontMgr {
                                                    wchar_t wcUnicode);
   RetainPtr<CFGAS_GEFont> LoadFontInternal(const WideString& wsFaceName,
                                            int32_t iFaceIndex);
+  void EnsureFontsEnumerated();
 #endif  // BUILDFLAG(IS_WIN)
 
   std::map<uint32_t, std::vector<RetainPtr<CFGAS_GEFont>>> hash_2fonts_;
@@ -140,6 +143,7 @@ class CFGAS_FontMgr {
 #if BUILDFLAG(IS_WIN)
   std::deque<FX_FONTDESCRIPTOR> font_faces_;
 #else
+  bool fonts_enumerated_ = false;
   std::vector<std::unique_ptr<CFGAS_FontDescriptor>> installed_fonts_;
   std::map<uint32_t, std::vector<CFGAS_FontDescriptorInfo>>
       hash_2candidate_list_;
