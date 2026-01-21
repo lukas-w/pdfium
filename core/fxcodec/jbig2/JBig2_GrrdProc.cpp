@@ -163,16 +163,14 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRRDProc::DecodeTemplate0Opt(
   }
 
   int LTP = 0;
-  uint8_t* pLine = GRREG->span().data();
-  uint8_t* pLineR = GRREFERENCE->span().data();
-  intptr_t nStride = GRREG->stride();
-  intptr_t nStrideR = GRREFERENCE->stride();
-  int32_t GRWR = GRREFERENCE->width();
-  int32_t GRHR = GRREFERENCE->height();
+  uint8_t* line_ref = GRREFERENCE->span().data();
+  const intptr_t stride_ref = GRREFERENCE->stride();
+  const int32_t GRWR = GRREFERENCE->width();
+  const int32_t GRHR = GRREFERENCE->height();
   if (GRREFERENCEDY < -GRHR + 1 || GRREFERENCEDY > GRHR - 1) {
     GRREFERENCEDY = 0;
   }
-  intptr_t nOffset = -GRREFERENCEDY * nStrideR;
+  const intptr_t nOffset = -GRREFERENCEDY * stride_ref;
   for (int32_t h = 0; h < iGRH; h++) {
     if (TPGRON) {
       if (pArithDecoder->IsComplete()) {
@@ -180,24 +178,34 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRRDProc::DecodeTemplate0Opt(
       }
       LTP = LTP ^ pArithDecoder->Decode(&grContexts[0x0010]);
     }
-    uint32_t line1 = (h > 0) ? UNSAFE_TODO(pLine[-nStride]) << 4 : 0;
+
+    const bool is_first_line = h == 0;
+    pdfium::span<uint8_t> row_write = GRREG->GetLine(h);
+    pdfium::span<const uint8_t> row_prev;
+    uint32_t line1 = 0;
+    if (!is_first_line) {
+      row_prev = GRREG->GetLine(h - 1);
+      line1 = row_prev.front() << 4;
+    }
     int32_t reference_h = h - GRREFERENCEDY;
     bool line1_r_ok = (reference_h > 0 && reference_h < GRHR + 1);
     bool line2_r_ok = (reference_h > -1 && reference_h < GRHR);
     bool line3_r_ok = (reference_h > -2 && reference_h < GRHR - 1);
-    uint32_t line1_r = line1_r_ok ? UNSAFE_TODO(pLineR[nOffset - nStrideR]) : 0;
-    uint32_t line2_r = line2_r_ok ? UNSAFE_TODO(pLineR[nOffset]) : 0;
-    uint32_t line3_r = line3_r_ok ? UNSAFE_TODO(pLineR[nOffset + nStrideR]) : 0;
+    uint32_t line1_r =
+        line1_r_ok ? UNSAFE_TODO(line_ref[nOffset - stride_ref]) : 0;
+    uint32_t line2_r = line2_r_ok ? UNSAFE_TODO(line_ref[nOffset]) : 0;
+    uint32_t line3_r =
+        line3_r_ok ? UNSAFE_TODO(line_ref[nOffset + stride_ref]) : 0;
     if (!LTP) {
       uint32_t CONTEXT = (line1 & 0x1c00) | (line1_r & 0x01c0) |
                          ((line2_r >> 3) & 0x0038) | ((line3_r >> 6) & 0x0007);
       for (int32_t w = 0; w < iGRW; w += 8) {
         int32_t nBits = iGRW - w > 8 ? 8 : iGRW - w;
-        if (h > 0) {
-          line1 =
-              (line1 << 8) |
-              (w + 8 < iGRW ? UNSAFE_TODO(pLine[-nStride + (w >> 3) + 1]) << 4
-                            : 0);
+        if (!is_first_line) {
+          line1 = line1 << 8;
+          if (w + 8 < iGRW) {
+            line1 |= row_prev[w / 8 + 1] << 4;
+          }
         }
         if (h > GRHR + GRREFERENCEDY + 1) {
           line1_r = 0;
@@ -208,20 +216,20 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRRDProc::DecodeTemplate0Opt(
             line1_r =
                 (line1_r << 8) |
                 (w + 8 < GRWR
-                     ? UNSAFE_TODO(pLineR[nOffset - nStrideR + (w >> 3) + 1])
+                     ? UNSAFE_TODO(line_ref[nOffset - stride_ref + (w / 8) + 1])
                      : 0);
           }
           if (line2_r_ok) {
             line2_r =
                 (line2_r << 8) |
-                (w + 8 < GRWR ? UNSAFE_TODO(pLineR[nOffset + (w >> 3) + 1])
+                (w + 8 < GRWR ? UNSAFE_TODO(line_ref[nOffset + (w / 8) + 1])
                               : 0);
           }
           if (line3_r_ok) {
             line3_r =
                 (line3_r << 8) |
                 (w + 8 < GRWR
-                     ? UNSAFE_TODO(pLineR[nOffset + nStrideR + (w >> 3) + 1])
+                     ? UNSAFE_TODO(line_ref[nOffset + stride_ref + (w / 8) + 1])
                      : 0);
           } else {
             line3_r = 0;
@@ -237,36 +245,36 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRRDProc::DecodeTemplate0Opt(
                     ((line2_r >> (10 - k)) & 0x0008) |
                     ((line3_r >> (13 - k)) & 0x0001);
         }
-        UNSAFE_TODO(pLine[w >> 3] = cVal);
+        row_write[w / 8] = cVal;
       }
     } else {
       uint32_t CONTEXT = (line1 & 0x1c00) | (line1_r & 0x01c0) |
                          ((line2_r >> 3) & 0x0038) | ((line3_r >> 6) & 0x0007);
       for (int32_t w = 0; w < iGRW; w += 8) {
         int32_t nBits = iGRW - w > 8 ? 8 : iGRW - w;
-        if (h > 0) {
-          line1 =
-              (line1 << 8) |
-              (w + 8 < iGRW ? UNSAFE_TODO(pLine[-nStride + (w >> 3) + 1]) << 4
-                            : 0);
+        if (!is_first_line) {
+          line1 = line1 << 8;
+          if (w + 8 < iGRW) {
+            line1 |= row_prev[w / 8 + 1] << 4;
+          }
         }
         if (line1_r_ok) {
           line1_r =
               (line1_r << 8) |
               (w + 8 < GRWR
-                   ? UNSAFE_TODO(pLineR[nOffset - nStrideR + (w >> 3) + 1])
+                   ? UNSAFE_TODO(line_ref[nOffset - stride_ref + (w / 8) + 1])
                    : 0);
         }
         if (line2_r_ok) {
           line2_r =
               (line2_r << 8) |
-              (w + 8 < GRWR ? UNSAFE_TODO(pLineR[nOffset + (w >> 3) + 1]) : 0);
+              (w + 8 < GRWR ? UNSAFE_TODO(line_ref[nOffset + (w / 8) + 1]) : 0);
         }
         if (line3_r_ok) {
           line3_r =
               (line3_r << 8) |
               (w + 8 < GRWR
-                   ? UNSAFE_TODO(pLineR[nOffset + nStrideR + (w >> 3) + 1])
+                   ? UNSAFE_TODO(line_ref[nOffset + stride_ref + (w / 8) + 1])
                    : 0);
         } else {
           line3_r = 0;
@@ -295,12 +303,11 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRRDProc::DecodeTemplate0Opt(
                     ((line2_r >> (10 - k)) & 0x0008) |
                     ((line3_r >> (13 - k)) & 0x0001);
         }
-        UNSAFE_TODO(pLine[w >> 3] = cVal);
+        row_write[w / 8] = cVal;
       }
     }
-    UNSAFE_TODO(pLine += nStride);
     if (h < GRHR + GRREFERENCEDY) {
-      UNSAFE_TODO(pLineR += nStrideR);
+      UNSAFE_TODO(line_ref += stride_ref);
     }
   }
   return GRREG;
@@ -431,16 +438,14 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRRDProc::DecodeTemplate1Opt(
   }
 
   int LTP = 0;
-  uint8_t* pLine = GRREG->span().data();
-  uint8_t* pLineR = GRREFERENCE->span().data();
-  intptr_t nStride = GRREG->stride();
-  intptr_t nStrideR = GRREFERENCE->stride();
-  int32_t GRWR = GRREFERENCE->width();
-  int32_t GRHR = GRREFERENCE->height();
+  uint8_t* line_ref = GRREFERENCE->span().data();
+  const intptr_t stride_ref = GRREFERENCE->stride();
+  const int32_t GRWR = GRREFERENCE->width();
+  const int32_t GRHR = GRREFERENCE->height();
   if (GRREFERENCEDY < -GRHR + 1 || GRREFERENCEDY > GRHR - 1) {
     GRREFERENCEDY = 0;
   }
-  intptr_t nOffset = -GRREFERENCEDY * nStrideR;
+  const intptr_t nOffset = -GRREFERENCEDY * stride_ref;
   for (int32_t h = 0; h < iGRH; h++) {
     if (TPGRON) {
       if (pArithDecoder->IsComplete()) {
@@ -449,42 +454,51 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRRDProc::DecodeTemplate1Opt(
 
       LTP = LTP ^ pArithDecoder->Decode(&grContexts[0x0008]);
     }
-    uint32_t line1 = (h > 0) ? UNSAFE_TODO(pLine[-nStride]) << 1 : 0;
+    const bool is_first_line = h == 0;
+    pdfium::span<uint8_t> row_write = GRREG->GetLine(h);
+    pdfium::span<const uint8_t> row_prev;
+    uint32_t line1 = 0;
+    if (!is_first_line) {
+      row_prev = GRREG->GetLine(h - 1);
+      line1 = row_prev.front() << 1;
+    }
     int32_t reference_h = h - GRREFERENCEDY;
     bool line1_r_ok = (reference_h > 0 && reference_h < GRHR + 1);
     bool line2_r_ok = (reference_h > -1 && reference_h < GRHR);
     bool line3_r_ok = (reference_h > -2 && reference_h < GRHR - 1);
-    uint32_t line1_r = line1_r_ok ? UNSAFE_TODO(pLineR[nOffset - nStrideR]) : 0;
-    uint32_t line2_r = line2_r_ok ? UNSAFE_TODO(pLineR[nOffset]) : 0;
-    uint32_t line3_r = line3_r_ok ? UNSAFE_TODO(pLineR[nOffset + nStrideR]) : 0;
+    uint32_t line1_r =
+        line1_r_ok ? UNSAFE_TODO(line_ref[nOffset - stride_ref]) : 0;
+    uint32_t line2_r = line2_r_ok ? UNSAFE_TODO(line_ref[nOffset]) : 0;
+    uint32_t line3_r =
+        line3_r_ok ? UNSAFE_TODO(line_ref[nOffset + stride_ref]) : 0;
     if (!LTP) {
       uint32_t CONTEXT = (line1 & 0x0380) | ((line1_r >> 2) & 0x0020) |
                          ((line2_r >> 4) & 0x001c) | ((line3_r >> 6) & 0x0003);
       for (int32_t w = 0; w < iGRW; w += 8) {
         int32_t nBits = iGRW - w > 8 ? 8 : iGRW - w;
-        if (h > 0) {
-          line1 =
-              (line1 << 8) |
-              (w + 8 < iGRW ? UNSAFE_TODO(pLine[-nStride + (w >> 3) + 1]) << 1
-                            : 0);
+        if (!is_first_line) {
+          line1 = line1 << 8;
+          if (w + 8 < iGRW) {
+            line1 |= row_prev[w / 8 + 1] << 1;
+          }
         }
         if (line1_r_ok) {
           line1_r =
               (line1_r << 8) |
               (w + 8 < GRWR
-                   ? UNSAFE_TODO(pLineR[nOffset - nStrideR + (w >> 3) + 1])
+                   ? UNSAFE_TODO(line_ref[nOffset - stride_ref + (w / 8) + 1])
                    : 0);
         }
         if (line2_r_ok) {
           line2_r =
               (line2_r << 8) |
-              (w + 8 < GRWR ? UNSAFE_TODO(pLineR[nOffset + (w >> 3) + 1]) : 0);
+              (w + 8 < GRWR ? UNSAFE_TODO(line_ref[nOffset + (w / 8) + 1]) : 0);
         }
         if (line3_r_ok) {
           line3_r =
               (line3_r << 8) |
               (w + 8 < GRWR
-                   ? UNSAFE_TODO(pLineR[nOffset + nStrideR + (w >> 3) + 1])
+                   ? UNSAFE_TODO(line_ref[nOffset + stride_ref + (w / 8) + 1])
                    : 0);
         } else {
           line3_r = 0;
@@ -499,36 +513,36 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRRDProc::DecodeTemplate1Opt(
                     ((line2_r >> (11 - k)) & 0x0004) |
                     ((line3_r >> (13 - k)) & 0x0001);
         }
-        UNSAFE_TODO(pLine[w >> 3] = cVal);
+        row_write[w / 8] = cVal;
       }
     } else {
       uint32_t CONTEXT = (line1 & 0x0380) | ((line1_r >> 2) & 0x0020) |
                          ((line2_r >> 4) & 0x001c) | ((line3_r >> 6) & 0x0003);
       for (int32_t w = 0; w < iGRW; w += 8) {
         int32_t nBits = iGRW - w > 8 ? 8 : iGRW - w;
-        if (h > 0) {
-          line1 =
-              (line1 << 8) |
-              (w + 8 < iGRW ? UNSAFE_TODO(pLine[-nStride + (w >> 3) + 1]) << 1
-                            : 0);
+        if (!is_first_line) {
+          line1 = line1 << 8;
+          if (w + 8 < iGRW) {
+            line1 |= row_prev[(w / 8) + 1] << 1;
+          }
         }
         if (line1_r_ok) {
           line1_r =
               (line1_r << 8) |
               (w + 8 < GRWR
-                   ? UNSAFE_TODO(pLineR[nOffset - nStrideR + (w >> 3) + 1])
+                   ? UNSAFE_TODO(line_ref[nOffset - stride_ref + (w / 8) + 1])
                    : 0);
         }
         if (line2_r_ok) {
           line2_r =
               (line2_r << 8) |
-              (w + 8 < GRWR ? UNSAFE_TODO(pLineR[nOffset + (w >> 3) + 1]) : 0);
+              (w + 8 < GRWR ? UNSAFE_TODO(line_ref[nOffset + (w / 8) + 1]) : 0);
         }
         if (line3_r_ok) {
           line3_r =
               (line3_r << 8) |
               (w + 8 < GRWR
-                   ? UNSAFE_TODO(pLineR[nOffset + nStrideR + (w >> 3) + 1])
+                   ? UNSAFE_TODO(line_ref[nOffset + stride_ref + (w / 8) + 1])
                    : 0);
         } else {
           line3_r = 0;
@@ -557,12 +571,11 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRRDProc::DecodeTemplate1Opt(
                     ((line2_r >> (11 - k)) & 0x0004) |
                     ((line3_r >> (13 - k)) & 0x0001);
         }
-        UNSAFE_TODO(pLine[w >> 3] = cVal);
+        row_write[w / 8] = cVal;
       }
     }
-    UNSAFE_TODO(pLine += nStride);
     if (h < GRHR + GRREFERENCEDY) {
-      UNSAFE_TODO(pLineR += nStrideR);
+      UNSAFE_TODO(line_ref += stride_ref);
     }
   }
   return GRREG;
