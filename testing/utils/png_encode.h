@@ -10,11 +10,13 @@
 #include <vector>
 
 #include "core/fxcrt/span.h"
+#include "public/fpdfview.h"
 
 std::vector<uint8_t> EncodePng(pdfium::span<const uint8_t> input,
                                int width,
                                int height,
                                int stride,
                                int format);
+std::vector<uint8_t> EncodePng(FPDF_BITMAP bitmap);
 
 #endif  // TESTING_UTILS_PNG_ENCODE_H_

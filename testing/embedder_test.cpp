@@ -35,6 +35,8 @@
 #include "testing/utils/file_util.h"
 #include "testing/utils/hash.h"
 #include "testing/utils/path_service.h"
+#include "testing/utils/png_encode.h"
+#include "third_party/simdutf/simdutf.h"
 
 namespace {
 
@@ -396,6 +398,17 @@ int CompareBGRBitmapToPng(pdfium::span<const uint8_t> bitmap_span,
   return CompareBGRxBitmapToPng(bgrx_buffer, bgrx_stride, decoded_png);
 }
 
+std::string EncodeBase64(pdfium::span<const uint8_t> png) {
+  std::string base64_png(simdutf::base64_length_from_binary(png.size()), '\0');
+  size_t base64_len = simdutf::binary_to_base64(png, base64_png);
+  CHECK_EQ(base64_len, base64_png.size());
+  return "data:image/png;base64," + base64_png;
+}
+
+std::string EncodeBase64Png(FPDF_BITMAP bitmap) {
+  return EncodeBase64(EncodePng(bitmap));
+}
+
 void CompareBitmapToPngData(FPDF_BITMAP bitmap,
                             pdfium::span<const uint8_t> png_data) {
   DecodedPng decoded_png = DecodePngData(png_data);
@@ -438,7 +451,10 @@ void CompareBitmapToPngData(FPDF_BITMAP bitmap,
       // Support other formats as-needed.
       NOTREACHED();
   }
-  EXPECT_EQ(pixels_different, 0);
+  EXPECT_EQ(pixels_different, 0)
+      << ", Actual pixels (open in browser):\n"
+      << EncodeBase64Png(bitmap) << "\nExpected pixels (open in browser):\n"
+      << EncodeBase64(png_data);
 }
 
 }  // namespace
@@ -1049,7 +1065,9 @@ void EmbedderTest::CompareBitmapToPng(FPDF_BITMAP bitmap,
   std::string png_path = GetEmbedderTestExpectationPath(expectation_png_name);
   std::vector<uint8_t> png_data = GetFileContents(png_path.c_str());
   ASSERT_FALSE(png_data.empty())
-      << "No expectation file matching " << expectation_png_name;
+      << "No expectation file matching " << expectation_png_name
+      << ", Actual pixels (open in browser):\n"
+      << EncodeBase64Png(bitmap);
   SCOPED_TRACE(testing::Message() << "CompareBitmapToPng() with " << png_path);
   CompareBitmapToPngData(bitmap, png_data);
   if (EmbedderTestEnvironment::GetInstance()->write_pngs()) {
@@ -1077,7 +1095,10 @@ void EmbedderTest::CompareBitmapToPngWithExpectationSuffix(
     }
     return;
   }
-  ADD_FAILURE() << "No expectation file matching " << expectation_png_name;
+
+  ADD_FAILURE() << "No expectation file matching " << expectation_png_name
+                << ", Actual pixels (open in browser):\n"
+                << EncodeBase64Png(bitmap);
 }
 
 // static

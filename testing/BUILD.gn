@@ -192,6 +192,7 @@ source_set("embedder_test_support") {
     "image_diff",
     "//testing/gmock",
     "//testing/gtest",
+    "//third_party/simdutf",
   ]
   public_deps = [
     ":test_environments",
