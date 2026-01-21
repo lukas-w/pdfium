@@ -1052,6 +1052,9 @@ void EmbedderTest::CompareBitmapToPng(FPDF_BITMAP bitmap,
       << "No expectation file matching " << expectation_png_name;
   SCOPED_TRACE(testing::Message() << "CompareBitmapToPng() with " << png_path);
   CompareBitmapToPngData(bitmap, png_data);
+  if (EmbedderTestEnvironment::GetInstance()->write_pngs()) {
+    WriteBitmapToPng(bitmap, png_path);
+  }
 }
 
 // static
@@ -1069,6 +1072,9 @@ void EmbedderTest::CompareBitmapToPngWithExpectationSuffix(
                  << "CompareBitmapToPngWithExpectationSuffix() with "
                  << png_path);
     CompareBitmapToPngData(bitmap, GetFileContents(png_path.c_str()));
+    if (EmbedderTestEnvironment::GetInstance()->write_pngs()) {
+      WriteBitmapToPng(bitmap, png_path);
+    }
     return;
   }
   ADD_FAILURE() << "No expectation file matching " << expectation_png_name;
