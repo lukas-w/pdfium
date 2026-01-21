@@ -19,13 +19,12 @@
 #include "public/fpdf_edit.h"
 #include "public/fpdf_thumbnail.h"
 #include "testing/fx_string_testhelpers.h"
-#include "testing/image_diff/image_diff_png.h"
+#include "testing/utils/png_encode.h"
 
 #ifdef PDF_ENABLE_SKIA
 #include "third_party/skia/include/core/SkData.h"         // nogncheck
 #include "third_party/skia/include/core/SkImage.h"        // nogncheck
 #include "third_party/skia/include/core/SkPicture.h"      // nogncheck
-#include "third_party/skia/include/core/SkPixmap.h"       // nogncheck
 #include "third_party/skia/include/core/SkSerialProcs.h"  // nogncheck
 #include "third_party/skia/include/core/SkStream.h"       // nogncheck
 #ifdef PDF_ENABLE_RUST_PNG
@@ -188,64 +187,6 @@ const char* PageObjectTypeToCString(int type) {
     return "Form";
   }
   NOTREACHED();
-}
-
-#ifdef PDF_ENABLE_SKIA
-std::vector<uint8_t> ConvertToStraightAlpha(pdfium::span<const uint8_t> input,
-                                            int width,
-                                            int height,
-                                            int row_byte_width) {
-  SkImageInfo premul_alpha_image_info = SkImageInfo::Make(
-      width, height, kBGRA_8888_SkColorType, kPremul_SkAlphaType);
-  SkPixmap src_pixmap(premul_alpha_image_info, input.data(), row_byte_width);
-
-  std::vector<uint8_t> result(input.size());
-  SkImageInfo straight_alpha_image_info = SkImageInfo::Make(
-      width, height, kBGRA_8888_SkColorType, kUnpremul_SkAlphaType);
-  SkPixmap dst_pixmap(straight_alpha_image_info, result.data(), row_byte_width);
-
-  CHECK(src_pixmap.readPixels(dst_pixmap));
-  return result;
-}
-#endif
-
-std::vector<uint8_t> EncodePng(pdfium::span<const uint8_t> input,
-                               int width,
-                               int height,
-                               int stride,
-                               int format) {
-  std::vector<uint8_t> png;
-  switch (format) {
-    case FPDFBitmap_Unknown:
-      break;
-    case FPDFBitmap_Gray:
-      png = image_diff_png::EncodeGrayPNG(input, width, height, stride);
-      break;
-    case FPDFBitmap_BGR:
-      png = image_diff_png::EncodeBGRPNG(input, width, height, stride);
-      break;
-    case FPDFBitmap_BGRx:
-      png = image_diff_png::EncodeBGRAPNG(input, width, height, stride,
-                                          /*discard_transparency=*/true);
-      break;
-    case FPDFBitmap_BGRA:
-      png = image_diff_png::EncodeBGRAPNG(input, width, height, stride,
-                                          /*discard_transparency=*/false);
-      break;
-#ifdef PDF_ENABLE_SKIA
-    case FPDFBitmap_BGRA_Premul: {
-      std::vector<uint8_t> input_with_straight_alpha =
-          ConvertToStraightAlpha(input, width, height, stride);
-      png = image_diff_png::EncodeBGRAPNG(input_with_straight_alpha, width,
-                                          height, stride,
-                                          /*discard_transparency=*/false);
-      break;
-    }
-#endif
-    default:
-      NOTREACHED();
-  }
-  return png;
 }
 
 #ifdef _WIN32
