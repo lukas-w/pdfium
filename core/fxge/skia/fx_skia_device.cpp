@@ -1174,8 +1174,9 @@ bool CFX_SkiaDeviceDriver::DrawPath(const CFX_Path& cfx_path,
       //
       // Drawing it as a stroke normally already operates in the knockout way
       // but not for the AA pixels in some cases.
-      SkPath stroke_outline;
-      skpathutils::FillPathWithPaint(path, stroke_paint, &stroke_outline);
+      SkPathBuilder stroke_outline_builder;
+      skpathutils::FillPathWithPaint(path, stroke_paint, &stroke_outline_builder);
+      SkPath stroke_outline = stroke_outline_builder.detach();
       layer_paint.setColor(stroke_color);
       DrawPathImpl(stroke_outline, layer_paint);
 
