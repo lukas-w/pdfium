@@ -13,7 +13,6 @@
 #include "core/fxcodec/jbig2/JBig2_ArithIntDecoder.h"
 #include "core/fxcodec/jbig2/JBig2_GrrdProc.h"
 #include "core/fxcodec/jbig2/JBig2_HuffmanDecoder.h"
-#include "core/fxcrt/compiler_specific.h"
 #include "core/fxcrt/fx_safe_types.h"
 #include "core/fxcrt/maybe_owned.h"
 
@@ -167,7 +166,7 @@ std::unique_ptr<CJBig2_Image> CJBig2_TRDProc::DecodeHuffman(
 
       MaybeOwned<CJBig2_Image> IBI;
       if (RI == 0) {
-        IBI = UNSAFE_TODO(SBSYMS[IDI]);
+        IBI = SBSYMS[IDI];
       } else {
         int32_t RDWI;
         int32_t RDHI;
@@ -183,7 +182,7 @@ std::unique_ptr<CJBig2_Image> CJBig2_TRDProc::DecodeHuffman(
         }
         pStream->alignByte();
         uint32_t nTmp = pStream->getOffset();
-        CJBig2_Image* IBOI = UNSAFE_TODO(SBSYMS[IDI]);
+        CJBig2_Image* IBOI = SBSYMS[IDI];
         if (!IBOI) {
           return nullptr;
         }
@@ -345,7 +344,7 @@ std::unique_ptr<CJBig2_Image> CJBig2_TRDProc::DecodeArith(
 
       MaybeOwned<CJBig2_Image> pIBI;
       if (RI == 0) {
-        pIBI = UNSAFE_TODO(SBSYMS[IDI]);
+        pIBI = SBSYMS[IDI];
       } else {
         int32_t RDWI;
         int32_t RDHI;
@@ -355,7 +354,7 @@ std::unique_ptr<CJBig2_Image> CJBig2_TRDProc::DecodeArith(
         pIARDH->Decode(pArithDecoder, &RDHI);
         pIARDX->Decode(pArithDecoder, &RDXI);
         pIARDY->Decode(pArithDecoder, &RDYI);
-        CJBig2_Image* IBOI = UNSAFE_TODO(SBSYMS[IDI]);
+        CJBig2_Image* IBOI = SBSYMS[IDI];
         if (!IBOI) {
           return nullptr;
         }
