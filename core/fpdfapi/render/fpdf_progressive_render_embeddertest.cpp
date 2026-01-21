@@ -278,8 +278,8 @@ TEST_F(FPDFProgressiveRenderEmbedderTest, RenderAnnotWithPause) {
     render_done = ContinueRenderPage(page.get(), &pause);
   }
   ScopedFPDFBitmap bitmap = FinishRenderPage(page.get());
-  CompareBitmap(bitmap.get(), 595, 842,
-                pdfium::AnnotationStampWithApChecksum());
+  CompareBitmapToPngWithExpectationSuffix(bitmap.get(),
+                                          pdfium::kAnnotationStampWithApPng);
 }
 
 TEST_F(FPDFProgressiveRenderEmbedderTest, RenderFormsWithPause) {

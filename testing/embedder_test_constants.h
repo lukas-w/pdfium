@@ -7,8 +7,9 @@
 
 namespace pdfium {
 
-// MD5 hash for rendering annotation_stamp_with_ap.pdf with annotations.
-const char* AnnotationStampWithApChecksum();
+// Expectation file basename for rendering annotation_stamp_with_ap.pdf with
+// annotations.
+inline constexpr char kAnnotationStampWithApPng[] = "annotation_stamp_with_ap";
 
 // Expectation file basename for rendering a 200x200 blank page.
 inline constexpr char kBlankPage200x200Png[] = "blank_200x200";

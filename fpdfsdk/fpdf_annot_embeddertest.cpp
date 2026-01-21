@@ -35,7 +35,7 @@
 #include "testing/gtest/include/gtest/gtest.h"
 #include "testing/utils/hash.h"
 
-using pdfium::AnnotationStampWithApChecksum;
+using pdfium::kAnnotationStampWithApPng;
 
 namespace {
 
@@ -1196,7 +1196,8 @@ TEST_F(FPDFAnnotEmbedderTest, AddAndModifyPath) {
   // Check that the page renders correctly.
   {
     ScopedFPDFBitmap bitmap = RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-    CompareBitmap(bitmap.get(), 595, 842, AnnotationStampWithApChecksum());
+    CompareBitmapToPngWithExpectationSuffix(bitmap.get(),
+                                            kAnnotationStampWithApPng);
   }
 
   {
@@ -1422,7 +1423,8 @@ TEST_F(FPDFAnnotEmbedderTest, AddAndModifyImage) {
   // Check that the page renders correctly.
   {
     ScopedFPDFBitmap bitmap = RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-    CompareBitmap(bitmap.get(), 595, 842, AnnotationStampWithApChecksum());
+    CompareBitmapToPngWithExpectationSuffix(bitmap.get(),
+                                            kAnnotationStampWithApPng);
   }
 
   static constexpr int kBitmapSize = 200;
@@ -1534,7 +1536,8 @@ TEST_F(FPDFAnnotEmbedderTest, AddAndModifyText) {
   // Check that the page renders correctly.
   {
     ScopedFPDFBitmap bitmap = RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-    CompareBitmap(bitmap.get(), 595, 842, AnnotationStampWithApChecksum());
+    CompareBitmapToPngWithExpectationSuffix(bitmap.get(),
+                                            kAnnotationStampWithApPng);
   }
 
   {
@@ -1591,7 +1594,8 @@ TEST_F(FPDFAnnotEmbedderTest, AddAndModifyText) {
   EXPECT_TRUE(FPDFPage_RemoveAnnot(page.get(), 2));
   {
     ScopedFPDFBitmap bitmap = RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-    CompareBitmap(bitmap.get(), 595, 842, AnnotationStampWithApChecksum());
+    CompareBitmapToPngWithExpectationSuffix(bitmap.get(),
+                                            kAnnotationStampWithApPng);
   }
 }
 
@@ -1654,8 +1658,8 @@ TEST_F(FPDFAnnotEmbedderTest, GetSetStringValue) {
     ASSERT_TRUE(saved_doc);
     ScopedSavedPage saved_page = LoadScopedSavedPage(0);
     ASSERT_TRUE(saved_page);
-    VerifySavedRendering(saved_page.get(), 595, 842,
-                         AnnotationStampWithApChecksum());
+    VerifySavedRenderingToPngWithExpectationSuffix(saved_page.get(),
+                                                   kAnnotationStampWithApPng);
 
     ScopedFPDFAnnotation new_annot(FPDFPage_GetAnnot(saved_page.get(), 0));
 

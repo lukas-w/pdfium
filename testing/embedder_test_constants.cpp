@@ -9,23 +9,6 @@
 
 namespace pdfium {
 
-const char* AnnotationStampWithApChecksum() {
-  if (CFX_DefaultRenderDevice::UseSkiaRenderer()) {
-#if BUILDFLAG(IS_WIN)
-    return "10425299f19e223eda9a3930ef4bed3c";
-#elif BUILDFLAG(IS_APPLE)
-    return "71c46babfe48a5a0dff03ad3edeb2918";
-#else
-    return "50f53c0a869ad33a8dd2b580740a63c8";
-#endif
-  }
-#if BUILDFLAG(IS_APPLE)
-  return "587311ad93447614cbe5887df14caa78";
-#else
-  return "2908fd6166f795dfd73c607ec12c5356";
-#endif
-}
-
 const char* HelloWorldRemovedChecksum() {
   if (CFX_DefaultRenderDevice::UseSkiaRenderer()) {
 #if BUILDFLAG(IS_WIN)
