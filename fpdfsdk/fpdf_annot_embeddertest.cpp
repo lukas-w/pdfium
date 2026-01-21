@@ -4084,8 +4084,6 @@ TEST_F(FPDFAnnotEmbedderTest, SharedFormXObjectMatrix) {
   EXPECT_FLOAT_EQ(0.0f, matrix2.b);
   EXPECT_FLOAT_EQ(0.0f, matrix2.c);
   EXPECT_FLOAT_EQ(1.0f, matrix2.d);
-  // TODO(crbug.com/475719025): Should be -10.395f.
-  EXPECT_FLOAT_EQ(156.1774f, matrix2.e);
-  // TODO(crbug.com/475719025): Should be -5.42212f.
-  EXPECT_FLOAT_EQ(681.1501f, matrix2.f);
+  EXPECT_FLOAT_EQ(-10.395f, matrix2.e);
+  EXPECT_FLOAT_EQ(-5.42212f, matrix2.f);
 }
