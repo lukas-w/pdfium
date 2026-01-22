@@ -13,6 +13,7 @@
 #include "core/fxcodec/jbig2/JBig2_BitStream.h"
 #include "core/fxcodec/jbig2/JBig2_Image.h"
 #include "core/fxcrt/compiler_specific.h"
+#include "core/fxcrt/zip.h"
 
 CJBig2_GRRDProc::CJBig2_GRRDProc() = default;
 
@@ -164,14 +165,11 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRRDProc::DecodeTemplate0Opt(
   }
 
   int LTP = 0;
-  uint8_t* line_ref = GRREFERENCE->span().data();
-  const intptr_t stride_ref = GRREFERENCE->stride();
   const int32_t GRWR = GRREFERENCE->width();
   const int32_t GRHR = GRREFERENCE->height();
   if (GRREFERENCEDY < -GRHR + 1 || GRREFERENCEDY > GRHR - 1) {
     GRREFERENCEDY = 0;
   }
-  const intptr_t nOffset = -GRREFERENCEDY * stride_ref;
   for (int32_t h = 0; h < iGRH; h++) {
     if (TPGRON) {
       if (pArithDecoder->IsComplete()) {
@@ -189,20 +187,21 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRRDProc::DecodeTemplate0Opt(
       line1 = row_prev.front() << 4;
     }
     const int32_t reference_h = h - GRREFERENCEDY;
-    const bool line1_r_ok = (reference_h > 0 && reference_h < GRHR + 1);
-    const bool line2_r_ok = (reference_h > -1 && reference_h < GRHR);
-    const bool line3_r_ok = (reference_h > -2 && reference_h < GRHR - 1);
+    std::array<pdfium::span<const uint8_t>, 3> row_refs_dy;
     std::array<uint32_t, 3> refs = {};
-    std::ranges::fill(refs, 0);
-    if (line1_r_ok) {
-      refs[0] = UNSAFE_TODO(line_ref[nOffset - stride_ref]);
+    if (reference_h > 0 && reference_h < GRHR + 1) {
+      row_refs_dy[0] = GRREFERENCE->GetLine(reference_h - 1);
+      refs[0] = row_refs_dy[0].front();
     }
-    if (line2_r_ok) {
-      refs[1] = UNSAFE_TODO(line_ref[nOffset]);
+    if (reference_h > -1 && reference_h < GRHR) {
+      row_refs_dy[1] = GRREFERENCE->GetLine(reference_h);
+      refs[1] = row_refs_dy[1].front();
     }
-    if (line3_r_ok) {
-      refs[2] = UNSAFE_TODO(line_ref[nOffset + stride_ref]);
+    if (reference_h > -2 && reference_h < GRHR - 1) {
+      row_refs_dy[2] = GRREFERENCE->GetLine(reference_h + 1);
+      refs[2] = row_refs_dy[2].front();
     }
+
     if (!LTP) {
       uint32_t CONTEXT = (line1 & 0x1c00) | (refs[0] & 0x01c0) |
                          ((refs[1] >> 3) & 0x0038) | ((refs[2] >> 6) & 0x0007);
@@ -218,24 +217,12 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRRDProc::DecodeTemplate0Opt(
           refs = {};
         } else {
           const bool next_w_in_bounds = w + 8 < GRWR;
-          if (line1_r_ok) {
-            refs[0] <<= 8;
-            if (next_w_in_bounds) {
-              refs[0] |=
-                  UNSAFE_TODO(line_ref[nOffset - stride_ref + (w / 8) + 1]);
-            }
-          }
-          if (line2_r_ok) {
-            refs[1] <<= 8;
-            if (next_w_in_bounds) {
-              refs[1] |= UNSAFE_TODO(line_ref[nOffset + (w / 8) + 1]);
-            }
-          }
-          if (line3_r_ok) {
-            refs[2] <<= 8;
-            if (next_w_in_bounds) {
-              refs[2] |=
-                  UNSAFE_TODO(line_ref[nOffset + stride_ref + (w / 8) + 1]);
+          for (auto [row_ref_dy, ref] : fxcrt::Zip(row_refs_dy, refs)) {
+            if (!row_ref_dy.empty()) {
+              ref <<= 8;
+              if (next_w_in_bounds) {
+                ref |= row_ref_dy[(w / 8) + 1];
+              }
             }
           }
         }
@@ -264,24 +251,12 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRRDProc::DecodeTemplate0Opt(
           }
         }
         const bool next_w_in_bounds = w + 8 < GRWR;
-        if (line1_r_ok) {
-          refs[0] <<= 8;
-          if (next_w_in_bounds) {
-            refs[0] |=
-                UNSAFE_TODO(line_ref[nOffset - stride_ref + (w / 8) + 1]);
-          }
-        }
-        if (line2_r_ok) {
-          refs[1] <<= 8;
-          if (next_w_in_bounds) {
-            refs[1] |= UNSAFE_TODO(line_ref[nOffset + (w / 8) + 1]);
-          }
-        }
-        if (line3_r_ok) {
-          refs[2] <<= 8;
-          if (next_w_in_bounds) {
-            refs[2] |=
-                UNSAFE_TODO(line_ref[nOffset + stride_ref + (w / 8) + 1]);
+        for (auto [row_ref_dy, ref] : fxcrt::Zip(row_refs_dy, refs)) {
+          if (!row_ref_dy.empty()) {
+            ref <<= 8;
+            if (next_w_in_bounds) {
+              ref |= row_ref_dy[(w / 8) + 1];
+            }
           }
         }
         uint8_t cVal = 0;
@@ -303,9 +278,6 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRRDProc::DecodeTemplate0Opt(
         }
         row_write[w / 8] = cVal;
       }
-    }
-    if (h < GRHR + GRREFERENCEDY) {
-      UNSAFE_TODO(line_ref += stride_ref);
     }
   }
   return GRREG;
