@@ -37,17 +37,19 @@ TEST(fxcodec, EmptyImage) {
   EXPECT_EQ(empty.width(), 0);
   EXPECT_EQ(empty.height(), 0);
 
+  // Out-of-bounds GetLine() returns empty.
+  pdfium::span<uint8_t> line0 = empty.GetLine(0);
+  pdfium::span<uint8_t> line1 = empty.GetLine(1);
+  EXPECT_TRUE(line0.empty());
+  EXPECT_TRUE(line1.empty());
+
   // Out-of-bounds SetPixel() is silent no-op.
-  empty.SetPixel(0, 0, true);
-  empty.SetPixel(1, 1, true);
+  empty.SetPixel(0, line0, true);
+  empty.SetPixel(1, line1, true);
 
   // Out-of-bounds GetPixel returns 0.
   EXPECT_EQ(empty.GetPixel(0, 0), 0);
   EXPECT_EQ(empty.GetPixel(1, 1), 0);
-
-  // Out-of-bounds GetLine() returns empty.
-  EXPECT_TRUE(empty.GetLine(0).empty());
-  EXPECT_TRUE(empty.GetLine(1).empty());
 }
 
 TEST(fxcodec, JBig2ImageCreate) {
@@ -55,23 +57,25 @@ TEST(fxcodec, JBig2ImageCreate) {
   EXPECT_EQ(kWidthPixels, img.width());
   EXPECT_EQ(kHeightLines, img.height());
   EXPECT_EQ(0, img.GetPixel(0, 0));
-  pdfium::span<const uint8_t> line0 = img.GetLine(0);
+  pdfium::span<uint8_t> line0 = img.GetLine(0);
   ASSERT_EQ(static_cast<size_t>(kStrideBytes), line0.size());
   EXPECT_EQ(0, line0[0]);
-  pdfium::span<const uint8_t> line_last = img.GetLine(kHeightLines - 1);
+  pdfium::span<uint8_t> line_last = img.GetLine(kHeightLines - 1);
   ASSERT_EQ(static_cast<size_t>(kStrideBytes), line_last.size());
   EXPECT_EQ(0, line_last[kWidthBytes - 1]);
 
-  img.SetPixel(0, 0, true);
-  img.SetPixel(kWidthPixels - 1, kHeightLines - 1, true);
+  img.SetPixel(0, line0, true);
+  img.SetPixel(kWidthPixels - 1, line_last, true);
   EXPECT_EQ(1, img.GetPixel(0, 0));
   EXPECT_EQ(1, img.GetPixel(kWidthPixels - 1, kHeightLines - 1));
   EXPECT_EQ(0x80, line0[0]);
   EXPECT_EQ(0x01, line_last[kWidthBytes - 1]);
 
   // Out-of-bounds SetPixel() is silent no-op.
-  img.SetPixel(-1, 1, true);
-  img.SetPixel(kWidthPixels, kHeightLines, true);
+  pdfium::span<uint8_t> line1 = img.GetLine(1);
+  img.SetPixel(-1, line1, true);
+  pdfium::span<uint8_t> line_oob = img.GetLine(kHeightLines);
+  img.SetPixel(kWidthPixels, line_oob, true);
 
   // Out-of-bounds GetPixel returns 0.
   EXPECT_EQ(0, img.GetPixel(-1, -1));
@@ -93,8 +97,10 @@ TEST(fxcodec, JBig2ImageCreateTooBig) {
 TEST(fxcodec, JBig2ImageCreateExternal) {
   uint8_t buf[kHeightLines * kStrideBytes];
   CJBig2_Image img(kWidthPixels, kHeightLines, kStrideBytes, buf);
-  img.SetPixel(0, 0, true);
-  img.SetPixel(kWidthPixels - 1, kHeightLines - 1, false);
+  pdfium::span<uint8_t> line0 = img.GetLine(0);
+  pdfium::span<uint8_t> line_last = img.GetLine(kHeightLines - 1);
+  img.SetPixel(0, line0, true);
+  img.SetPixel(kWidthPixels - 1, line_last, false);
   EXPECT_EQ(kWidthPixels, img.width());
   EXPECT_EQ(kHeightLines, img.height());
   EXPECT_TRUE(img.GetPixel(0, 0));
@@ -129,8 +135,10 @@ TEST(fxcodec, JBig2ImageCreateExternalBadStride) {
 
 TEST(fxcodec, JBig2ImageExpand) {
   CJBig2_Image img(kWidthPixels, kHeightLines);
-  img.SetPixel(0, 0, true);
-  img.SetPixel(kWidthPixels - 1, kHeightLines - 1, false);
+  pdfium::span<uint8_t> line0 = img.GetLine(0);
+  pdfium::span<uint8_t> line_last = img.GetLine(kHeightLines - 1);
+  img.SetPixel(0, line0, true);
+  img.SetPixel(kWidthPixels - 1, line_last, false);
   img.Expand(kLargerHeightLines, true);
   EXPECT_EQ(kWidthPixels, img.width());
   EXPECT_EQ(kLargerHeightLines, img.height());
@@ -141,8 +149,10 @@ TEST(fxcodec, JBig2ImageExpand) {
 
 TEST(fxcodec, JBig2ImageExpandTooBig) {
   CJBig2_Image img(kWidthPixels, kHeightLines);
-  img.SetPixel(0, 0, true);
-  img.SetPixel(kWidthPixels - 1, kHeightLines - 1, false);
+  pdfium::span<uint8_t> line0 = img.GetLine(0);
+  pdfium::span<uint8_t> line_last = img.GetLine(kHeightLines - 1);
+  img.SetPixel(0, line0, true);
+  img.SetPixel(kWidthPixels - 1, line_last, false);
   img.Expand(kTooLargeHeightLines, true);
   EXPECT_EQ(kWidthPixels, img.width());
   EXPECT_EQ(kHeightLines, img.height());
@@ -153,8 +163,10 @@ TEST(fxcodec, JBig2ImageExpandTooBig) {
 TEST(fxcodec, JBig2ImageExpandExternal) {
   uint8_t buf[kHeightLines * kStrideBytes];
   CJBig2_Image img(kWidthPixels, kHeightLines, kStrideBytes, buf);
-  img.SetPixel(0, 0, true);
-  img.SetPixel(kWidthPixels - 1, kHeightLines - 1, false);
+  pdfium::span<uint8_t> line0 = img.GetLine(0);
+  pdfium::span<uint8_t> line_last = img.GetLine(kHeightLines - 1);
+  img.SetPixel(0, line0, true);
+  img.SetPixel(kWidthPixels - 1, line_last, false);
   img.Expand(kLargerHeightLines, true);
   EXPECT_EQ(kWidthPixels, img.width());
   EXPECT_EQ(kLargerHeightLines, img.height());
@@ -166,8 +178,10 @@ TEST(fxcodec, JBig2ImageExpandExternal) {
 TEST(fxcodec, JBig2ImageExpandExternalTooBig) {
   uint8_t buf[kHeightLines * kStrideBytes];
   CJBig2_Image img(kWidthPixels, kHeightLines, kStrideBytes, buf);
-  img.SetPixel(0, 0, true);
-  img.SetPixel(kWidthPixels - 1, kHeightLines - 1, false);
+  pdfium::span<uint8_t> line0 = img.GetLine(0);
+  pdfium::span<uint8_t> line_last = img.GetLine(kHeightLines - 1);
+  img.SetPixel(0, line0, true);
+  img.SetPixel(kWidthPixels - 1, line_last, false);
   img.Expand(kTooLargeHeightLines, true);
   EXPECT_EQ(kWidthPixels, img.width());
   EXPECT_EQ(kHeightLines, img.height());
