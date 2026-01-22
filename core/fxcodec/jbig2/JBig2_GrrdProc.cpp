@@ -415,18 +415,23 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRRDProc::DecodeTemplate1Opt(
       row_prev = GRREG->GetLine(h - 1);
       line1 = row_prev.front() << 1;
     }
-    int32_t reference_h = h - GRREFERENCEDY;
+    const int32_t reference_h = h - GRREFERENCEDY;
     bool line1_r_ok = (reference_h > 0 && reference_h < GRHR + 1);
     bool line2_r_ok = (reference_h > -1 && reference_h < GRHR);
     bool line3_r_ok = (reference_h > -2 && reference_h < GRHR - 1);
-    uint32_t line1_r =
-        line1_r_ok ? UNSAFE_TODO(line_ref[nOffset - stride_ref]) : 0;
-    uint32_t line2_r = line2_r_ok ? UNSAFE_TODO(line_ref[nOffset]) : 0;
-    uint32_t line3_r =
-        line3_r_ok ? UNSAFE_TODO(line_ref[nOffset + stride_ref]) : 0;
+    std::array<uint32_t, 3> refs = {};
+    if (line1_r_ok) {
+      refs[0] = UNSAFE_TODO(line_ref[nOffset - stride_ref]);
+    }
+    if (line2_r_ok) {
+      refs[1] = UNSAFE_TODO(line_ref[nOffset]);
+    }
+    if (line3_r_ok) {
+      refs[2] = UNSAFE_TODO(line_ref[nOffset + stride_ref]);
+    }
     if (!LTP) {
-      uint32_t CONTEXT = (line1 & 0x0380) | ((line1_r >> 2) & 0x0020) |
-                         ((line2_r >> 4) & 0x001c) | ((line3_r >> 6) & 0x0003);
+      uint32_t CONTEXT = (line1 & 0x0380) | ((refs[0] >> 2) & 0x0020) |
+                         ((refs[1] >> 4) & 0x001c) | ((refs[2] >> 6) & 0x0003);
       for (int32_t w = 0; w < iGRW; w += 8) {
         int32_t nBits = iGRW - w > 8 ? 8 : iGRW - w;
         if (!is_first_line) {
@@ -435,26 +440,26 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRRDProc::DecodeTemplate1Opt(
             line1 |= row_prev[w / 8 + 1] << 1;
           }
         }
+        const bool next_w_in_bounds = w + 8 < GRWR;
         if (line1_r_ok) {
-          line1_r =
-              (line1_r << 8) |
-              (w + 8 < GRWR
-                   ? UNSAFE_TODO(line_ref[nOffset - stride_ref + (w / 8) + 1])
-                   : 0);
+          refs[0] <<= 8;
+          if (next_w_in_bounds) {
+            refs[0] |=
+                UNSAFE_TODO(line_ref[nOffset - stride_ref + (w / 8) + 1]);
+          }
         }
         if (line2_r_ok) {
-          line2_r =
-              (line2_r << 8) |
-              (w + 8 < GRWR ? UNSAFE_TODO(line_ref[nOffset + (w / 8) + 1]) : 0);
+          refs[1] <<= 8;
+          if (next_w_in_bounds) {
+            refs[1] |= UNSAFE_TODO(line_ref[nOffset + (w / 8) + 1]);
+          }
         }
         if (line3_r_ok) {
-          line3_r =
-              (line3_r << 8) |
-              (w + 8 < GRWR
-                   ? UNSAFE_TODO(line_ref[nOffset + stride_ref + (w / 8) + 1])
-                   : 0);
-        } else {
-          line3_r = 0;
+          refs[2] <<= 8;
+          if (next_w_in_bounds) {
+            refs[2] |=
+                UNSAFE_TODO(line_ref[nOffset + stride_ref + (w / 8) + 1]);
+          }
         }
         uint8_t cVal = 0;
         for (int32_t k = 0; k < nBits; k++) {
@@ -462,16 +467,16 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRRDProc::DecodeTemplate1Opt(
           cVal |= bVal << (7 - k);
           CONTEXT = ((CONTEXT & 0x018d) << 1) | (bVal << 6) |
                     ((line1 >> (7 - k)) & 0x0080) |
-                    ((line1_r >> (9 - k)) & 0x0020) |
-                    ((line2_r >> (11 - k)) & 0x0004) |
-                    ((line3_r >> (13 - k)) & 0x0001);
+                    ((refs[0] >> (9 - k)) & 0x0020) |
+                    ((refs[1] >> (11 - k)) & 0x0004) |
+                    ((refs[2] >> (13 - k)) & 0x0001);
         }
         row_write[w / 8] = cVal;
       }
     } else {
       std::array<pdfium::span<const uint8_t>, 3> row_refs = GetRowRefs(h);
-      uint32_t CONTEXT = (line1 & 0x0380) | ((line1_r >> 2) & 0x0020) |
-                         ((line2_r >> 4) & 0x001c) | ((line3_r >> 6) & 0x0003);
+      uint32_t CONTEXT = (line1 & 0x0380) | ((refs[0] >> 2) & 0x0020) |
+                         ((refs[1] >> 4) & 0x001c) | ((refs[2] >> 6) & 0x0003);
       for (int32_t w = 0; w < iGRW; w += 8) {
         int32_t nBits = iGRW - w > 8 ? 8 : iGRW - w;
         if (!is_first_line) {
@@ -480,26 +485,26 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRRDProc::DecodeTemplate1Opt(
             line1 |= row_prev[(w / 8) + 1] << 1;
           }
         }
+        const bool next_w_in_bounds = w + 8 < GRWR;
         if (line1_r_ok) {
-          line1_r =
-              (line1_r << 8) |
-              (w + 8 < GRWR
-                   ? UNSAFE_TODO(line_ref[nOffset - stride_ref + (w / 8) + 1])
-                   : 0);
+          refs[0] <<= 8;
+          if (next_w_in_bounds) {
+            refs[0] |=
+                UNSAFE_TODO(line_ref[nOffset - stride_ref + (w / 8) + 1]);
+          }
         }
         if (line2_r_ok) {
-          line2_r =
-              (line2_r << 8) |
-              (w + 8 < GRWR ? UNSAFE_TODO(line_ref[nOffset + (w / 8) + 1]) : 0);
+          refs[1] <<= 8;
+          if (next_w_in_bounds) {
+            refs[1] |= UNSAFE_TODO(line_ref[nOffset + (w / 8) + 1]);
+          }
         }
         if (line3_r_ok) {
-          line3_r =
-              (line3_r << 8) |
-              (w + 8 < GRWR
-                   ? UNSAFE_TODO(line_ref[nOffset + stride_ref + (w / 8) + 1])
-                   : 0);
-        } else {
-          line3_r = 0;
+          refs[2] <<= 8;
+          if (next_w_in_bounds) {
+            refs[2] |=
+                UNSAFE_TODO(line_ref[nOffset + stride_ref + (w / 8) + 1]);
+          }
         }
         uint8_t cVal = 0;
         for (int32_t k = 0; k < nBits; k++) {
@@ -514,9 +519,9 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRRDProc::DecodeTemplate1Opt(
           cVal |= bVal << (7 - k);
           CONTEXT = ((CONTEXT & 0x018d) << 1) | (bVal << 6) |
                     ((line1 >> (7 - k)) & 0x0080) |
-                    ((line1_r >> (9 - k)) & 0x0020) |
-                    ((line2_r >> (11 - k)) & 0x0004) |
-                    ((line3_r >> (13 - k)) & 0x0001);
+                    ((refs[0] >> (9 - k)) & 0x0020) |
+                    ((refs[1] >> (11 - k)) & 0x0004) |
+                    ((refs[2] >> (13 - k)) & 0x0001);
         }
         row_write[w / 8] = cVal;
       }
