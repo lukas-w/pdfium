@@ -58,26 +58,30 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRRDProc::DecodeTemplate0Unopt(
       }
       LTP = LTP ^ pArithDecoder->Decode(&grContexts[0x0010]);
     }
+
+    pdfium::span<const uint8_t> row_prev = GRREG->GetLine(h - 1);
+    std::array<pdfium::span<const uint8_t>, 3> row_refs_dy = GetRowRefsDy(h);
+
     std::array<uint32_t, 5> lines;
-    lines[0] = GRREG->GetPixel(1, h - 1);
-    lines[0] |= GRREG->GetPixel(0, h - 1) << 1;
+    lines[0] = GRREG->GetPixel(1, row_prev);
+    lines[0] |= GRREG->GetPixel(0, row_prev) << 1;
     lines[1] = 0;
-    lines[2] = GRREFERENCE->GetPixel(-GRREFERENCEDX + 1, h - GRREFERENCEDY - 1);
-    lines[2] |= GRREFERENCE->GetPixel(-GRREFERENCEDX, h - GRREFERENCEDY - 1)
-                << 1;
-    lines[3] = GRREFERENCE->GetPixel(-GRREFERENCEDX + 1, h - GRREFERENCEDY);
-    lines[3] |= GRREFERENCE->GetPixel(-GRREFERENCEDX, h - GRREFERENCEDY) << 1;
-    lines[3] |= GRREFERENCE->GetPixel(-GRREFERENCEDX - 1, h - GRREFERENCEDY)
-                << 2;
-    lines[4] = GRREFERENCE->GetPixel(-GRREFERENCEDX + 1, h - GRREFERENCEDY + 1);
-    lines[4] |= GRREFERENCE->GetPixel(-GRREFERENCEDX, h - GRREFERENCEDY + 1)
-                << 1;
-    lines[4] |= GRREFERENCE->GetPixel(-GRREFERENCEDX - 1, h - GRREFERENCEDY + 1)
-                << 2;
+    lines[2] = GRREFERENCE->GetPixel(-GRREFERENCEDX + 1, row_refs_dy[0]);
+    lines[2] |= GRREFERENCE->GetPixel(-GRREFERENCEDX, row_refs_dy[0]) << 1;
+    lines[3] = GRREFERENCE->GetPixel(-GRREFERENCEDX + 1, row_refs_dy[1]);
+    lines[3] |= GRREFERENCE->GetPixel(-GRREFERENCEDX, row_refs_dy[1]) << 1;
+    lines[3] |= GRREFERENCE->GetPixel(-GRREFERENCEDX - 1, row_refs_dy[1]) << 2;
+    lines[4] = GRREFERENCE->GetPixel(-GRREFERENCEDX + 1, row_refs_dy[2]);
+    lines[4] |= GRREFERENCE->GetPixel(-GRREFERENCEDX, row_refs_dy[2]) << 1;
+    lines[4] |= GRREFERENCE->GetPixel(-GRREFERENCEDX - 1, row_refs_dy[2]) << 2;
+
+    pdfium::span<const uint8_t> row_ref_grat =
+        GRREFERENCE->GetLine(h - GRREFERENCEDY + GRAT[3]);
+    pdfium::span<const uint8_t> row_grat = GRREG->GetLine(h + GRAT[1]);
     if (!LTP) {
       for (uint32_t w = 0; w < GRW; w++) {
-        uint32_t CONTEXT =
-            DecodeTemplate0UnoptCalculateContext(*GRREG, lines, w, h);
+        uint32_t CONTEXT = DecodeTemplate0UnoptCalculateContext(
+            *GRREG, lines, w, row_ref_grat, row_grat);
         if (pArithDecoder->IsComplete()) {
           return nullptr;
         }
@@ -86,18 +90,12 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRRDProc::DecodeTemplate0Unopt(
         DecodeTemplate0UnoptSetPixel(GRREG.get(), lines, w, h, bVal);
       }
     } else {
+      std::array<pdfium::span<const uint8_t>, 3> row_refs = GetRowRefs(h);
       for (uint32_t w = 0; w < GRW; w++) {
-        int bVal = GRREFERENCE->GetPixel(w, h);
-        if (!(TPGRON && (bVal == GRREFERENCE->GetPixel(w - 1, h - 1)) &&
-              (bVal == GRREFERENCE->GetPixel(w, h - 1)) &&
-              (bVal == GRREFERENCE->GetPixel(w + 1, h - 1)) &&
-              (bVal == GRREFERENCE->GetPixel(w - 1, h)) &&
-              (bVal == GRREFERENCE->GetPixel(w + 1, h)) &&
-              (bVal == GRREFERENCE->GetPixel(w - 1, h + 1)) &&
-              (bVal == GRREFERENCE->GetPixel(w, h + 1)) &&
-              (bVal == GRREFERENCE->GetPixel(w + 1, h + 1)))) {
-          uint32_t CONTEXT =
-              DecodeTemplate0UnoptCalculateContext(*GRREG, lines, w, h);
+        int bVal = GRREFERENCE->GetPixel(w, row_refs[1]);
+        if (!TPGRON || !TypicalPrediction(w, bVal, row_refs)) {
+          uint32_t CONTEXT = DecodeTemplate0UnoptCalculateContext(
+              *GRREG, lines, w, row_ref_grat, row_grat);
           if (pArithDecoder->IsComplete()) {
             return nullptr;
           }
@@ -115,16 +113,16 @@ uint32_t CJBig2_GRRDProc::DecodeTemplate0UnoptCalculateContext(
     const CJBig2_Image& GRREG,
     pdfium::span<const uint32_t, 5> lines,
     uint32_t w,
-    uint32_t h) const {
+    pdfium::span<const uint8_t> row_ref_grat,
+    pdfium::span<const uint8_t> row_grat) const {
   uint32_t CONTEXT = lines[4];
   CONTEXT |= lines[3] << 3;
   CONTEXT |= lines[2] << 6;
-  CONTEXT |= GRREFERENCE->GetPixel(w - GRREFERENCEDX + GRAT[2],
-                                   h - GRREFERENCEDY + GRAT[3])
+  CONTEXT |= GRREFERENCE->GetPixel(w - GRREFERENCEDX + GRAT[2], row_ref_grat)
              << 8;
   CONTEXT |= lines[1] << 9;
   CONTEXT |= lines[0] << 10;
-  CONTEXT |= GRREG.GetPixel(w + GRAT[0], h + GRAT[1]) << 12;
+  CONTEXT |= GRREG.GetPixel(w + GRAT[0], row_grat) << 12;
   return CONTEXT;
 }
 
@@ -248,6 +246,7 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRRDProc::DecodeTemplate0Opt(
         row_write[w / 8] = cVal;
       }
     } else {
+      std::array<pdfium::span<const uint8_t>, 3> row_refs = GetRowRefs(h);
       uint32_t CONTEXT = (line1 & 0x1c00) | (line1_r & 0x01c0) |
                          ((line2_r >> 3) & 0x0038) | ((line3_r >> 6) & 0x0007);
       for (int32_t w = 0; w < iGRW; w += 8) {
@@ -281,15 +280,8 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRRDProc::DecodeTemplate0Opt(
         }
         uint8_t cVal = 0;
         for (int32_t k = 0; k < nBits; k++) {
-          int bVal = GRREFERENCE->GetPixel(w + k, h);
-          if (!(TPGRON && (bVal == GRREFERENCE->GetPixel(w + k - 1, h - 1)) &&
-                (bVal == GRREFERENCE->GetPixel(w + k, h - 1)) &&
-                (bVal == GRREFERENCE->GetPixel(w + k + 1, h - 1)) &&
-                (bVal == GRREFERENCE->GetPixel(w + k - 1, h)) &&
-                (bVal == GRREFERENCE->GetPixel(w + k + 1, h)) &&
-                (bVal == GRREFERENCE->GetPixel(w + k - 1, h + 1)) &&
-                (bVal == GRREFERENCE->GetPixel(w + k, h + 1)) &&
-                (bVal == GRREFERENCE->GetPixel(w + k + 1, h + 1)))) {
+          int bVal = GRREFERENCE->GetPixel(w + k, row_refs[1]);
+          if (!TPGRON || !TypicalPrediction(w + k, bVal, row_refs)) {
             if (pArithDecoder->IsComplete()) {
               return nullptr;
             }
@@ -330,21 +322,24 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRRDProc::DecodeTemplate1Unopt(
       }
       LTP = LTP ^ pArithDecoder->Decode(&grContexts[0x0008]);
     }
+
+    pdfium::span<uint8_t> row_write = GRREG->GetLine(h);
+    pdfium::span<const uint8_t> row_prev = GRREG->GetLine(h - 1);
+    std::array<pdfium::span<const uint8_t>, 3> row_refs_dy = GetRowRefsDy(h);
+    std::array<uint32_t, 5> lines;
+
     if (!LTP) {
-      std::array<uint32_t, 5> lines;
-      lines[0] = GRREG->GetPixel(1, h - 1);
-      lines[0] |= GRREG->GetPixel(0, h - 1) << 1;
-      lines[0] |= GRREG->GetPixel(-1, h - 1) << 2;
+      lines[0] = GRREG->GetPixel(1, row_prev);
+      lines[0] |= GRREG->GetPixel(0, row_prev) << 1;
+      lines[0] |= GRREG->GetPixel(-1, row_prev) << 2;
       lines[1] = 0;
-      lines[2] = GRREFERENCE->GetPixel(-GRREFERENCEDX, h - GRREFERENCEDY - 1);
-      lines[3] = GRREFERENCE->GetPixel(-GRREFERENCEDX + 1, h - GRREFERENCEDY);
-      lines[3] |= GRREFERENCE->GetPixel(-GRREFERENCEDX, h - GRREFERENCEDY) << 1;
-      lines[3] |= GRREFERENCE->GetPixel(-GRREFERENCEDX - 1, h - GRREFERENCEDY)
+      lines[2] = GRREFERENCE->GetPixel(-GRREFERENCEDX, row_refs_dy[0]);
+      lines[3] = GRREFERENCE->GetPixel(-GRREFERENCEDX + 1, row_refs_dy[1]);
+      lines[3] |= GRREFERENCE->GetPixel(-GRREFERENCEDX, row_refs_dy[1]) << 1;
+      lines[3] |= GRREFERENCE->GetPixel(-GRREFERENCEDX - 1, row_refs_dy[1])
                   << 2;
-      lines[4] =
-          GRREFERENCE->GetPixel(-GRREFERENCEDX + 1, h - GRREFERENCEDY + 1);
-      lines[4] |= GRREFERENCE->GetPixel(-GRREFERENCEDX, h - GRREFERENCEDY + 1)
-                  << 1;
+      lines[4] = GRREFERENCE->GetPixel(-GRREFERENCEDX + 1, row_refs_dy[2]);
+      lines[4] |= GRREFERENCE->GetPixel(-GRREFERENCEDX, row_refs_dy[2]) << 1;
       for (uint32_t w = 0; w < GRW; w++) {
         uint32_t CONTEXT = lines[4];
         CONTEXT |= lines[3] << 2;
@@ -355,45 +350,37 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRRDProc::DecodeTemplate1Unopt(
           return nullptr;
         }
         int bVal = pArithDecoder->Decode(&grContexts[CONTEXT]);
-        GRREG->SetPixel(w, h, bVal);
+        GRREG->SetPixel(w, row_write, bVal);
         const int w_dx = w - GRREFERENCEDX + 1;
-        lines[0] = ((lines[0] << 1) | GRREG->GetPixel(w + 2, h - 1)) & 0x07;
+        lines[0] = ((lines[0] << 1) | GRREG->GetPixel(w + 2, row_prev)) & 0x07;
         lines[1] = ((lines[1] << 1) | bVal) & 0x01;
-        lines[2] = ((lines[2] << 1) |
-                    GRREFERENCE->GetPixel(w_dx, h - GRREFERENCEDY - 1)) &
-                   0x01;
+        lines[2] =
+            ((lines[2] << 1) | GRREFERENCE->GetPixel(w_dx, row_refs_dy[0])) &
+            0x01;
         lines[3] = ((lines[3] << 1) |
-                    GRREFERENCE->GetPixel(w_dx + 1, h - GRREFERENCEDY)) &
+                    GRREFERENCE->GetPixel(w_dx + 1, row_refs_dy[1])) &
                    0x07;
         lines[4] = ((lines[4] << 1) |
-                    GRREFERENCE->GetPixel(w_dx + 1, h - GRREFERENCEDY + 1)) &
+                    GRREFERENCE->GetPixel(w_dx + 1, row_refs_dy[2])) &
                    0x03;
       }
     } else {
-      std::array<uint32_t, 5> lines;
-      lines[0] = GRREG->GetPixel(1, h - 1);
-      lines[0] |= GRREG->GetPixel(0, h - 1) << 1;
-      lines[0] |= GRREG->GetPixel(-1, h - 1) << 2;
+      lines[0] = GRREG->GetPixel(1, row_prev);
+      lines[0] |= GRREG->GetPixel(0, row_prev) << 1;
+      lines[0] |= GRREG->GetPixel(-1, row_prev) << 2;
       lines[1] = 0;
-      lines[2] = GRREFERENCE->GetPixel(-GRREFERENCEDX, h - GRREFERENCEDY - 1);
-      lines[3] = GRREFERENCE->GetPixel(-GRREFERENCEDX + 1, h - GRREFERENCEDY);
-      lines[3] |= GRREFERENCE->GetPixel(-GRREFERENCEDX, h - GRREFERENCEDY) << 1;
-      lines[3] |= GRREFERENCE->GetPixel(-GRREFERENCEDX - 1, h - GRREFERENCEDY)
+      lines[2] = GRREFERENCE->GetPixel(-GRREFERENCEDX, row_refs_dy[0]);
+      lines[3] = GRREFERENCE->GetPixel(-GRREFERENCEDX + 1, row_refs_dy[1]);
+      lines[3] |= GRREFERENCE->GetPixel(-GRREFERENCEDX, row_refs_dy[1]) << 1;
+      lines[3] |= GRREFERENCE->GetPixel(-GRREFERENCEDX - 1, row_refs_dy[1])
                   << 2;
-      lines[4] =
-          GRREFERENCE->GetPixel(-GRREFERENCEDX + 1, h - GRREFERENCEDY + 1);
-      lines[4] |= GRREFERENCE->GetPixel(-GRREFERENCEDX, h - GRREFERENCEDY + 1)
-                  << 1;
+      lines[4] = GRREFERENCE->GetPixel(-GRREFERENCEDX + 1, row_refs_dy[2]);
+      lines[4] |= GRREFERENCE->GetPixel(-GRREFERENCEDX, row_refs_dy[2]) << 1;
+
+      std::array<pdfium::span<const uint8_t>, 3> row_refs = GetRowRefs(h);
       for (uint32_t w = 0; w < GRW; w++) {
         int bVal = GRREFERENCE->GetPixel(w, h);
-        if (!(TPGRON && (bVal == GRREFERENCE->GetPixel(w - 1, h - 1)) &&
-              (bVal == GRREFERENCE->GetPixel(w, h - 1)) &&
-              (bVal == GRREFERENCE->GetPixel(w + 1, h - 1)) &&
-              (bVal == GRREFERENCE->GetPixel(w - 1, h)) &&
-              (bVal == GRREFERENCE->GetPixel(w + 1, h)) &&
-              (bVal == GRREFERENCE->GetPixel(w - 1, h + 1)) &&
-              (bVal == GRREFERENCE->GetPixel(w, h + 1)) &&
-              (bVal == GRREFERENCE->GetPixel(w + 1, h + 1)))) {
+        if (!TPGRON || !TypicalPrediction(w, bVal, row_refs)) {
           uint32_t CONTEXT = lines[4];
           CONTEXT |= lines[3] << 2;
           CONTEXT |= lines[2] << 5;
@@ -404,18 +391,18 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRRDProc::DecodeTemplate1Unopt(
           }
           bVal = pArithDecoder->Decode(&grContexts[CONTEXT]);
         }
-        GRREG->SetPixel(w, h, bVal);
-        const int w_dx = w - GRREFERENCEDX + 1;
-        lines[0] = ((lines[0] << 1) | GRREG->GetPixel(w + 2, h - 1)) & 0x07;
+        GRREG->SetPixel(w, row_write, bVal);
+        int w_dx = w - GRREFERENCEDX + 1;
+        lines[0] = ((lines[0] << 1) | GRREG->GetPixel(w + 2, row_prev)) & 0x07;
         lines[1] = ((lines[1] << 1) | bVal) & 0x01;
-        lines[2] = ((lines[2] << 1) |
-                    GRREFERENCE->GetPixel(w_dx, h - GRREFERENCEDY - 1)) &
-                   0x01;
+        lines[2] =
+            ((lines[2] << 1) | GRREFERENCE->GetPixel(w_dx, row_refs_dy[0])) &
+            0x01;
         lines[3] = ((lines[3] << 1) |
-                    GRREFERENCE->GetPixel(w_dx + 1, h - GRREFERENCEDY)) &
+                    GRREFERENCE->GetPixel(w_dx + 1, row_refs_dy[1])) &
                    0x07;
         lines[4] = ((lines[4] << 1) |
-                    GRREFERENCE->GetPixel(w_dx + 1, h - GRREFERENCEDY + 1)) &
+                    GRREFERENCE->GetPixel(w_dx + 1, row_refs_dy[2])) &
                    0x03;
       }
     }
@@ -516,6 +503,7 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRRDProc::DecodeTemplate1Opt(
         row_write[w / 8] = cVal;
       }
     } else {
+      std::array<pdfium::span<const uint8_t>, 3> row_refs = GetRowRefs(h);
       uint32_t CONTEXT = (line1 & 0x0380) | ((line1_r >> 2) & 0x0020) |
                          ((line2_r >> 4) & 0x001c) | ((line3_r >> 6) & 0x0003);
       for (int32_t w = 0; w < iGRW; w += 8) {
@@ -549,15 +537,8 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRRDProc::DecodeTemplate1Opt(
         }
         uint8_t cVal = 0;
         for (int32_t k = 0; k < nBits; k++) {
-          int bVal = GRREFERENCE->GetPixel(w + k, h);
-          if (!(TPGRON && (bVal == GRREFERENCE->GetPixel(w + k - 1, h - 1)) &&
-                (bVal == GRREFERENCE->GetPixel(w + k, h - 1)) &&
-                (bVal == GRREFERENCE->GetPixel(w + k + 1, h - 1)) &&
-                (bVal == GRREFERENCE->GetPixel(w + k - 1, h)) &&
-                (bVal == GRREFERENCE->GetPixel(w + k + 1, h)) &&
-                (bVal == GRREFERENCE->GetPixel(w + k - 1, h + 1)) &&
-                (bVal == GRREFERENCE->GetPixel(w + k, h + 1)) &&
-                (bVal == GRREFERENCE->GetPixel(w + k + 1, h + 1)))) {
+          int bVal = GRREFERENCE->GetPixel(w + k, row_refs[1]);
+          if (!TPGRON || !TypicalPrediction(w + k, bVal, row_refs)) {
             if (pArithDecoder->IsComplete()) {
               return nullptr;
             }
@@ -579,4 +560,36 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRRDProc::DecodeTemplate1Opt(
     }
   }
   return GRREG;
+}
+
+std::array<pdfium::span<const uint8_t>, 3> CJBig2_GRRDProc::GetRowRefs(
+    uint32_t h) const {
+  return {
+      GRREFERENCE->GetLine(h - 1),
+      GRREFERENCE->GetLine(h),
+      GRREFERENCE->GetLine(h + 1),
+  };
+}
+
+std::array<pdfium::span<const uint8_t>, 3> CJBig2_GRRDProc::GetRowRefsDy(
+    uint32_t h) const {
+  return {
+      GRREFERENCE->GetLine(h - GRREFERENCEDY - 1),
+      GRREFERENCE->GetLine(h - GRREFERENCEDY),
+      GRREFERENCE->GetLine(h - GRREFERENCEDY + 1),
+  };
+}
+
+bool CJBig2_GRRDProc::TypicalPrediction(
+    int x,
+    int val,
+    pdfium::span<pdfium::span<const uint8_t>, 3> row_refs) const {
+  return (val == GRREFERENCE->GetPixel(x - 1, row_refs[0])) &&
+         (val == GRREFERENCE->GetPixel(x, row_refs[0])) &&
+         (val == GRREFERENCE->GetPixel(x + 1, row_refs[0])) &&
+         (val == GRREFERENCE->GetPixel(x - 1, row_refs[1])) &&
+         (val == GRREFERENCE->GetPixel(x + 1, row_refs[1])) &&
+         (val == GRREFERENCE->GetPixel(x - 1, row_refs[2])) &&
+         (val == GRREFERENCE->GetPixel(x, row_refs[2])) &&
+         (val == GRREFERENCE->GetPixel(x + 1, row_refs[2]));
 }
