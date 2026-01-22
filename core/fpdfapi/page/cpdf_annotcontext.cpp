@@ -25,10 +25,7 @@ CPDF_AnnotContext::CPDF_AnnotContext(RetainPtr<CPDF_Dictionary> pAnnotDict,
 CPDF_AnnotContext::~CPDF_AnnotContext() = default;
 
 void CPDF_AnnotContext::SetForm(RetainPtr<CPDF_Stream> pStream) {
-  if (!pStream) {
-    return;
-  }
-
+  CHECK(pStream);
   annot_form_ = std::make_unique<CPDF_Form>(
       page_->GetDocument(), page_->AsPDFPage()->GetMutableResources(), pStream);
 
