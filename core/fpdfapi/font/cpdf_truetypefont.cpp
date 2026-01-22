@@ -7,6 +7,7 @@
 #include "core/fpdfapi/font/cpdf_truetypefont.h"
 
 #include <algorithm>
+#include <numeric>
 #include <utility>
 
 #include "core/fpdfapi/parser/cpdf_dictionary.h"
@@ -254,10 +255,5 @@ void CPDF_TrueTypeFont::SetGlyphIndicesFromFirstChar() {
   auto [zeroed_glyphs, set_glyphs] =
       pdfium::span(glyph_index_).split_at(static_cast<size_t>(start_char));
   std::ranges::fill(zeroed_glyphs, 0);
-
-  uint16_t glyph_value = 3;
-  for (uint16_t& glyph : set_glyphs) {
-    glyph = glyph_value;
-    ++glyph_value;
-  }
+  std::iota(set_glyphs.begin(), set_glyphs.end(), 3);
 }
