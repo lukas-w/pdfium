@@ -107,7 +107,7 @@ bool CPDF_Type1Font::Load() {
     flags_ = pdfium::kFontStyleNonSymbolic;
   }
   if (IsFixedFont()) {
-    std::fill(std::begin(char_width_), std::end(char_width_), 600);
+    std::ranges::fill(char_width_, 600);
   }
   if (base14_font_ == CFX_FontMapper::kSymbol) {
     base_encoding_ = FontEncoding::kAdobeSymbol;

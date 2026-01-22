@@ -862,8 +862,7 @@ void CPDF_DIB::LoadPalette() {
       return;
     }
     float color_values[3];
-    std::fill(std::begin(color_values), std::end(color_values),
-              comp_data_[0].decode_min_);
+    std::ranges::fill(color_values, comp_data_[0].decode_min_);
 
     auto rgb = color_space_->GetRGBOrZerosOnError(color_values);
     FX_ARGB argb0 =

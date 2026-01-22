@@ -221,7 +221,7 @@ CStretchEngine::CStretchEngine(ScanlineComposerIface* pDestBitmap,
 
   dest_scanline_.resize(maybe_size.value());
   if (dest_format == FXDIB_Format::kBgrx) {
-    std::fill(dest_scanline_.begin(), dest_scanline_.end(), 255);
+    std::ranges::fill(dest_scanline_, 255);
   }
   inter_pitch_ = fxge::CalculatePitch32OrDie(dest_bpp_, dest_clip_.Width());
   extra_mask_pitch_ = fxge::CalculatePitch32OrDie(8, dest_clip_.Width());

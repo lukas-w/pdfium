@@ -2210,7 +2210,7 @@ TEST_F(FPDFAnnotEmbedderTest, Bug1212) {
     EXPECT_EQ(FPDF_ANNOT_TEXT, FPDFAnnot_GetSubtype(annot.get()));
 
     // Make sure there is no test key, add set a value there, and read it back.
-    std::fill(buf.begin(), buf.end(), 'x');
+    std::ranges::fill(buf, 'x');
     ASSERT_EQ(2u, FPDFAnnot_GetStringValue(annot.get(), kTestKey, buf.data(),
                                            kBufSize));
     EXPECT_EQ(L"", GetPlatformWString(buf.data()));
@@ -2218,7 +2218,7 @@ TEST_F(FPDFAnnotEmbedderTest, Bug1212) {
     ScopedFPDFWideString text = GetFPDFWideString(kData);
     EXPECT_TRUE(FPDFAnnot_SetStringValue(annot.get(), kTestKey, text.get()));
 
-    std::fill(buf.begin(), buf.end(), 'x');
+    std::ranges::fill(buf, 'x');
     ASSERT_EQ(6u, FPDFAnnot_GetStringValue(annot.get(), kTestKey, buf.data(),
                                            kBufSize));
     EXPECT_EQ(kData, GetPlatformWString(buf.data()));
@@ -2233,7 +2233,7 @@ TEST_F(FPDFAnnotEmbedderTest, Bug1212) {
     EXPECT_EQ(2, FPDFPage_GetAnnotCount(page.get()));
     EXPECT_EQ(FPDF_ANNOT_STAMP, FPDFAnnot_GetSubtype(annot.get()));
     // Also do the same test for its appearance string.
-    std::fill(buf.begin(), buf.end(), 'x');
+    std::ranges::fill(buf, 'x');
     ASSERT_EQ(2u,
               FPDFAnnot_GetAP(annot.get(), FPDF_ANNOT_APPEARANCEMODE_ROLLOVER,
                               buf.data(), kBufSize));
@@ -2243,7 +2243,7 @@ TEST_F(FPDFAnnotEmbedderTest, Bug1212) {
     EXPECT_TRUE(FPDFAnnot_SetAP(annot.get(), FPDF_ANNOT_APPEARANCEMODE_ROLLOVER,
                                 text.get()));
 
-    std::fill(buf.begin(), buf.end(), 'x');
+    std::ranges::fill(buf, 'x');
     ASSERT_EQ(6u,
               FPDFAnnot_GetAP(annot.get(), FPDF_ANNOT_APPEARANCEMODE_ROLLOVER,
                               buf.data(), kBufSize));
@@ -2266,7 +2266,7 @@ TEST_F(FPDFAnnotEmbedderTest, Bug1212) {
       ASSERT_TRUE(annot);
       EXPECT_EQ(FPDF_ANNOT_TEXT, FPDFAnnot_GetSubtype(annot.get()));
 
-      std::fill(buf.begin(), buf.end(), 'x');
+      std::ranges::fill(buf, 'x');
       ASSERT_EQ(6u, FPDFAnnot_GetStringValue(annot.get(), kTestKey, buf.data(),
                                              kBufSize));
       EXPECT_EQ(kData, GetPlatformWString(buf.data()));
@@ -2278,7 +2278,7 @@ TEST_F(FPDFAnnotEmbedderTest, Bug1212) {
       // TODO(thestig): This return FPDF_ANNOT_UNKNOWN for some reason.
       // EXPECT_EQ(FPDF_ANNOT_TEXT, FPDFAnnot_GetSubtype(annot.get()));
 
-      std::fill(buf.begin(), buf.end(), 'x');
+      std::ranges::fill(buf, 'x');
       ASSERT_EQ(6u, FPDFAnnot_GetStringValue(annot.get(), kTestKey, buf.data(),
                                              kBufSize));
       EXPECT_EQ(kData, GetPlatformWString(buf.data()));
