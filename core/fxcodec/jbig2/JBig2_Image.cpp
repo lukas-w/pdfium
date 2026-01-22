@@ -143,10 +143,6 @@ pdfium::span<uint8_t> CJBig2_Image::span() {
       pdfium::span(data_.Get(), Fx2DSizeOrDie(stride_, height_)));
 }
 
-int CJBig2_Image::GetPixel(int32_t x, int32_t y) const {
-  return GetPixel(x, GetLine(y));
-}
-
 int CJBig2_Image::GetPixel(int32_t x, pdfium::span<const uint8_t> line) const {
   if (line.empty() || x < 0 || x >= width_) {
     return 0;

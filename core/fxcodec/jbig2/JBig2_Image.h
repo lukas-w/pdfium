@@ -50,8 +50,6 @@ class CJBig2_Image {
   pdfium::span<const uint8_t> span() const;
   pdfium::span<uint8_t> span();
 
-  int GetPixel(int32_t x, int32_t y) const;
-
   // Overloads of the methods above that are more efficient than repeated
   // GetPixel() and SetPixel() calls to the same line. Assumes `line` came from
   // GetLine() from the same instance and `line` is not empty.

@@ -370,7 +370,7 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRRDProc::DecodeTemplate1Unopt(
     } else {
       std::array<pdfium::span<const uint8_t>, 3> row_refs = GetRowRefs(h);
       for (uint32_t w = 0; w < GRW; w++) {
-        int bVal = GRREFERENCE->GetPixel(w, h);
+        int bVal = GRREFERENCE->GetPixel(w, row_refs[1]);
         if (!TPGRON || !TypicalPrediction(w, bVal, row_refs)) {
           uint32_t CONTEXT = lines[4];
           CONTEXT |= lines[3] << 2;
