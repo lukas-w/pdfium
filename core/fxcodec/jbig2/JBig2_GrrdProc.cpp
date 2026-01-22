@@ -188,18 +188,24 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRRDProc::DecodeTemplate0Opt(
       row_prev = GRREG->GetLine(h - 1);
       line1 = row_prev.front() << 4;
     }
-    int32_t reference_h = h - GRREFERENCEDY;
-    bool line1_r_ok = (reference_h > 0 && reference_h < GRHR + 1);
-    bool line2_r_ok = (reference_h > -1 && reference_h < GRHR);
-    bool line3_r_ok = (reference_h > -2 && reference_h < GRHR - 1);
-    uint32_t line1_r =
-        line1_r_ok ? UNSAFE_TODO(line_ref[nOffset - stride_ref]) : 0;
-    uint32_t line2_r = line2_r_ok ? UNSAFE_TODO(line_ref[nOffset]) : 0;
-    uint32_t line3_r =
-        line3_r_ok ? UNSAFE_TODO(line_ref[nOffset + stride_ref]) : 0;
+    const int32_t reference_h = h - GRREFERENCEDY;
+    const bool line1_r_ok = (reference_h > 0 && reference_h < GRHR + 1);
+    const bool line2_r_ok = (reference_h > -1 && reference_h < GRHR);
+    const bool line3_r_ok = (reference_h > -2 && reference_h < GRHR - 1);
+    std::array<uint32_t, 3> refs = {};
+    std::ranges::fill(refs, 0);
+    if (line1_r_ok) {
+      refs[0] = UNSAFE_TODO(line_ref[nOffset - stride_ref]);
+    }
+    if (line2_r_ok) {
+      refs[1] = UNSAFE_TODO(line_ref[nOffset]);
+    }
+    if (line3_r_ok) {
+      refs[2] = UNSAFE_TODO(line_ref[nOffset + stride_ref]);
+    }
     if (!LTP) {
-      uint32_t CONTEXT = (line1 & 0x1c00) | (line1_r & 0x01c0) |
-                         ((line2_r >> 3) & 0x0038) | ((line3_r >> 6) & 0x0007);
+      uint32_t CONTEXT = (line1 & 0x1c00) | (refs[0] & 0x01c0) |
+                         ((refs[1] >> 3) & 0x0038) | ((refs[2] >> 6) & 0x0007);
       for (int32_t w = 0; w < iGRW; w += 8) {
         int32_t nBits = iGRW - w > 8 ? 8 : iGRW - w;
         if (!is_first_line) {
@@ -209,31 +215,28 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRRDProc::DecodeTemplate0Opt(
           }
         }
         if (h > GRHR + GRREFERENCEDY + 1) {
-          line1_r = 0;
-          line2_r = 0;
-          line3_r = 0;
+          refs = {};
         } else {
+          const bool next_w_in_bounds = w + 8 < GRWR;
           if (line1_r_ok) {
-            line1_r =
-                (line1_r << 8) |
-                (w + 8 < GRWR
-                     ? UNSAFE_TODO(line_ref[nOffset - stride_ref + (w / 8) + 1])
-                     : 0);
+            refs[0] <<= 8;
+            if (next_w_in_bounds) {
+              refs[0] |=
+                  UNSAFE_TODO(line_ref[nOffset - stride_ref + (w / 8) + 1]);
+            }
           }
           if (line2_r_ok) {
-            line2_r =
-                (line2_r << 8) |
-                (w + 8 < GRWR ? UNSAFE_TODO(line_ref[nOffset + (w / 8) + 1])
-                              : 0);
+            refs[1] <<= 8;
+            if (next_w_in_bounds) {
+              refs[1] |= UNSAFE_TODO(line_ref[nOffset + (w / 8) + 1]);
+            }
           }
           if (line3_r_ok) {
-            line3_r =
-                (line3_r << 8) |
-                (w + 8 < GRWR
-                     ? UNSAFE_TODO(line_ref[nOffset + stride_ref + (w / 8) + 1])
-                     : 0);
-          } else {
-            line3_r = 0;
+            refs[2] <<= 8;
+            if (next_w_in_bounds) {
+              refs[2] |=
+                  UNSAFE_TODO(line_ref[nOffset + stride_ref + (w / 8) + 1]);
+            }
           }
         }
         uint8_t cVal = 0;
@@ -242,16 +245,16 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRRDProc::DecodeTemplate0Opt(
           cVal |= bVal << (7 - k);
           CONTEXT = ((CONTEXT & 0x0cdb) << 1) | (bVal << 9) |
                     ((line1 >> (7 - k)) & 0x0400) |
-                    ((line1_r >> (7 - k)) & 0x0040) |
-                    ((line2_r >> (10 - k)) & 0x0008) |
-                    ((line3_r >> (13 - k)) & 0x0001);
+                    ((refs[0] >> (7 - k)) & 0x0040) |
+                    ((refs[1] >> (10 - k)) & 0x0008) |
+                    ((refs[2] >> (13 - k)) & 0x0001);
         }
         row_write[w / 8] = cVal;
       }
     } else {
       std::array<pdfium::span<const uint8_t>, 3> row_refs = GetRowRefs(h);
-      uint32_t CONTEXT = (line1 & 0x1c00) | (line1_r & 0x01c0) |
-                         ((line2_r >> 3) & 0x0038) | ((line3_r >> 6) & 0x0007);
+      uint32_t CONTEXT = (line1 & 0x1c00) | (refs[0] & 0x01c0) |
+                         ((refs[1] >> 3) & 0x0038) | ((refs[2] >> 6) & 0x0007);
       for (int32_t w = 0; w < iGRW; w += 8) {
         int32_t nBits = iGRW - w > 8 ? 8 : iGRW - w;
         if (!is_first_line) {
@@ -260,26 +263,26 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRRDProc::DecodeTemplate0Opt(
             line1 |= row_prev[w / 8 + 1] << 4;
           }
         }
+        const bool next_w_in_bounds = w + 8 < GRWR;
         if (line1_r_ok) {
-          line1_r =
-              (line1_r << 8) |
-              (w + 8 < GRWR
-                   ? UNSAFE_TODO(line_ref[nOffset - stride_ref + (w / 8) + 1])
-                   : 0);
+          refs[0] <<= 8;
+          if (next_w_in_bounds) {
+            refs[0] |=
+                UNSAFE_TODO(line_ref[nOffset - stride_ref + (w / 8) + 1]);
+          }
         }
         if (line2_r_ok) {
-          line2_r =
-              (line2_r << 8) |
-              (w + 8 < GRWR ? UNSAFE_TODO(line_ref[nOffset + (w / 8) + 1]) : 0);
+          refs[1] <<= 8;
+          if (next_w_in_bounds) {
+            refs[1] |= UNSAFE_TODO(line_ref[nOffset + (w / 8) + 1]);
+          }
         }
         if (line3_r_ok) {
-          line3_r =
-              (line3_r << 8) |
-              (w + 8 < GRWR
-                   ? UNSAFE_TODO(line_ref[nOffset + stride_ref + (w / 8) + 1])
-                   : 0);
-        } else {
-          line3_r = 0;
+          refs[2] <<= 8;
+          if (next_w_in_bounds) {
+            refs[2] |=
+                UNSAFE_TODO(line_ref[nOffset + stride_ref + (w / 8) + 1]);
+          }
         }
         uint8_t cVal = 0;
         for (int32_t k = 0; k < nBits; k++) {
@@ -294,9 +297,9 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRRDProc::DecodeTemplate0Opt(
           cVal |= bVal << (7 - k);
           CONTEXT = ((CONTEXT & 0x0cdb) << 1) | (bVal << 9) |
                     ((line1 >> (7 - k)) & 0x0400) |
-                    ((line1_r >> (7 - k)) & 0x0040) |
-                    ((line2_r >> (10 - k)) & 0x0008) |
-                    ((line3_r >> (13 - k)) & 0x0001);
+                    ((refs[0] >> (7 - k)) & 0x0040) |
+                    ((refs[1] >> (10 - k)) & 0x0008) |
+                    ((refs[2] >> (13 - k)) & 0x0001);
         }
         row_write[w / 8] = cVal;
       }
