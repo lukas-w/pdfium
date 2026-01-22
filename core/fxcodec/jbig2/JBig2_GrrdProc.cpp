@@ -327,19 +327,19 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRRDProc::DecodeTemplate1Unopt(
     pdfium::span<const uint8_t> row_prev = GRREG->GetLine(h - 1);
     std::array<pdfium::span<const uint8_t>, 3> row_refs_dy = GetRowRefsDy(h);
     std::array<uint32_t, 5> lines;
+    lines[0] = GRREG->GetPixel(1, row_prev);
+    lines[0] |= GRREG->GetPixel(0, row_prev) << 1;
+    lines[0] |= GRREG->GetPixel(-1, row_prev) << 2;
+    lines[1] = 0;
+    lines[2] = GRREFERENCE->GetPixel(-GRREFERENCEDX, row_refs_dy[0]);
+    lines[2] = GRREFERENCE->GetPixel(-GRREFERENCEDX, row_refs_dy[0]);
+    lines[3] = GRREFERENCE->GetPixel(-GRREFERENCEDX + 1, row_refs_dy[1]);
+    lines[3] |= GRREFERENCE->GetPixel(-GRREFERENCEDX, row_refs_dy[1]) << 1;
+    lines[3] |= GRREFERENCE->GetPixel(-GRREFERENCEDX - 1, row_refs_dy[1]) << 2;
+    lines[4] = GRREFERENCE->GetPixel(-GRREFERENCEDX + 1, row_refs_dy[2]);
+    lines[4] |= GRREFERENCE->GetPixel(-GRREFERENCEDX, row_refs_dy[2]) << 1;
 
     if (!LTP) {
-      lines[0] = GRREG->GetPixel(1, row_prev);
-      lines[0] |= GRREG->GetPixel(0, row_prev) << 1;
-      lines[0] |= GRREG->GetPixel(-1, row_prev) << 2;
-      lines[1] = 0;
-      lines[2] = GRREFERENCE->GetPixel(-GRREFERENCEDX, row_refs_dy[0]);
-      lines[3] = GRREFERENCE->GetPixel(-GRREFERENCEDX + 1, row_refs_dy[1]);
-      lines[3] |= GRREFERENCE->GetPixel(-GRREFERENCEDX, row_refs_dy[1]) << 1;
-      lines[3] |= GRREFERENCE->GetPixel(-GRREFERENCEDX - 1, row_refs_dy[1])
-                  << 2;
-      lines[4] = GRREFERENCE->GetPixel(-GRREFERENCEDX + 1, row_refs_dy[2]);
-      lines[4] |= GRREFERENCE->GetPixel(-GRREFERENCEDX, row_refs_dy[2]) << 1;
       for (uint32_t w = 0; w < GRW; w++) {
         uint32_t CONTEXT = lines[4];
         CONTEXT |= lines[3] << 2;
@@ -365,18 +365,6 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRRDProc::DecodeTemplate1Unopt(
                    0x03;
       }
     } else {
-      lines[0] = GRREG->GetPixel(1, row_prev);
-      lines[0] |= GRREG->GetPixel(0, row_prev) << 1;
-      lines[0] |= GRREG->GetPixel(-1, row_prev) << 2;
-      lines[1] = 0;
-      lines[2] = GRREFERENCE->GetPixel(-GRREFERENCEDX, row_refs_dy[0]);
-      lines[3] = GRREFERENCE->GetPixel(-GRREFERENCEDX + 1, row_refs_dy[1]);
-      lines[3] |= GRREFERENCE->GetPixel(-GRREFERENCEDX, row_refs_dy[1]) << 1;
-      lines[3] |= GRREFERENCE->GetPixel(-GRREFERENCEDX - 1, row_refs_dy[1])
-                  << 2;
-      lines[4] = GRREFERENCE->GetPixel(-GRREFERENCEDX + 1, row_refs_dy[2]);
-      lines[4] |= GRREFERENCE->GetPixel(-GRREFERENCEDX, row_refs_dy[2]) << 1;
-
       std::array<pdfium::span<const uint8_t>, 3> row_refs = GetRowRefs(h);
       for (uint32_t w = 0; w < GRW; w++) {
         int bVal = GRREFERENCE->GetPixel(w, h);
