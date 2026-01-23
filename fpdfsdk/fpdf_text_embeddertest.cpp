@@ -1393,7 +1393,7 @@ TEST_F(FPDFTextEmbedderTest, CountRects) {
   }
 
   // Now test larger start values.
-  const int kExpectedLength = UNSAFE_TODO(strlen(kHelloGoodbyeText));
+  const int kExpectedLength = strlen(kHelloGoodbyeText);
   for (int start = kGoodbyeWorldStart + 1; start < kExpectedLength; ++start) {
     EXPECT_EQ(1, FPDFText_CountRects(textpage.get(), start, -1));
     EXPECT_EQ(0, FPDFText_CountRects(textpage.get(), start, 0));

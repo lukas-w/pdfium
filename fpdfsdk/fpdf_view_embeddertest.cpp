@@ -1430,9 +1430,9 @@ TEST_F(FPDFViewEmbedderTest, GetXFAArrayData) {
 
   for (const auto& testcase : kTestCases) {
     char name_buffer[20] = {};
-    ASSERT_EQ(UNSAFE_TODO(strlen(testcase.name)) + 1,
+    ASSERT_EQ(strlen(testcase.name) + 1,
               FPDF_GetXFAPacketName(document(), testcase.index, nullptr, 0));
-    EXPECT_EQ(UNSAFE_TODO(strlen(testcase.name)) + 1,
+    EXPECT_EQ(strlen(testcase.name) + 1,
               FPDF_GetXFAPacketName(document(), testcase.index, name_buffer,
                                     sizeof(name_buffer)));
     EXPECT_STREQ(testcase.name, name_buffer);

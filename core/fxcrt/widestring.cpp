@@ -150,7 +150,7 @@ std::optional<size_t> GuessSizeForVSWPrintf(const wchar_t* pFormat,
       case 's': {
         const wchar_t* pstrNextArg = va_arg(argList, const wchar_t*);
         if (pstrNextArg) {
-          nItemLen = UNSAFE_TODO(wcslen(pstrNextArg));
+          nItemLen = wcslen(pstrNextArg);
           if (nItemLen < 1) {
             nItemLen = 1;
           }
@@ -161,7 +161,7 @@ std::optional<size_t> GuessSizeForVSWPrintf(const wchar_t* pFormat,
       case 'S': {
         const char* pstrNextArg = va_arg(argList, const char*);
         if (pstrNextArg) {
-          nItemLen = UNSAFE_TODO(strlen(pstrNextArg));
+          nItemLen = strlen(pstrNextArg);
           if (nItemLen < 1) {
             nItemLen = 1;
           }
@@ -173,7 +173,7 @@ std::optional<size_t> GuessSizeForVSWPrintf(const wchar_t* pFormat,
       case 'S' | FORCE_ANSI: {
         const char* pstrNextArg = va_arg(argList, const char*);
         if (pstrNextArg) {
-          nItemLen = UNSAFE_TODO(strlen(pstrNextArg));
+          nItemLen = strlen(pstrNextArg);
           if (nItemLen < 1) {
             nItemLen = 1;
           }
@@ -185,7 +185,7 @@ std::optional<size_t> GuessSizeForVSWPrintf(const wchar_t* pFormat,
       case 'S' | FORCE_UNICODE: {
         const wchar_t* pstrNextArg = va_arg(argList, wchar_t*);
         if (pstrNextArg) {
-          nItemLen = UNSAFE_TODO(wcslen(pstrNextArg));
+          nItemLen = wcslen(pstrNextArg);
           if (nItemLen < 1) {
             nItemLen = 1;
           }
@@ -240,7 +240,7 @@ std::optional<size_t> GuessSizeForVSWPrintf(const wchar_t* pFormat,
             f = va_arg(argList, double);
             FXSYS_snprintf(pszTemp, sizeof(pszTemp), "%*.*f", nWidth,
                            nPrecision + 6, f);
-            nItemLen = UNSAFE_TODO(strlen(pszTemp));
+            nItemLen = strlen(pszTemp);
           }
           break;
         case 'p':

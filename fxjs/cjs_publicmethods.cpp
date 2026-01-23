@@ -882,7 +882,7 @@ CJS_Result CJS_PublicMethods::AFPercent_Format(
     // Write into |strValue|.
     pdfium::span<char> span = strValue.GetBuffer(szBufferSize);
     UNSAFE_TODO(FXSYS_snprintf(span.data(), szBufferSize, format, dValue));
-    szNewSize = UNSAFE_TODO(strlen(span.data()));
+    szNewSize = strlen(span.data());
   }
   strValue.ReleaseBuffer(szNewSize);
 
