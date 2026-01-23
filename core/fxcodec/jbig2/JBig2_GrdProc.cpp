@@ -119,10 +119,10 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRDProc::DecodeArithOpt3(
       }
 
       LTP = LTP ^ pArithDecoder->Decode(&gbContexts[kOptConstant1[OPT]]);
-    }
-    if (LTP) {
-      GBREG->CopyLine(h, h - 1);
-      continue;
+      if (LTP) {
+        GBREG->CopyLine(h, h - 1);
+        continue;
+      }
     }
 
     pdfium::span<uint8_t> row_write = GBREG->GetLine(h);
@@ -237,10 +237,10 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRDProc::DecodeArithTemplateUnopt(
       }
 
       LTP = LTP ^ pArithDecoder->Decode(&gbContexts[kOptConstant1[UNOPT]]);
-    }
-    if (LTP) {
-      GBREG->CopyLine(h, h - 1);
-      continue;
+      if (LTP) {
+        GBREG->CopyLine(h, h - 1);
+        continue;
+      }
     }
 
     pdfium::span<uint8_t> row_write = GBREG->GetLine(h);
@@ -322,11 +322,10 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRDProc::DecodeArithTemplate3Opt3(
       }
 
       LTP = LTP ^ pArithDecoder->Decode(&gbContexts[0x0195]);
-    }
-
-    if (LTP) {
-      GBREG->CopyLine(h, h - 1);
-      continue;
+      if (LTP) {
+        GBREG->CopyLine(h, h - 1);
+        continue;
+      }
     }
 
     pdfium::span<uint8_t> row_write = GBREG->GetLine(h);
@@ -411,10 +410,10 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRDProc::DecodeArithTemplate3Unopt(
       }
 
       LTP = LTP ^ pArithDecoder->Decode(&gbContexts[0x0195]);
-    }
-    if (LTP == 1) {
-      GBREG->CopyLine(h, h - 1);
-      continue;
+      if (LTP) {
+        GBREG->CopyLine(h, h - 1);
+        continue;
+      }
     }
 
     pdfium::span<uint8_t> row_write = GBREG->GetLine(h);
