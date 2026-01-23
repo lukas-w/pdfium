@@ -62,6 +62,17 @@ class CJBig2_GRDProc {
   std::array<int8_t, 8> GBAT;
 
  private:
+  struct TemplateOpt3Params {
+    uint32_t tp_ctx;
+    uint32_t context_mask;
+    int val1_shift;
+    uint32_t val1_context_mask;
+    uint32_t val1_bit_mask;
+    int val2_shift;
+    uint32_t val2_context_mask;
+    uint32_t val2_bit_mask;
+  };
+
   bool UseTemplate0Opt3() const;
   bool UseTemplate1Opt3() const;
   bool UseTemplate23Opt3() const;
@@ -83,6 +94,12 @@ class CJBig2_GRDProc {
       ProgressiveArithDecodeState* pState);
   FXCODEC_STATUS ProgressiveDecodeArithTemplate3Unopt(
       ProgressiveArithDecodeState* pState);
+
+  bool ProgressiveDecodeArithTemplateOpt3Helper(
+      ProgressiveArithDecodeState* state,
+      const TemplateOpt3Params& params,
+      int32_t nLineBytes,
+      int32_t nBitsLeft);
 
   void AdvanceLine(CJBig2_Image* image);
 
