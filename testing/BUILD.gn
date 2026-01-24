@@ -80,6 +80,15 @@ source_set("test_support") {
   }
 }
 
+source_set("pixel_diff_utils") {
+  testonly = true
+  sources = [
+    "utils/pixel_diff_util.cpp",
+    "utils/pixel_diff_util.h",
+  ]
+  configs += [ "../:pdfium_strict_config" ]
+}
+
 source_set("path_service") {
   testonly = true
   sources = [
