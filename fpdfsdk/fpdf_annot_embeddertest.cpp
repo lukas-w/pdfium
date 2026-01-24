@@ -1138,55 +1138,6 @@ TEST_F(FPDFAnnotEmbedderTest, RemoveAnnotation) {
 }
 
 TEST_F(FPDFAnnotEmbedderTest, AddAndModifyPath) {
-  const char* md5_modified_path = []() {
-    if (CFX_DefaultRenderDevice::UseSkiaRenderer()) {
-#if BUILDFLAG(IS_WIN)
-      return "02c0628d5e1da4d0f2d481272c7e5a9b";
-#elif BUILDFLAG(IS_APPLE)
-      return "c81ee833f81ae0fa674e0c16872156d2";
-#else
-      return "4a3a53f2b1b0cb40e9a32305eef9197a";
-#endif
-    }
-#if BUILDFLAG(IS_APPLE)
-    return "ac6a1526c71bb0cebe3c3c0b6bf59aab";
-#else
-    return "fb9e6f707986e5daf2f7bb75b4ed28ec";
-#endif
-  }();
-  const char* md5_two_paths = []() {
-    if (CFX_DefaultRenderDevice::UseSkiaRenderer()) {
-#if BUILDFLAG(IS_WIN)
-      return "cf7119f478a5daf7fa7c707514f39e13";
-#elif BUILDFLAG(IS_APPLE)
-      return "c3ce00fda0bcaad52536b49991a24aba";
-#else
-      return "db4c609adaa0dcfba213450bbd62264e";
-#endif
-    }
-#if BUILDFLAG(IS_APPLE)
-    return "48a03185099a335f60b158ade04ff22c";
-#else
-    return "1abd24eb0ec89cd429ea7080d9762713";
-#endif
-  }();
-  const char* md5_new_annot = []() {
-    if (CFX_DefaultRenderDevice::UseSkiaRenderer()) {
-#if BUILDFLAG(IS_WIN)
-      return "81efe2316ad269b44c6d0e8857a724cd";
-#elif BUILDFLAG(IS_APPLE)
-      return "ad5080d1d79b5aff932cddc8b462094a";
-#else
-      return "e0d70cb144cac570b929f0d32671526c";
-#endif
-    }
-#if BUILDFLAG(IS_APPLE)
-    return "eae62b0038343c77141eedea842f01eb";
-#else
-    return "897415260f33a8b553c85466ffcf4a56";
-#endif
-  }();
-
   // Open a file with two annotations and load its first page.
   ASSERT_TRUE(OpenDocument("annotation_stamp_with_ap.pdf"));
   ScopedPage page = LoadScopedPage(0);
@@ -1222,7 +1173,8 @@ TEST_F(FPDFAnnotEmbedderTest, AddAndModifyPath) {
     {
       ScopedFPDFBitmap bitmap =
           RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-      CompareBitmap(bitmap.get(), 595, 842, md5_modified_path);
+      CompareBitmapToPngWithExpectationSuffix(
+          bitmap.get(), "annotation_stamp_with_ap_modified_path");
     }
 
     // Add a second path object to the same annotation.
@@ -1242,7 +1194,8 @@ TEST_F(FPDFAnnotEmbedderTest, AddAndModifyPath) {
     {
       ScopedFPDFBitmap bitmap =
           RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-      CompareBitmap(bitmap.get(), 595, 842, md5_two_paths);
+      CompareBitmapToPngWithExpectationSuffix(
+          bitmap.get(), "annotation_stamp_with_ap_two_paths");
     }
 
     // Delete the newly added path object.
@@ -1254,7 +1207,8 @@ TEST_F(FPDFAnnotEmbedderTest, AddAndModifyPath) {
   // Check that the page renders the same as before.
   {
     ScopedFPDFBitmap bitmap = RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-    CompareBitmap(bitmap.get(), 595, 842, md5_modified_path);
+    CompareBitmapToPngWithExpectationSuffix(
+        bitmap.get(), "annotation_stamp_with_ap_modified_path");
   }
 
   FS_RECTF rect;
@@ -1298,7 +1252,8 @@ TEST_F(FPDFAnnotEmbedderTest, AddAndModifyPath) {
     ASSERT_TRUE(saved_doc);
     ScopedSavedPage saved_page = LoadScopedSavedPage(0);
     ASSERT_TRUE(saved_page);
-    VerifySavedRendering(saved_page.get(), 595, 842, md5_new_annot);
+    VerifySavedRenderingToPngWithExpectationSuffix(
+        saved_page.get(), "annotation_stamp_with_ap_new_annot");
 
     // Check that the document has a correct count of annotations and objects.
     EXPECT_EQ(3, FPDFPage_GetAnnotCount(saved_page.get()));
@@ -1379,41 +1334,6 @@ TEST_F(FPDFAnnotEmbedderTest, ModifyAnnotationFlags) {
 }
 
 TEST_F(FPDFAnnotEmbedderTest, AddAndModifyImage) {
-  const char* md5_new_image = []() {
-    if (CFX_DefaultRenderDevice::UseSkiaRenderer()) {
-#if BUILDFLAG(IS_WIN)
-      return "067c891d5c5f3add0779798f2f5d20d0";
-#elif BUILDFLAG(IS_APPLE) && defined(ARCH_CPU_ARM64)
-      return "3d5b2cdad126e5daa7c1de43a4282433";
-#elif BUILDFLAG(IS_APPLE) && !defined(ARCH_CPU_ARM64)
-      return "b2b09967e4aed8faf8218f44650a836d";
-#else
-      return "bc49737f97f2119799be8deb347249fe";
-#endif
-    }
-#if BUILDFLAG(IS_APPLE)
-    return "4c63afd81a7835579485f056e2d5f951";
-#else
-    return "727380057983d1ce10c7f51cbcd0917f";
-#endif
-  }();
-  const char* md5_modified_image = []() {
-    if (CFX_DefaultRenderDevice::UseSkiaRenderer()) {
-#if BUILDFLAG(IS_WIN)
-      return "327f3321c72ab2ebf4cc8ee861333831";
-#elif BUILDFLAG(IS_APPLE)
-      return "98c6d9a7147b2d1d1832b62438bd7346";
-#else
-      return "76282c55b2148e784ef0a42348e314b3";
-#endif
-    }
-#if BUILDFLAG(IS_APPLE)
-    return "5d242652769254acd9a1f91311ff6b65";
-#else
-    return "f0d4f77fee46e77f79edae2d93d574a3";
-#endif
-  }();
-
   // Open a file with two annotations and load its first page.
   ASSERT_TRUE(OpenDocument("annotation_stamp_with_ap.pdf"));
   ScopedPage page = LoadScopedPage(0);
@@ -1461,7 +1381,8 @@ TEST_F(FPDFAnnotEmbedderTest, AddAndModifyImage) {
   // Check that the page renders correctly with the new image object.
   {
     ScopedFPDFBitmap bitmap = RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-    CompareBitmap(bitmap.get(), 595, 842, md5_new_image);
+    CompareBitmapToPngWithFuzzyExpectationSuffix(
+        bitmap.get(), "annotation_stamp_with_ap_new_image");
   }
 
   {
@@ -1486,47 +1407,11 @@ TEST_F(FPDFAnnotEmbedderTest, AddAndModifyImage) {
   FPDFBitmap_Destroy(image_bitmap);
 
   // Test that the saved document renders the modified image object correctly.
-  VerifySavedDocument(595, 842, md5_modified_image);
+  VerifySavedDocumentToPngWithExpectationSuffix(
+      "annotation_stamp_with_ap_modified_image");
 }
 
 TEST_F(FPDFAnnotEmbedderTest, AddAndModifyText) {
-  const char* md5_new_text = []() {
-    if (CFX_DefaultRenderDevice::UseSkiaRenderer()) {
-#if BUILDFLAG(IS_WIN)
-      return "90b145bc03cc170e28b23eae7e3994ad";
-#elif BUILDFLAG(IS_APPLE)
-      return "be064db73d0146def61aae35965c1aa4";
-#else
-      return "b3f726d5b989385149630cccca359d1c";
-#endif
-    }
-#if BUILDFLAG(IS_APPLE) && defined(ARCH_CPU_ARM64)
-    return "0db8fd3a229c07a478f2709d483663dd";
-#elif BUILDFLAG(IS_APPLE) && !defined(ARCH_CPU_ARM64)
-    return "8cfa6f61f5a03b3f2306d0924ef6c000";
-#else
-    return "c9b2be9f9bcb8998ee181f149a979cb8";
-#endif
-  }();
-  const char* md5_modified_text = []() {
-    if (CFX_DefaultRenderDevice::UseSkiaRenderer()) {
-#if BUILDFLAG(IS_WIN)
-      return "6b52c2bd81239f638b45ad53fd1384c6";
-#elif BUILDFLAG(IS_APPLE)
-      return "6ef0b0d3bcd1f64065c492f3123b8afd";
-#else
-      return "bba9a3ca38d5286631b4a475b81715d0";
-#endif
-    }
-#if BUILDFLAG(IS_APPLE) && defined(ARCH_CPU_ARM64)
-    return "8bd9e9d3d4f6ba9e14e5703b16e7b5f3";
-#elif BUILDFLAG(IS_APPLE) && !defined(ARCH_CPU_ARM64)
-    return "c39124df1815dd6fce3b2f113169c8c9";
-#else
-    return "c08913614721f4337ff893c3cf53026d";
-#endif
-  }();
-
   // Open a file with two annotations and load its first page.
   ASSERT_TRUE(OpenDocument("annotation_stamp_with_ap.pdf"));
   ScopedPage page = LoadScopedPage(0);
@@ -1567,7 +1452,8 @@ TEST_F(FPDFAnnotEmbedderTest, AddAndModifyText) {
   // Check that the page renders correctly with the new text object.
   {
     ScopedFPDFBitmap bitmap = RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-    CompareBitmap(bitmap.get(), 595, 842, md5_new_text);
+    CompareBitmapToPngWithFuzzyExpectationSuffix(
+        bitmap.get(), "annotation_stamp_with_ap_new_text");
   }
 
   {
@@ -1587,7 +1473,8 @@ TEST_F(FPDFAnnotEmbedderTest, AddAndModifyText) {
   // Check that the page renders correctly with the modified text object.
   {
     ScopedFPDFBitmap bitmap = RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-    CompareBitmap(bitmap.get(), 595, 842, md5_modified_text);
+    CompareBitmapToPngWithFuzzyExpectationSuffix(
+        bitmap.get(), "annotation_stamp_with_ap_modified_text");
   }
 
   // Remove the new annotation, and check that the page renders as before.
