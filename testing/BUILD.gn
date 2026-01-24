@@ -194,6 +194,7 @@ source_set("embedder_test_support") {
     "utils/compare_coordinates.h",
   ]
   deps = [
+    ":pixel_diff_utils",
     "../:pdfium_public_headers",
     "../core/fdrm",
     "../core/fxge",
