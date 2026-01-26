@@ -256,7 +256,7 @@ vars = {
   # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling zlib
   # and whatever else without interference from each other.
-  'zlib_revision': 'e00f7038713ff2e751c28a1ac08f0b68bca8567c',
+  'zlib_revision': '980253c1cc835c893c57b5cfc10c5b942e10bc46',
 }
 
 # Only these hosts are allowed for dependencies in this DEPS file.
