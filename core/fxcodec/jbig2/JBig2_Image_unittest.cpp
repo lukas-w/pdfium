@@ -368,18 +368,18 @@ TEST(fxcodec, JBig2CopyLine) {
   auto expected = std::make_unique<CJBig2_Image>(37, 3, 8, expected_pattern);
 
   // Shuffle.
-  img->CopyLine(2, 1);
-  img->CopyLine(1, 0);
-  img->CopyLine(0, 2);
+  img->CopyLine(img->GetLine(2), img->GetLine(1));
+  img->CopyLine(img->GetLine(1), img->GetLine(0));
+  img->CopyLine(img->GetLine(0), img->GetLine(2));
 
   // Clear top line via invalid |from| offset.
-  img->CopyLine(2, 3);
+  img->CopyLine(img->GetLine(2), img->GetLine(3));
 
   // Copies with invalid |to|s don't mess with things.
-  img->CopyLine(-1, 0);
-  img->CopyLine(4, 0);
-  img->CopyLine(-1, -1);
-  img->CopyLine(4, 4);
+  img->CopyLine(img->GetLine(-1), img->GetLine(0));
+  img->CopyLine(img->GetLine(4), img->GetLine(0));
+  img->CopyLine(img->GetLine(-1), img->GetLine(-1));
+  img->CopyLine(img->GetLine(4), img->GetLine(4));
 
   CheckImageEq(expected.get(), img.get(), __LINE__);
 }

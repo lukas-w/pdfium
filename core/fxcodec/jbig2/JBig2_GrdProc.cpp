@@ -113,6 +113,8 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRDProc::DecodeArithOpt3(
   // TODO(npm): Why is the height only trimmed when OPT is 0?
   const uint32_t height = OPT == 0 ? GBH & 0x7fffffff : GBH;
   for (uint32_t h = 0; h < height; ++h) {
+    pdfium::span<uint8_t> row_write = GBREG->GetLine(h);
+    pdfium::span<const uint8_t> row_prev1 = GBREG->GetLine(h - 1);
     if (TPGDON) {
       if (pArithDecoder->IsComplete()) {
         return nullptr;
@@ -120,25 +122,22 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRDProc::DecodeArithOpt3(
 
       LTP = LTP ^ pArithDecoder->Decode(&gbContexts[kOptConstant1[OPT]]);
       if (LTP) {
-        GBREG->CopyLine(h, h - 1);
+        GBREG->CopyLine(row_write, row_prev1);
         continue;
       }
     }
 
-    pdfium::span<uint8_t> row_write = GBREG->GetLine(h);
     if (h < 2) {
       const bool is_second_line = h == 1;
-      pdfium::span<const uint8_t> row_prev;
       uint32_t val_prev = 0;
       if (is_second_line) {
-        row_prev = GBREG->GetLine(h - 1);
-        val_prev = row_prev.take_first_elem();
+        val_prev = row_prev1.take_first_elem();
       }
       uint32_t CONTEXT =
           ((val_prev >> kOptConstant4[OPT]) & kOptConstant5[OPT]);
       for (int32_t cc = 0; cc < nLineBytes; ++cc) {
         if (is_second_line) {
-          val_prev = (val_prev << 8) | row_prev.take_first_elem();
+          val_prev = (val_prev << 8) | row_prev1.take_first_elem();
         }
         uint8_t cVal = 0;
         for (int32_t k = 7; k >= 0; --k) {
@@ -173,7 +172,6 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRDProc::DecodeArithOpt3(
 
     pdfium::span<const uint8_t> row_prev2 = GBREG->GetLine(h - 2);
     uint32_t val_prev2 = row_prev2.take_first_elem() << kOptConstant2[OPT];
-    pdfium::span<const uint8_t> row_prev1 = GBREG->GetLine(h - 1);
     uint32_t val_prev1 = row_prev1.take_first_elem();
     uint32_t CONTEXT = (val_prev2 & kOptConstant3[OPT]) |
                        ((val_prev1 >> kOptConstant4[OPT]) & kOptConstant5[OPT]);
@@ -227,10 +225,12 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRDProc::DecodeArithTemplateUnopt(
 
   GBREG->Fill(false);
   int LTP = 0;
-  uint8_t MOD2 = UNOPT % 2;
-  uint8_t DIV2 = UNOPT / 2;
-  uint8_t SHIFT = 4 - UNOPT;
+  const uint8_t MOD2 = UNOPT % 2;
+  const uint8_t DIV2 = UNOPT / 2;
+  const uint8_t SHIFT = 4 - UNOPT;
   for (uint32_t h = 0; h < GBH; h++) {
+    pdfium::span<uint8_t> row_write = GBREG->GetLine(h);
+    pdfium::span<const uint8_t> row_prev1 = GBREG->GetLine(h - 1);
     if (TPGDON) {
       if (pArithDecoder->IsComplete()) {
         return nullptr;
@@ -238,14 +238,12 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRDProc::DecodeArithTemplateUnopt(
 
       LTP = LTP ^ pArithDecoder->Decode(&gbContexts[kOptConstant1[UNOPT]]);
       if (LTP) {
-        GBREG->CopyLine(h, h - 1);
+        GBREG->CopyLine(row_write, row_prev1);
         continue;
       }
     }
 
-    pdfium::span<uint8_t> row_write = GBREG->GetLine(h);
     pdfium::span<const uint8_t> row_prev2 = GBREG->GetLine(h - 2);
-    pdfium::span<const uint8_t> row_prev1 = GBREG->GetLine(h - 1);
     pdfium::span<const uint8_t> row_skip;
     if (USESKIP) {
       row_skip = SKIP->GetLine(h);
@@ -316,6 +314,8 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRDProc::DecodeArithTemplate3Opt3(
   const int32_t nLineBytes = ((GBW + 7) >> 3) - 1;
   const int32_t nBitsLeft = GBW - (nLineBytes << 3);
   for (uint32_t h = 0; h < GBH; h++) {
+    pdfium::span<uint8_t> row_write = GBREG->GetLine(h);
+    pdfium::span<const uint8_t> row_prev = GBREG->GetLine(h - 1);
     if (TPGDON) {
       if (pArithDecoder->IsComplete()) {
         return nullptr;
@@ -323,12 +323,11 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRDProc::DecodeArithTemplate3Opt3(
 
       LTP = LTP ^ pArithDecoder->Decode(&gbContexts[0x0195]);
       if (LTP) {
-        GBREG->CopyLine(h, h - 1);
+        GBREG->CopyLine(row_write, row_prev);
         continue;
       }
     }
 
-    pdfium::span<uint8_t> row_write = GBREG->GetLine(h);
     if (h == 0) {
       uint32_t CONTEXT = 0;
       for (int32_t cc = 0; cc < nLineBytes; cc++) {
@@ -358,7 +357,6 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRDProc::DecodeArithTemplate3Opt3(
       continue;
     }
 
-    pdfium::span<const uint8_t> row_prev = GBREG->GetLine(h - 1);
     uint32_t val_prev = row_prev.take_first_elem();
     uint32_t CONTEXT = (val_prev >> 1) & 0x03f0;
     for (int32_t cc = 0; cc < nLineBytes; cc++) {
@@ -404,6 +402,8 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRDProc::DecodeArithTemplate3Unopt(
   GBREG->Fill(false);
   int LTP = 0;
   for (uint32_t h = 0; h < GBH; h++) {
+    pdfium::span<uint8_t> row_write = GBREG->GetLine(h);
+    pdfium::span<const uint8_t> row_prev = GBREG->GetLine(h - 1);
     if (TPGDON) {
       if (pArithDecoder->IsComplete()) {
         return nullptr;
@@ -411,13 +411,11 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRDProc::DecodeArithTemplate3Unopt(
 
       LTP = LTP ^ pArithDecoder->Decode(&gbContexts[0x0195]);
       if (LTP) {
-        GBREG->CopyLine(h, h - 1);
+        GBREG->CopyLine(row_write, row_prev);
         continue;
       }
     }
 
-    pdfium::span<uint8_t> row_write = GBREG->GetLine(h);
-    pdfium::span<const uint8_t> row_prev = GBREG->GetLine(h - 1);
     pdfium::span<const uint8_t> row_skip;
     if (USESKIP) {
       row_skip = SKIP->GetLine(h);
@@ -611,12 +609,12 @@ FXCODEC_STATUS CJBig2_GRDProc::ProgressiveDecodeArithTemplate0Unopt(
 
       ltp_ = ltp_ ^ pArithDecoder->Decode(&gbContexts[0x9b25]);
     }
+    pdfium::span<uint8_t> row_write = pImage->GetLine(loop_index_);
+    pdfium::span<const uint8_t> row_prev1 = pImage->GetLine(loop_index_ - 1);
     if (ltp_) {
-      pImage->CopyLine(loop_index_, loop_index_ - 1);
+      pImage->CopyLine(row_write, row_prev1);
     } else {
-      pdfium::span<uint8_t> row_write = pImage->GetLine(loop_index_);
       pdfium::span<const uint8_t> row_prev2 = pImage->GetLine(loop_index_ - 2);
-      pdfium::span<const uint8_t> row_prev1 = pImage->GetLine(loop_index_ - 1);
       pdfium::span<const uint8_t> row_skip;
       if (USESKIP) {
         row_skip = SKIP->GetLine(loop_index_);
@@ -719,12 +717,12 @@ FXCODEC_STATUS CJBig2_GRDProc::ProgressiveDecodeArithTemplate1Unopt(
 
       ltp_ = ltp_ ^ pArithDecoder->Decode(&gbContexts[0x0795]);
     }
+    pdfium::span<uint8_t> row_write = pImage->GetLine(loop_index_);
+    pdfium::span<const uint8_t> row_prev1 = pImage->GetLine(loop_index_ - 1);
     if (ltp_) {
-      pImage->CopyLine(loop_index_, loop_index_ - 1);
+      pImage->CopyLine(row_write, row_prev1);
     } else {
-      pdfium::span<uint8_t> row_write = pImage->GetLine(loop_index_);
       pdfium::span<const uint8_t> row_prev2 = pImage->GetLine(loop_index_ - 2);
-      pdfium::span<const uint8_t> row_prev1 = pImage->GetLine(loop_index_ - 1);
       pdfium::span<const uint8_t> row_skip;
       if (USESKIP) {
         row_skip = SKIP->GetLine(loop_index_);
@@ -821,7 +819,7 @@ bool CJBig2_GRDProc::ProgressiveDecodeArithTemplateOpt3Helper(
         ltp_ ^ state->pArithDecoder->Decode(&state->gbContexts[params.tp_ctx]);
   }
   if (ltp_) {
-    state->pImage->get()->CopyLine(loop_index_, loop_index_ - 1);
+    CopyPrevLine(state->pImage->get());
     return true;
   }
 
@@ -923,12 +921,12 @@ FXCODEC_STATUS CJBig2_GRDProc::ProgressiveDecodeArithTemplate2Unopt(
 
       ltp_ = ltp_ ^ pArithDecoder->Decode(&gbContexts[0x00e5]);
     }
+    pdfium::span<uint8_t> row_write = pImage->GetLine(loop_index_);
+    pdfium::span<const uint8_t> row_prev1 = pImage->GetLine(loop_index_ - 1);
     if (ltp_) {
-      pImage->CopyLine(loop_index_, loop_index_ - 1);
+      pImage->CopyLine(row_write, row_prev1);
     } else {
-      pdfium::span<uint8_t> row_write = pImage->GetLine(loop_index_);
       pdfium::span<const uint8_t> row_prev2 = pImage->GetLine(loop_index_ - 2);
-      pdfium::span<const uint8_t> row_prev1 = pImage->GetLine(loop_index_ - 1);
       pdfium::span<const uint8_t> row_skip;
       if (USESKIP) {
         row_skip = SKIP->GetLine(loop_index_);
@@ -994,7 +992,7 @@ FXCODEC_STATUS CJBig2_GRDProc::ProgressiveDecodeArithTemplate3Opt3(
       ltp_ = ltp_ ^ pArithDecoder->Decode(&gbContexts[0x0195]);
     }
     if (ltp_) {
-      pImage->CopyLine(loop_index_, loop_index_ - 1);
+      CopyPrevLine(pImage);
     } else {
       if (loop_index_ == 0) {
         uint32_t CONTEXT = 0;
@@ -1080,11 +1078,11 @@ FXCODEC_STATUS CJBig2_GRDProc::ProgressiveDecodeArithTemplate3Unopt(
 
       ltp_ = ltp_ ^ pArithDecoder->Decode(&gbContexts[0x0195]);
     }
+    pdfium::span<uint8_t> row_write = pImage->GetLine(loop_index_);
+    pdfium::span<const uint8_t> row_prev = pImage->GetLine(loop_index_ - 1);
     if (ltp_) {
-      pImage->CopyLine(loop_index_, loop_index_ - 1);
+      pImage->CopyLine(row_write, row_prev);
     } else {
-      pdfium::span<uint8_t> row_write = pImage->GetLine(loop_index_);
-      pdfium::span<const uint8_t> row_prev = pImage->GetLine(loop_index_ - 1);
       pdfium::span<const uint8_t> row_skip;
       if (USESKIP) {
         row_skip = SKIP->GetLine(loop_index_);
@@ -1124,9 +1122,16 @@ FXCODEC_STATUS CJBig2_GRDProc::ProgressiveDecodeArithTemplate3Unopt(
   return FXCODEC_STATUS::kDecodeFinished;
 }
 
-void CJBig2_GRDProc::AdvanceLine(CJBig2_Image* image) {
+void CJBig2_GRDProc::AdvanceLine(const CJBig2_Image* image) {
   line_prev2_ = std::move(line_prev1_);
   auto next_line = line_.subspan(static_cast<size_t>(image->stride()));
   line_prev1_ = std::move(line_);
   line_ = std::move(next_line);
+}
+
+void CJBig2_GRDProc::CopyPrevLine(CJBig2_Image* image) {
+  if (!line_prev1_.empty()) {
+    image->CopyLine(line_,
+                    line_prev1_.first(static_cast<size_t>(image->stride())));
+  }
 }

@@ -60,7 +60,7 @@ class CJBig2_Image {
   pdfium::span<const uint8_t> GetLine(int32_t y) const;
   pdfium::span<uint8_t> GetLine(int32_t y);
 
-  void CopyLine(int32_t dest_y, int32_t src_y);
+  void CopyLine(pdfium::span<uint8_t> dest, pdfium::span<const uint8_t> src);
   void Fill(bool v);
 
   bool ComposeFrom(int64_t x, int64_t y, CJBig2_Image* pSrc, JBig2ComposeOp op);

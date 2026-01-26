@@ -183,13 +183,12 @@ pdfium::span<uint8_t> CJBig2_Image::GetLine(int32_t y) {
   return span().subspan(offset.value(), static_cast<size_t>(stride_));
 }
 
-void CJBig2_Image::CopyLine(int32_t dest_y, int32_t src_y) {
-  pdfium::span<uint8_t> dest = GetLine(dest_y);
+void CJBig2_Image::CopyLine(pdfium::span<uint8_t> dest,
+                            pdfium::span<const uint8_t> src) {
   if (dest.empty()) {
     return;
   }
 
-  pdfium::span<const uint8_t> src = GetLine(src_y);
   if (src.empty()) {
     std::ranges::fill(dest, 0);
     return;

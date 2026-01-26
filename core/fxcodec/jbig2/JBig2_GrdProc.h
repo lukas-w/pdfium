@@ -101,7 +101,8 @@ class CJBig2_GRDProc {
       int32_t nLineBytes,
       int32_t nBitsLeft);
 
-  void AdvanceLine(CJBig2_Image* image);
+  void AdvanceLine(const CJBig2_Image* image);
+  void CopyPrevLine(CJBig2_Image* image);
 
   std::unique_ptr<CJBig2_Image> DecodeArithOpt3(
       CJBig2_ArithDecoder* pArithDecoder,
