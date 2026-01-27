@@ -113,13 +113,12 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRDProc::DecodeArithOpt3(
   // TODO(npm): Why is the height only trimmed when OPT is 0?
   const uint32_t height = OPT == 0 ? GBH & 0x7fffffff : GBH;
   pdfium::span<uint8_t> row_write;
-  pdfium::span<const uint8_t> row_prev1_saved;
-  pdfium::span<const uint8_t> row_prev2_saved;
+  pdfium::span<const uint8_t> row_prev1;
+  pdfium::span<const uint8_t> row_prev2;
   for (uint32_t h = 0; h < height; ++h) {
-    row_prev2_saved = row_prev1_saved;
-    row_prev1_saved = row_write;
+    row_prev2 = row_prev1;
+    row_prev1 = row_write;
     row_write = GBREG->GetLine(h);
-    pdfium::span<const uint8_t> row_prev1 = row_prev1_saved;
     if (TPGDON) {
       if (pArithDecoder->IsComplete()) {
         return nullptr;
@@ -136,13 +135,13 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRDProc::DecodeArithOpt3(
       const bool is_second_line = h == 1;
       uint32_t val_prev = 0;
       if (is_second_line) {
-        val_prev = row_prev1.take_first_elem();
+        val_prev = row_prev1[0];
       }
       uint32_t CONTEXT =
           ((val_prev >> kOptConstant4[OPT]) & kOptConstant5[OPT]);
       for (int32_t cc = 0; cc < nLineBytes; ++cc) {
         if (is_second_line) {
-          val_prev = (val_prev << 8) | row_prev1.take_first_elem();
+          val_prev = (val_prev << 8) | row_prev1[cc + 1];
         }
         uint8_t cVal = 0;
         for (int32_t k = 7; k >= 0; --k) {
@@ -175,15 +174,13 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRDProc::DecodeArithOpt3(
       continue;
     }
 
-    pdfium::span<const uint8_t> row_prev2 = row_prev2_saved;
-    uint32_t val_prev2 = row_prev2.take_first_elem() << kOptConstant2[OPT];
-    uint32_t val_prev1 = row_prev1.take_first_elem();
+    uint32_t val_prev2 = row_prev2[0] << kOptConstant2[OPT];
+    uint32_t val_prev1 = row_prev1[0];
     uint32_t CONTEXT = (val_prev2 & kOptConstant3[OPT]) |
                        ((val_prev1 >> kOptConstant4[OPT]) & kOptConstant5[OPT]);
     for (int32_t cc = 0; cc < nLineBytes; ++cc) {
-      val_prev2 = (val_prev2 << 8) |
-                  (row_prev2.take_first_elem() << kOptConstant2[OPT]);
-      val_prev1 = (val_prev1 << 8) | row_prev1.take_first_elem();
+      val_prev2 = (val_prev2 << 8) | (row_prev2[cc + 1] << kOptConstant2[OPT]);
+      val_prev1 = (val_prev1 << 8) | row_prev1[cc + 1];
       uint8_t cVal = 0;
       for (int32_t k = 7; k >= 0; --k) {
         if (pArithDecoder->IsComplete()) {
@@ -322,11 +319,10 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRDProc::DecodeArithTemplate3Opt3(
   const int32_t nLineBytes = ((GBW + 7) >> 3) - 1;
   const int32_t nBitsLeft = GBW - (nLineBytes << 3);
   pdfium::span<uint8_t> row_write;
-  pdfium::span<const uint8_t> row_prev_saved;
+  pdfium::span<const uint8_t> row_prev;
   for (uint32_t h = 0; h < GBH; h++) {
-    row_prev_saved = row_write;
+    row_prev = row_write;
     row_write = GBREG->GetLine(h);
-    pdfium::span<const uint8_t> row_prev = row_prev_saved;
     if (TPGDON) {
       if (pArithDecoder->IsComplete()) {
         return nullptr;
@@ -368,10 +364,10 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRDProc::DecodeArithTemplate3Opt3(
       continue;
     }
 
-    uint32_t val_prev = row_prev.take_first_elem();
+    uint32_t val_prev = row_prev[0];
     uint32_t CONTEXT = (val_prev >> 1) & 0x03f0;
     for (int32_t cc = 0; cc < nLineBytes; cc++) {
-      val_prev = (val_prev << 8) | row_prev.take_first_elem();
+      val_prev = (val_prev << 8) | row_prev[cc + 1];
       uint8_t cVal = 0;
       for (int32_t k = 7; k >= 0; k--) {
         if (pArithDecoder->IsComplete()) {
@@ -844,13 +840,12 @@ bool CJBig2_GRDProc::ProgressiveDecodeArithTemplateOpt3Helper(
 
   if (loop_index_ <= 1) {
     const bool is_second_line = loop_index_ == 1;
-    pdfium::span<const uint8_t> line_prev = line_prev1_;
-    uint32_t val_prev = is_second_line ? line_prev.take_first_elem() : 0;
+    uint32_t val_prev = is_second_line ? line_prev1_[0] : 0;
     uint32_t CONTEXT =
         (val_prev >> params.val1_shift) & params.val1_context_mask;
     for (int32_t cc = 0; cc < nLineBytes; cc++) {
       if (is_second_line) {
-        val_prev = (val_prev << 8) | line_prev.take_first_elem();
+        val_prev = (val_prev << 8) | line_prev1_[cc + 1];
       }
       uint8_t cVal = 0;
       for (int32_t k = 7; k >= 0; k--) {
@@ -883,17 +878,14 @@ bool CJBig2_GRDProc::ProgressiveDecodeArithTemplateOpt3Helper(
     return true;
   }
 
-  pdfium::span<const uint8_t> line_prev2 = line_prev2_;
-  pdfium::span<const uint8_t> line_prev1 = line_prev1_;
-  uint32_t val_prev2 = line_prev2.take_first_elem() << params.val2_shift;
-  uint32_t val_prev1 = line_prev1.take_first_elem();
+  uint32_t val_prev2 = line_prev2_[0] << params.val2_shift;
+  uint32_t val_prev1 = line_prev1_[0];
   uint32_t CONTEXT =
       (val_prev2 & params.val2_context_mask) |
       ((val_prev1 >> params.val1_shift) & params.val1_context_mask);
   for (int32_t cc = 0; cc < nLineBytes; cc++) {
-    val_prev2 =
-        (val_prev2 << 8) | (line_prev2.take_first_elem() << params.val2_shift);
-    val_prev1 = (val_prev1 << 8) | line_prev1.take_first_elem();
+    val_prev2 = (val_prev2 << 8) | (line_prev2_[cc + 1] << params.val2_shift);
+    val_prev1 = (val_prev1 << 8) | line_prev1_[cc + 1];
     uint8_t cVal = 0;
     for (int32_t k = 7; k >= 0; k--) {
       if (state->pArithDecoder->IsComplete()) {
@@ -1043,11 +1035,10 @@ FXCODEC_STATUS CJBig2_GRDProc::ProgressiveDecodeArithTemplate3Opt3(
         }
         line_[nLineBytes] = cVal1;
       } else {
-        pdfium::span<const uint8_t> line_prev = line_prev1_;
-        uint32_t val_prev = line_prev.take_first_elem();
+        uint32_t val_prev = line_prev1_[0];
         uint32_t CONTEXT = (val_prev >> 1) & 0x03f0;
         for (int32_t cc = 0; cc < nLineBytes; cc++) {
-          val_prev = (val_prev << 8) | line_prev.take_first_elem();
+          val_prev = (val_prev << 8) | line_prev1_[cc + 1];
           uint8_t cVal = 0;
           for (int32_t k = 7; k >= 0; k--) {
             if (pArithDecoder->IsComplete()) {
