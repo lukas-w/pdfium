@@ -487,8 +487,7 @@ RetainPtr<CFX_Face> LoadFace(
     const RetainPtr<IFX_SeekableReadStream>& font_stream,
     int32_t iFaceIndex) {
   CFX_FontMgr* font_mgr = CFX_GEModule::Get()->GetFontMgr();
-  FXFT_LibraryRec* library = font_mgr->GetFTLibrary();
-  return CFX_Face::OpenFromStream(library, font_stream, iFaceIndex);
+  return CFX_Face::OpenFromStream(font_mgr, font_stream, iFaceIndex);
 }
 
 bool VerifyUnicodeForFontDescriptor(CFGAS_FontDescriptor* pDesc,

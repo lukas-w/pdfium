@@ -339,14 +339,15 @@ FT_Render_Mode FtRenderModeFromFontAntiAliasingMode(
 }  // namespace
 
 // static
-RetainPtr<CFX_Face> CFX_Face::New(FT_Library library,
+RetainPtr<CFX_Face> CFX_Face::New(CFX_FontMgr* font_mgr,
                                   RetainPtr<Retainable> desc,
                                   pdfium::span<const uint8_t> data,
                                   uint32_t face_index) {
   FXFT_FaceRec* face_rec = nullptr;
-  if (FT_New_Memory_Face(
-          library, data.data(), pdfium::checked_cast<FT_Long>(data.size()),
-          pdfium::checked_cast<FT_Long>(face_index), &face_rec) != 0) {
+  if (FT_New_Memory_Face(font_mgr->GetFTLibrary(), data.data(),
+                         pdfium::checked_cast<FT_Long>(data.size()),
+                         pdfium::checked_cast<FT_Long>(face_index),
+                         &face_rec) != 0) {
     return nullptr;
   }
   // Private ctor.
@@ -360,9 +361,10 @@ RetainPtr<CFX_Face> CFX_Face::New(FT_Library library,
 
 #if BUILDFLAG(IS_ANDROID) || defined(PDF_ENABLE_XFA)
 // static
-RetainPtr<CFX_Face> CFX_Face::Open(FT_Library library,
+RetainPtr<CFX_Face> CFX_Face::Open(CFX_FontMgr* font_mgr,
                                    const FT_Open_Args* args,
                                    uint32_t face_index) {
+  FXFT_LibraryRec* library = font_mgr->GetFTLibrary();
   if (!library) {
     return nullptr;
   }
@@ -378,7 +380,7 @@ RetainPtr<CFX_Face> CFX_Face::Open(FT_Library library,
 #endif
 
 #if BUILDFLAG(IS_ANDROID)
-RetainPtr<CFX_Face> CFX_Face::OpenFromFilePath(FT_Library library,
+RetainPtr<CFX_Face> CFX_Face::OpenFromFilePath(CFX_FontMgr* font_mgr,
                                                ByteStringView path,
                                                int32_t face_index) {
   if (path.IsEmpty()) {
@@ -392,7 +394,7 @@ RetainPtr<CFX_Face> CFX_Face::OpenFromFilePath(FT_Library library,
   FT_Open_Args args;
   args.flags = FT_OPEN_PATHNAME;
   args.pathname = const_cast<FT_String*>(path.unterminated_c_str());
-  RetainPtr<CFX_Face> face = Open(library, &args, face_index);
+  RetainPtr<CFX_Face> face = Open(font_mgr, &args, face_index);
   if (!face) {
     return nullptr;
   }
@@ -403,7 +405,7 @@ RetainPtr<CFX_Face> CFX_Face::OpenFromFilePath(FT_Library library,
 
 #if defined(PDF_ENABLE_XFA)
 RetainPtr<CFX_Face> CFX_Face::OpenFromStream(
-    FT_Library library,
+    CFX_FontMgr* font_mgr,
     const RetainPtr<IFX_SeekableReadStream>& font_stream,
     uint32_t face_index) {
   if (!font_stream) {
@@ -425,7 +427,7 @@ RetainPtr<CFX_Face> CFX_Face::OpenFromStream(
   ft_args.flags = FT_OPEN_STREAM;
   ft_args.stream = ft_stream.get();
 
-  RetainPtr<CFX_Face> face = Open(library, &ft_args, face_index);
+  RetainPtr<CFX_Face> face = Open(font_mgr, &ft_args, face_index);
   if (!face) {
     return nullptr;
   }
@@ -434,7 +436,6 @@ RetainPtr<CFX_Face> CFX_Face::OpenFromStream(
   face->owned_stream_rec_ = std::move(ft_stream);
   return face;
 }
-
 #endif
 
 bool CFX_Face::HasGlyphNames() const {

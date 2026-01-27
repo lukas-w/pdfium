@@ -27,6 +27,7 @@ enum class FontEncoding : uint32_t;
 }
 
 class CFX_Font;
+class CFX_FontMgr;
 class CFX_GlyphBitmap;
 class CFX_Path;
 class CFX_SubstFont;
@@ -55,19 +56,19 @@ class CFX_Face final : public Retainable, public Observable {
   static constexpr CharMapId kWindowsSymbolCmapId{3, 0};
   static constexpr CharMapId kWindowsUnicodeCmapId{3, 1};
 
-  static RetainPtr<CFX_Face> New(FT_Library library,
+  static RetainPtr<CFX_Face> New(CFX_FontMgr* font_mgr,
                                  RetainPtr<Retainable> desc,
                                  pdfium::span<const uint8_t> data,
                                  uint32_t face_index);
 
 #if defined(PDF_ENABLE_XFA)
   static RetainPtr<CFX_Face> OpenFromStream(
-      FT_Library library,
+      CFX_FontMgr* font_mgr,
       const RetainPtr<IFX_SeekableReadStream>& font_stream,
       uint32_t face_index);
 #endif
 #if BUILDFLAG(IS_ANDROID)
-  static RetainPtr<CFX_Face> OpenFromFilePath(FT_Library library,
+  static RetainPtr<CFX_Face> OpenFromFilePath(CFX_FontMgr* font_mgr,
                                               ByteStringView path,
                                               int32_t face_index);
 #endif
@@ -173,7 +174,7 @@ class CFX_Face final : public Retainable, public Observable {
 #if BUILDFLAG(IS_ANDROID) || defined(PDF_ENABLE_XFA)
   std::optional<std::array<uint8_t, 2>> GetOs2Panose();
 
-  static RetainPtr<CFX_Face> Open(FT_Library library,
+  static RetainPtr<CFX_Face> Open(CFX_FontMgr* font_mgr,
                                   const FT_Open_Args* args,
                                   uint32_t face_index);
 #endif

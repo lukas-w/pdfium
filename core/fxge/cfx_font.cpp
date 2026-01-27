@@ -151,8 +151,8 @@ int CFX_Font::GetSubstFontItalicAngle() const {
 bool CFX_Font::LoadFile(RetainPtr<IFX_SeekableReadStream> pFile,
                         int nFaceIndex) {
   object_tag_ = 0;
-  face_ = CFX_Face::OpenFromStream(
-      CFX_GEModule::Get()->GetFontMgr()->GetFTLibrary(), pFile, nFaceIndex);
+  face_ = CFX_Face::OpenFromStream(CFX_GEModule::Get()->GetFontMgr(), pFile,
+                                   nFaceIndex);
   return !!face_;
 }
 
