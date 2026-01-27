@@ -72,10 +72,10 @@ class CFX_Face final : public Retainable, public Observable {
                                               ByteStringView path,
                                               int32_t face_index);
 #endif
+
   bool HasGlyphNames() const;
   bool IsTtOt() const;
   bool IsFixedWidth() const;
-
   bool IsItalic() const;
   bool IsBold() const;
 
@@ -155,8 +155,6 @@ class CFX_Face final : public Retainable, public Observable {
   bool HasFaceRec() const { return !!GetRec(); }
 
  private:
-  friend class ScopedFontTransform;
-
   CFX_Face(FXFT_FaceRec* pRec, RetainPtr<Retainable> pDesc);
   ~CFX_Face() override;
 
@@ -164,9 +162,7 @@ class CFX_Face final : public Retainable, public Observable {
   const FXFT_FaceRec* GetRec() const { return rec_.get(); }
 
   bool IsTricky() const;
-
   bool SetPixelSize(uint32_t width, uint32_t height);
-
   void AdjustVariationParams(int glyph_index, int dest_width, int weight);
 
   pdfium::span<const FT_CharMap> GetCharMaps() const;

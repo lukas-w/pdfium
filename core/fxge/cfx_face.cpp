@@ -29,7 +29,6 @@
 #include "core/fxge/dib/fx_dib.h"
 #include "core/fxge/fx_font.h"
 #include "core/fxge/fx_fontencoding.h"
-#include "core/fxge/scoped_font_transform.h"
 
 #define EM_ADJUST(em, a) (em == 0 ? (a) : (a) * 1000 / em)
 
@@ -336,6 +335,25 @@ FT_Render_Mode FtRenderModeFromFontAntiAliasingMode(
   NOTREACHED();
 }
 
+// Sets the given transform on the FaceRec, and resets it to the identity when
+// it goes out of scope.
+class ScopedFaceTransform {
+ public:
+  FX_STACK_ALLOCATED();
+
+  ScopedFaceTransform(FXFT_FaceRec* rec, FT_Matrix* matrix) : rec_(rec) {
+    FT_Set_Transform(rec_, matrix, nullptr);
+  }
+
+  ~ScopedFaceTransform() {
+    FT_Matrix matrix = {0x10000L, 0L, 0L, 0x10000L};
+    FT_Set_Transform(rec_, &matrix, nullptr);
+  }
+
+ private:
+  UnownedPtr<FXFT_FaceRec> const rec_;
+};
+
 }  // namespace
 
 // static
@@ -591,7 +609,7 @@ std::unique_ptr<CFX_GlyphBitmap> CFX_Face::RenderGlyph(
     }
   }
 
-  ScopedFontTransform scoped_transform(pdfium::WrapRetain(this), &ft_matrix);
+  ScopedFaceTransform scoped_transform(GetRec(), &ft_matrix);
   int load_flags = FT_LOAD_NO_BITMAP | FT_LOAD_PEDANTIC;
   if (!IsTtOt()) {
     load_flags |= FT_LOAD_NO_HINTING;
@@ -704,7 +722,7 @@ std::unique_ptr<CFX_Path> CFX_Face::LoadGlyphPath(
       AdjustVariationParams(glyph_index, dest_width, subst_font->weight_);
     }
   }
-  ScopedFontTransform scoped_transform(pdfium::WrapRetain(this), &ft_matrix);
+  ScopedFaceTransform scoped_transform(GetRec(), &ft_matrix);
   int load_flags = FT_LOAD_NO_BITMAP;
   if (!IsTtOt() || !IsTricky()) {
     load_flags |= FT_LOAD_NO_HINTING;
