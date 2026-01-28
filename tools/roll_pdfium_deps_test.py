@@ -2599,11 +2599,11 @@ class RollAllDepsTest(unittest.TestCase):
         'roll-dep third_party/libjpeg_turbo '
         '--roll-to 6383cf609c1f63c18af0f59b2738caa0c6c7e379 '
         '--ignore-dirty-tree --no-log',
-        'roll-dep third_party/libc++abi/src '
-        '--roll-to 83a852080747b9a362e8f9e361366b7a601f302c '
-        '--ignore-dirty-tree --no-log',
         'roll-dep third_party/libc++/src '
         '--roll-to c5dd8ade977af3a7441bbf99a2dcac2d5820e702 '
+        '--ignore-dirty-tree --no-log',
+        'roll-dep third_party/libc++abi/src '
+        '--roll-to 83a852080747b9a362e8f9e361366b7a601f302c '
         '--ignore-dirty-tree --no-log',
         'roll-dep third_party/libunwind/src '
         '--roll-to 88fc07ed143a5b3bbf45d430b72a4617ee9e235f '
