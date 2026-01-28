@@ -88,6 +88,10 @@ vars = {
   # and whatever else without interference from each other.
   'android_toolchain_version': 'KXOia11cm9lVdUdPlbGLu8sCz6Y4ey_HV2s8_8qeqhgC',
   # Three lines of non-changing comments so that
+  # the commit queue can handle CLs rolling brotli
+  # and whatever else without interference from each other.
+  'brotli_revision': 'ac16a36bc55c4c896135084e878f0d6a2f9b347e',
+  # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling build
   # and whatever else without interference from each other.
   'build_revision': '26e5b4f1d8e96df200db4bf007961fd69f3d1168',
@@ -352,6 +356,10 @@ deps = {
     'condition': 'checkout_android_native_support',
     'dep_type': 'cipd',
   },
+
+  'third_party/brotli':
+    Var('chromium_git') + '/chromium/src/third_party/brotli.git@' +
+        Var('brotli_revision'),
 
   'third_party/catapult': {
     'url': Var('chromium_git') + '/catapult.git@' + Var('catapult_revision'),

@@ -1571,6 +1571,10 @@ vars = {
   # and whatever else without interference from each other.
   'android_toolchain_version': 'KXOia11cm9lVdUdPlbGLu8sCz6Y4ey_HV2s8_8qeqhgC',
   # Three lines of non-changing comments so that
+  # the commit queue can handle CLs rolling brotli
+  # and whatever else without interference from each other.
+  'brotli_revision': '64800e1d57528678d22078004d07d4ddff771528',
+  # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling build
   # and whatever else without interference from each other.
   'build_revision': '3c58005adf6e658f44946971a544d62815373e00',
@@ -1835,6 +1839,10 @@ deps = {
     'condition': 'checkout_android_native_support',
     'dep_type': 'cipd',
   },
+
+  'third_party/brotli':
+    Var('chromium_git') + '/chromium/src/third_party/brotli.git@' +
+        Var('brotli_revision'),
 
   'third_party/catapult': {
     'url': Var('chromium_git') + '/catapult.git@' + Var('catapult_revision'),
@@ -2515,6 +2523,11 @@ class RollDepTest(unittest.TestCase):
         'roll-dep third_party/abseil-cpp '
         '--ignore-dirty-tree --no-log', message)
 
+    success, message = roll_dep(CHROMIUM_DEPS, PDFIUM_DEPS, 'brotli_revision')
+    self.assertTrue(success)
+    self.assertEqual('roll-dep third_party/brotli --ignore-dirty-tree --no-log',
+                     message)
+
     success, message = roll_dep(CHROMIUM_DEPS, PDFIUM_DEPS, 'build_revision')
     self.assertTrue(success)
     self.assertEqual('roll-dep build --ignore-dirty-tree --no-log', message)
@@ -2582,6 +2595,7 @@ class RollAllDepsTest(unittest.TestCase):
   def testRollAll(self):
     EXPECTED_ALL = [
         'roll-dep third_party/abseil-cpp --ignore-dirty-tree --no-log',
+        'roll-dep third_party/brotli --ignore-dirty-tree --no-log',
         'roll-dep build --ignore-dirty-tree --no-log',
         'roll-dep buildtools --ignore-dirty-tree --no-log',
         'roll-dep tools/clang --ignore-dirty-tree --no-log',

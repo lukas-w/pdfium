@@ -11,6 +11,7 @@ import sys
 ALL_DEPS_ENTRIES = (
     'abseil_revision',
     'android_toolchain_version',
+    'brotli_revision',
     'build_revision',
     'buildtools_revision',
     'clang_format_revision',
