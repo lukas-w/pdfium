@@ -403,7 +403,8 @@ int CompareGrayBitmapToPng(pdfium::span<const uint8_t> bitmap_span,
 #ifdef PDF_USE_SKIA
 int CompareBGRxPremultBitmapToPng(pdfium::span<const uint8_t> bitmap_span,
                                   size_t bitmap_stride,
-                                  const DecodedPng& decoded_png) {
+                                  const DecodedPng& decoded_png,
+                                  int max_pixel_per_channel_delta) {
   std::vector<uint8_t> bitmap_data(bitmap_span.begin(), bitmap_span.end());
   pdfium::span<uint8_t> converted_bitmap_span{bitmap_data};
 
@@ -416,13 +417,14 @@ int CompareBGRxPremultBitmapToPng(pdfium::span<const uint8_t> bitmap_span,
     }
   }
   return CompareBGRxBitmapToPng(bitmap_span, bitmap_stride, decoded_png,
-                                /*max_pixel_per_channel_delta=*/0);
+                                max_pixel_per_channel_delta);
 }
 #endif  // PDF_USE_SKIA
 
 int CompareBGRBitmapToPng(pdfium::span<const uint8_t> bitmap_span,
                           size_t bitmap_stride,
-                          const DecodedPng& decoded_png) {
+                          const DecodedPng& decoded_png,
+                          int max_pixel_per_channel_delta) {
   const int width = decoded_png.width;
   const size_t dest_row_width = static_cast<size_t>(width);
   const int height = decoded_png.height;
@@ -442,7 +444,7 @@ int CompareBGRBitmapToPng(pdfium::span<const uint8_t> bitmap_span,
     }
   }
   return CompareBGRxBitmapToPng(bgrx_buffer, bgrx_stride, decoded_png,
-                                /*max_pixel_per_channel_delta=*/0);
+                                max_pixel_per_channel_delta);
 }
 
 std::string EncodeBase64(pdfium::span<const uint8_t> png) {
@@ -484,8 +486,8 @@ void CompareBitmapToPngData(FPDF_BITMAP bitmap,
           bitmap_span, stride, decoded_png, max_pixel_per_channel_delta);
       break;
     case FPDFBitmap_BGR:
-      pixels_different =
-          CompareBGRBitmapToPng(bitmap_span, stride, decoded_png);
+      pixels_different = CompareBGRBitmapToPng(bitmap_span, stride, decoded_png,
+                                               max_pixel_per_channel_delta);
       break;
     case FPDFBitmap_BGRx:
     case FPDFBitmap_BGRA: {
@@ -495,8 +497,8 @@ void CompareBitmapToPngData(FPDF_BITMAP bitmap,
     }
 #ifdef PDF_USE_SKIA
     case FPDFBitmap_BGRA_Premul:
-      pixels_different =
-          CompareBGRxPremultBitmapToPng(bitmap_span, stride, decoded_png);
+      pixels_different = CompareBGRxPremultBitmapToPng(
+          bitmap_span, stride, decoded_png, max_pixel_per_channel_delta);
       break;
 #endif  // PDF_USE_SKIA
     default:
