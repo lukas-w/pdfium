@@ -654,7 +654,6 @@ RetainPtr<CFX_DIBitmap> MakeDebugBitmap(int width, int height, uint32_t color) {
 }
 
 bool HasRSX(pdfium::span<const TextCharPos> char_pos,
-            float* scaleXPtr,
             bool* oneAtATimePtr) {
   bool useRSXform = false;
   bool oneAtATime = false;
@@ -681,7 +680,6 @@ bool HasRSX(pdfium::span<const TextCharPos> char_pos,
     }
   }
   *oneAtATimePtr = oneAtATime;
-  *scaleXPtr = oneAtATime ? 1 : scaleX;
   return oneAtATime ? false : useRSXform;
 }
 
@@ -896,9 +894,8 @@ bool CFX_SkiaDeviceDriver::TryDrawText(pdfium::span<const TextCharPos> char_pos,
                                        float font_size,
                                        uint32_t color,
                                        const CFX_TextRenderOptions& options) {
-  float scaleX = 1;
   bool oneAtATime = false;
-  bool hasRSX = HasRSX(char_pos, &scaleX, &oneAtATime);
+  bool hasRSX = HasRSX(char_pos, &oneAtATime);
   if (oneAtATime) {
     return false;
   }
@@ -951,7 +948,6 @@ bool CFX_SkiaDeviceDriver::TryDrawText(pdfium::span<const TextCharPos> char_pos,
   if (pFont->HasFaceRec()) {  // exclude placeholder test fonts
     font.setTypeface(sk_ref_sp(pFont->GetDeviceCache()));
   }
-  font.setScaleX(scaleX);
 
   SkAutoCanvasRestore scoped_save_restore(canvas_, /*doSave=*/true);
   canvas_->concat(ToFlippedSkMatrix(matrix, horizontal_flip));
@@ -969,6 +965,8 @@ bool CFX_SkiaDeviceDriver::TryDrawText(pdfium::span<const TextCharPos> char_pos,
   for (size_t i = 0; i < char_details_.Count(); ++i) {
     const uint32_t font_glyph_width = pFont->GetGlyphWidth(glyphs[i]);
     const uint32_t pdf_glyph_width = widths[i];
+    float scaleX =
+        char_pos[i].glyph_adjust_ ? char_pos[i].adjust_matrix_[0] : 1;
     if (pdf_glyph_width > 0 && font_glyph_width > 0) {
       // Scale the glyph from its default width `pdf_glyph_width` to the
       // targeted width `pdf_glyph_width`.
