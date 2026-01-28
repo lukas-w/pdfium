@@ -20,8 +20,7 @@ namespace pdfium {
 
 namespace {
 
-const char kEmailRecommendedFilledChecksum[] =
-    "211e4e46eb347aa2bc7c425556d600b0";
+constexpr char kEmailRecommendedFilledFilename[] = "email_filled";
 
 }  // namespace
 
@@ -106,11 +105,11 @@ TEST_F(CFWLEditEmbedderTest, DragMouseSelection) {
   EXPECT_EQ("defgh", GetPlatformString(buf));
 
   // TODO(hnakashima): This is incorrect. Visually 'abcdefgh' are selected.
-  const char kDraggedMD5[] = "f131526c8edd04e44de17b2647ec54c8";
+  constexpr char kDraggedFilename[] = "drag_mouse_formfill";
   {
     ScopedFPDFBitmap page_bitmap =
         RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-    CompareBitmap(page_bitmap.get(), 612, 792, kDraggedMD5);
+    CompareBitmapToPng(page_bitmap.get(), kDraggedFilename);
   }
 }
 
@@ -122,11 +121,11 @@ TEST_F(CFWLEditEmbedderTest, SimpleFill) {
 
   CreateAndInitializeFormPDF("xfa/email_recommended.pdf");
   ScopedPage page = LoadScopedPage(0);
-  const char kBlankMD5[] = "8dda78a3afaf9f7b5210eb81cacc4600";
+  constexpr char kBlankFilename[] = "blank_email";
   {
     ScopedFPDFBitmap page_bitmap =
         RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-    CompareBitmap(page_bitmap.get(), 612, 792, kBlankMD5);
+    CompareBitmapToPng(page_bitmap.get(), kBlankFilename);
   }
 
   FORM_OnLButtonDown(form_handle(), page.get(), 0, 115, 58);
@@ -137,7 +136,7 @@ TEST_F(CFWLEditEmbedderTest, SimpleFill) {
   {
     ScopedFPDFBitmap page_bitmap =
         RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-    CompareBitmap(page_bitmap.get(), 612, 792, kEmailRecommendedFilledChecksum);
+    CompareBitmapToPng(page_bitmap.get(), kEmailRecommendedFilledFilename);
   }
 }
 
@@ -161,7 +160,7 @@ TEST_F(CFWLEditEmbedderTest, FillWithNewLineWithoutMultiline) {
   {
     ScopedFPDFBitmap page_bitmap =
         RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-    CompareBitmap(page_bitmap.get(), 612, 792, kEmailRecommendedFilledChecksum);
+    CompareBitmapToPng(page_bitmap.get(), kEmailRecommendedFilledFilename);
   }
 }
 
@@ -233,11 +232,11 @@ TEST_F(CFWLEditEmbedderTest, DateTimePickerTest) {
   // Give focus to date time widget, creating down-arrow button.
   FORM_OnLButtonDown(form_handle(), page.get(), 0, 115, 58);
   FORM_OnLButtonUp(form_handle(), page.get(), 0, 115, 58);
-  const char kSelectedMD5[] = "1036b8837a9dba75c6bd8f9347ae2eb2";
+  constexpr char kSelectedFilename[] = "selected_datetime";
   {
     ScopedFPDFBitmap page_bitmap =
         RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-    CompareBitmap(page_bitmap.get(), 612, 792, kSelectedMD5);
+    CompareBitmapToPng(page_bitmap.get(), kSelectedFilename);
   }
 
   // Click down-arrow button, bringing up calendar widget.
@@ -269,19 +268,11 @@ TEST_F(CFWLEditEmbedderTest, ImageEditTest) {
   CreateAndInitializeFormPDF("xfa/xfa_image_edit.pdf");
   ScopedPage page = LoadScopedPage(0);
   FORM_OnLButtonDown(form_handle(), page.get(), 0, 115, 58);
-  const char* filled_checksum = []() {
-    if (CFX_DefaultRenderDevice::UseSkiaRenderer()) {
-#if BUILDFLAG(IS_APPLE) && defined(ARCH_CPU_ARM64)
-      return "062ad65614888e4f114b99f3396be3e8";
-#else
-      return "23658ed124114f05518372d41c80e41b";
-#endif
-    }
-    return "101cf6223fa2403fba4c413a8310ab02";
-  }();
+  constexpr char kFilledBasename[] = "xfa_image_edit";
   ScopedFPDFBitmap page_bitmap =
       RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-  CompareBitmap(page_bitmap.get(), 612, 792, filled_checksum);
+  CompareBitmapToPngWithFuzzyExpectationSuffix(page_bitmap.get(),
+                                               kFilledBasename);
 }
 
 TEST_F(CFWLEditEmbedderTest, ComboBoxTest) {
@@ -292,15 +283,10 @@ TEST_F(CFWLEditEmbedderTest, ComboBoxTest) {
   FORM_OnLButtonDown(form_handle(), page.get(), 0, 115, 58);
   FORM_OnLButtonUp(form_handle(), page.get(), 0, 115, 58);
   {
-    const char* filled_checksum = []() {
-      if (CFX_DefaultRenderDevice::UseSkiaRenderer()) {
-        return "eaf121044b088a55c94829920d6581c5";
-      }
-      return "dad642ae8a5afce2591ffbcabbfc58dd";
-    }();
+    constexpr char kFilledBasename[] = "filled_combox";
     ScopedFPDFBitmap page_bitmap =
         RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-    CompareBitmap(page_bitmap.get(), 612, 792, filled_checksum);
+    CompareBitmapToPngWithExpectationSuffix(page_bitmap.get(), kFilledBasename);
   }
 
   // Click on down-arrow button, dropdown list appears.
