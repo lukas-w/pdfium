@@ -17,6 +17,7 @@
 #include "core/fxcodec/jbig2/JBig2_Image.h"
 #include "core/fxcrt/check_op.h"
 #include "core/fxcrt/pauseindicator_iface.h"
+#include "core/fxcrt/zip.h"
 
 namespace {
 
@@ -192,9 +193,13 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRDProc::DecodeArithOpt3(
     uint32_t val_prev1 = row_prev1[0];
     uint32_t CONTEXT = (val_prev2 & kOptConstant3[OPT]) |
                        ((val_prev1 >> kOptConstant4[OPT]) & kOptConstant5[OPT]);
-    for (uint32_t cc = 0; cc < layout.full_bytes; ++cc) {
-      val_prev2 = (val_prev2 << 8) | (row_prev2[cc + 1] << kOptConstant2[OPT]);
-      val_prev1 = (val_prev1 << 8) | row_prev1[cc + 1];
+    auto row_write_zip = row_write.first(layout.full_bytes);
+    auto row_prev1_zip = row_prev1.subspan<1u>();
+    auto row_prev2_zip = row_prev2.subspan<1u>();
+    for (auto [elem_write, elem_prev1, elem_prev2] :
+         fxcrt::Zip(row_write_zip, row_prev1_zip, row_prev2_zip)) {
+      val_prev2 = (val_prev2 << 8) | (elem_prev2 << kOptConstant2[OPT]);
+      val_prev1 = (val_prev1 << 8) | elem_prev1;
       uint8_t cVal = 0;
       for (int32_t k = 7; k >= 0; --k) {
         if (pArithDecoder->IsComplete()) {
@@ -208,7 +213,7 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRDProc::DecodeArithOpt3(
              ((val_prev2 >> k) & kOptConstant7[OPT]) |
              ((val_prev1 >> (k + kOptConstant4[OPT])) & kOptConstant8[OPT]));
       }
-      row_write[cc] = cVal;
+      elem_write = cVal;
     }
     val_prev2 <<= 8;
     val_prev1 <<= 8;
