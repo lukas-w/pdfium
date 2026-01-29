@@ -664,7 +664,7 @@ TEST_F(FPDFTextEmbedderTest, TextSearchSpaceInSearchTerm) {
   EXPECT_FALSE(FPDFText_FindNext(search.get()));
 }
 
-// Fails on Windows. https://crbug.com/pdfium/1370
+// Fails on Windows. https://crbug.com/42270374
 #if BUILDFLAG(IS_WIN)
 #define MAYBE_TextSearchLatinExtended DISABLED_TextSearchLatinExtended
 #else
@@ -1616,7 +1616,7 @@ TEST_F(FPDFTextEmbedderTest, GetFontWeight) {
 
   // Using a /StemV value of 82, the estimate comes out to 410, even though
   // /FontWeight is 400.
-  // TODO(crbug.com/pdfium/1420): Fix this the return value here.
+  // TODO(crbug.com/42270423): Fix this the return value here.
   EXPECT_EQ(410, FPDFText_GetFontWeight(text_page.get(), 1));
 }
 
@@ -2187,7 +2187,7 @@ TEST_F(FPDFTextEmbedderTest, Bug1769) {
   ASSERT_TRUE(textpage);
 
   unsigned short buffer[128] = {};
-  // TODO(crbug.com/pdfium/1769): Improve text extraction.
+  // TODO(crbug.com/42270780): Improve text extraction.
   // The first instance of "world" is visible to the human eye and should be
   // extracted as is. The second instance is not, so how it should be
   // extracted is debatable.

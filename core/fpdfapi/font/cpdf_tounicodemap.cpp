@@ -95,7 +95,7 @@ std::optional<uint32_t> CPDF_ToUnicodeMap::StringToCode(ByteStringView str) {
 
   FX_SAFE_UINT32 code = 0;
   for (char c : str.Substr(1, len - 2)) {
-    // Ignore whitespace https://crbug.com/pdfium/2065
+    // Ignore whitespace https://crbug.com/42271078
     if (PDFCharIsWhitespace(c)) {
       continue;
     }
@@ -122,7 +122,7 @@ WideString CPDF_ToUnicodeMap::StringToWideString(ByteStringView str) {
   int byte_pos = 0;
   wchar_t ch = 0;
   for (char c : str.Substr(1, len - 2)) {
-    // Ignore whitespace https://crbug.com/pdfium/1022
+    // Ignore whitespace https://crbug.com/42270019
     if (PDFCharIsWhitespace(c)) {
       continue;
     }

@@ -33,7 +33,7 @@ namespace {
 
 // Appends a Unicode code point to a `ByteString` using UTF-8.
 //
-// TODO(crbug.com/pdfium/2041): Migrate to `ByteString`.
+// TODO(crbug.com/42271053): Migrate to `ByteString`.
 void AppendCodePointToByteString(char32_t code_point, ByteString& buffer) {
   if (code_point > pdfium::kMaximumSupplementaryCodePoint) {
     // Invalid code point above U+10FFFF.

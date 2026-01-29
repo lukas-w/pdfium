@@ -2070,7 +2070,7 @@ TEST_F(FPDFAnnotEmbedderTest, Bug1206) {
     CompareBitmap(bitmap.get(), 612, 792, expected_bitmap);
 
     ASSERT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
-    // TODO(https://crbug.com/pdfium/1206): This is wrong. The size should be
+    // TODO(https://crbug.com/42270200): This is wrong. The size should be
     // equal, not bigger.
     EXPECT_GT(GetString().size(), original_size);
     ClearString();
@@ -3687,7 +3687,7 @@ TEST_F(FPDFAnnotEmbedderTest, FormFieldAlternateName) {
   }
 }
 
-// Due to https://crbug.com/pdfium/570, the AnnotationBorder test above cannot
+// Due to https://crbug.com/41480220, the AnnotationBorder test above cannot
 // actually render the line annotations inside line_annot.pdf. For now, use a
 // square annotation in annots.pdf for testing.
 TEST_F(FPDFAnnotEmbedderTest, AnnotationBorderRendering) {

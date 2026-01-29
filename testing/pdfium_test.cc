@@ -1517,13 +1517,13 @@ bool PdfProcessor::ProcessPage(const int page_index) {
       break;
 
     case OutputFormat::kEmf:
-      // TODO(crbug.com/pdfium/2054): Render directly to DC.
+      // TODO(crbug.com/42271066): Render directly to DC.
       writer = BitmapPageRenderer::WrapPageWriter(WriteEmf);
       break;
 
     case OutputFormat::kPs2:
     case OutputFormat::kPs3:
-      // TODO(crbug.com/pdfium/2054): Render directly to DC.
+      // TODO(crbug.com/42271066): Render directly to DC.
       writer = BitmapPageRenderer::WrapPageWriter(WritePS);
       break;
 #endif  // _WIN32

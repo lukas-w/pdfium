@@ -36,7 +36,7 @@ TEST_DEFAULT_TIMEZONE = 'America/Los_Angeles'
 TEXT_TESTS = ['javascript']
 
 # Timeout (in seconds) for individual test commands.
-# TODO(crbug.com/pdfium/1967): array_buffer.in is slow under MSan, so need a
+# TODO(crbug.com/42270974): array_buffer.in is slow under MSan, so need a
 # very generous 5 minute timeout for now.
 TEST_TIMEOUT = timedelta(minutes=5).total_seconds()
 
@@ -715,7 +715,7 @@ class _TestCaseRunner:
 
     return self.test_case.NewResult(result_types.PASS)
 
-  # TODO(crbug.com/pdfium/1656): Remove when ready to fully switch over to
+  # TODO(crbug.com/42270661): Remove when ready to fully switch over to
   # Skia Gold
   def TestPixel(self):
     # Remove any existing generated images from previous runs.

@@ -660,7 +660,7 @@ RetainPtr<CFX_DIBitmap> CPDF_DIB::LoadJpxBitmap(
     }
   }
 
-  // TODO(crbug.com/pdfium/1747): Handle SMaskInData entries for different
+  // TODO(crbug.com/42270756): Handle SMaskInData entries for different
   // color space types.
 
   bpc_ = 8;

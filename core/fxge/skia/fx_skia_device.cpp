@@ -886,7 +886,7 @@ bool CFX_SkiaDeviceDriver::DrawDeviceText(
 
 // TODO(crbug.com/42271005): Merge with `DrawDeviceText()` and refactor
 // common logic.
-// TODO(crbug.com/pdfium/1774): Sometimes the thickness of the glyphs is not
+// TODO(crbug.com/42270786): Sometimes the thickness of the glyphs is not
 // ideal. Improve text rendering results regarding different font weight.
 bool CFX_SkiaDeviceDriver::TryDrawText(pdfium::span<const TextCharPos> char_pos,
                                        const CFX_Font* pFont,

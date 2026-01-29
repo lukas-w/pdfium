@@ -963,7 +963,7 @@ FPDFPageObj_GetRotatedBounds(FPDF_PAGEOBJECT page_object,
       matrix = cpage_object->AsImage()->matrix();
       break;
     default:
-      // TODO(crbug.com/pdfium/1840): Support more object types.
+      // TODO(crbug.com/42270854): Support more object types.
       return false;
   }
 

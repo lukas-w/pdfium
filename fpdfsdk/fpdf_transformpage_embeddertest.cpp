@@ -408,7 +408,7 @@ TEST_F(FPDFTransformEmbedderTest, TransFormWithClipAndSave) {
       // Render the page after transforming.
       // Note that the change should affect the rendering, but does not.
       // It should behaves just like the case below, rather than the case above.
-      // TODO(crbug.com/pdfium/1328): The checksum after invoking
+      // TODO(crbug.com/42270329): The checksum after invoking
       // `FPDFPage_TransFormWithClip()` below should match `ShrunkChecksum()`.
       const FS_MATRIX half_matrix{0.5, 0, 0, 0.5, 0, 0};
       EXPECT_TRUE(
@@ -467,7 +467,7 @@ TEST_F(FPDFTransformEmbedderTest, TransFormWithClipAndSaveWithLocale) {
       // Render the page after transforming.
       // Note that the change should affect the rendering, but does not.
       // It should behaves just like the case below, rather than the case above.
-      // TODO(crbug.com/pdfium/1328): The checksum after invoking
+      // TODO(crbug.com/42270329): The checksum after invoking
       // `FPDFPage_TransFormWithClip()` below should match `ShrunkChecksum()`.
       const FS_MATRIX half_matrix{0.5, 0, 0, 0.5, 0, 0};
       EXPECT_TRUE(
