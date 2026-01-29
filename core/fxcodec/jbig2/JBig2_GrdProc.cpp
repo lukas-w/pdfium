@@ -15,6 +15,7 @@
 #include "core/fxcodec/jbig2/JBig2_ArithDecoder.h"
 #include "core/fxcodec/jbig2/JBig2_BitStream.h"
 #include "core/fxcodec/jbig2/JBig2_Image.h"
+#include "core/fxcrt/check_op.h"
 #include "core/fxcrt/pauseindicator_iface.h"
 
 namespace {
@@ -44,6 +45,20 @@ constexpr std::array<const uint16_t, 3> kOptConstant11 = {
     {0x001f, 0x001f, 0x000f}};
 constexpr std::array<const uint16_t, 3> kOptConstant12 = {
     {0x000f, 0x0007, 0x0003}};
+
+struct LineLayout {
+  uint32_t full_bytes;
+  // Range of values is [1, 8].
+  uint32_t last_byte_bits;
+};
+
+LineLayout GetLineLayout(uint32_t width) {
+  CHECK_GT(width, 0u);
+  // Note that this deliberately represents 8 bits as:
+  // full_bytes = 0 and last_byte_bits = 8.
+  return {.full_bytes = (width - 1) / 8,
+          .last_byte_bits = ((width - 1) & 7) + 1};
+}
 
 }  // namespace
 
@@ -108,8 +123,7 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRDProc::DecodeArithOpt3(
   }
 
   int LTP = 0;
-  const int32_t nLineBytes = ((GBW + 7) >> 3) - 1;
-  const int32_t nBitsLeft = GBW - (nLineBytes << 3);
+  const LineLayout layout = GetLineLayout(GBW);
   // TODO(npm): Why is the height only trimmed when OPT is 0?
   const uint32_t height = OPT == 0 ? GBH & 0x7fffffff : GBH;
   pdfium::span<uint8_t> row_write;
@@ -139,7 +153,7 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRDProc::DecodeArithOpt3(
       }
       uint32_t CONTEXT =
           ((val_prev >> kOptConstant4[OPT]) & kOptConstant5[OPT]);
-      for (int32_t cc = 0; cc < nLineBytes; ++cc) {
+      for (uint32_t cc = 0; cc < layout.full_bytes; ++cc) {
         if (is_second_line) {
           val_prev = (val_prev << 8) | row_prev1[cc + 1];
         }
@@ -159,7 +173,7 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRDProc::DecodeArithOpt3(
       }
       val_prev <<= 8;
       uint8_t cVal1 = 0;
-      for (int32_t k = 0; k < nBitsLeft; ++k) {
+      for (uint32_t k = 0; k < layout.last_byte_bits; ++k) {
         if (pArithDecoder->IsComplete()) {
           return nullptr;
         }
@@ -170,7 +184,7 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRDProc::DecodeArithOpt3(
                    (((val_prev >> (7 + kOptConstant4[OPT] - k))) &
                     kOptConstant8[OPT]));
       }
-      row_write[nLineBytes] = cVal1;
+      row_write[layout.full_bytes] = cVal1;
       continue;
     }
 
@@ -178,7 +192,7 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRDProc::DecodeArithOpt3(
     uint32_t val_prev1 = row_prev1[0];
     uint32_t CONTEXT = (val_prev2 & kOptConstant3[OPT]) |
                        ((val_prev1 >> kOptConstant4[OPT]) & kOptConstant5[OPT]);
-    for (int32_t cc = 0; cc < nLineBytes; ++cc) {
+    for (uint32_t cc = 0; cc < layout.full_bytes; ++cc) {
       val_prev2 = (val_prev2 << 8) | (row_prev2[cc + 1] << kOptConstant2[OPT]);
       val_prev1 = (val_prev1 << 8) | row_prev1[cc + 1];
       uint8_t cVal = 0;
@@ -199,7 +213,7 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRDProc::DecodeArithOpt3(
     val_prev2 <<= 8;
     val_prev1 <<= 8;
     uint8_t cVal1 = 0;
-    for (int32_t k = 0; k < nBitsLeft; ++k) {
+    for (uint32_t k = 0; k < layout.last_byte_bits; ++k) {
       if (pArithDecoder->IsComplete()) {
         return nullptr;
       }
@@ -211,7 +225,7 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRDProc::DecodeArithOpt3(
            ((val_prev2 >> (7 - k)) & kOptConstant7[OPT]) |
            ((val_prev1 >> (7 + kOptConstant4[OPT] - k)) & kOptConstant8[OPT]));
     }
-    row_write[nLineBytes] = cVal1;
+    row_write[layout.full_bytes] = cVal1;
   }
   return GBREG;
 }
@@ -316,8 +330,7 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRDProc::DecodeArithTemplate3Opt3(
   }
 
   int LTP = 0;
-  const int32_t nLineBytes = ((GBW + 7) >> 3) - 1;
-  const int32_t nBitsLeft = GBW - (nLineBytes << 3);
+  const LineLayout layout = GetLineLayout(GBW);
   pdfium::span<uint8_t> row_write;
   pdfium::span<const uint8_t> row_prev;
   for (uint32_t h = 0; h < GBH; h++) {
@@ -337,7 +350,7 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRDProc::DecodeArithTemplate3Opt3(
 
     if (h == 0) {
       uint32_t CONTEXT = 0;
-      for (int32_t cc = 0; cc < nLineBytes; cc++) {
+      for (uint32_t cc = 0; cc < layout.full_bytes; cc++) {
         uint8_t cVal = 0;
         for (int32_t k = 7; k >= 0; k--) {
           if (pArithDecoder->IsComplete()) {
@@ -351,7 +364,7 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRDProc::DecodeArithTemplate3Opt3(
         row_write[cc] = cVal;
       }
       uint8_t cVal1 = 0;
-      for (int32_t k = 0; k < nBitsLeft; k++) {
+      for (uint32_t k = 0; k < layout.last_byte_bits; k++) {
         if (pArithDecoder->IsComplete()) {
           return nullptr;
         }
@@ -360,13 +373,13 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRDProc::DecodeArithTemplate3Opt3(
         cVal1 |= bVal << (7 - k);
         CONTEXT = ((CONTEXT & 0x01f7) << 1) | bVal;
       }
-      row_write[nLineBytes] = cVal1;
+      row_write[layout.full_bytes] = cVal1;
       continue;
     }
 
     uint32_t val_prev = row_prev[0];
     uint32_t CONTEXT = (val_prev >> 1) & 0x03f0;
-    for (int32_t cc = 0; cc < nLineBytes; cc++) {
+    for (uint32_t cc = 0; cc < layout.full_bytes; cc++) {
       val_prev = (val_prev << 8) | row_prev[cc + 1];
       uint8_t cVal = 0;
       for (int32_t k = 7; k >= 0; k--) {
@@ -383,7 +396,7 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRDProc::DecodeArithTemplate3Opt3(
     }
     val_prev <<= 8;
     uint8_t cVal1 = 0;
-    for (int32_t k = 0; k < nBitsLeft; k++) {
+    for (uint32_t k = 0; k < layout.last_byte_bits; k++) {
       if (pArithDecoder->IsComplete()) {
         return nullptr;
       }
@@ -393,7 +406,7 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRDProc::DecodeArithTemplate3Opt3(
       CONTEXT =
           ((CONTEXT & 0x01f7) << 1) | bVal | ((val_prev >> (8 - k)) & 0x0010);
     }
-    row_write[nLineBytes] = cVal1;
+    row_write[layout.full_bytes] = cVal1;
   }
   return GBREG;
 }
@@ -585,12 +598,11 @@ FXCODEC_STATUS CJBig2_GRDProc::ProgressiveDecodeArithTemplate0Opt3(
                                                  .val2_shift = 6,
                                                  .val2_context_mask = 0xf800,
                                                  .val2_bit_mask = 0x0800};
-  const int32_t nLineBytes = ((GBW + 7) >> 3) - 1;
-  const int32_t nBitsLeft = GBW - (nLineBytes << 3);
+  const LineLayout layout = GetLineLayout(GBW);
   const uint32_t height = GBH & 0x7fffffff;
   for (; loop_index_ < height; loop_index_++) {
-    if (!ProgressiveDecodeArithTemplateOpt3Helper(pState, kParams, nLineBytes,
-                                                  nBitsLeft)) {
+    if (!ProgressiveDecodeArithTemplateOpt3Helper(
+            pState, kParams, layout.full_bytes, layout.last_byte_bits)) {
       return FXCODEC_STATUS::kError;
     }
 
@@ -697,11 +709,10 @@ FXCODEC_STATUS CJBig2_GRDProc::ProgressiveDecodeArithTemplate1Opt3(
                                                  .val2_shift = 4,
                                                  .val2_context_mask = 0x1e00,
                                                  .val2_bit_mask = 0x0200};
-  const int32_t nLineBytes = ((GBW + 7) >> 3) - 1;
-  const int32_t nBitsLeft = GBW - (nLineBytes << 3);
+  const LineLayout layout = GetLineLayout(GBW);
   for (; loop_index_ < GBH; loop_index_++) {
-    if (!ProgressiveDecodeArithTemplateOpt3Helper(pState, kParams, nLineBytes,
-                                                  nBitsLeft)) {
+    if (!ProgressiveDecodeArithTemplateOpt3Helper(
+            pState, kParams, layout.full_bytes, layout.last_byte_bits)) {
       return FXCODEC_STATUS::kError;
     }
 
@@ -800,11 +811,10 @@ FXCODEC_STATUS CJBig2_GRDProc::ProgressiveDecodeArithTemplate2Opt3(
                                                  .val2_shift = 1,
                                                  .val2_context_mask = 0x0380,
                                                  .val2_bit_mask = 0x0080};
-  const int32_t nLineBytes = ((GBW + 7) >> 3) - 1;
-  const int32_t nBitsLeft = GBW - (nLineBytes << 3);
+  const LineLayout layout = GetLineLayout(GBW);
   for (; loop_index_ < GBH; loop_index_++) {
-    if (!ProgressiveDecodeArithTemplateOpt3Helper(pState, kParams, nLineBytes,
-                                                  nBitsLeft)) {
+    if (!ProgressiveDecodeArithTemplateOpt3Helper(
+            pState, kParams, layout.full_bytes, layout.last_byte_bits)) {
       return FXCODEC_STATUS::kError;
     }
 
@@ -823,8 +833,8 @@ FXCODEC_STATUS CJBig2_GRDProc::ProgressiveDecodeArithTemplate2Opt3(
 bool CJBig2_GRDProc::ProgressiveDecodeArithTemplateOpt3Helper(
     ProgressiveArithDecodeState* state,
     const TemplateOpt3Params& params,
-    int32_t nLineBytes,
-    int32_t nBitsLeft) {
+    uint32_t nLineBytes,
+    uint32_t nBitsLeft) {
   if (TPGDON) {
     if (state->pArithDecoder->IsComplete()) {
       return false;
@@ -843,7 +853,7 @@ bool CJBig2_GRDProc::ProgressiveDecodeArithTemplateOpt3Helper(
     uint32_t val_prev = is_second_line ? line_prev1_[0] : 0;
     uint32_t CONTEXT =
         (val_prev >> params.val1_shift) & params.val1_context_mask;
-    for (int32_t cc = 0; cc < nLineBytes; cc++) {
+    for (uint32_t cc = 0; cc < nLineBytes; cc++) {
       if (is_second_line) {
         val_prev = (val_prev << 8) | line_prev1_[cc + 1];
       }
@@ -863,7 +873,7 @@ bool CJBig2_GRDProc::ProgressiveDecodeArithTemplateOpt3Helper(
     }
     val_prev <<= 8;
     uint8_t cVal1 = 0;
-    for (int32_t k = 0; k < nBitsLeft; k++) {
+    for (uint32_t k = 0; k < nBitsLeft; k++) {
       if (state->pArithDecoder->IsComplete()) {
         return false;
       }
@@ -883,7 +893,7 @@ bool CJBig2_GRDProc::ProgressiveDecodeArithTemplateOpt3Helper(
   uint32_t CONTEXT =
       (val_prev2 & params.val2_context_mask) |
       ((val_prev1 >> params.val1_shift) & params.val1_context_mask);
-  for (int32_t cc = 0; cc < nLineBytes; cc++) {
+  for (uint32_t cc = 0; cc < nLineBytes; cc++) {
     val_prev2 = (val_prev2 << 8) | (line_prev2_[cc + 1] << params.val2_shift);
     val_prev1 = (val_prev1 << 8) | line_prev1_[cc + 1];
     uint8_t cVal = 0;
@@ -903,7 +913,7 @@ bool CJBig2_GRDProc::ProgressiveDecodeArithTemplateOpt3Helper(
   val_prev2 <<= 8;
   val_prev1 <<= 8;
   uint8_t cVal1 = 0;
-  for (int32_t k = 0; k < nBitsLeft; k++) {
+  for (uint32_t k = 0; k < nBitsLeft; k++) {
     if (state->pArithDecoder->IsComplete()) {
       return false;
     }
@@ -995,8 +1005,7 @@ FXCODEC_STATUS CJBig2_GRDProc::ProgressiveDecodeArithTemplate3Opt3(
     line_ = pImage->span();
   }
 
-  const int32_t nLineBytes = ((GBW + 7) >> 3) - 1;
-  const int32_t nBitsLeft = GBW - (nLineBytes << 3);
+  const LineLayout layout = GetLineLayout(GBW);
   for (; loop_index_ < GBH; loop_index_++) {
     if (TPGDON) {
       if (pArithDecoder->IsComplete()) {
@@ -1010,7 +1019,7 @@ FXCODEC_STATUS CJBig2_GRDProc::ProgressiveDecodeArithTemplate3Opt3(
     } else {
       if (loop_index_ == 0) {
         uint32_t CONTEXT = 0;
-        for (int32_t cc = 0; cc < nLineBytes; cc++) {
+        for (uint32_t cc = 0; cc < layout.full_bytes; cc++) {
           uint8_t cVal = 0;
           for (int32_t k = 7; k >= 0; k--) {
             if (pArithDecoder->IsComplete()) {
@@ -1024,7 +1033,7 @@ FXCODEC_STATUS CJBig2_GRDProc::ProgressiveDecodeArithTemplate3Opt3(
           line_[cc] = cVal;
         }
         uint8_t cVal1 = 0;
-        for (int32_t k = 0; k < nBitsLeft; k++) {
+        for (uint32_t k = 0; k < layout.last_byte_bits; k++) {
           if (pArithDecoder->IsComplete()) {
             return FXCODEC_STATUS::kError;
           }
@@ -1033,11 +1042,11 @@ FXCODEC_STATUS CJBig2_GRDProc::ProgressiveDecodeArithTemplate3Opt3(
           cVal1 |= bVal << (7 - k);
           CONTEXT = ((CONTEXT & 0x01f7) << 1) | bVal;
         }
-        line_[nLineBytes] = cVal1;
+        line_[layout.full_bytes] = cVal1;
       } else {
         uint32_t val_prev = line_prev1_[0];
         uint32_t CONTEXT = (val_prev >> 1) & 0x03f0;
-        for (int32_t cc = 0; cc < nLineBytes; cc++) {
+        for (uint32_t cc = 0; cc < layout.full_bytes; cc++) {
           val_prev = (val_prev << 8) | line_prev1_[cc + 1];
           uint8_t cVal = 0;
           for (int32_t k = 7; k >= 0; k--) {
@@ -1054,7 +1063,7 @@ FXCODEC_STATUS CJBig2_GRDProc::ProgressiveDecodeArithTemplate3Opt3(
         }
         val_prev <<= 8;
         uint8_t cVal1 = 0;
-        for (int32_t k = 0; k < nBitsLeft; k++) {
+        for (uint32_t k = 0; k < layout.last_byte_bits; k++) {
           if (pArithDecoder->IsComplete()) {
             return FXCODEC_STATUS::kError;
           }
@@ -1064,7 +1073,7 @@ FXCODEC_STATUS CJBig2_GRDProc::ProgressiveDecodeArithTemplate3Opt3(
           CONTEXT = ((CONTEXT & 0x01f7) << 1) | bVal |
                     ((val_prev >> (8 - k)) & 0x0010);
         }
-        line_[nLineBytes] = cVal1;
+        line_[layout.full_bytes] = cVal1;
       }
     }
     AdvanceLine(pImage);

@@ -98,8 +98,8 @@ class CJBig2_GRDProc {
   bool ProgressiveDecodeArithTemplateOpt3Helper(
       ProgressiveArithDecodeState* state,
       const TemplateOpt3Params& params,
-      int32_t nLineBytes,
-      int32_t nBitsLeft);
+      uint32_t nLineBytes,
+      uint32_t nBitsLeft);
 
   void AdvanceLine(const CJBig2_Image* image);
   void CopyPrevLine(CJBig2_Image* image);
