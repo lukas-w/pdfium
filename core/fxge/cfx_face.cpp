@@ -359,26 +359,6 @@ RetainPtr<CFX_Face> CFX_Face::New(CFX_FontMgr* font_mgr,
   return face;
 }
 
-#if BUILDFLAG(IS_ANDROID) || defined(PDF_ENABLE_XFA)
-// static
-RetainPtr<CFX_Face> CFX_Face::Open(CFX_FontMgr* font_mgr,
-                                   const FT_Open_Args* args,
-                                   uint32_t face_index) {
-  FXFT_LibraryRec* library = font_mgr->GetFTLibrary();
-  if (!library) {
-    return nullptr;
-  }
-  FXFT_FaceRec* face_rec = nullptr;
-  if (FT_Open_Face(library, args, pdfium::checked_cast<FT_Long>(face_index),
-                   &face_rec) != 0) {
-    return nullptr;
-  }
-
-  // Private ctor.
-  return pdfium::WrapRetain(new CFX_Face(face_rec, nullptr));
-}
-#endif
-
 #if BUILDFLAG(IS_ANDROID)
 RetainPtr<CFX_Face> CFX_Face::OpenFromFilePath(CFX_FontMgr* font_mgr,
                                                ByteStringView path,
@@ -391,13 +371,28 @@ RetainPtr<CFX_Face> CFX_Face::OpenFromFilePath(CFX_FontMgr* font_mgr,
     return nullptr;
   }
 
+  FXFT_LibraryRec* library = font_mgr->GetFTLibrary();
+  if (!library) {
+    return nullptr;
+  }
+
   FT_Open_Args args;
   args.flags = FT_OPEN_PATHNAME;
   args.pathname = const_cast<FT_String*>(path.unterminated_c_str());
-  RetainPtr<CFX_Face> face = Open(font_mgr, &args, face_index);
+
+  FXFT_FaceRec* face_rec = nullptr;
+  if (FT_Open_Face(library, &args, pdfium::checked_cast<FT_Long>(face_index),
+                   &face_rec) != 0) {
+    return nullptr;
+  }
+
+  // Private ctor.
+  RetainPtr<CFX_Face> face =
+      pdfium::WrapRetain(new CFX_Face(face_rec, nullptr));
   if (!face) {
     return nullptr;
   }
+
   face->SetPixelSize(0, 64);
   return face;
 }

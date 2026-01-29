@@ -170,10 +170,6 @@ class CFX_Face final : public Retainable, public Observable {
 
 #if BUILDFLAG(IS_ANDROID) || defined(PDF_ENABLE_XFA)
   std::optional<std::array<uint8_t, 2>> GetOs2Panose();
-
-  static RetainPtr<CFX_Face> Open(CFX_FontMgr* font_mgr,
-                                  const FT_Open_Args* args,
-                                  uint32_t face_index);
 #endif
 
   // `owned_font_stream_` must outlive `rec_`.
