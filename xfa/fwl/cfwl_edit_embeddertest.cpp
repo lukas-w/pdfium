@@ -80,7 +80,7 @@ TEST_F(CFWLEditEmbedderTest, LeftClickMouseSelection) {
 }
 
 TEST_F(CFWLEditEmbedderTest, DragMouseSelection) {
-  // TODO(crbug.com/pdfium/11): Fix this test and enable for Skia variants.
+  // TODO(crbug.com/40096188): Fix this test and enable for Skia variants.
   if (CFX_DefaultRenderDevice::UseSkiaRenderer()) {
     return;
   }
@@ -114,7 +114,7 @@ TEST_F(CFWLEditEmbedderTest, DragMouseSelection) {
 }
 
 TEST_F(CFWLEditEmbedderTest, SimpleFill) {
-  // TODO(crbug.com/pdfium/11): Fix this test and enable for Skia variants.
+  // TODO(crbug.com/40096188): Fix this test and enable for Skia variants.
   if (CFX_DefaultRenderDevice::UseSkiaRenderer()) {
     return;
   }
@@ -141,7 +141,7 @@ TEST_F(CFWLEditEmbedderTest, SimpleFill) {
 }
 
 TEST_F(CFWLEditEmbedderTest, FillWithNewLineWithoutMultiline) {
-  // TODO(crbug.com/pdfium/11): Fix this test and enable for Skia variants.
+  // TODO(crbug.com/40096188): Fix this test and enable for Skia variants.
   if (CFX_DefaultRenderDevice::UseSkiaRenderer()) {
     return;
   }
@@ -164,8 +164,12 @@ TEST_F(CFWLEditEmbedderTest, FillWithNewLineWithoutMultiline) {
   }
 }
 
-// Disabled due to flakiness.
-TEST_F(CFWLEditEmbedderTest, DISABLED_FillWithNewLineWithMultiline) {
+TEST_F(CFWLEditEmbedderTest, FillWithNewLineWithMultiline) {
+  // TODO(crbug.com/40096188): Fix this test and enable for Skia variants.
+  if (CFX_DefaultRenderDevice::UseSkiaRenderer()) {
+    return;
+  }
+
   CreateAndInitializeFormPDF("xfa/xfa_multiline_textfield.pdf");
   ScopedPage page = LoadScopedPage(0);
   FORM_OnLButtonDown(form_handle(), page.get(), 0, 115, 58);
@@ -182,11 +186,13 @@ TEST_F(CFWLEditEmbedderTest, DISABLED_FillWithNewLineWithMultiline) {
   // abcde
   // fghij|
   {
-#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
-    const char kFilledMultilineMD5[] = "fc1f4d5fdb2c5755005fc525b0a60ec9";
+#if BUILDFLAG(IS_WIN)
+    const char kFilledMultilineMD5[] = "dc925a171db0fdde6a42adeb53b428b3";
+#elif BUILDFLAG(IS_APPLE)
+    const char kFilledMultilineMD5[] = "3d8763ade9772f6fa142910d63823baf";
 #else
-    const char kFilledMultilineMD5[] = "a5654e027d8b1667c20f3b86d1918003";
-#endif  // BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
+    const char kFilledMultilineMD5[] = "fc1f4d5fdb2c5755005fc525b0a60ec9";
+#endif
     ScopedFPDFBitmap page_bitmap =
         RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
     CompareBitmap(page_bitmap.get(), 612, 792, kFilledMultilineMD5);
@@ -209,11 +215,13 @@ TEST_F(CFWLEditEmbedderTest, DISABLED_FillWithNewLineWithMultiline) {
   // Should look like:
   // abcde|ghij
   {
-#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
-    const char kMultilineBackspaceMD5[] = "8bb62a8100ff1e1cc113d4033e0d824e";
+#if BUILDFLAG(IS_WIN)
+    const char kMultilineBackspaceMD5[] = "6c5b5904c9e6d102f9034a2ff5c49c37";
+#elif BUILDFLAG(IS_APPLE)
+    const char kMultilineBackspaceMD5[] = "609bbf17994047fc35692f62c228d9f6";
 #else
-    const char kMultilineBackspaceMD5[] = "a2f1dcab92bb1fb7c2f9ccc70100c989";
-#endif  // BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
+    const char kMultilineBackspaceMD5[] = "8bb62a8100ff1e1cc113d4033e0d824e";
+#endif
     ScopedFPDFBitmap page_bitmap =
         RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
     CompareBitmap(page_bitmap.get(), 612, 792, kMultilineBackspaceMD5);
@@ -221,7 +229,7 @@ TEST_F(CFWLEditEmbedderTest, DISABLED_FillWithNewLineWithMultiline) {
 }
 
 TEST_F(CFWLEditEmbedderTest, DateTimePickerTest) {
-  // TODO(crbug.com/pdfium/11): Fix this test and enable for Skia variants.
+  // TODO(crbug.com/40096188): Fix this test and enable for Skia variants.
   if (CFX_DefaultRenderDevice::UseSkiaRenderer()) {
     return;
   }
