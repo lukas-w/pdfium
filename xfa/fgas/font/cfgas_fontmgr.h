@@ -21,8 +21,8 @@
 #include "core/fxcrt/widestring.h"
 #include "core/fxge/cfx_face.h"
 
+class CFX_ReadOnlyVectorStream;
 class CFGAS_GEFont;
-class IFX_SeekableReadStream;
 
 #if BUILDFLAG(IS_WIN)
 struct FX_FONTSIGNATURE {
@@ -125,15 +125,15 @@ class CFGAS_FontMgr {
   bool EnumFontsFromFontMapper();
   void RegisterFace(RetainPtr<CFX_Face> face,
                     int face_index,
-                    const WideString& wsFaceName);
-  void RegisterFaces(const RetainPtr<IFX_SeekableReadStream>& font_stream,
-                     const WideString& wsFaceName);
+                    const WideString& face_name);
+  void RegisterFaces(const RetainPtr<CFX_ReadOnlyVectorStream>& font_stream,
+                     const WideString& face_name);
   std::vector<CFGAS_FontDescriptorInfo> MatchFonts(FX_CodePage wCodePage,
                                                    uint32_t dwFontStyles,
                                                    const WideString& FontName,
                                                    wchar_t wcUnicode);
-  RetainPtr<CFGAS_GEFont> LoadFontInternal(const WideString& wsFaceName,
-                                           int32_t iFaceIndex);
+  RetainPtr<CFGAS_GEFont> LoadFontInternal(const WideString& face_name,
+                                           int32_t face_index);
   void EnsureFontsEnumerated();
 #endif  // BUILDFLAG(IS_WIN)
 

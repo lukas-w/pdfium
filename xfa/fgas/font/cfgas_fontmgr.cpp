@@ -460,8 +460,9 @@ std::vector<WideString> GetNames(pdfium::span<const uint8_t> name_table) {
   return results;
 }
 
-RetainPtr<IFX_SeekableReadStream> CreateFontStream(CFX_FontMapper* font_mapper,
-                                                   size_t index) {
+RetainPtr<CFX_ReadOnlyVectorStream> CreateFontStream(
+    CFX_FontMapper* font_mapper,
+    size_t index) {
   FixedSizeDataVector<uint8_t> buffer = font_mapper->RawBytesForIndex(index);
   if (buffer.empty()) {
     return nullptr;
@@ -469,7 +470,7 @@ RetainPtr<IFX_SeekableReadStream> CreateFontStream(CFX_FontMapper* font_mapper,
   return pdfium::MakeRetain<CFX_ReadOnlyVectorStream>(std::move(buffer));
 }
 
-RetainPtr<IFX_SeekableReadStream> CreateFontStream(
+RetainPtr<CFX_ReadOnlyVectorStream> CreateFontStream(
     const ByteString& bsFaceName) {
   CFX_FontMgr* font_mgr = CFX_GEModule::Get()->GetFontMgr();
   CFX_FontMapper* font_mapper = font_mgr->GetBuiltinMapper();
@@ -484,16 +485,16 @@ RetainPtr<IFX_SeekableReadStream> CreateFontStream(
 }
 
 RetainPtr<CFX_Face> LoadFace(
-    const RetainPtr<IFX_SeekableReadStream>& font_stream,
-    int32_t iFaceIndex) {
-  CFX_FontMgr* font_mgr = CFX_GEModule::Get()->GetFontMgr();
-  return CFX_Face::OpenFromStream(font_mgr, font_stream, iFaceIndex);
+    const RetainPtr<CFX_ReadOnlyVectorStream>& font_stream,
+    int32_t face_index) {
+  return CFX_Face::NewFromVectorStream(CFX_GEModule::Get()->GetFontMgr(),
+                                       font_stream, face_index);
 }
 
 bool VerifyUnicodeForFontDescriptor(CFGAS_FontDescriptor* pDesc,
                                     wchar_t wcUnicode) {
   if (!pDesc->face_) {
-    RetainPtr<IFX_SeekableReadStream> pFileRead =
+    RetainPtr<CFX_ReadOnlyVectorStream> pFileRead =
         CreateFontStream(pDesc->face_name_.ToUTF8());
     if (!pFileRead) {
       return false;
@@ -619,15 +620,15 @@ bool CFGAS_FontMgr::EnumFontsFromFontMapper() {
   font_mapper->LoadInstalledFonts();
 
   for (size_t i = 0; i < font_mapper->GetFaceSize(); ++i) {
-    RetainPtr<IFX_SeekableReadStream> font_stream =
+    RetainPtr<CFX_ReadOnlyVectorStream> font_stream =
         CreateFontStream(font_mapper, i);
     if (!font_stream) {
       continue;
     }
 
-    WideString wsFaceName =
+    WideString face_name =
         WideString::FromDefANSI(font_mapper->GetFaceName(i).AsStringView());
-    RegisterFaces(font_stream, wsFaceName);
+    RegisterFaces(font_stream, face_name);
   }
 
   return !installed_fonts_.empty();
@@ -669,20 +670,18 @@ RetainPtr<CFGAS_GEFont> CFGAS_FontMgr::GetFontByUnicodeImpl(
 }
 
 RetainPtr<CFGAS_GEFont> CFGAS_FontMgr::LoadFontInternal(
-    const WideString& wsFaceName,
-    int32_t iFaceIndex) {
-  RetainPtr<IFX_SeekableReadStream> font_stream =
-      CreateFontStream(wsFaceName.ToUTF8());
+    const WideString& face_name,
+    int32_t face_index) {
+  RetainPtr<CFX_ReadOnlyVectorStream> font_stream =
+      CreateFontStream(face_name.ToUTF8());
   if (!font_stream) {
     return nullptr;
   }
-
-  auto pInternalFont = std::make_unique<CFX_Font>();
-  if (!pInternalFont->LoadFile(std::move(font_stream), iFaceIndex)) {
+  auto internal_font = std::make_unique<CFX_Font>();
+  if (!internal_font->LoadFromVectorStream(font_stream, face_index)) {
     return nullptr;
   }
-
-  return CFGAS_GEFont::LoadFont(std::move(pInternalFont));
+  return CFGAS_GEFont::LoadFont(std::move(internal_font));
 }
 
 std::vector<CFGAS_FontDescriptorInfo> CFGAS_FontMgr::MatchFonts(
@@ -753,8 +752,8 @@ void CFGAS_FontMgr::RegisterFace(RetainPtr<CFX_Face> face,
 }
 
 void CFGAS_FontMgr::RegisterFaces(
-    const RetainPtr<IFX_SeekableReadStream>& font_stream,
-    const WideString& wsFaceName) {
+    const RetainPtr<CFX_ReadOnlyVectorStream>& font_stream,
+    const WideString& face_name) {
   int index = 0;
   int num_faces = 0;
   do {
@@ -767,7 +766,7 @@ void CFGAS_FontMgr::RegisterFaces(
     if (num_faces == 0) {
       num_faces = face->GetNumFaces();
     }
-    RegisterFace(face, index, wsFaceName);
+    RegisterFace(face, index, face_name);
     ++index;
   } while (index < num_faces);
 }

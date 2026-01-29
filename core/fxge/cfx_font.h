@@ -27,8 +27,8 @@
 class CFX_GlyphBitmap;
 class CFX_GlyphCache;
 class CFX_Path;
+class CFX_ReadOnlyVectorStream;
 class CFX_SubstFont;
-class IFX_SeekableReadStream;
 struct CFX_TextRenderOptions;
 
 class CFX_Font {
@@ -74,7 +74,9 @@ class CFX_Font {
   int GetSubstFontItalicAngle() const;
 
 #if defined(PDF_ENABLE_XFA)
-  bool LoadFile(RetainPtr<IFX_SeekableReadStream> pFile, int nFaceIndex);
+  bool LoadFromVectorStream(
+      const RetainPtr<CFX_ReadOnlyVectorStream>& vector_stream,
+      int face_index);
 
 #if !BUILDFLAG(IS_WIN)
   void SetFace(RetainPtr<CFX_Face> face);

@@ -14,8 +14,8 @@
 
 #include "build/build_config.h"
 #include "core/fxcrt/bytestring.h"
+#include "core/fxcrt/cfx_read_only_vector_stream.h"
 #include "core/fxcrt/fx_coordinates.h"
-#include "core/fxcrt/fx_stream.h"
 #include "core/fxcrt/observed_ptr.h"
 #include "core/fxcrt/retain_ptr.h"
 #include "core/fxcrt/span.h"
@@ -62,11 +62,12 @@ class CFX_Face final : public Retainable, public Observable {
                                  uint32_t face_index);
 
 #if defined(PDF_ENABLE_XFA)
-  static RetainPtr<CFX_Face> OpenFromStream(
+  static RetainPtr<CFX_Face> NewFromVectorStream(
       CFX_FontMgr* font_mgr,
-      const RetainPtr<IFX_SeekableReadStream>& font_stream,
+      const RetainPtr<CFX_ReadOnlyVectorStream>& font_stream,
       uint32_t face_index);
 #endif
+
 #if BUILDFLAG(IS_ANDROID)
   static RetainPtr<CFX_Face> OpenFromFilePath(CFX_FontMgr* font_mgr,
                                               ByteStringView path,
@@ -175,10 +176,8 @@ class CFX_Face final : public Retainable, public Observable {
                                   uint32_t face_index);
 #endif
 
-  // `owned_font_stream_` must outlive `owned_stream_rec_`.
-  RetainPtr<IFX_SeekableReadStream> owned_font_stream_;
-  // `owned_stream_rec_` must outlive `rec_`.
-  std::unique_ptr<FXFT_StreamRec> owned_stream_rec_;
+  // `owned_font_stream_` must outlive `rec_`.
+  RetainPtr<CFX_ReadOnlyVectorStream> owned_font_stream_;
   ScopedFXFTFaceRec const rec_;
   RetainPtr<Retainable> const desc_;
 };

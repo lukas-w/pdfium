@@ -148,11 +148,12 @@ int CFX_Font::GetSubstFontItalicAngle() const {
 }
 
 #ifdef PDF_ENABLE_XFA
-bool CFX_Font::LoadFile(RetainPtr<IFX_SeekableReadStream> pFile,
-                        int nFaceIndex) {
+bool CFX_Font::LoadFromVectorStream(
+    const RetainPtr<CFX_ReadOnlyVectorStream>& vector_stream,
+    int face_index) {
   object_tag_ = 0;
-  face_ = CFX_Face::OpenFromStream(CFX_GEModule::Get()->GetFontMgr(), pFile,
-                                   nFaceIndex);
+  face_ = CFX_Face::NewFromVectorStream(CFX_GEModule::Get()->GetFontMgr(),
+                                        vector_stream, face_index);
   return !!face_;
 }
 
