@@ -492,7 +492,7 @@ bool CJBig2_Image::ComposeToInternal(CJBig2_Image* pDst,
         }
         dest = dest.subspan(dest_offset);
         if (d1 != 0) {
-          auto src_bytes1 = src.first<4u>();
+          auto src_bytes1 = src.take_first<4u>();
           auto src_bytes2 = src.first<4u>();
           uint32_t tmp1 = (GetUInt32MSBFirst(src_bytes1) << shift1) |
                           (GetUInt32MSBFirst(src_bytes2) >> shift2);
