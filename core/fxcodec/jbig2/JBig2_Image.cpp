@@ -23,8 +23,6 @@
 #include "core/fxcrt/span_util.h"
 
 using fxcrt::FromBE32;
-using fxcrt::GetUInt32MSBFirst;
-using fxcrt::PutUInt32MSBFirst;
 
 namespace {
 
@@ -295,20 +293,19 @@ void CJBig2_Image::SubImageSlow(int32_t x,
                                 CJBig2_Image* image) const {
   int32_t m = BitIndexToAlignedByte(x);
   int32_t n = x & 31;
-  size_t bytes_to_copy = std::min(image->stride_, stride_ - m);
+  size_t elems_to_copy = std::min(image->stride_, stride_ - m) / 4;
   int32_t lines_to_copy = std::min(image->height_, height_ - y);
   for (int32_t i = 0; i < lines_to_copy; ++i) {
-    pdfium::span<const uint8_t> src =
-        GetLine(y + i).subspan(static_cast<size_t>(m));
-    pdfium::span<uint8_t> dest = image->GetLine(i).first(bytes_to_copy);
+    pdfium::span<const uint32_t> src =
+        GetLine32(y + i).subspan(static_cast<size_t>(m / 4));
+    pdfium::span<uint32_t> dest = image->GetLine32(i).first(elems_to_copy);
     while (!dest.empty()) {
-      auto src_bytes = src.take_first<4u>();
-      auto dest_bytes = dest.take_first<4u>();
-      uint32_t val = GetUInt32MSBFirst(src_bytes) << n;
-      if (src.size() >= 4) {
-        val |= (GetUInt32MSBFirst(src.first<4u>()) >> (32 - n));
+      uint32_t src_val = FromBE32(src.take_first_elem()) << n;
+      if (!src.empty()) {
+        src_val |= FromBE32(src.front()) >> (32 - n);
       }
-      PutUInt32MSBFirst(val, dest_bytes);
+      uint32_t& dest_elem = dest.take_first<1u>().front();
+      dest_elem = FromBE32(src_val);
     }
   }
 }
