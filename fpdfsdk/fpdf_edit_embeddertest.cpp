@@ -107,10 +107,11 @@ const char* LoadedFontTextChecksum() {
 #endif
 }
 
-const char kRedRectangleChecksum[] = "66d02eaa6181e2c069ce2ea99beda497";
+const char kRedRectanglePng[] = "red_rectangle";
 
 // In embedded_images.pdf.
 const char kEmbeddedImage33Checksum[] = "cb3637934bb3b95a6e4ae1ea9eb9e56e";
+const char kEmbeddedImage33Png[] = "embedded_images_33";
 
 const char* NotoSansSCChecksum() {
   if (CFX_DefaultRenderDevice::UseSkiaRenderer()) {
@@ -436,7 +437,7 @@ TEST_F(FPDFEditEmbedderTest, EmptyCreation) {
 
 // Regression test for https://crbug.com/667012
 TEST_F(FPDFEditEmbedderTest, RasterizePDF) {
-  const char kAllBlackChecksum[] = "5708fc5c4a8bd0abde99c8e8f0390615";
+  const char kAllBlackPng[] = "black_612x792";
 
   // Get the bitmap for the original document.
   ScopedFPDFBitmap orig_bitmap;
@@ -445,7 +446,7 @@ TEST_F(FPDFEditEmbedderTest, RasterizePDF) {
     ScopedPage orig_page = LoadScopedPage(0);
     ASSERT_TRUE(orig_page);
     orig_bitmap = RenderLoadedPage(orig_page.get());
-    CompareBitmap(orig_bitmap.get(), 612, 792, kAllBlackChecksum);
+    CompareBitmapToPng(orig_bitmap.get(), kAllBlackPng);
   }
 
   // Create a new document from |orig_bitmap| and save it.
@@ -469,7 +470,7 @@ TEST_F(FPDFEditEmbedderTest, RasterizePDF) {
   // Get the generated content. Make sure it is at least as big as the original
   // PDF.
   EXPECT_GT(GetString().size(), 923u);
-  VerifySavedDocument(612, 792, kAllBlackChecksum);
+  VerifySavedDocumentToPng(kAllBlackPng);
 }
 
 TEST_F(FPDFEditEmbedderTest, AddPaths) {
@@ -509,7 +510,7 @@ TEST_F(FPDFEditEmbedderTest, AddPaths) {
   FPDFPage_InsertObject(page, red_rect);
   {
     ScopedFPDFBitmap page_bitmap = RenderPage(page);
-    CompareBitmap(page_bitmap.get(), 612, 792, kRedRectangleChecksum);
+    CompareBitmapToPng(page_bitmap.get(), kRedRectanglePng);
   }
 
   // Now add to that a green rectangle with some medium alpha
@@ -571,8 +572,7 @@ TEST_F(FPDFEditEmbedderTest, AddPaths) {
   FPDFPage_InsertObject(page, green_rect);
   {
     ScopedFPDFBitmap page_bitmap = RenderPage(page);
-    CompareBitmap(page_bitmap.get(), 612, 792,
-                  "7b0b87604594e773add528fae567a558");
+    CompareBitmapToPng(page_bitmap.get(), "red_green_rectangles");
   }
 
   // Add a black triangle.
@@ -611,8 +611,8 @@ TEST_F(FPDFEditEmbedderTest, AddPaths) {
   FPDFPage_InsertObject(page, black_path);
   {
     ScopedFPDFBitmap page_bitmap = RenderPage(page);
-    CompareBitmap(page_bitmap.get(), 612, 792,
-                  "eadc8020a14dfcf091da2688733d8806");
+    CompareBitmapToPng(page_bitmap.get(),
+                       "red_green_rectangles_black_triangle");
   }
 
   // Now add a more complex blue path.
@@ -787,15 +787,12 @@ TEST_F(FPDFEditEmbedderTest, Bug1399) {
 }
 
 TEST_F(FPDFEditEmbedderTest, Bug1549) {
-  static const char kOriginalChecksum[] = "126366fb95e6caf8ea196780075b22b2";
-  static const char kRemovedChecksum[] = "6ec2f27531927882624b37bc7d8e12f4";
-
   ASSERT_TRUE(OpenDocument("bug_1549.pdf"));
   ScopedPage page = LoadScopedPage(0);
 
   {
     ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-    CompareBitmap(bitmap.get(), 100, 150, kOriginalChecksum);
+    CompareBitmapToPng(bitmap.get(), "bug_1549");
 
     ScopedFPDFPageObject obj(FPDFPage_GetObject(page.get(), 0));
     ASSERT_EQ(FPDF_PAGEOBJ_IMAGE, FPDFPageObj_GetType(obj.get()));
@@ -806,13 +803,13 @@ TEST_F(FPDFEditEmbedderTest, Bug1549) {
 
   {
     ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-    CompareBitmap(bitmap.get(), 100, 150, kRemovedChecksum);
+    CompareBitmapToPng(bitmap.get(), "bug_1549_removed");
   }
 
   ASSERT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
 
-  // TODO(crbug.com/42270554): Should be `kRemovedChecksum`.
-  VerifySavedDocument(100, 150, "4f9889cd5993db20f1ab37d677ac8d26");
+  // TODO(crbug.com/42270554): Should be "bug_1549_removed".
+  VerifySavedDocumentToPng("bug_1549_incorrect");
 }
 
 TEST_F(FPDFEditEmbedderTest, SetText) {
@@ -2480,7 +2477,7 @@ TEST_F(FPDFEditEmbedderTest, AddAndRemovePaths) {
   FPDFPage_InsertObject(page, red_rect);
   {
     ScopedFPDFBitmap page_bitmap = RenderPage(page);
-    CompareBitmap(page_bitmap.get(), 612, 792, kRedRectangleChecksum);
+    CompareBitmapToPng(page_bitmap.get(), kRedRectanglePng);
   }
   EXPECT_EQ(1, FPDFPage_CountObjects(page));
 
@@ -3425,6 +3422,9 @@ TEST_F(FPDFEditEmbedderTest, GraphicsData) {
 }
 
 TEST_F(FPDFEditEmbedderTest, DoubleGenerating) {
+  static constexpr char kRedRectangleAlphaPng[] = "red_rectangle_alpha";
+  static constexpr char kBlueRectangleAlphaPng[] = "blue_rectangle_alpha";
+
   // Start with a blank page
   FPDF_PAGE page = FPDFPage_New(CreateNewDocument(), 0, 612, 792);
 
@@ -3446,8 +3446,7 @@ TEST_F(FPDFEditEmbedderTest, DoubleGenerating) {
   // Check the bitmap
   {
     ScopedFPDFBitmap page_bitmap = RenderPage(page);
-    CompareBitmap(page_bitmap.get(), 612, 792,
-                  "5384da3406d62360ffb5cac4476fff1c");
+    CompareBitmapToPng(page_bitmap.get(), kRedRectangleAlphaPng);
   }
 
   // Never mind, my new favorite color is blue, increase alpha.
@@ -3460,8 +3459,7 @@ TEST_F(FPDFEditEmbedderTest, DoubleGenerating) {
   // Check that bitmap displays changed content
   {
     ScopedFPDFBitmap page_bitmap = RenderPage(page);
-    CompareBitmap(page_bitmap.get(), 612, 792,
-                  "2e51656f5073b0bee611d9cd086aa09c");
+    CompareBitmapToPng(page_bitmap.get(), kBlueRectangleAlphaPng);
   }
 
   // And now generate, without changes
@@ -3470,8 +3468,7 @@ TEST_F(FPDFEditEmbedderTest, DoubleGenerating) {
               UnorderedElementsAreArray({"FXE1", "FXE3"}));
   {
     ScopedFPDFBitmap page_bitmap = RenderPage(page);
-    CompareBitmap(page_bitmap.get(), 612, 792,
-                  "2e51656f5073b0bee611d9cd086aa09c");
+    CompareBitmapToPng(page_bitmap.get(), kBlueRectangleAlphaPng);
   }
 
   // Add some text to the page, which starts out with no fonts.
@@ -4563,7 +4560,7 @@ TEST_F(FPDFEditEmbedderTest, GetBitmap) {
     ASSERT_EQ(FPDF_PAGEOBJ_IMAGE, FPDFPageObj_GetType(obj));
     ScopedFPDFBitmap bitmap(FPDFImageObj_GetBitmap(obj));
     EXPECT_EQ(FPDFBitmap_BGR, FPDFBitmap_GetFormat(bitmap.get()));
-    CompareBitmap(bitmap.get(), 109, 88, kEmbeddedImage33Checksum);
+    CompareBitmapToPng(bitmap.get(), kEmbeddedImage33Png);
   }
 
   {
@@ -4571,7 +4568,7 @@ TEST_F(FPDFEditEmbedderTest, GetBitmap) {
     ASSERT_EQ(FPDF_PAGEOBJ_IMAGE, FPDFPageObj_GetType(obj));
     ScopedFPDFBitmap bitmap(FPDFImageObj_GetBitmap(obj));
     EXPECT_EQ(FPDFBitmap_BGR, FPDFBitmap_GetFormat(bitmap.get()));
-    CompareBitmap(bitmap.get(), 103, 75, "c8d51fa6821ceb2a67f08446ff236c40");
+    CompareBitmapToPng(bitmap.get(), "embedded_images_34");
   }
 
   {
@@ -4579,7 +4576,7 @@ TEST_F(FPDFEditEmbedderTest, GetBitmap) {
     ASSERT_EQ(FPDF_PAGEOBJ_IMAGE, FPDFPageObj_GetType(obj));
     ScopedFPDFBitmap bitmap(FPDFImageObj_GetBitmap(obj));
     EXPECT_EQ(FPDFBitmap_BGR, FPDFBitmap_GetFormat(bitmap.get()));
-    CompareBitmap(bitmap.get(), 92, 68, "7e34551035943e30a9f353db17de62ab");
+    CompareBitmapToPng(bitmap.get(), "embedded_images_35");
   }
 
   {
@@ -4587,7 +4584,7 @@ TEST_F(FPDFEditEmbedderTest, GetBitmap) {
     ASSERT_EQ(FPDF_PAGEOBJ_IMAGE, FPDFPageObj_GetType(obj));
     ScopedFPDFBitmap bitmap(FPDFImageObj_GetBitmap(obj));
     EXPECT_EQ(FPDFBitmap_BGR, FPDFBitmap_GetFormat(bitmap.get()));
-    CompareBitmap(bitmap.get(), 79, 60, "f4e72fb783a01c7b4614cdc25eaa98ac");
+    CompareBitmapToPng(bitmap.get(), "embedded_images_36");
   }
 
   {
@@ -4595,7 +4592,7 @@ TEST_F(FPDFEditEmbedderTest, GetBitmap) {
     ASSERT_EQ(FPDF_PAGEOBJ_IMAGE, FPDFPageObj_GetType(obj));
     ScopedFPDFBitmap bitmap(FPDFImageObj_GetBitmap(obj));
     EXPECT_EQ(FPDFBitmap_BGR, FPDFBitmap_GetFormat(bitmap.get()));
-    CompareBitmap(bitmap.get(), 126, 106, "2cf9e66414c72461f4ccbf9cdebdfa1b");
+    CompareBitmapToPng(bitmap.get(), "embedded_images_37");
   }
 
   {
@@ -4603,7 +4600,7 @@ TEST_F(FPDFEditEmbedderTest, GetBitmap) {
     ASSERT_EQ(FPDF_PAGEOBJ_IMAGE, FPDFPageObj_GetType(obj));
     ScopedFPDFBitmap bitmap(FPDFImageObj_GetBitmap(obj));
     EXPECT_EQ(FPDFBitmap_BGR, FPDFBitmap_GetFormat(bitmap.get()));
-    CompareBitmap(bitmap.get(), 194, 119, "a8f3a126cec274dab8242fd2ccdc1b8b");
+    CompareBitmapToPng(bitmap.get(), "embedded_images_38");
   }
 }
 
@@ -4620,7 +4617,7 @@ TEST_F(FPDFEditEmbedderTest, GetBitmapIgnoresSetMatrix) {
     // Render |obj| as is.
     ScopedFPDFBitmap bitmap(FPDFImageObj_GetBitmap(obj));
     EXPECT_EQ(FPDFBitmap_BGR, FPDFBitmap_GetFormat(bitmap.get()));
-    CompareBitmap(bitmap.get(), 109, 88, kEmbeddedImage33Checksum);
+    CompareBitmapToPng(bitmap.get(), kEmbeddedImage33Png);
   }
 
   // Check the matrix for |obj|.
@@ -4644,7 +4641,7 @@ TEST_F(FPDFEditEmbedderTest, GetBitmapIgnoresSetMatrix) {
     // effect.
     ScopedFPDFBitmap bitmap(FPDFImageObj_GetBitmap(obj));
     EXPECT_EQ(FPDFBitmap_BGR, FPDFBitmap_GetFormat(bitmap.get()));
-    CompareBitmap(bitmap.get(), 109, 88, kEmbeddedImage33Checksum);
+    CompareBitmapToPng(bitmap.get(), kEmbeddedImage33Png);
   }
 }
 
@@ -4660,7 +4657,7 @@ TEST_F(FPDFEditEmbedderTest, GetBitmapForJBigImage) {
     ScopedFPDFBitmap bitmap(FPDFImageObj_GetBitmap(obj));
     ASSERT_TRUE(bitmap);
     EXPECT_EQ(FPDFBitmap_Gray, FPDFBitmap_GetFormat(bitmap.get()));
-    CompareBitmap(bitmap.get(), 1152, 720, "3f6a48e2b3e91b799bf34567f55cb4de");
+    CompareBitmapToPng(bitmap.get(), "bug_631912");
   }
 }
 
@@ -4678,7 +4675,7 @@ TEST_F(FPDFEditEmbedderTest, GetBitmapIgnoresSMask) {
     ScopedFPDFBitmap bitmap(FPDFImageObj_GetBitmap(obj));
     ASSERT_TRUE(bitmap);
     EXPECT_EQ(FPDFBitmap_BGR, FPDFBitmap_GetFormat(bitmap.get()));
-    CompareBitmap(bitmap.get(), 50, 50, "46c9a1dbe0b44765ce46017ad629a2fe");
+    CompareBitmapToPng(bitmap.get(), "matte");
   }
 }
 
@@ -4696,7 +4693,7 @@ TEST_F(FPDFEditEmbedderTest, GetBitmapWithArgbImageWithPalette) {
   ScopedFPDFBitmap bitmap(FPDFImageObj_GetBitmap(obj));
   ASSERT_TRUE(bitmap);
   EXPECT_EQ(FPDFBitmap_BGR, FPDFBitmap_GetFormat(bitmap.get()));
-  CompareBitmap(bitmap.get(), 4, 4, "49b4d39d3fd81c9853b493b615e475d1");
+  CompareBitmapToPng(bitmap.get(), "bug_343075986");
 }
 
 TEST_F(FPDFEditEmbedderTest, GetRenderedBitmapHandlesSetMatrix) {
