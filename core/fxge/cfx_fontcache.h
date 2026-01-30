@@ -15,6 +15,10 @@
 
 class CFX_Font;
 
+#if defined(PDF_USE_SKIA)
+class SkTypeface;
+#endif
+
 class CFX_FontCache {
  public:
   CFX_FontCache();
@@ -22,7 +26,7 @@ class CFX_FontCache {
 
   RetainPtr<CFX_GlyphCache> GetGlyphCache(const CFX_Font* font);
 #if defined(PDF_USE_SKIA)
-  CFX_TypeFace* GetDeviceCache(const CFX_Font* font);
+  SkTypeface* GetDeviceCache(const CFX_Font* font);
 #endif
 
  private:

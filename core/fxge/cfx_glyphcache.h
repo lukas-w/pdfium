@@ -27,6 +27,10 @@ class CFX_Matrix;
 class CFX_Path;
 struct CFX_TextRenderOptions;
 
+#if defined(PDF_USE_SKIA)
+class SkTypeface;
+#endif
+
 class CFX_GlyphCache final : public Retainable, public Observable {
  public:
   CONSTRUCT_VIA_MAKE_RETAIN;
@@ -49,7 +53,7 @@ class CFX_GlyphCache final : public Retainable, public Observable {
   RetainPtr<CFX_Face> GetFace() { return face_; }
 
 #if defined(PDF_USE_SKIA)
-  CFX_TypeFace* GetDeviceCache(const CFX_Font* font);
+  SkTypeface* GetDeviceCache(const CFX_Font* font);
   static void InitializeGlobals();
   static void DestroyGlobals();
 #endif

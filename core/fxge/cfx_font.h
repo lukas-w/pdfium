@@ -31,6 +31,10 @@ class CFX_ReadOnlyVectorStream;
 class CFX_SubstFont;
 struct CFX_TextRenderOptions;
 
+#if defined(PDF_USE_SKIA)
+class SkTypeface;
+#endif
+
 class CFX_Font {
  public:
   // This struct should be the same as FPDF_CharsetFontMap.
@@ -122,7 +126,7 @@ class CFX_Font {
   int GetGlyphWidthImpl(uint32_t glyph_index, int dest_width, int weight) const;
 
 #if defined(PDF_USE_SKIA)
-  CFX_TypeFace* GetDeviceCache() const;
+  SkTypeface* GetDeviceCache() const;
   bool IsSubstFontBold() const;
 #endif
 
