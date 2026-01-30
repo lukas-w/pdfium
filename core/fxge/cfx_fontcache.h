@@ -15,19 +15,12 @@
 
 class CFX_Font;
 
-#if defined(PDF_USE_SKIA)
-class SkTypeface;
-#endif
-
 class CFX_FontCache {
  public:
   CFX_FontCache();
   ~CFX_FontCache();
 
   RetainPtr<CFX_GlyphCache> GetGlyphCache(const CFX_Font* font);
-#if defined(PDF_USE_SKIA)
-  SkTypeface* GetDeviceCache(const CFX_Font* font);
-#endif
 
  private:
   std::map<CFX_Face*, ObservedPtr<CFX_GlyphCache>> glyph_cache_map_;

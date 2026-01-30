@@ -24,9 +24,3 @@ RetainPtr<CFX_GlyphCache> CFX_FontCache::GetGlyphCache(const CFX_Font* font) {
   glyph_cache_map_[face.Get()].Reset(new_cache.Get());
   return new_cache;
 }
-
-#if defined(PDF_USE_SKIA)
-SkTypeface* CFX_FontCache::GetDeviceCache(const CFX_Font* font) {
-  return GetGlyphCache(font)->GetDeviceCache(font);
-}
-#endif
