@@ -14,6 +14,7 @@
 
 #include "core/fxcrt/byteorder.h"
 #include "core/fxcrt/check.h"
+#include "core/fxcrt/check_op.h"
 #include "core/fxcrt/compiler_specific.h"
 #include "core/fxcrt/fx_2d_size.h"
 #include "core/fxcrt/fx_coordinates.h"
@@ -29,11 +30,11 @@ namespace {
 const int kMaxImagePixels = INT_MAX - 31;
 const int kMaxImageBytes = kMaxImagePixels / 8;
 
-int BitIndexToByte(int index) {
+uint32_t BitIndexToByte(uint32_t index) {
   return index / 8;
 }
 
-int BitIndexToAlignedUint32(int index) {
+uint32_t BitIndexToAlignedUint32(uint32_t index) {
   return index / 32;
 }
 
@@ -147,7 +148,7 @@ int CJBig2_Image::GetPixel(int32_t x, pdfium::span<const uint8_t> line) const {
     return 0;
   }
 
-  int32_t m = BitIndexToByte(x);
+  uint32_t m = BitIndexToByte(x);
   int32_t n = x & 7;
   return (line[m] >> (7 - n)) & 1;
 }
@@ -157,7 +158,7 @@ void CJBig2_Image::SetPixel(int32_t x, pdfium::span<uint8_t> line, int v) {
     return;
   }
 
-  int32_t m = BitIndexToByte(x);
+  uint32_t m = BitIndexToByte(x);
   int32_t n = 1 << (7 - (x & 7));
   if (v) {
     line[m] |= n;
@@ -271,30 +272,39 @@ std::optional<size_t> CJBig2_Image::GetLineOffset(int32_t y) const {
   return size.ValueOrDie();
 }
 
-void CJBig2_Image::SubImageFast(int32_t x,
-                                int32_t y,
+void CJBig2_Image::SubImageFast(uint32_t x,
+                                uint32_t y,
                                 int32_t w,
                                 int32_t h,
                                 CJBig2_Image* image) const {
-  int32_t m = BitIndexToByte(x);
-  size_t bytes_to_copy = std::min(image->stride_, stride_ - m);
-  int32_t lines_to_copy = std::min(image->height_, height_ - y);
+  uint32_t m = BitIndexToByte(x);
+  // SubImage() made sure `x` is [0, width_).
+  CHECK_GT(static_cast<size_t>(stride_), m);
+  size_t bytes_to_copy = std::min<size_t>(image->stride_, stride_ - m);
+  // SubImage() made sure both images have data.
+  CHECK_GT(bytes_to_copy, 0);
+  int32_t lines_to_copy = std::min<int32_t>(image->height_, height_ - y);
   for (int32_t i = 0; i < lines_to_copy; ++i) {
-    pdfium::span<const uint8_t> src =
-        GetLine(y + i).subspan(static_cast<size_t>(m), bytes_to_copy);
+    pdfium::span<const uint8_t> src = GetLine(y + i).subspan(m, bytes_to_copy);
     fxcrt::spancpy(image->GetLine(i), src);
   }
 }
 
-void CJBig2_Image::SubImageSlow(int32_t x,
-                                int32_t y,
+void CJBig2_Image::SubImageSlow(uint32_t x,
+                                uint32_t y,
                                 int32_t w,
                                 int32_t h,
                                 CJBig2_Image* image) const {
-  int32_t m = BitIndexToAlignedUint32(x);
+  uint32_t m = BitIndexToAlignedUint32(x);
+  // SubImage() made sure `x` is [0, width_).
+  CHECK_GT(static_cast<size_t>(stride_ / sizeof(uint32_t)), m);
   int32_t n = x & 31;
-  size_t elems_to_copy = std::min(image->stride_ / 4, stride_ / 4 - m);
-  int32_t lines_to_copy = std::min(image->height_, height_ - y);
+  size_t elems_to_copy = std::min<size_t>(image->stride_ / sizeof(uint32_t),
+                                          stride_ / sizeof(uint32_t) - m);
+  // SubImage() made sure both images have data. The strides are always a
+  // multiple of 4.
+  CHECK_GT(elems_to_copy, 0);
+  int32_t lines_to_copy = std::min<int32_t>(image->height_, height_ - y);
   for (int32_t i = 0; i < lines_to_copy; ++i) {
     pdfium::span<const uint32_t> src =
         GetLine32(y + i).subspan(static_cast<size_t>(m));
@@ -390,12 +400,11 @@ bool CJBig2_Image::ComposeToInternal(CJBig2_Image* pDst,
 
   const int src_start_line = rtSrc.top + ys0;
   const int dest_start_line = yd0;
-  const size_t src_offset =
-      pdfium::checked_cast<size_t>(BitIndexToAlignedUint32(xs0 + rtSrc.left));
-  const size_t dest_offset =
-      pdfium::checked_cast<size_t>(BitIndexToAlignedUint32(xd0));
-  const size_t line_size =
-      pdfium::checked_cast<size_t>(stride_ / 4 - BitIndexToAlignedUint32(xs0));
+  const uint32_t src_offset =
+      BitIndexToAlignedUint32(pdfium::checked_cast<uint32_t>(xs0 + rtSrc.left));
+  const uint32_t dest_offset = BitIndexToAlignedUint32(xd0);
+  const uint32_t line_size = pdfium::checked_cast<uint32_t>(
+      stride_ / sizeof(uint32_t) - BitIndexToAlignedUint32(xs0));
 
   enum class ComposeToOp {
     kDestAlignedSrcAlignedSrcGreaterThanDest,

@@ -89,13 +89,14 @@ class CJBig2_Image {
  private:
   std::optional<size_t> GetLineOffset(int32_t y) const;
 
-  void SubImageFast(int32_t x,
-                    int32_t y,
+  // SubImage() already checked `x` and `y` are valid.
+  void SubImageFast(uint32_t x,
+                    uint32_t y,
                     int32_t w,
                     int32_t h,
                     CJBig2_Image* image) const;
-  void SubImageSlow(int32_t x,
-                    int32_t y,
+  void SubImageSlow(uint32_t x,
+                    uint32_t y,
                     int32_t w,
                     int32_t h,
                     CJBig2_Image* image) const;
