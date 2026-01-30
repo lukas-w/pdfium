@@ -16,15 +16,12 @@ CFX_FontCache::~CFX_FontCache() = default;
 
 RetainPtr<CFX_GlyphCache> CFX_FontCache::GetGlyphCache(const CFX_Font* font) {
   RetainPtr<CFX_Face> face = font->GetFace();
-  const bool bExternal = !face;
-  auto& map = bExternal ? ext_glyph_cache_map_ : glyph_cache_map_;
-  auto it = map.find(face.Get());
-  if (it != map.end() && it->second) {
+  auto it = glyph_cache_map_.find(face.Get());
+  if (it != glyph_cache_map_.end() && it->second) {
     return pdfium::WrapRetain(it->second.Get());
   }
-
   auto new_cache = pdfium::MakeRetain<CFX_GlyphCache>(face);
-  map[face.Get()].Reset(new_cache.Get());
+  glyph_cache_map_[face.Get()].Reset(new_cache.Get());
   return new_cache;
 }
 
