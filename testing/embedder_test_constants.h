@@ -23,8 +23,9 @@ inline constexpr char kBug890322Png[] = "bug_890322";
 // Expectation file basename for rendering hello_world.pdf or bug_455199.pdf.
 inline constexpr char kHelloWorldPng[] = "hello_world";
 
-// MD5 hash for rendering hello_world.pdf after removing "Goodbye, world!".
-const char* HelloWorldRemovedChecksum();
+// Expectation file basename for rendering hello_world.pdf after removing
+// "Goodbye, world!".
+inline constexpr char kHelloWorldRemovedPng[] = "hello_world_removed";
 
 // Expectation file basename for rendering many_rectangles.pdf.
 inline constexpr char kManyRectanglesPng[] = "many_rectangles";
@@ -32,8 +33,8 @@ inline constexpr char kManyRectanglesPng[] = "many_rectangles";
 // Expectation file basename for rendering rectangles.pdf.
 inline constexpr char kRectanglesPng[] = "rectangles";
 
-// MD5 hash for rendering text_form.pdf.
-const char* TextFormChecksum();
+// Expectation file basename for rendering text_form.pdf.
+inline constexpr char kTextFormPng[] = "text_form";
 
 }  // namespace pdfium
 

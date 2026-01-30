@@ -2187,10 +2187,11 @@ TEST_F(FPDFEditEmbedderTest, RemoveLastFromSingleStream) {
   cpdf_page_object = CPDFPageObjectFromFPDFPageObject(page_object);
   ASSERT_EQ(0, cpdf_page_object->GetContentStream());
 
-  using pdfium::HelloWorldRemovedChecksum;
+  using pdfium::kHelloWorldRemovedPng;
   {
     ScopedFPDFBitmap page_bitmap = RenderPage(page.get());
-    CompareBitmap(page_bitmap.get(), 200, 200, HelloWorldRemovedChecksum());
+    CompareBitmapToPngWithExpectationSuffix(page_bitmap.get(),
+                                            kHelloWorldRemovedPng);
   }
 
   // Save the file
@@ -2208,7 +2209,8 @@ TEST_F(FPDFEditEmbedderTest, RemoveLastFromSingleStream) {
   ASSERT_EQ(0, cpdf_page_object->GetContentStream());
   {
     ScopedFPDFBitmap page_bitmap = RenderPage(saved_page);
-    CompareBitmap(page_bitmap.get(), 200, 200, HelloWorldRemovedChecksum());
+    CompareBitmapToPngWithExpectationSuffix(page_bitmap.get(),
+                                            kHelloWorldRemovedPng);
   }
 
   CloseSavedPage(saved_page);

@@ -180,7 +180,6 @@ source_set("embedder_test_support") {
   sources = [
     "embedder_test.cpp",
     "embedder_test.h",
-    "embedder_test_constants.cpp",
     "embedder_test_constants.h",
     "embedder_test_environment.cpp",
     "embedder_test_environment.h",

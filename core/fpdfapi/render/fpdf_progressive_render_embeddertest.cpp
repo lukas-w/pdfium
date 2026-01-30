@@ -297,7 +297,7 @@ TEST_F(FPDFProgressiveRenderEmbedderTest, RenderFormsWithPause) {
   }
   ScopedFPDFBitmap bitmap =
       FinishRenderPageWithForms(page.get(), form_handle());
-  CompareBitmap(bitmap.get(), 300, 300, pdfium::TextFormChecksum());
+  CompareBitmapToPngWithExpectationSuffix(bitmap.get(), pdfium::kTextFormPng);
 }
 
 void FPDFProgressiveRenderEmbedderTest::VerifyRenderingWithColorScheme(

@@ -101,8 +101,8 @@ class CPDFSecurityHandlerEmbedderTest : public EmbedderTest {
     ASSERT_TRUE(page);
 
     ScopedFPDFBitmap page_bitmap = RenderPage(page);
-    CompareBitmap(page_bitmap.get(), 200, 200,
-                  pdfium::HelloWorldRemovedChecksum());
+    CompareBitmapToPngWithExpectationSuffix(page_bitmap.get(),
+                                            pdfium::kHelloWorldRemovedPng);
   }
 };
 
