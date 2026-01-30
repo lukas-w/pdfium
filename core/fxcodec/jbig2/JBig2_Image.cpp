@@ -22,6 +22,7 @@
 #include "core/fxcrt/notreached.h"
 #include "core/fxcrt/span_util.h"
 
+using fxcrt::FromBE32;
 using fxcrt::GetUInt32MSBFirst;
 using fxcrt::PutUInt32MSBFirst;
 
@@ -181,6 +182,14 @@ pdfium::span<uint8_t> CJBig2_Image::GetLine(int32_t y) {
     return {};
   }
   return span().subspan(offset.value(), static_cast<size_t>(stride_));
+}
+
+pdfium::span<const uint32_t> CJBig2_Image::GetLine32(int32_t y) const {
+  return fxcrt::reinterpret_span<const uint32_t>(GetLine(y));
+}
+
+pdfium::span<uint32_t> CJBig2_Image::GetLine32(int32_t y) {
+  return fxcrt::reinterpret_span<uint32_t>(GetLine(y));
 }
 
 void CJBig2_Image::CopyLine(pdfium::span<uint8_t> dest,
@@ -385,11 +394,11 @@ bool CJBig2_Image::ComposeToInternal(CJBig2_Image* pDst,
   const int src_start_line = rtSrc.top + ys0;
   const int dest_start_line = yd0;
   const size_t src_offset =
-      pdfium::checked_cast<size_t>(BitIndexToAlignedByte(xs0 + rtSrc.left));
+      pdfium::checked_cast<size_t>(BitIndexToAlignedByte(xs0 + rtSrc.left)) / 4;
   const size_t dest_offset =
-      pdfium::checked_cast<size_t>(BitIndexToAlignedByte(xd0));
+      pdfium::checked_cast<size_t>(BitIndexToAlignedByte(xd0)) / 4;
   const size_t line_size =
-      pdfium::checked_cast<size_t>(stride_ - BitIndexToAlignedByte(xs0));
+      pdfium::checked_cast<size_t>(stride_ - BitIndexToAlignedByte(xs0)) / 4;
 
   enum class ComposeToOp {
     kDestAlignedSrcAlignedSrcGreaterThanDest,
@@ -423,34 +432,32 @@ bool CJBig2_Image::ComposeToInternal(CJBig2_Image* pDst,
     case ComposeToOp::kDestAlignedSrcAlignedSrcGreaterThanDest: {
       const uint32_t shift = s1 - d1;
       for (int32_t i = 0; i < h; ++i) {
-        pdfium::span<const uint8_t> src = GetLine(src_start_line + i);
-        pdfium::span<uint8_t> dest = pDst->GetLine(dest_start_line + i);
+        pdfium::span<const uint32_t> src = GetLine32(src_start_line + i);
+        pdfium::span<uint32_t> dest = pDst->GetLine32(dest_start_line + i);
         if (src.empty() || dest.empty()) {
           return false;
         }
 
-        auto src_bytes = src.subspan(src_offset).first<4u>();
-        auto dest_bytes = dest.subspan(dest_offset).first<4u>();
-        uint32_t tmp1 = GetUInt32MSBFirst(src_bytes) << shift;
-        uint32_t tmp2 = GetUInt32MSBFirst(dest_bytes);
-        PutUInt32MSBFirst(DoComposeWithMask(op, tmp1, tmp2, maskM), dest_bytes);
+        uint32_t src_val = FromBE32(src.subspan(src_offset).front()) << shift;
+        uint32_t& dest_elem = dest.subspan(dest_offset).front();
+        dest_elem = FromBE32(
+            DoComposeWithMask(op, src_val, FromBE32(dest_elem), maskM));
       }
       return true;
     }
     case ComposeToOp::kDestAlignedSrcAlignedSrcLessThanEqualDest: {
       const uint32_t shift = d1 - s1;
       for (int32_t i = 0; i < h; ++i) {
-        pdfium::span<const uint8_t> src = GetLine(src_start_line + i);
-        pdfium::span<uint8_t> dest = pDst->GetLine(dest_start_line + i);
+        pdfium::span<const uint32_t> src = GetLine32(src_start_line + i);
+        pdfium::span<uint32_t> dest = pDst->GetLine32(dest_start_line + i);
         if (src.empty() || dest.empty()) {
           return false;
         }
 
-        auto src_bytes = src.subspan(src_offset).first<4u>();
-        auto dest_bytes = dest.subspan(dest_offset).first<4u>();
-        uint32_t tmp1 = GetUInt32MSBFirst(src_bytes) >> shift;
-        uint32_t tmp2 = GetUInt32MSBFirst(dest_bytes);
-        PutUInt32MSBFirst(DoComposeWithMask(op, tmp1, tmp2, maskM), dest_bytes);
+        uint32_t src_val = FromBE32(src.subspan(src_offset).front()) >> shift;
+        uint32_t& dest_elem = dest.subspan(dest_offset).front();
+        dest_elem = FromBE32(
+            DoComposeWithMask(op, src_val, FromBE32(dest_elem), maskM));
       }
       return true;
     }
@@ -458,20 +465,18 @@ bool CJBig2_Image::ComposeToInternal(CJBig2_Image* pDst,
       const uint32_t shift1 = s1 - d1;
       const uint32_t shift2 = 32 - shift1;
       for (int32_t i = 0; i < h; ++i) {
-        pdfium::span<const uint8_t> src = GetLine(src_start_line + i);
-        pdfium::span<uint8_t> dest = pDst->GetLine(dest_start_line + i);
+        pdfium::span<const uint32_t> src = GetLine32(src_start_line + i);
+        pdfium::span<uint32_t> dest = pDst->GetLine32(dest_start_line + i);
         if (src.empty() || dest.empty()) {
           return false;
         }
 
         src = src.subspan(src_offset);
-        auto src_bytes1 = src.first<4u>();
-        auto src_bytes2 = src.subspan<4u, 4u>();
-        auto dest_bytes = dest.subspan(dest_offset).first<4u>();
-        uint32_t tmp1 = (GetUInt32MSBFirst(src_bytes1) << shift1) |
-                        (GetUInt32MSBFirst(src_bytes2) >> shift2);
-        uint32_t tmp2 = GetUInt32MSBFirst(dest_bytes);
-        PutUInt32MSBFirst(DoComposeWithMask(op, tmp1, tmp2, maskM), dest_bytes);
+        uint32_t src_val = (FromBE32(src.take_first_elem()) << shift1) |
+                           (FromBE32(src.front()) >> shift2);
+        uint32_t& dest_elem = dest.subspan(dest_offset).front();
+        dest_elem = FromBE32(
+            DoComposeWithMask(op, src_val, FromBE32(dest_elem), maskM));
       }
       return true;
     }
@@ -480,8 +485,8 @@ bool CJBig2_Image::ComposeToInternal(CJBig2_Image* pDst,
       const uint32_t shift2 = 32 - shift1;
       const int32_t middleDwords = (xd1 >> 5) - ((xd0 + 31) >> 5);
       for (int32_t i = 0; i < h; ++i) {
-        pdfium::span<const uint8_t> src = GetLine(src_start_line + i);
-        pdfium::span<uint8_t> dest = pDst->GetLine(dest_start_line + i);
+        pdfium::span<const uint32_t> src = GetLine32(src_start_line + i);
+        pdfium::span<uint32_t> dest = pDst->GetLine32(dest_start_line + i);
         if (src.empty() || dest.empty()) {
           return false;
         }
@@ -492,33 +497,26 @@ bool CJBig2_Image::ComposeToInternal(CJBig2_Image* pDst,
         }
         dest = dest.subspan(dest_offset);
         if (d1 != 0) {
-          auto src_bytes1 = src.take_first<4u>();
-          auto src_bytes2 = src.first<4u>();
-          uint32_t tmp1 = (GetUInt32MSBFirst(src_bytes1) << shift1) |
-                          (GetUInt32MSBFirst(src_bytes2) >> shift2);
-          auto dest_bytes = dest.take_first<4u>();
-          uint32_t tmp2 = GetUInt32MSBFirst(dest_bytes);
-          PutUInt32MSBFirst(DoComposeWithMask(op, tmp1, tmp2, maskL),
-                            dest_bytes);
+          uint32_t src_val = (FromBE32(src.take_first_elem()) << shift1) |
+                             (FromBE32(src.front()) >> shift2);
+          uint32_t& dest_elem = dest.take_first<1u>().front();
+          dest_elem = FromBE32(
+              DoComposeWithMask(op, src_val, FromBE32(dest_elem), maskL));
         }
         for (int32_t xx = 0; xx < middleDwords; xx++) {
-          auto src_bytes1 = src.take_first<4u>();
-          auto src_bytes2 = src.first<4u>();
-          uint32_t tmp1 = (GetUInt32MSBFirst(src_bytes1) << shift1) |
-                          (GetUInt32MSBFirst(src_bytes2) >> shift2);
-          auto dest_bytes = dest.take_first<4u>();
-          uint32_t tmp2 = GetUInt32MSBFirst(dest_bytes);
-          PutUInt32MSBFirst(DoCompose(op, tmp1, tmp2), dest_bytes);
+          uint32_t src_val = (FromBE32(src.take_first_elem()) << shift1) |
+                             (FromBE32(src.front()) >> shift2);
+          uint32_t& dest_elem = dest.take_first<1u>().front();
+          dest_elem = FromBE32(DoCompose(op, src_val, FromBE32(dest_elem)));
         }
         if (d2 != 0) {
-          uint32_t tmp1 = (GetUInt32MSBFirst(src.take_first<4u>()) << shift1);
+          uint32_t src_val = FromBE32(src.take_first_elem()) << shift1;
           if (!src.empty()) {
-            tmp1 |= (GetUInt32MSBFirst(src.first<4u>()) >> shift2);
+            src_val |= FromBE32(src.front()) >> shift2;
           }
-          auto dest_bytes = dest.first<4u>();
-          uint32_t tmp2 = GetUInt32MSBFirst(dest_bytes);
-          PutUInt32MSBFirst(DoComposeWithMask(op, tmp1, tmp2, maskR),
-                            dest_bytes);
+          uint32_t& dest_elem = dest.front();
+          dest_elem = FromBE32(
+              DoComposeWithMask(op, src_val, FromBE32(dest_elem), maskR));
         }
       }
       return true;
@@ -526,8 +524,8 @@ bool CJBig2_Image::ComposeToInternal(CJBig2_Image* pDst,
     case ComposeToOp::kDestNotAlignedSrcEqualToDest: {
       const int32_t middleDwords = (xd1 >> 5) - ((xd0 + 31) >> 5);
       for (int32_t i = 0; i < h; ++i) {
-        pdfium::span<const uint8_t> src = GetLine(src_start_line + i);
-        pdfium::span<uint8_t> dest = pDst->GetLine(dest_start_line + i);
+        pdfium::span<const uint32_t> src = GetLine32(src_start_line + i);
+        pdfium::span<uint32_t> dest = pDst->GetLine32(dest_start_line + i);
         if (src.empty() || dest.empty()) {
           return false;
         }
@@ -535,24 +533,21 @@ bool CJBig2_Image::ComposeToInternal(CJBig2_Image* pDst,
         src = src.subspan(src_offset);
         dest = dest.subspan(dest_offset);
         if (d1 != 0) {
-          uint32_t tmp1 = GetUInt32MSBFirst(src.take_first<4u>());
-          auto dest_bytes = dest.take_first<4u>();
-          uint32_t tmp2 = GetUInt32MSBFirst(dest_bytes);
-          PutUInt32MSBFirst(DoComposeWithMask(op, tmp1, tmp2, maskL),
-                            dest_bytes);
+          uint32_t src_val = FromBE32(src.take_first_elem());
+          uint32_t& dest_elem = dest.take_first<1u>().front();
+          dest_elem = FromBE32(
+              DoComposeWithMask(op, src_val, FromBE32(dest_elem), maskL));
         }
         for (int32_t xx = 0; xx < middleDwords; xx++) {
-          uint32_t tmp1 = GetUInt32MSBFirst(src.take_first<4u>());
-          auto dest_bytes = dest.take_first<4u>();
-          uint32_t tmp2 = GetUInt32MSBFirst(dest_bytes);
-          PutUInt32MSBFirst(DoCompose(op, tmp1, tmp2), dest_bytes);
+          uint32_t src_val = FromBE32(src.take_first_elem());
+          uint32_t& dest_elem = dest.take_first<1u>().front();
+          dest_elem = FromBE32(DoCompose(op, src_val, FromBE32(dest_elem)));
         }
         if (d2 != 0) {
-          uint32_t tmp1 = GetUInt32MSBFirst(src.first<4u>());
-          auto dest_bytes = dest.first<4u>();
-          uint32_t tmp2 = GetUInt32MSBFirst(dest_bytes);
-          PutUInt32MSBFirst(DoComposeWithMask(op, tmp1, tmp2, maskR),
-                            dest_bytes);
+          uint32_t src_val = FromBE32(src.front());
+          uint32_t& dest_elem = dest.front();
+          dest_elem = FromBE32(
+              DoComposeWithMask(op, src_val, FromBE32(dest_elem), maskR));
         }
       }
       return true;
@@ -562,8 +557,8 @@ bool CJBig2_Image::ComposeToInternal(CJBig2_Image* pDst,
       const uint32_t shift2 = 32 - shift1;
       const int32_t middleDwords = (xd1 >> 5) - ((xd0 + 31) >> 5);
       for (int32_t i = 0; i < h; ++i) {
-        pdfium::span<const uint8_t> src = GetLine(src_start_line + i);
-        pdfium::span<uint8_t> dest = pDst->GetLine(dest_start_line + i);
+        pdfium::span<const uint32_t> src = GetLine32(src_start_line + i);
+        pdfium::span<uint32_t> dest = pDst->GetLine32(dest_start_line + i);
         if (src.empty() || dest.empty()) {
           return false;
         }
@@ -574,30 +569,25 @@ bool CJBig2_Image::ComposeToInternal(CJBig2_Image* pDst,
         }
         dest = dest.subspan(dest_offset);
         if (d1 != 0) {
-          uint32_t tmp1 = GetUInt32MSBFirst(src.first<4u>()) >> shift1;
-          auto dest_bytes = dest.take_first<4u>();
-          uint32_t tmp2 = GetUInt32MSBFirst(dest_bytes);
-          PutUInt32MSBFirst(DoComposeWithMask(op, tmp1, tmp2, maskL),
-                            dest_bytes);
+          uint32_t src_val = FromBE32(src.front()) >> shift1;
+          uint32_t& dest_elem = dest.take_first<1u>().front();
+          dest_elem = FromBE32(
+              DoComposeWithMask(op, src_val, FromBE32(dest_elem), maskL));
         }
         for (int32_t xx = 0; xx < middleDwords; xx++) {
-          auto src_bytes1 = src.take_first<4u>();
-          auto src_bytes2 = src.first<4u>();
-          uint32_t tmp1 = (GetUInt32MSBFirst(src_bytes1) << shift2) |
-                          (GetUInt32MSBFirst(src_bytes2) >> shift1);
-          auto dest_bytes = dest.take_first<4u>();
-          uint32_t tmp2 = GetUInt32MSBFirst(dest_bytes);
-          PutUInt32MSBFirst(DoCompose(op, tmp1, tmp2), dest_bytes);
+          uint32_t src_val = (FromBE32(src.take_first_elem()) << shift2) |
+                             (FromBE32(src.front()) >> shift1);
+          uint32_t& dest_elem = dest.take_first<1u>().front();
+          dest_elem = FromBE32(DoCompose(op, src_val, FromBE32(dest_elem)));
         }
         if (d2 != 0) {
-          uint32_t tmp1 = (GetUInt32MSBFirst(src.take_first<4u>()) << shift2);
+          uint32_t src_val = FromBE32(src.take_first_elem()) << shift2;
           if (!src.empty()) {
-            tmp1 |= (GetUInt32MSBFirst(src.first<4u>()) >> shift1);
+            src_val |= FromBE32(src.front()) >> shift1;
           }
-          auto dest_bytes = dest.first<4u>();
-          uint32_t tmp2 = GetUInt32MSBFirst(dest_bytes);
-          PutUInt32MSBFirst(DoComposeWithMask(op, tmp1, tmp2, maskR),
-                            dest_bytes);
+          uint32_t& dest_elem = dest.front();
+          dest_elem = FromBE32(
+              DoComposeWithMask(op, src_val, FromBE32(dest_elem), maskR));
         }
       }
       return true;

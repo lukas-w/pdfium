@@ -60,6 +60,8 @@ class CJBig2_Image {
   // Returns an empty span if `y` is out of bounds, or if there is no data.
   pdfium::span<const uint8_t> GetLine(int32_t y) const;
   pdfium::span<uint8_t> GetLine(int32_t y);
+  pdfium::span<const uint32_t> GetLine32(int32_t y) const;
+  pdfium::span<uint32_t> GetLine32(int32_t y);
 
   void CopyLine(pdfium::span<uint8_t> dest, pdfium::span<const uint8_t> src);
   void Fill(bool v);
