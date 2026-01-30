@@ -33,8 +33,8 @@ int BitIndexToByte(int index) {
   return index / 8;
 }
 
-int BitIndexToAlignedByte(int index) {
-  return index / 32 * 4;
+int BitIndexToAlignedUint32(int index) {
+  return index / 32;
 }
 
 uint32_t DoCompose(JBig2ComposeOp op, uint32_t val1, uint32_t val2) {
@@ -291,13 +291,13 @@ void CJBig2_Image::SubImageSlow(int32_t x,
                                 int32_t w,
                                 int32_t h,
                                 CJBig2_Image* image) const {
-  int32_t m = BitIndexToAlignedByte(x);
+  int32_t m = BitIndexToAlignedUint32(x);
   int32_t n = x & 31;
-  size_t elems_to_copy = std::min(image->stride_, stride_ - m) / 4;
+  size_t elems_to_copy = std::min(image->stride_ / 4, stride_ / 4 - m);
   int32_t lines_to_copy = std::min(image->height_, height_ - y);
   for (int32_t i = 0; i < lines_to_copy; ++i) {
     pdfium::span<const uint32_t> src =
-        GetLine32(y + i).subspan(static_cast<size_t>(m / 4));
+        GetLine32(y + i).subspan(static_cast<size_t>(m));
     pdfium::span<uint32_t> dest = image->GetLine32(i).first(elems_to_copy);
     while (!dest.empty()) {
       uint32_t src_val = FromBE32(src.take_first_elem()) << n;
@@ -391,11 +391,11 @@ bool CJBig2_Image::ComposeToInternal(CJBig2_Image* pDst,
   const int src_start_line = rtSrc.top + ys0;
   const int dest_start_line = yd0;
   const size_t src_offset =
-      pdfium::checked_cast<size_t>(BitIndexToAlignedByte(xs0 + rtSrc.left)) / 4;
+      pdfium::checked_cast<size_t>(BitIndexToAlignedUint32(xs0 + rtSrc.left));
   const size_t dest_offset =
-      pdfium::checked_cast<size_t>(BitIndexToAlignedByte(xd0)) / 4;
+      pdfium::checked_cast<size_t>(BitIndexToAlignedUint32(xd0));
   const size_t line_size =
-      pdfium::checked_cast<size_t>(stride_ - BitIndexToAlignedByte(xs0)) / 4;
+      pdfium::checked_cast<size_t>(stride_ / 4 - BitIndexToAlignedUint32(xs0));
 
   enum class ComposeToOp {
     kDestAlignedSrcAlignedSrcGreaterThanDest,
