@@ -50,8 +50,6 @@ class CFX_GlyphCache final : public Retainable, public Observable {
                     int dest_width,
                     int weight);
 
-  RetainPtr<CFX_Face> GetFace() { return face_; }
-
 #if defined(PDF_USE_SKIA)
   SkTypeface* GetDeviceCache(const CFX_Font* font);
   static void InitializeGlobals();
@@ -81,6 +79,7 @@ class CFX_GlyphCache final : public Retainable, public Observable {
                                      bool bFontStyle,
                                      int dest_width,
                                      FontAntiAliasingMode anti_alias);
+
   RetainPtr<CFX_Face> const face_;
   std::map<ByteString, SizeGlyphCache> size_map_;
   std::map<PathMapKey, std::unique_ptr<CFX_Path>> path_map_;

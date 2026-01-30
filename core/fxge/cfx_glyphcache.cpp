@@ -132,7 +132,7 @@ std::unique_ptr<CFX_GlyphBitmap> CFX_GlyphCache::RenderGlyph(
 const CFX_Path* CFX_GlyphCache::LoadGlyphPath(const CFX_Font* font,
                                               uint32_t glyph_index,
                                               int dest_width) {
-  if (!GetFace() || glyph_index == kInvalidGlyphIndex) {
+  if (!face_ || glyph_index == kInvalidGlyphIndex) {
     return nullptr;
   }
 
