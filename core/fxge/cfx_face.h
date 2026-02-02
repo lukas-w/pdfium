@@ -36,11 +36,6 @@ class CFX_Face final : public Retainable, public Observable {
  public:
   using CharMap = void*;
 
-  struct CharCodeAndIndex {
-    uint32_t char_code;
-    uint32_t glyph_index;
-  };
-
   // Note that this corresponds to the cmap header in fonts, and not the cmap
   // data in PDFs.
   struct CharMapId {

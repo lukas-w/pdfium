@@ -888,7 +888,7 @@ FX_RECT CFX_Face::GetGlyphBBox() const {
                  NormalizeFontMetric(top - glyph->metrics.height, upem));
 }
 
-std::vector<CFX_Face::CharCodeAndIndex> CFX_Face::GetCharCodesAndIndices(
+std::vector<CharCodeAndIndex> CFX_Face::GetCharCodesAndIndices(
     char32_t max_char) {
   CharCodeAndIndex char_code_and_index;
   char_code_and_index.char_code = static_cast<uint32_t>(

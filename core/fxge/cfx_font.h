@@ -11,6 +11,7 @@
 
 #include <memory>
 #include <optional>
+#include <vector>
 
 #include "build/build_config.h"
 #include "core/fxcrt/bytestring.h"
@@ -76,6 +77,7 @@ class CFX_Font {
   bool HasFaceRec() const { return face_ && face_->HasFaceRec(); }
   CFX_SubstFont* GetSubstFont() const { return subst_font_.get(); }
   int GetSubstFontItalicAngle() const;
+  std::vector<CharCodeAndIndex> GetCharCodesAndIndices(char32_t max_char);
 
 #if defined(PDF_ENABLE_XFA)
   bool LoadFromVectorStream(
@@ -97,6 +99,8 @@ class CFX_Font {
       FontAntiAliasingMode anti_alias,
       CFX_TextRenderOptions* text_options) const;
   const CFX_Path* LoadGlyphPath(uint32_t glyph_index, int dest_width) const;
+
+  bool HasAnyGlyphs() const;
   int GetGlyphWidth(uint32_t glyph_index) const;
   int GetGlyphWidth(uint32_t glyph_index, int dest_width, int weight) const;
   int GetAscent() const;
