@@ -309,10 +309,12 @@ void CJBig2_Image::SubImageSlow(uint32_t x,
     pdfium::span<const uint32_t> src =
         GetLine32(y + i).subspan(static_cast<size_t>(m));
     pdfium::span<uint32_t> dest = image->GetLine32(i).first(elems_to_copy);
+    uint32_t saved_src_elem = FromBE32(src.take_first_elem());
     while (!dest.empty()) {
-      uint32_t src_val = FromBE32(src.take_first_elem()) << n;
+      uint32_t src_val = saved_src_elem << n;
       if (!src.empty()) {
-        src_val |= FromBE32(src.front()) >> (32 - n);
+        saved_src_elem = FromBE32(src.take_first_elem());
+        src_val |= saved_src_elem >> (32 - n);
       }
       uint32_t& dest_elem = dest.take_first<1u>().front();
       dest_elem = FromBE32(src_val);
@@ -502,21 +504,27 @@ bool CJBig2_Image::ComposeToInternal(CJBig2_Image* pDst,
           src = src.first(line_size);
         }
         dest = dest.subspan(dest_offset);
+
+        uint32_t saved_src_elem = FromBE32(src.take_first_elem());
         if (d1 != 0) {
-          uint32_t src_val = (FromBE32(src.take_first_elem()) << shift1) |
-                             (FromBE32(src.front()) >> shift2);
+          uint32_t next_src_elem = FromBE32(src.take_first_elem());
+          uint32_t src_val =
+              (saved_src_elem << shift1) | (next_src_elem >> shift2);
+          saved_src_elem = next_src_elem;
           uint32_t& dest_elem = dest.take_first<1u>().front();
           dest_elem = FromBE32(
               DoComposeWithMask(op, src_val, FromBE32(dest_elem), maskL));
         }
         for (int32_t xx = 0; xx < middleDwords; xx++) {
-          uint32_t src_val = (FromBE32(src.take_first_elem()) << shift1) |
-                             (FromBE32(src.front()) >> shift2);
+          uint32_t next_src_elem = FromBE32(src.take_first_elem());
+          uint32_t src_val =
+              (saved_src_elem << shift1) | (next_src_elem >> shift2);
+          saved_src_elem = next_src_elem;
           uint32_t& dest_elem = dest.take_first<1u>().front();
           dest_elem = FromBE32(DoCompose(op, src_val, FromBE32(dest_elem)));
         }
         if (d2 != 0) {
-          uint32_t src_val = FromBE32(src.take_first_elem()) << shift1;
+          uint32_t src_val = saved_src_elem << shift1;
           if (!src.empty()) {
             src_val |= FromBE32(src.front()) >> shift2;
           }
@@ -574,20 +582,24 @@ bool CJBig2_Image::ComposeToInternal(CJBig2_Image* pDst,
           src = src.first(line_size);
         }
         dest = dest.subspan(dest_offset);
+
+        uint32_t saved_src_elem = FromBE32(src.take_first_elem());
         if (d1 != 0) {
-          uint32_t src_val = FromBE32(src.front()) >> shift1;
+          uint32_t src_val = saved_src_elem >> shift1;
           uint32_t& dest_elem = dest.take_first<1u>().front();
           dest_elem = FromBE32(
               DoComposeWithMask(op, src_val, FromBE32(dest_elem), maskL));
         }
         for (int32_t xx = 0; xx < middleDwords; xx++) {
-          uint32_t src_val = (FromBE32(src.take_first_elem()) << shift2) |
-                             (FromBE32(src.front()) >> shift1);
+          uint32_t next_src_elem = FromBE32(src.take_first_elem());
+          uint32_t src_val =
+              (saved_src_elem << shift2) | (next_src_elem >> shift1);
+          saved_src_elem = next_src_elem;
           uint32_t& dest_elem = dest.take_first<1u>().front();
           dest_elem = FromBE32(DoCompose(op, src_val, FromBE32(dest_elem)));
         }
         if (d2 != 0) {
-          uint32_t src_val = FromBE32(src.take_first_elem()) << shift2;
+          uint32_t src_val = saved_src_elem << shift2;
           if (!src.empty()) {
             src_val |= FromBE32(src.front()) >> shift1;
           }
