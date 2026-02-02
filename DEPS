@@ -162,7 +162,7 @@ vars = {
   # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling instrumented_lib
   # and whatever else without interference from each other.
-  'instrumented_lib_revision': '69015643b3f68dbd438c010439c59adc52cac808',
+  'instrumented_lib_revision': 'e8cb570a9a2ee9128e2214c73417ad2a3c47780b',
   # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling jinja2
   # and whatever else without interference from each other.
