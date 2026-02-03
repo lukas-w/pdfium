@@ -74,6 +74,7 @@ class CFX_Font {
                     bool force_vertical,
                     uint64_t object_tag);
   RetainPtr<CFX_Face> GetFace() const { return face_; }
+  bool HasFace() const { return !!face_; }
   bool HasFaceRec() const { return face_ && face_->HasFaceRec(); }
   CFX_SubstFont* GetSubstFont() const { return subst_font_.get(); }
   int GetSubstFontItalicAngle() const;
@@ -85,7 +86,7 @@ class CFX_Font {
       int face_index);
 
 #if !BUILDFLAG(IS_WIN)
-  void SetFace(RetainPtr<CFX_Face> face);
+  void SetFaceFromFont(const CFX_Font& that);
   void SetFontSpan(pdfium::span<uint8_t> pSpan) { font_data_ = pSpan; }
   void SetSubstFont(std::unique_ptr<CFX_SubstFont> subst);
 #endif  // !BUILDFLAG(IS_WIN)

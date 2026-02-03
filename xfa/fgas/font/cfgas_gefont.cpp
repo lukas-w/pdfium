@@ -96,7 +96,7 @@ bool CFGAS_GEFont::LoadFontInternal(const wchar_t* pszFontFamily,
 
   font_->LoadSubst(csFontFamily, true, dwFontStyles, iWeight, 0, wCodePage,
                    false);
-  return font_->GetFace() && InitFont();
+  return font_->HasFace() && InitFont();
 }
 #endif  // BUILDFLAG(IS_WIN)
 

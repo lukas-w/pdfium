@@ -166,10 +166,10 @@ bool CFX_Font::LoadFromVectorStream(
 }
 
 #if !BUILDFLAG(IS_WIN)
-void CFX_Font::SetFace(RetainPtr<CFX_Face> face) {
+void CFX_Font::SetFaceFromFont(const CFX_Font& that) {
   ClearGlyphCache();
   object_tag_ = 0;
-  face_ = face;
+  face_ = that.face_;
 }
 
 void CFX_Font::SetSubstFont(std::unique_ptr<CFX_SubstFont> subst) {
