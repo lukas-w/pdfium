@@ -54,15 +54,18 @@ inline bool operator==(const FX_FONTDESCRIPTOR& left,
 
 #else  // BUILDFLAG(IS_WIN)
 
+// Represents metatdata about a font that isn't necessarily loaded yet.
 class CFGAS_FontDescriptor {
  public:
   CFGAS_FontDescriptor();
   ~CFGAS_FontDescriptor();
 
+  bool VerifyUnicode(wchar_t unicode);
+
   int32_t face_index_ = 0;
   uint32_t font_styles_ = 0;
   WideString face_name_;
-  RetainPtr<CFX_Face> face_;
+  RetainPtr<CFX_Face> face_;  // May be null until required.
   std::vector<WideString> family_names_;
   std::array<uint32_t, 4> usb_ = {};
   std::array<uint32_t, 2> csb_ = {};
