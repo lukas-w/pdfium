@@ -312,14 +312,18 @@ class EmbedderTest : public ::testing::Test,
 
   // Like CompareBitmap(), except instead of just adding ".png" to
   // `expectation_png_name`, this method will look for the expectation PNG using
-  // several suffixes in order: "_$renderer_$os.png", "_$renderer.png",
-  // "_$os.png".
+  // several suffixes in order: "_$renderer_$os_$cpu.png", "_$renderer_$os.png",
+  // "_$renderer.png", "_$os_$cpu.png", "_$os.png".
   //
-  // For example, with "hello_world", using Skia on Windows, the list of
+  // $cpu is for macOS x86 only and is used to differentiate from macOS ARM.
+  //
+  // For example, with "hello_world", using Skia on macOS, the list of
   // expectation PNGs are:
-  // - hello_world_skia_win.png
+  // - hello_world_skia_mac_x86.png
+  // - hello_world_skia_mac.png
   // - hello_world_skia.png
-  // - hello_world_win.png
+  // - hello_world_mac_x86.png
+  // - hello_world_mac.png
   // - hello_world.png
   //
   // This is similar to the behavior in testing/tools/pngdiffer.py.
