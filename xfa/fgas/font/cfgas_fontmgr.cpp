@@ -44,24 +44,6 @@
 
 namespace {
 
-bool VerifyUnicode(const RetainPtr<CFGAS_GEFont>& font, wchar_t wcUnicode) {
-  RetainPtr<CFX_Face> face = font->GetDevFont()->GetFace();
-  if (!face) {
-    return false;
-  }
-
-  CFX_Face::CharMap charmap = face->GetCurrentCharMap();
-  if (!face->SelectCharMap(fxge::FontEncoding::kUnicode)) {
-    return false;
-  }
-
-  if (face->GetCharIndex(wcUnicode) == 0) {
-    face->SetCharMap(charmap);
-    return false;
-  }
-  return true;
-}
-
 uint32_t ShortFormHash(FX_CodePage wCodePage,
                        uint32_t dwFontStyles,
                        WideStringView wsFontFamily) {
@@ -274,7 +256,7 @@ RetainPtr<CFGAS_GEFont> CFGAS_FontMgr::GetFontByUnicodeImpl(
   }
 
   font->SetLogicalFontStyle(dwFontStyles);
-  if (!VerifyUnicode(font, wUnicode)) {
+  if (!font->VerifyUnicode(wUnicode)) {
     failed_unicodes_set_.insert(wUnicode);
     return nullptr;
   }
@@ -845,7 +827,7 @@ RetainPtr<CFGAS_GEFont> CFGAS_FontMgr::GetFontByUnicode(
           ? LongFormHash(wCodePage, wBitField, dwFontStyles, pszFontFamily)
           : ShortFormHash(wCodePage, dwFontStyles, pszFontFamily);
   for (auto& font : hash_2fonts_[dwHash]) {
-    if (VerifyUnicode(font, wUnicode)) {
+    if (font->VerifyUnicode(wUnicode)) {
       return font;
     }
   }

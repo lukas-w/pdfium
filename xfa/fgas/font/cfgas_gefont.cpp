@@ -292,3 +292,21 @@ RetainPtr<CFGAS_GEFont> CFGAS_GEFont::GetSubstFont(int32_t iGlyphIndex) {
   }
   return subst_fonts_[iGlyphIndex - 1];
 }
+
+bool CFGAS_GEFont::VerifyUnicode(wchar_t wcUnicode) {
+  RetainPtr<CFX_Face> face = GetDevFont()->GetFace();
+  if (!face) {
+    return false;
+  }
+
+  CFX_Face::CharMap charmap = face->GetCurrentCharMap();
+  if (!face->SelectCharMap(fxge::FontEncoding::kUnicode)) {
+    return false;
+  }
+
+  if (face->GetCharIndex(wcUnicode) == 0) {
+    face->SetCharMap(charmap);
+    return false;
+  }
+  return true;
+}
