@@ -237,8 +237,8 @@ bool CFX_Font::LoadEmbedded(pdfium::span<const uint8_t> src_span,
   vertical_ = force_vertical;
   object_tag_ = object_tag;
   font_data_allocation_ = DataVector<uint8_t>(src_span.begin(), src_span.end());
-  face_ = CFX_GEModule::Get()->GetFontMgr()->NewFixedFace(
-      nullptr, font_data_allocation_, 0);
+  face_ = CFX_Face::New(CFX_GEModule::Get()->GetFontMgr(), nullptr,
+                        font_data_allocation_, 0);
   font_data_ = font_data_allocation_;
   return !!face_;
 }

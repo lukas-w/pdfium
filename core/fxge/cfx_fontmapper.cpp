@@ -542,8 +542,8 @@ RetainPtr<CFX_Face> CFX_FontMapper::UseInternalSubst(
     CFX_SubstFont* subst_font) {
   if (base_font < kNumStandardFonts) {
     if (!standard_faces_[base_font]) {
-      standard_faces_[base_font] = font_mgr_->NewFixedFace(
-          nullptr, font_mgr_->GetStandardFont(base_font), 0);
+      standard_faces_[base_font] = CFX_Face::New(
+          font_mgr_, nullptr, font_mgr_->GetStandardFont(base_font), 0);
     }
     return standard_faces_[base_font];
   }
@@ -556,15 +556,15 @@ RetainPtr<CFX_Face> CFX_FontMapper::UseInternalSubst(
   if (FontFamilyIsRoman(pitch_family)) {
     subst_font->UseChromeSerif();
     if (!generic_serif_face_) {
-      generic_serif_face_ =
-          font_mgr_->NewFixedFace(nullptr, font_mgr_->GetGenericSerifFont(), 0);
+      generic_serif_face_ = CFX_Face::New(font_mgr_, nullptr,
+                                          font_mgr_->GetGenericSerifFont(), 0);
     }
     return generic_serif_face_;
   }
   subst_font->family_ = "Chrome Sans";
   if (!generic_sans_face_) {
     generic_sans_face_ =
-        font_mgr_->NewFixedFace(nullptr, font_mgr_->GetGenericSansFont(), 0);
+        CFX_Face::New(font_mgr_, nullptr, font_mgr_->GetGenericSansFont(), 0);
   }
   return generic_sans_face_;
 }
@@ -923,8 +923,8 @@ RetainPtr<CFX_Face> CFX_FontMapper::GetCachedTTCFace(void* font_handle,
     return face;
   }
 
-  face = font_mgr_->NewFixedFace(
-      font_desc, font_desc->FontData().first(ttc_size), face_index);
+  face = CFX_Face::New(font_mgr_, font_desc,
+                       font_desc->FontData().first(ttc_size), face_index);
   if (!face) {
     return nullptr;
   }
@@ -955,8 +955,8 @@ RetainPtr<CFX_Face> CFX_FontMapper::GetCachedFace(void* font_handle,
     return face;
   }
 
-  face = font_mgr_->NewFixedFace(font_desc,
-                                 font_desc->FontData().first(data_size), 0);
+  face = CFX_Face::New(font_mgr_, font_desc,
+                       font_desc->FontData().first(data_size), 0);
   if (!face) {
     return nullptr;
   }

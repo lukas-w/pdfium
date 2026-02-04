@@ -104,12 +104,6 @@ RetainPtr<CFX_FontMgr::FontDesc> CFX_FontMgr::AddCachedTTCFontDesc(
   return pNewDesc;
 }
 
-RetainPtr<CFX_Face> CFX_FontMgr::NewFixedFace(RetainPtr<FontDesc> desc,
-                                              pdfium::span<const uint8_t> span,
-                                              uint32_t face_index) {
-  return CFX_Face::New(this, std::move(desc), span, face_index);
-}
-
 // static
 pdfium::span<const uint8_t> CFX_FontMgr::GetStandardFont(size_t index) {
   return kFoxitFonts[index];
