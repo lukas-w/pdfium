@@ -186,17 +186,16 @@ int32_t CALLBACK GdiFontEnumProc(ENUMLOGFONTEX* lpelfe,
   static_assert(std::is_aggregate_v<decltype(font)>);
   font.uCharSet = FX_GetCharsetFromInt(lf.lfCharSet);
   font.dwFontStyles = GetGdiFontStyles(lf);
-  UNSAFE_TODO({
-    FXSYS_wcsncpy(font.wsFontFace, (const wchar_t*)lf.lfFaceName, 31);
-    font.wsFontFace[31] = 0;
-    FXSYS_memcpy(&font.FontSignature, &lpntme->ntmFontSig,
-                 sizeof(lpntme->ntmFontSig));
-  });
+  static_assert(sizeof(font.wsFontFace) == sizeof(lf.lfFaceName));
+  pdfium::span(font.wsFontFace).copy_from_nonoverlapping(lf.lfFaceName);
+  static_assert(sizeof(font.FontSignature) == sizeof(lpntme->ntmFontSig));
+  pdfium::byte_span_from_ref(font.FontSignature)
+      .copy_from_nonoverlapping(pdfium::byte_span_from_ref(lpntme->ntmFontSig));
   reinterpret_cast<std::deque<FX_FONTDESCRIPTOR>*>(lParam)->push_back(font);
   return 1;
 }
 
-std::deque<FX_FONTDESCRIPTOR> EnumGdiFonts(const wchar_t* face_name) {
+std::deque<FX_FONTDESCRIPTOR> EnumGdiFonts(WideStringView face_name) {
   std::deque<FX_FONTDESCRIPTOR> fonts;
   if (!pdfium::IsUser32AndGdi32Available()) {
     // Without GDI32 and User32, GetDC / EnumFontFamiliesExW / ReleaseDC all
@@ -207,11 +206,13 @@ std::deque<FX_FONTDESCRIPTOR> EnumGdiFonts(const wchar_t* face_name) {
   LOGFONTW lfFind = {};  // Aggregate initialization.
   static_assert(std::is_aggregate_v<decltype(lfFind)>);
   lfFind.lfCharSet = DEFAULT_CHARSET;
-  if (face_name) {
-    UNSAFE_TODO({
-      FXSYS_wcsncpy(lfFind.lfFaceName, face_name, 31);
-      lfFind.lfFaceName[31] = 0;
-    });
+  if (!face_name.IsEmpty()) {
+    pdfium::span<wchar_t> dest_face_name_with_null(lfFind.lfFaceName);
+    pdfium::span<const wchar_t> src_face_name = face_name.span();
+    src_face_name = src_face_name.first(
+        std::min(dest_face_name_with_null.size() - 1, src_face_name.size()));
+    dest_face_name_with_null.copy_prefix_from(src_face_name);
+    dest_face_name_with_null[src_face_name.size() + 1] = 0;
   }
   HDC hDC = ::GetDC(nullptr);
   EnumFontFamiliesExW(hDC, (LPLOGFONTW)&lfFind, (FONTENUMPROCW)GdiFontEnumProc,
@@ -222,7 +223,7 @@ std::deque<FX_FONTDESCRIPTOR> EnumGdiFonts(const wchar_t* face_name) {
 
 }  // namespace
 
-CFGAS_FontMgr::CFGAS_FontMgr() : font_faces_(EnumGdiFonts(nullptr)) {}
+CFGAS_FontMgr::CFGAS_FontMgr() : font_faces_(EnumGdiFonts({})) {}
 
 CFGAS_FontMgr::~CFGAS_FontMgr() = default;
 
