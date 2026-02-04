@@ -214,10 +214,11 @@ std::deque<FX_FONTDESCRIPTOR> EnumGdiFonts(WideStringView face_name) {
     dest_face_name_with_null.copy_prefix_from(src_face_name);
     dest_face_name_with_null[src_face_name.size() + 1] = 0;
   }
-  HDC hDC = ::GetDC(nullptr);
-  EnumFontFamiliesExW(hDC, (LPLOGFONTW)&lfFind, (FONTENUMPROCW)GdiFontEnumProc,
+  HDC hdc = ::GetDC(nullptr);
+  CHECK(hdc);
+  EnumFontFamiliesExW(hdc, (LPLOGFONTW)&lfFind, (FONTENUMPROCW)GdiFontEnumProc,
                       (LPARAM)&fonts, 0);
-  ::ReleaseDC(nullptr, hDC);
+  ::ReleaseDC(nullptr, hdc);
   return fonts;
 }
 
