@@ -196,8 +196,7 @@ int32_t CALLBACK GdiFontEnumProc(ENUMLOGFONTEX* lpelfe,
   return 1;
 }
 
-std::deque<FX_FONTDESCRIPTOR> EnumGdiFonts(const wchar_t* pwsFaceName,
-                                           wchar_t wUnicode) {
+std::deque<FX_FONTDESCRIPTOR> EnumGdiFonts(const wchar_t* face_name) {
   std::deque<FX_FONTDESCRIPTOR> fonts;
   if (!pdfium::IsUser32AndGdi32Available()) {
     // Without GDI32 and User32, GetDC / EnumFontFamiliesExW / ReleaseDC all
@@ -208,9 +207,9 @@ std::deque<FX_FONTDESCRIPTOR> EnumGdiFonts(const wchar_t* pwsFaceName,
   LOGFONTW lfFind = {};  // Aggregate initialization.
   static_assert(std::is_aggregate_v<decltype(lfFind)>);
   lfFind.lfCharSet = DEFAULT_CHARSET;
-  if (pwsFaceName) {
+  if (face_name) {
     UNSAFE_TODO({
-      FXSYS_wcsncpy(lfFind.lfFaceName, pwsFaceName, 31);
+      FXSYS_wcsncpy(lfFind.lfFaceName, face_name, 31);
       lfFind.lfFaceName[31] = 0;
     });
   }
@@ -223,7 +222,7 @@ std::deque<FX_FONTDESCRIPTOR> EnumGdiFonts(const wchar_t* pwsFaceName,
 
 }  // namespace
 
-CFGAS_FontMgr::CFGAS_FontMgr() : font_faces_(EnumGdiFonts(nullptr, 0xFEFF)) {}
+CFGAS_FontMgr::CFGAS_FontMgr() : font_faces_(EnumGdiFonts(nullptr)) {}
 
 CFGAS_FontMgr::~CFGAS_FontMgr() = default;
 
@@ -292,8 +291,7 @@ const FX_FONTDESCRIPTOR* CFGAS_FontMgr::FindFont(const wchar_t* pszFontFamily,
   // Use a named object to store the returned value of EnumGdiFonts() instead
   // of using a temporary object. This can prevent use-after-free issues since
   // pDesc may point to one of std::deque object's elements.
-  std::deque<FX_FONTDESCRIPTOR> namedFonts =
-      EnumGdiFonts(pszFontFamily, wUnicode);
+  std::deque<FX_FONTDESCRIPTOR> namedFonts = EnumGdiFonts(pszFontFamily);
   params.pwsFamily = nullptr;
   pDesc = MatchDefaultFont(&params, namedFonts);
   if (!pDesc) {
