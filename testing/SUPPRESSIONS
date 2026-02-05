@@ -735,6 +735,9 @@ jpxdecode_without_colorspace.in * * * *
 # TODO(crbug.com/40661120): Remove after associated bug is fixed
 reset_button.in * * * *
 
+# TODO(crbug.com/479849565): Remove after associated bug is fixed
+bug_479849565.in * * * agg
+
 # xfa_specific
 
 # TODO(crbug.com/42270088): Remove after associated bug is fixed
