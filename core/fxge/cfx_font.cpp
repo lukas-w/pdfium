@@ -20,7 +20,6 @@
 #include "core/fxcrt/span.h"
 #include "core/fxcrt/unowned_ptr.h"
 #include "core/fxge/cfx_face.h"
-#include "core/fxge/cfx_fontcache.h"
 #include "core/fxge/cfx_fontmapper.h"
 #include "core/fxge/cfx_fontmgr.h"
 #include "core/fxge/cfx_gemodule.h"
@@ -372,7 +371,7 @@ std::optional<FX_RECT> CFX_Font::GetBBox() const {
 
 RetainPtr<CFX_GlyphCache> CFX_Font::GetOrCreateGlyphCache() const {
   if (!glyph_cache_) {
-    glyph_cache_ = CFX_GEModule::Get()->GetFontCache()->GetGlyphCache(this);
+    glyph_cache_ = CFX_GEModule::Get()->GetFontMgr()->GetGlyphCache(this);
   }
   return glyph_cache_;
 }

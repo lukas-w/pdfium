@@ -31,8 +31,6 @@ source_set("fxge") {
     "cfx_folderfontinfo.h",
     "cfx_font.cpp",
     "cfx_font.h",
-    "cfx_fontcache.cpp",
-    "cfx_fontcache.h",
     "cfx_fontmapper.cpp",
     "cfx_fontmapper.h",
     "cfx_fontmgr.cpp",

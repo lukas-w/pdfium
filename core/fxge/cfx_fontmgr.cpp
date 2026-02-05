@@ -13,7 +13,9 @@
 
 #include "core/fxcrt/check_op.h"
 #include "core/fxcrt/fixed_size_data_vector.h"
+#include "core/fxge/cfx_font.h"
 #include "core/fxge/cfx_fontmapper.h"
+#include "core/fxge/cfx_glyphcache.h"
 #include "core/fxge/cfx_substfont.h"
 #include "core/fxge/fontdata/chromefontdata/chromefontdata.h"
 #include "core/fxge/fx_font.h"
@@ -102,6 +104,17 @@ RetainPtr<CFX_FontMgr::FontDesc> CFX_FontMgr::AddCachedTTCFontDesc(
   auto pNewDesc = pdfium::MakeRetain<FontDesc>(std::move(data));
   ttc_face_map_[{ttc_size, checksum}].Reset(pNewDesc.Get());
   return pNewDesc;
+}
+
+RetainPtr<CFX_GlyphCache> CFX_FontMgr::GetGlyphCache(const CFX_Font* font) {
+  RetainPtr<CFX_Face> face = font->GetFace();
+  auto it = glyph_cache_map_.find(face.Get());
+  if (it != glyph_cache_map_.end() && it->second) {
+    return pdfium::WrapRetain(it->second.Get());
+  }
+  auto new_cache = pdfium::MakeRetain<CFX_GlyphCache>(face);
+  glyph_cache_map_[face.Get()].Reset(new_cache.Get());
+  return new_cache;
 }
 
 // static

@@ -28,7 +28,7 @@
 #include "core/fxcrt/stl_util.h"
 #include "core/fxge/cfx_fillrenderoptions.h"
 #include "core/fxge/cfx_font.h"
-#include "core/fxge/cfx_fontcache.h"
+#include "core/fxge/cfx_fontmgr.h"
 #include "core/fxge/cfx_gemodule.h"
 #include "core/fxge/cfx_glyphcache.h"
 #include "core/fxge/cfx_path.h"
@@ -788,8 +788,8 @@ void CFX_PSRenderer::DrawTextAsType3Font(int char_count,
                                          CFX_Font* font,
                                          float font_size,
                                          fxcrt::ostringstream& buf) {
-  CFX_FontCache* pCache = CFX_GEModule::Get()->GetFontCache();
-  RetainPtr<CFX_GlyphCache> pGlyphCache = pCache->GetGlyphCache(font);
+  RetainPtr<CFX_GlyphCache> pGlyphCache =
+      CFX_GEModule::Get()->GetFontMgr()->GetGlyphCache(font);
   int last_fontnum = -1;
   UNSAFE_TODO({
     for (int i = 0; i < char_count; i++) {

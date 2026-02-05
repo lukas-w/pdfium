@@ -24,6 +24,7 @@
 #include "core/fxge/freetype/fx_freetype.h"
 
 class CFX_FontMapper;
+class CFX_GlyphCache;
 
 class CFX_FontMgr {
  public:
@@ -64,6 +65,8 @@ class CFX_FontMgr {
                                            uint32_t checksum,
                                            FixedSizeDataVector<uint8_t> data);
 
+  RetainPtr<CFX_GlyphCache> GetGlyphCache(const CFX_Font* font);
+
   // Always present.
   CFX_FontMapper* GetBuiltinMapper() const { return builtin_mapper_.get(); }
 
@@ -76,6 +79,7 @@ class CFX_FontMgr {
   std::unique_ptr<CFX_FontMapper> builtin_mapper_;
   std::map<std::tuple<ByteString, int, bool>, ObservedPtr<FontDesc>> face_map_;
   std::map<std::tuple<size_t, uint32_t>, ObservedPtr<FontDesc>> ttc_face_map_;
+  std::map<CFX_Face*, ObservedPtr<CFX_GlyphCache>> glyph_cache_map_;
   const bool ft_library_supports_hinting_;
 };
 
