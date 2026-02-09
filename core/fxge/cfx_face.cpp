@@ -401,7 +401,7 @@ RetainPtr<CFX_Face> CFX_Face::OpenFromFilePath(CFX_FontMgr* font_mgr,
 #if defined(PDF_ENABLE_XFA)
 RetainPtr<CFX_Face> CFX_Face::NewFromVectorStream(
     CFX_FontMgr* font_mgr,
-    const RetainPtr<CFX_ReadOnlyVectorStream>& font_stream,
+    const RetainPtr<CFX_ReadOnlyFixedSizeDataVectorStream>& font_stream,
     uint32_t face_index) {
   if (!font_stream) {
     return nullptr;

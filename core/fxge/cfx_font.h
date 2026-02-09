@@ -15,6 +15,7 @@
 
 #include "build/build_config.h"
 #include "core/fxcrt/bytestring.h"
+#include "core/fxcrt/cfx_read_only_container_stream.h"
 #include "core/fxcrt/data_vector.h"
 #include "core/fxcrt/fx_codepage_forward.h"
 #include "core/fxcrt/fx_coordinates.h"
@@ -28,7 +29,6 @@
 class CFX_GlyphBitmap;
 class CFX_GlyphCache;
 class CFX_Path;
-class CFX_ReadOnlyVectorStream;
 class CFX_SubstFont;
 struct CFX_TextRenderOptions;
 
@@ -82,7 +82,7 @@ class CFX_Font {
 
 #if defined(PDF_ENABLE_XFA)
   bool LoadFromVectorStream(
-      const RetainPtr<CFX_ReadOnlyVectorStream>& vector_stream,
+      const RetainPtr<CFX_ReadOnlyFixedSizeDataVectorStream>& vector_stream,
       int face_index);
 
 #if !BUILDFLAG(IS_WIN)

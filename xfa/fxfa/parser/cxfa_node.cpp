@@ -18,8 +18,7 @@
 #include <vector>
 
 #include "core/fxcrt/autorestorer.h"
-#include "core/fxcrt/cfx_read_only_string_stream.h"
-#include "core/fxcrt/cfx_read_only_vector_stream.h"
+#include "core/fxcrt/cfx_read_only_container_stream.h"
 #include "core/fxcrt/check.h"
 #include "core/fxcrt/check_op.h"
 #include "core/fxcrt/containers/contains.h"
@@ -498,11 +497,11 @@ RetainPtr<CFX_DIBitmap> XFA_LoadImageData(CXFA_FFDoc* doc,
       DataVector<uint8_t> buffer = XFA_Base64Decode(wsImage.ToUTF8());
       if (!buffer.empty()) {
         pImageFileRead =
-            pdfium::MakeRetain<CFX_ReadOnlyVectorStream>(std::move(buffer));
+            pdfium::MakeRetain<CFX_ReadOnlyDataVectorStream>(std::move(buffer));
       }
     } else {
       pImageFileRead =
-          pdfium::MakeRetain<CFX_ReadOnlyStringStream>(wsImage.ToDefANSI());
+          pdfium::MakeRetain<CFX_ReadOnlyByteStringStream>(wsImage.ToDefANSI());
     }
   } else {
     WideString wsURL = wsHref;

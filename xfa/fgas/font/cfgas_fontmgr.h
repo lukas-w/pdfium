@@ -15,13 +15,13 @@
 #include <vector>
 
 #include "build/build_config.h"
+#include "core/fxcrt/cfx_read_only_container_stream.h"
 #include "core/fxcrt/compiler_specific.h"
 #include "core/fxcrt/fx_codepage_forward.h"
 #include "core/fxcrt/retain_ptr.h"
 #include "core/fxcrt/widestring.h"
 #include "core/fxge/cfx_face.h"
 
-class CFX_ReadOnlyVectorStream;
 class CFGAS_GEFont;
 
 #if BUILDFLAG(IS_WIN)
@@ -129,8 +129,9 @@ class CFGAS_FontMgr {
   void RegisterFace(RetainPtr<CFX_Face> face,
                     int face_index,
                     const WideString& face_name);
-  void RegisterFaces(const RetainPtr<CFX_ReadOnlyVectorStream>& font_stream,
-                     const WideString& face_name);
+  void RegisterFaces(
+      const RetainPtr<CFX_ReadOnlyFixedSizeDataVectorStream>& font_stream,
+      const WideString& face_name);
   std::vector<CFGAS_FontDescriptorInfo> MatchFonts(FX_CodePage wCodePage,
                                                    uint32_t dwFontStyles,
                                                    const WideString& FontName,

@@ -17,7 +17,7 @@
 
 #include "build/build_config.h"
 #include "core/fxcrt/byteorder.h"
-#include "core/fxcrt/cfx_read_only_vector_stream.h"
+#include "core/fxcrt/cfx_read_only_container_stream.h"
 #include "core/fxcrt/check.h"
 #include "core/fxcrt/compiler_specific.h"
 #include "core/fxcrt/containers/contains.h"
@@ -442,17 +442,18 @@ std::vector<WideString> GetNames(pdfium::span<const uint8_t> name_table) {
   return results;
 }
 
-RetainPtr<CFX_ReadOnlyVectorStream> CreateFontStream(
+RetainPtr<CFX_ReadOnlyFixedSizeDataVectorStream> CreateFontStream(
     CFX_FontMapper* font_mapper,
     size_t index) {
   FixedSizeDataVector<uint8_t> buffer = font_mapper->RawBytesForIndex(index);
   if (buffer.empty()) {
     return nullptr;
   }
-  return pdfium::MakeRetain<CFX_ReadOnlyVectorStream>(std::move(buffer));
+  return pdfium::MakeRetain<CFX_ReadOnlyFixedSizeDataVectorStream>(
+      std::move(buffer));
 }
 
-RetainPtr<CFX_ReadOnlyVectorStream> CreateFontStream(
+RetainPtr<CFX_ReadOnlyFixedSizeDataVectorStream> CreateFontStream(
     const ByteString& bsFaceName) {
   CFX_FontMgr* font_mgr = CFX_GEModule::Get()->GetFontMgr();
   CFX_FontMapper* font_mapper = font_mgr->GetBuiltinMapper();
@@ -561,7 +562,7 @@ CFGAS_FontDescriptor::~CFGAS_FontDescriptor() = default;
 
 bool CFGAS_FontDescriptor::VerifyUnicode(wchar_t unicode) {
   if (!face_) {
-    RetainPtr<CFX_ReadOnlyVectorStream> file_read =
+    RetainPtr<CFX_ReadOnlyFixedSizeDataVectorStream> file_read =
         CreateFontStream(face_name_.ToUTF8());
     if (!file_read) {
       return false;
@@ -595,7 +596,7 @@ bool CFGAS_FontMgr::EnumFontsFromFontMapper() {
   font_mapper->LoadInstalledFonts();
 
   for (size_t i = 0; i < font_mapper->GetFaceSize(); ++i) {
-    RetainPtr<CFX_ReadOnlyVectorStream> font_stream =
+    RetainPtr<CFX_ReadOnlyFixedSizeDataVectorStream> font_stream =
         CreateFontStream(font_mapper, i);
     if (!font_stream) {
       continue;
@@ -647,7 +648,7 @@ RetainPtr<CFGAS_GEFont> CFGAS_FontMgr::GetFontByUnicodeImpl(
 RetainPtr<CFGAS_GEFont> CFGAS_FontMgr::LoadFontInternal(
     const WideString& face_name,
     int32_t face_index) {
-  RetainPtr<CFX_ReadOnlyVectorStream> font_stream =
+  RetainPtr<CFX_ReadOnlyFixedSizeDataVectorStream> font_stream =
       CreateFontStream(face_name.ToUTF8());
   if (!font_stream) {
     return nullptr;
@@ -723,7 +724,7 @@ void CFGAS_FontMgr::RegisterFace(RetainPtr<CFX_Face> face,
 }
 
 void CFGAS_FontMgr::RegisterFaces(
-    const RetainPtr<CFX_ReadOnlyVectorStream>& font_stream,
+    const RetainPtr<CFX_ReadOnlyFixedSizeDataVectorStream>& font_stream,
     const WideString& face_name) {
   int index = 0;
   int num_faces = 0;
