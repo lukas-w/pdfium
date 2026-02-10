@@ -162,6 +162,8 @@ source_set("fxcrt") {
       "cfx_fileaccess_posix.cpp",
       "cfx_fileaccess_posix.h",
       "fx_folder_posix.cpp",
+      "mapped_data_bytes.cpp",
+      "mapped_data_bytes.h",
     ]
   }
   if (is_win) {
@@ -269,5 +271,8 @@ pdfium_unittest_source_set("unittests") {
   if (pdf_enable_xfa) {
     sources += [ "cfx_memorystream_unittest.cpp" ]
     deps += [ "../fpdfapi/parser" ]
+  }
+  if (is_posix) {
+    sources += [ "mapped_data_bytes_unittest.cpp" ]
   }
 }
