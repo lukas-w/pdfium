@@ -291,11 +291,11 @@ std::string_view GetCpuArchSuffix() {
 }
 
 int GetPlatformMaxPixelDelta() {
-#if BUILDFLAG(IS_APPLE) && !defined(ARCH_CPU_ARM64)
+#if BUILDFLAG(IS_APPLE)
   return 1;
 #else
   return 0;
-#endif  // BUILDFLAG(IS_APPLE) && !defined(ARCH_CPU_ARM64)
+#endif  // BUILDFLAG(IS_APPLE)
 }
 
 std::string GetEmbedderTestExpectationPath(
