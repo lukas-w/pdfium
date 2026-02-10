@@ -33,6 +33,9 @@
 
 namespace {
 
+constexpr int kAllValidFlags =
+    FPDF_INCREMENTAL | FPDF_NO_INCREMENTAL | FPDF_REMOVE_SECURITY;
+
 #ifdef PDF_ENABLE_XFA
 bool SaveXFADocumentData(
     CPDFXFA_Context* context,
@@ -177,7 +180,7 @@ bool DoDocSave(FPDF_DOCUMENT document,
   }
 #endif  // PDF_ENABLE_XFA
 
-  if (flags < FPDF_INCREMENTAL || flags > FPDF_REMOVE_SECURITY) {
+  if (flags > kAllValidFlags) {
     flags = 0;
   }
 
@@ -186,9 +189,15 @@ bool DoDocSave(FPDF_DOCUMENT document,
   if (version.has_value()) {
     file_maker.SetFileVersion(version.value());
   }
-  if (flags == FPDF_REMOVE_SECURITY) {
-    flags = 0;
+
+  if (flags == FPDF_REMOVE_SECURITY_DEPRECATED ||
+      (flags & FPDF_REMOVE_SECURITY)) {
+    flags &= ~FPDF_REMOVE_SECURITY;
     file_maker.RemoveSecurity();
+  }
+
+  if ((flags & FPDF_INCREMENTAL) && (flags & FPDF_NO_INCREMENTAL)) {
+    flags &= ~(FPDF_INCREMENTAL | FPDF_NO_INCREMENTAL);
   }
 
   bool create_result = file_maker.Create(static_cast<uint32_t>(flags));

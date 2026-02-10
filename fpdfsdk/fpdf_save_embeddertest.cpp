@@ -68,6 +68,14 @@ TEST_F(FPDFSaveEmbedderTest, SaveSimpleDocNoIncremental) {
   EXPECT_EQ(805u, GetString().size());
 }
 
+TEST_F(FPDFSaveEmbedderTest, SaveSimpleDocRemoveSecurityDeprecated) {
+  ASSERT_TRUE(OpenDocument("hello_world.pdf"));
+  EXPECT_TRUE(FPDF_SaveWithVersion(document(), this,
+                                   FPDF_REMOVE_SECURITY_DEPRECATED, 14));
+  EXPECT_THAT(GetString(), StartsWith("%PDF-1.4\r\n"));
+  EXPECT_EQ(805u, GetString().size());
+}
+
 TEST_F(FPDFSaveEmbedderTest, SaveSimpleDocRemoveSecurity) {
   ASSERT_TRUE(OpenDocument("hello_world.pdf"));
   EXPECT_TRUE(FPDF_SaveWithVersion(document(), this, FPDF_REMOVE_SECURITY, 14));
