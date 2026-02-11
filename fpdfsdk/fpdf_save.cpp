@@ -31,6 +31,15 @@
 #include "public/fpdf_formfill.h"
 #endif
 
+static_assert(FPDF_INCREMENTAL == CPDF_Creator::CreateFlags::kIncremental);
+static_assert(FPDF_NO_INCREMENTAL == CPDF_Creator::CreateFlags::kNoOriginal);
+static_assert(FPDF_REMOVE_SECURITY_DEPRECATED ==
+              CPDF_Creator::CreateFlags::kRemoveSecurityDeprecated);
+static_assert(FPDF_REMOVE_SECURITY ==
+              CPDF_Creator::CreateFlags::kRemoveSecurity);
+static_assert(FPDF_SUBSET_NEW_FONTS ==
+              CPDF_Creator::CreateFlags::kSubsetNewFonts);
+
 namespace {
 
 constexpr int kAllValidFlags = FPDF_INCREMENTAL | FPDF_NO_INCREMENTAL |
@@ -192,7 +201,6 @@ bool DoDocSave(FPDF_DOCUMENT document,
 
   if (flags == FPDF_REMOVE_SECURITY_DEPRECATED ||
       (flags & FPDF_REMOVE_SECURITY)) {
-    flags &= ~FPDF_REMOVE_SECURITY;
     file_maker.RemoveSecurity();
   }
 
@@ -201,7 +209,8 @@ bool DoDocSave(FPDF_DOCUMENT document,
   }
 
   // TODO(crbug.com/476127152): Subset new fonts.
-  bool create_result = file_maker.Create(static_cast<uint32_t>(flags));
+  bool create_result =
+      file_maker.Create(static_cast<CPDF_Creator::CreateFlags>(flags));
 
 #ifdef PDF_ENABLE_XFA
   if (context) {
