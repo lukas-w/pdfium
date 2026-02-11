@@ -17,9 +17,9 @@
 #include "core/fpdfapi/parser/cpdf_stream.h"
 #include "core/fpdfapi/parser/cpdf_syntax_parser.h"
 #include "core/fxcrt/bytestring.h"
+#include "core/fxcrt/cfx_fileaccess_stream.h"
 #include "core/fxcrt/cfx_read_only_container_stream.h"
 #include "core/fxcrt/check.h"
-#include "core/fxcrt/fx_stream.h"
 #include "testing/gmock/include/gmock/gmock.h"
 #include "testing/gtest/include/gtest/gtest.h"
 #include "testing/utils/path_service.h"
@@ -31,7 +31,7 @@ RetainPtr<CPDF_ReadValidator> MakeValidatorFromFile(
   std::string file_path = PathService::GetTestFilePath(file_name);
   CHECK(!file_path.empty());
   return pdfium::MakeRetain<CPDF_ReadValidator>(
-      IFX_SeekableReadStream::CreateFromFilename(file_path.c_str()), nullptr);
+      CFX_FileAccessStream::CreateFromFilename(file_path.c_str()), nullptr);
 }
 
 std::unique_ptr<CPDF_DataAvail> MakeDataAvailFromFile(

@@ -34,6 +34,8 @@ source_set("fxcrt") {
     "cfx_bitstream.h",
     "cfx_datetime.cpp",
     "cfx_datetime.h",
+    "cfx_fileaccess_stream.cpp",
+    "cfx_fileaccess_stream.h",
     "cfx_read_only_container_stream.cpp",
     "cfx_read_only_container_stream.h",
     "cfx_read_only_span_stream.cpp",

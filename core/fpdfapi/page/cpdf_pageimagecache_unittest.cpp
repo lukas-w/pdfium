@@ -15,7 +15,7 @@
 #include "core/fpdfapi/page/cpdf_pagemodule.h"
 #include "core/fpdfapi/parser/cpdf_parser.h"
 #include "core/fpdfapi/render/cpdf_docrenderdata.h"
-#include "core/fxcrt/fx_stream.h"
+#include "core/fxcrt/cfx_fileaccess_stream.h"
 #include "testing/gtest/include/gtest/gtest.h"
 #include "testing/utils/path_service.h"
 
@@ -35,7 +35,7 @@ TEST(CPDFPageImageCache, RenderBug1924) {
         std::make_unique<CPDF_Document>(std::make_unique<CPDF_DocRenderData>(),
                                         std::make_unique<CPDF_DocPageData>());
     ASSERT_EQ(document->LoadDoc(
-                  IFX_SeekableReadStream::CreateFromFilename(file_path.c_str()),
+                  CFX_FileAccessStream::CreateFromFilename(file_path.c_str()),
                   nullptr),
               CPDF_Parser::SUCCESS);
 

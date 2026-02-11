@@ -31,6 +31,7 @@
 #include "core/fpdfapi/render/cpdf_renderoptions.h"
 #include "core/fpdfdoc/cpdf_nametree.h"
 #include "core/fpdfdoc/cpdf_viewerpreferences.h"
+#include "core/fxcrt/cfx_fileaccess_stream.h"
 #include "core/fxcrt/cfx_read_only_span_stream.h"
 #include "core/fxcrt/cfx_timer.h"
 #include "core/fxcrt/check_op.h"
@@ -38,7 +39,6 @@
 #include "core/fxcrt/fx_extension.h"
 #include "core/fxcrt/fx_memcpy_wrappers.h"
 #include "core/fxcrt/fx_safe_types.h"
-#include "core/fxcrt/fx_stream.h"
 #include "core/fxcrt/fx_string.h"
 #include "core/fxcrt/fx_system.h"
 #include "core/fxcrt/numerics/safe_conversions.h"
@@ -298,7 +298,7 @@ FPDF_EXPORT FPDF_DOCUMENT FPDF_CALLCONV
 FPDF_LoadDocument(FPDF_STRING file_path, FPDF_BYTESTRING password) {
   // NOTE: the creation of the file needs to be by the embedder on the
   // other side of this API.
-  return LoadDocumentImpl(IFX_SeekableReadStream::CreateFromFilename(file_path),
+  return LoadDocumentImpl(CFX_FileAccessStream::CreateFromFilename(file_path),
                           password);
 }
 
