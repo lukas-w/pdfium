@@ -146,9 +146,9 @@ void CountImageSizeMismatchAsPixelDifference(const Image& baseline,
   *pixels_different += (max_h - h) * max_w;
 }
 
-float PercentageDifferent(const Image& baseline,
-                          const Image& actual,
-                          uint8_t max_pixel_per_channel_delta) {
+int PixelsDifferent(const Image& baseline,
+                    const Image& actual,
+                    uint8_t max_pixel_per_channel_delta) {
   int w = std::min(baseline.w(), actual.w());
   int h = std::min(baseline.h(), actual.h());
 
@@ -170,10 +170,10 @@ float PercentageDifferent(const Image& baseline,
   }
 
   CountImageSizeMismatchAsPixelDifference(baseline, actual, &pixels_different);
-  return CalculateDifferencePercentage(actual, pixels_different);
+  return pixels_different;
 }
 
-float HistogramPercentageDifferent(const Image& baseline, const Image& actual) {
+int HistogramPixelsDifferent(const Image& baseline, const Image& actual) {
   // TODO(johnme): Consider using a joint histogram instead, as described in
   // "Comparing Images Using Joint Histograms" by Pass & Zabih
   // http://www.cs.cornell.edu/~rdz/papers/pz-jms99.pdf
@@ -205,7 +205,7 @@ float HistogramPercentageDifferent(const Image& baseline, const Image& actual) {
   }
 
   CountImageSizeMismatchAsPixelDifference(baseline, actual, &pixels_different);
-  return CalculateDifferencePercentage(actual, pixels_different);
+  return pixels_different;
 }
 
 void PrintHelp(const std::string& binary_name) {
@@ -256,16 +256,22 @@ int CompareImages(const std::string& binary_name,
   }
 
   if (compare_histograms) {
-    float percent = HistogramPercentageDifferent(actual_image, baseline_image);
+    int pixels_different =
+        HistogramPixelsDifferent(actual_image, baseline_image);
+    float percent =
+        CalculateDifferencePercentage(actual_image, pixels_different);
     const char* passed = percent > 0.0 ? "failed" : "passed";
-    printf("histogram diff: %01.2f%% %s\n", percent, passed);
+    printf("histogram diff: %01.2f%% %s (%d pixels differ)\n", percent, passed,
+           pixels_different);
   }
 
   const char* const diff_name = compare_histograms ? "exact diff" : "diff";
-  float percent = PercentageDifferent(actual_image, baseline_image,
-                                      max_pixel_per_channel_delta);
+  int pixels_different = PixelsDifferent(actual_image, baseline_image,
+                                         max_pixel_per_channel_delta);
+  float percent = CalculateDifferencePercentage(actual_image, pixels_different);
   const char* const passed = percent > 0.0 ? "failed" : "passed";
-  printf("%s: %01.2f%% %s\n", diff_name, percent, passed);
+  printf("%s: %01.2f%% %s (%d pixels differ)\n", diff_name, percent, passed,
+         pixels_different);
 
   if (percent > 0.0) {
     // failure: The WebKit version also writes the difference image to
