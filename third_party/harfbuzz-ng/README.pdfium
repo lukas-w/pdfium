@@ -1,0 +1,35 @@
+Name: harfbuzz-ng
+Short Name: harfbuzz-ng
+URL: http://harfbuzz.org
+Version: 12.3.0-20
+CPEPrefix: cpe:/a:harfbuzz_project:harfbuzz:12.3.0
+Date: 2026-01-08
+Revision: fa2908bf16d2ccd6623f4d575455fea72a1a722b
+Update Mechanism: Manual
+Security Critical: yes
+Shipped: yes
+License: MIT-Modern-Variant
+License File: src/COPYING
+
+Description:
+This is harfbuzz-ng, a new implementation of harfbuzz with a different
+API from the old one.
+
+Currently we are intentionally not building the following files from
+HarfBuzz. Specifically, we are not building hb-coretext any longer, as we rely
+on HarfBuzz' built-in AAT shaping.
+    dump-indic-data.cc
+    dump-khmer-data.cc
+    dump-myanmar-data.cc
+    dump-use-data.cc
+    hb-coretext.h
+    hb-coretext.cc
+    hb-directwrite.cc
+    hb-directwrite.h
+    hb-fallback-shape.cc
+    hb-null.hh
+    hb-ot-color-sbix-table.hh
+    hb-ot-color-svg-table.hh
+    hb-uniscribe.cc
+    hb-uniscribe.h
+    test-unicode-ranges.cc

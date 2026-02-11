@@ -23,6 +23,7 @@ ALL_DEPS_ENTRIES = (
     'freetype_revision',
     'gn_version',
     'gtest_revision',
+    'harfbuzz_revision',
     'highway_revision',
     'icu_revision',
     'jpeg_turbo_revision',

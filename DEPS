@@ -152,6 +152,10 @@ vars = {
   # and whatever else without interference from each other.
   'gtest_revision': '4fe3307fb2d9f86d19777c7eb0e4809e9694dde7',
   # Three lines of non-changing comments so that
+  # the commit queue can handle CLs rolling HarfBuzz
+  # and whatever else without interference from each other.
+  'harfbuzz_revision': 'fa2908bf16d2ccd6623f4d575455fea72a1a722b',
+  # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling highway
   # and whatever else without interference from each other.
   'highway_revision': '84379d1c73de9681b54fbe1c035a23c7bd5d272d',
@@ -403,6 +407,10 @@ deps = {
   'third_party/googletest/src':
     Var('chromium_git') + '/external/github.com/google/googletest.git@' +
         Var('gtest_revision'),
+
+  'third_party/harfbuzz-ng/src':
+    Var('chromium_git') + '/external/github.com/harfbuzz/harfbuzz.git@' +
+        Var('harfbuzz_revision'),
 
   'third_party/highway/src': {
     'url': Var('chromium_git') + '/external/github.com/google/highway.git@' +

@@ -1635,6 +1635,10 @@ vars = {
   # and whatever else without interference from each other.
   'gtest_revision': 'b2b9072ecbe874f5937054653ef8f2731eb0f010',
   # Three lines of non-changing comments so that
+  # the commit queue can handle CLs rolling HarfBuzz
+  # and whatever else without interference from each other.
+  'harfbuzz_revision': '7d936359a27abb2d7cb14ecc102463bb15c11843',
+  # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling highway
   # and whatever else without interference from each other.
   'highway_revision': '84379d1c73de9681b54fbe1c035a23c7bd5d272d',
@@ -1886,6 +1890,10 @@ deps = {
   'third_party/googletest/src':
     Var('chromium_git') + '/external/github.com/google/googletest.git@' +
         Var('gtest_revision'),
+
+  'third_party/harfbuzz-ng/src':
+    Var('chromium_git') + '/external/github.com/harfbuzz/harfbuzz.git@' +
+        Var('harfbuzz_revision'),
 
   'third_party/highway/src': {
     'url': Var('chromium_git') + '/external/github.com/google/highway.git@' +
@@ -2606,6 +2614,9 @@ class RollAllDepsTest(unittest.TestCase):
         'git_revision:5964f499767097d81dbe034e8b541c3988168073',
         'roll-dep third_party/googletest/src '
         '--roll-to 4fe3307fb2d9f86d19777c7eb0e4809e9694dde7 '
+        '--ignore-dirty-tree --no-log',
+        'roll-dep third_party/harfbuzz-ng/src '
+        '--roll-to 31695252eb6ed25096893aec7f848889dad874bc '
         '--ignore-dirty-tree --no-log',
         'roll-dep third_party/icu '
         '--roll-to a86a32e67b8d1384b33f8fa48c83a6079b86f8cd '
