@@ -221,6 +221,7 @@ pdfium_unittest_source_set("unittests") {
     "bytestring_unittest.cpp",
     "cfx_bitstream_unittest.cpp",
     "cfx_datetime_unittest.cpp",
+    "cfx_read_only_container_stream_unittest.cpp",
     "cfx_seekablestreamproxy_unittest.cpp",
     "cfx_timer_unittest.cpp",
     "code_point_view_unittest.cpp",

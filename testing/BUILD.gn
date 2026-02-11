@@ -146,7 +146,7 @@ source_set("test_environments") {
 source_set("unit_test_support") {
   testonly = true
   sources = []
-  deps = []
+  deps = [ "//testing/gtest" ]
   configs += [
     "../:pdfium_strict_config",
     "../:pdfium_noshorten_config",
@@ -155,15 +155,19 @@ source_set("unit_test_support") {
     ":test_environments",
     ":test_support",
   ]
+  if (is_posix) {
+    sources += [
+      "temporary_file_test.cpp",
+      "temporary_file_test.h",
+    ]
+    deps += [ "../core/fxcrt" ]
+  }
   if (pdf_enable_v8) {
     sources += [
       "fxv8_unittest.cpp",
       "fxv8_unittest.h",
     ]
-    deps += [
-      "../fxjs",
-      "//testing/gtest",
-    ]
+    deps += [ "../fxjs" ]
     configs += [ "//v8:external_startup_data" ]
     if (pdf_enable_xfa) {
       sources += [

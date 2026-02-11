@@ -13,6 +13,7 @@
 #include "core/fxcrt/bytestring.h"
 #include "core/fxcrt/span.h"
 #include "testing/gtest/include/gtest/gtest.h"
+#include "testing/temporary_file_test.h"
 
 #if !BUILDFLAG(IS_POSIX)
 #error "Built on wrong platform"
@@ -20,39 +21,7 @@
 
 namespace fxcrt {
 
-class MappedDataBytesTest : public testing::Test {
- public:
-  MappedDataBytesTest() = default;
-  ~MappedDataBytesTest() override = default;
-
-  void SetUp() override {
-    fd_ = mkstemp(temp_name_);
-    ASSERT_GE(fd_, 0);
-  }
-
-  void TearDown() override {
-    if (fd_ != -1) {
-      close(fd_);
-    }
-    unlink(temp_name_);
-  }
-
-  void WriteAndClose(pdfium::span<const uint8_t> data) {
-    if (!data.empty()) {
-      write(fd_, data.data(), data.size());
-    }
-    close(fd_);
-    fd_ = -1;
-  }
-
-  std::unique_ptr<MappedDataBytes> Create() {
-    return MappedDataBytes::Create(temp_name_);
-  }
-
- private:
-  char temp_name_[25] = "/tmp/pdfium_empty_XXXXXX";
-  int fd_;
-};
+class MappedDataBytesTest : public TemporaryFileTest {};
 
 TEST_F(MappedDataBytesTest, CreateNotFound) {
   auto mapping = MappedDataBytes::Create("non_existent_file_asdfghjkl");
@@ -62,7 +31,7 @@ TEST_F(MappedDataBytesTest, CreateNotFound) {
 TEST_F(MappedDataBytesTest, CreateEmpty) {
   WriteAndClose({});
 
-  auto mapping = Create();
+  auto mapping = MappedDataBytes::Create(temp_name());
   ASSERT_TRUE(mapping);
   EXPECT_TRUE(mapping->empty());
   EXPECT_EQ(0u, mapping->size());
@@ -73,7 +42,7 @@ TEST_F(MappedDataBytesTest, CreateNormal) {
   static const uint8_t kData[] = {'h', 'e', 'l', 'l', 'o'};
   WriteAndClose(kData);
 
-  auto mapping = Create();
+  auto mapping = MappedDataBytes::Create(temp_name());
   ASSERT_TRUE(mapping);
   EXPECT_FALSE(mapping->empty());
   EXPECT_EQ(sizeof(kData), mapping->size());
