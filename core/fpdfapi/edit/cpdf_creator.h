@@ -14,6 +14,7 @@
 #include <vector>
 
 #include "core/fxcrt/fx_stream.h"
+#include "core/fxcrt/mask.h"
 #include "core/fxcrt/retain_ptr.h"
 #include "core/fxcrt/unowned_ptr.h"
 
@@ -28,11 +29,12 @@ class CPDF_Parser;
 class CPDF_Creator {
  public:
   enum CreateFlags : uint32_t {
+    kNone = 0,
     kIncremental = (1 << 0),
     kNoOriginal = (1 << 1),
-    // TODO(crbug.com/42270430): Implement the flags below.
     kRemoveSecurityDeprecated = 3,
     kRemoveSecurity = (1 << 2),
+    // TODO(crbug.com/42270430): Implement font subsetting.
     kSubsetNewFonts = (1 << 3),
   };
 
@@ -40,9 +42,7 @@ class CPDF_Creator {
                RetainPtr<IFX_RetainableWriteStream> archive);
   ~CPDF_Creator();
 
-  void RemoveSecurity();
-  bool Create(CreateFlags flags);
-  bool SetFileVersion(int32_t fileVersion);
+  bool Create(Mask<CreateFlags> flags, int32_t file_version);
 
  private:
   enum class Stage {
@@ -77,6 +77,8 @@ class CPDF_Creator {
   bool WriteOldObjs();
   bool WriteNewObjs();
   bool WriteIndirectObj(uint32_t objnum, const CPDF_Object* pObj);
+
+  void RemoveSecurity();
 
   CPDF_CryptoHandler* GetCryptoHandler();
 

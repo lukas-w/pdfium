@@ -31,6 +31,7 @@
 #include "core/fxcrt/fx_extension.h"
 #include "core/fxcrt/fx_random.h"
 #include "core/fxcrt/fx_safe_types.h"
+#include "core/fxcrt/mask.h"
 #include "core/fxcrt/raw_span.h"
 #include "core/fxcrt/span_util.h"
 #include "core/fxcrt/stl_util.h"
@@ -38,6 +39,15 @@
 namespace {
 
 const size_t kArchiveBufferSize = 32768;
+
+constexpr Mask<CPDF_Creator::CreateFlags> kAllValidFlags{
+    CPDF_Creator::CreateFlags::kIncremental,
+    CPDF_Creator::CreateFlags::kNoOriginal,
+    CPDF_Creator::CreateFlags::kRemoveSecurity,
+    CPDF_Creator::CreateFlags::kSubsetNewFonts};
+constexpr Mask<CPDF_Creator::CreateFlags> kConflictingFlags{
+    CPDF_Creator::CreateFlags::kIncremental,
+    CPDF_Creator::CreateFlags::kNoOriginal};
 
 class CFX_FileBufferArchive final : public IFX_ArchiveStream {
  public:
@@ -592,9 +602,26 @@ CPDF_Creator::Stage CPDF_Creator::WriteDoc_Stage4() {
   return stage_;
 }
 
-bool CPDF_Creator::Create(CreateFlags flags) {
+bool CPDF_Creator::Create(Mask<CreateFlags> flags, int32_t file_version) {
+  if (flags & ~kAllValidFlags) {
+    flags = CreateFlags::kNone;
+  }
+
+  if (flags == CreateFlags::kRemoveSecurityDeprecated ||
+      (flags & CreateFlags::kRemoveSecurity)) {
+    RemoveSecurity();
+  }
+
+  if (flags.TestAll(kConflictingFlags)) {
+    flags.Clear(kConflictingFlags);
+  }
+
   is_incremental_ = !!(flags & CreateFlags::kIncremental);
   is_original_ = !(flags & CreateFlags::kNoOriginal);
+
+  if (file_version >= 10 && file_version <= 17) {
+    file_version_ = file_version;
+  }
 
   stage_ = Stage::kInit0;
   last_obj_num_ = document_->GetLastObjNum();
@@ -679,14 +706,6 @@ bool CPDF_Creator::Continue() {
   }
 
   return stage_ > Stage::kInvalid;
-}
-
-bool CPDF_Creator::SetFileVersion(int32_t fileVersion) {
-  if (fileVersion < 10 || fileVersion > 17) {
-    return false;
-  }
-  file_version_ = fileVersion;
-  return true;
 }
 
 void CPDF_Creator::RemoveSecurity() {
