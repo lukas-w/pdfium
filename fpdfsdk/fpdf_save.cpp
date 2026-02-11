@@ -33,8 +33,8 @@
 
 namespace {
 
-constexpr int kAllValidFlags =
-    FPDF_INCREMENTAL | FPDF_NO_INCREMENTAL | FPDF_REMOVE_SECURITY;
+constexpr int kAllValidFlags = FPDF_INCREMENTAL | FPDF_NO_INCREMENTAL |
+                               FPDF_REMOVE_SECURITY | FPDF_SUBSET_NEW_FONTS;
 
 #ifdef PDF_ENABLE_XFA
 bool SaveXFADocumentData(
@@ -200,6 +200,7 @@ bool DoDocSave(FPDF_DOCUMENT document,
     flags &= ~(FPDF_INCREMENTAL | FPDF_NO_INCREMENTAL);
   }
 
+  // TODO(crbug.com/476127152): Subset new fonts.
   bool create_result = file_maker.Create(static_cast<uint32_t>(flags));
 
 #ifdef PDF_ENABLE_XFA
