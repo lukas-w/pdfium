@@ -379,6 +379,8 @@ class EmbedderTest : public ::testing::Test,
   void VerifySavedDocumentToPng(std::string_view expectation_png_name);
   void VerifySavedDocumentToPngWithExpectationSuffix(
       std::string_view expectation_png_name);
+  void VerifySavedDocumentToPngWithFuzzyExpectationSuffix(
+      std::string_view expectation_png_name);
   void VerifySavedDocument(int width, int height, const char* md5);
 
   void SetWholeFileAvailable();

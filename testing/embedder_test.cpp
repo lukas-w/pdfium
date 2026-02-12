@@ -1072,6 +1072,13 @@ void EmbedderTest::VerifySavedDocumentToPngWithExpectationSuffix(
   CompareBitmapToPngWithExpectationSuffix(bitmap.get(), expectation_png_name);
 }
 
+void EmbedderTest::VerifySavedDocumentToPngWithFuzzyExpectationSuffix(
+    std::string_view expectation_png_name) {
+  ScopedFPDFBitmap bitmap = VerifySavedDocumentCommon();
+  CompareBitmapToPngWithFuzzyExpectationSuffix(bitmap.get(),
+                                               expectation_png_name);
+}
+
 void EmbedderTest::VerifySavedDocument(int width, int height, const char* md5) {
   ScopedFPDFBitmap bitmap = VerifySavedDocumentCommon();
   CompareBitmap(bitmap.get(), width, height, md5);
