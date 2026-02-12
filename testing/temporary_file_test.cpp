@@ -25,7 +25,7 @@ void TemporaryFileTest::TearDown() {
 
 void TemporaryFileTest::WriteAndClose(pdfium::span<const uint8_t> data) {
   if (!data.empty()) {
-    write(fd_, data.data(), data.size());
+    (void)write(fd_, data.data(), data.size());
   }
   close(fd_);
   fd_ = -1;
