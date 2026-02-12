@@ -155,12 +155,12 @@ std::vector<CharCodeAndIndex> CFX_Font::GetCharCodesAndIndices(
 }
 
 #ifdef PDF_ENABLE_XFA
-bool CFX_Font::LoadFromVectorStream(
-    const RetainPtr<CFX_ReadOnlyFixedSizeDataVectorStream>& vector_stream,
+bool CFX_Font::LoadFromSpanStream(
+    const RetainPtr<CFX_ReadOnlySpanStream>& stream,
     int face_index) {
   object_tag_ = 0;
-  face_ = CFX_Face::NewFromVectorStream(CFX_GEModule::Get()->GetFontMgr(),
-                                        vector_stream, face_index);
+  face_ = CFX_Face::NewFromSpanStream(CFX_GEModule::Get()->GetFontMgr(), stream,
+                                      face_index);
   return !!face_;
 }
 

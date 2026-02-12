@@ -81,9 +81,8 @@ class CFX_Font {
   std::vector<CharCodeAndIndex> GetCharCodesAndIndices(char32_t max_char);
 
 #if defined(PDF_ENABLE_XFA)
-  bool LoadFromVectorStream(
-      const RetainPtr<CFX_ReadOnlyFixedSizeDataVectorStream>& vector_stream,
-      int face_index);
+  bool LoadFromSpanStream(const RetainPtr<CFX_ReadOnlySpanStream>& stream,
+                          int face_index);
 
 #if !BUILDFLAG(IS_WIN)
   void SetFaceFromFont(const CFX_Font& that);

@@ -31,7 +31,7 @@ class CFPF_SkiaFontMgr {
                             FX_Charset charset,
                             uint32_t style);
 
-  RetainPtr<CFX_Face> GetFontFace(ByteStringView path, int32_t face_index);
+  RetainPtr<CFX_Face> GetFontFace(const ByteString& path, int32_t face_index);
 
  private:
   void ScanPath(const ByteString& path);

@@ -14,7 +14,7 @@
 
 #include "build/build_config.h"
 #include "core/fxcrt/bytestring.h"
-#include "core/fxcrt/cfx_read_only_container_stream.h"
+#include "core/fxcrt/cfx_read_only_span_stream.h"
 #include "core/fxcrt/fx_coordinates.h"
 #include "core/fxcrt/observed_ptr.h"
 #include "core/fxcrt/retain_ptr.h"
@@ -56,18 +56,12 @@ class CFX_Face final : public Retainable, public Observable {
                                  pdfium::span<const uint8_t> data,
                                  uint32_t face_index);
 
-#if defined(PDF_ENABLE_XFA)
-  static RetainPtr<CFX_Face> NewFromVectorStream(
+#if defined(PDF_ENABLE_XFA) || BUILDFLAG(IS_ANDROID)
+  static RetainPtr<CFX_Face> NewFromSpanStream(
       CFX_FontMgr* font_mgr,
-      const RetainPtr<CFX_ReadOnlyFixedSizeDataVectorStream>& font_stream,
+      const RetainPtr<CFX_ReadOnlySpanStream>& font_stream,
       uint32_t face_index);
-#endif
-
-#if BUILDFLAG(IS_ANDROID)
-  static RetainPtr<CFX_Face> OpenFromFilePath(CFX_FontMgr* font_mgr,
-                                              ByteStringView path,
-                                              int32_t face_index);
-#endif
+#endif  // defined(PDF_ENABLE_XFA) || BUILDFLAG(IS_ANDROID)
 
   bool HasGlyphNames() const;
   bool IsTtOt() const;
@@ -168,7 +162,7 @@ class CFX_Face final : public Retainable, public Observable {
 #endif
 
   // `owned_font_stream_` must outlive `rec_`.
-  RetainPtr<CFX_ReadOnlyFixedSizeDataVectorStream> owned_font_stream_;
+  RetainPtr<CFX_ReadOnlySpanStream> owned_font_stream_;
   ScopedFXFTFaceRec const rec_;
   RetainPtr<Retainable> const desc_;
 };

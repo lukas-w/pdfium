@@ -567,7 +567,7 @@ bool CFGAS_FontDescriptor::VerifyUnicode(wchar_t unicode) {
     if (!file_read) {
       return false;
     }
-    RetainPtr<CFX_Face> ft_face = CFX_Face::NewFromVectorStream(
+    RetainPtr<CFX_Face> ft_face = CFX_Face::NewFromSpanStream(
         CFX_GEModule::Get()->GetFontMgr(), file_read, face_index_);
     if (!ft_face) {
       return false;
@@ -654,7 +654,7 @@ RetainPtr<CFGAS_GEFont> CFGAS_FontMgr::LoadFontInternal(
     return nullptr;
   }
   auto internal_font = std::make_unique<CFX_Font>();
-  if (!internal_font->LoadFromVectorStream(font_stream, face_index)) {
+  if (!internal_font->LoadFromSpanStream(font_stream, face_index)) {
     return nullptr;
   }
   return CFGAS_GEFont::LoadFont(std::move(internal_font));
@@ -729,7 +729,7 @@ void CFGAS_FontMgr::RegisterFaces(
   int index = 0;
   int num_faces = 0;
   do {
-    RetainPtr<CFX_Face> face = CFX_Face::NewFromVectorStream(
+    RetainPtr<CFX_Face> face = CFX_Face::NewFromSpanStream(
         CFX_GEModule::Get()->GetFontMgr(), font_stream, index);
     if (!face) {
       ++index;
