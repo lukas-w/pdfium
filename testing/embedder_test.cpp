@@ -1046,6 +1046,14 @@ void EmbedderTest::VerifySavedRenderingToPngWithExpectationSuffix(
   CompareBitmapToPngWithExpectationSuffix(bitmap.get(), expectation_png_name);
 }
 
+void EmbedderTest::VerifySavedRenderingToPngWithFuzzyExpectationSuffix(
+    FPDF_PAGE page,
+    std::string_view expectation_png_name) {
+  ScopedFPDFBitmap bitmap = VerifySavedRenderingCommon(page);
+  CompareBitmapToPngWithFuzzyExpectationSuffix(bitmap.get(),
+                                               expectation_png_name);
+}
+
 void EmbedderTest::VerifySavedRendering(FPDF_PAGE page,
                                         int width,
                                         int height,

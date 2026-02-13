@@ -372,6 +372,9 @@ class EmbedderTest : public ::testing::Test,
   void VerifySavedRenderingToPngWithExpectationSuffix(
       FPDF_PAGE page,
       std::string_view expectation_png_name);
+  void VerifySavedRenderingToPngWithFuzzyExpectationSuffix(
+      FPDF_PAGE page,
+      std::string_view expectation_png_name);
   void VerifySavedRendering(FPDF_PAGE page,
                             int width,
                             int height,
