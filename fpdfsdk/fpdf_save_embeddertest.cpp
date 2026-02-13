@@ -196,7 +196,7 @@ TEST_F(FPDFSaveEmbedderTest, Bug1409) {
   FPDF_PAGE saved_page = LoadSavedPage(0);
   ASSERT_TRUE(saved_page);
   ScopedFPDFBitmap bitmap = RenderSavedPage(saved_page);
-  CompareBitmapToPng(bitmap.get(), pdfium::kBlankPage612By792Png);
+  CompareBitmap(bitmap.get(), pdfium::kBlankPage612By792Png);
   CloseSavedPage(saved_page);
   CloseSavedDocument();
 
@@ -374,7 +374,7 @@ TEST_F(FPDFSaveWithFontSubsetEmbedderTest, SaveWithoutSubsetWithNewText) {
 
   // Verify the text is visible.
   ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-  CompareBitmapToPngWithExpectationSuffix(bitmap.get(), kSaveNewTextFilename);
+  CompareBitmapWithExpectationSuffix(bitmap.get(), kSaveNewTextFilename);
 }
 
 TEST_F(FPDFSaveWithFontSubsetEmbedderTest, SaveWithSubsetWithNewText) {
@@ -393,5 +393,5 @@ TEST_F(FPDFSaveWithFontSubsetEmbedderTest, SaveWithSubsetWithNewText) {
 
   // Verify the text is visible.
   ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-  CompareBitmapToPngWithExpectationSuffix(bitmap.get(), kSaveNewTextFilename);
+  CompareBitmapWithExpectationSuffix(bitmap.get(), kSaveNewTextFilename);
 }

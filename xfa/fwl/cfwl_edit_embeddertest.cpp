@@ -109,7 +109,7 @@ TEST_F(CFWLEditEmbedderTest, DragMouseSelection) {
   {
     ScopedFPDFBitmap page_bitmap =
         RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-    CompareBitmapToPng(page_bitmap.get(), kDraggedFilename);
+    CompareBitmap(page_bitmap.get(), kDraggedFilename);
   }
 }
 
@@ -125,7 +125,7 @@ TEST_F(CFWLEditEmbedderTest, SimpleFill) {
   {
     ScopedFPDFBitmap page_bitmap =
         RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-    CompareBitmapToPng(page_bitmap.get(), kBlankFilename);
+    CompareBitmap(page_bitmap.get(), kBlankFilename);
   }
 
   FORM_OnLButtonDown(form_handle(), page.get(), 0, 115, 58);
@@ -136,7 +136,7 @@ TEST_F(CFWLEditEmbedderTest, SimpleFill) {
   {
     ScopedFPDFBitmap page_bitmap =
         RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-    CompareBitmapToPng(page_bitmap.get(), kEmailRecommendedFilledFilename);
+    CompareBitmap(page_bitmap.get(), kEmailRecommendedFilledFilename);
   }
 }
 
@@ -160,7 +160,7 @@ TEST_F(CFWLEditEmbedderTest, FillWithNewLineWithoutMultiline) {
   {
     ScopedFPDFBitmap page_bitmap =
         RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-    CompareBitmapToPng(page_bitmap.get(), kEmailRecommendedFilledFilename);
+    CompareBitmap(page_bitmap.get(), kEmailRecommendedFilledFilename);
   }
 }
 
@@ -185,8 +185,8 @@ TEST_F(CFWLEditEmbedderTest, FillWithNewLineWithMultiline) {
         "xfa_multiline_textfield_filled";
     ScopedFPDFBitmap page_bitmap =
         RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-    CompareBitmapToPngWithExpectationSuffix(page_bitmap.get(),
-                                            kFilledMultilineBasename);
+    CompareBitmapWithExpectationSuffix(page_bitmap.get(),
+                                       kFilledMultilineBasename);
   }
 
   for (size_t i = 0; i < 4; ++i) {
@@ -210,8 +210,8 @@ TEST_F(CFWLEditEmbedderTest, FillWithNewLineWithMultiline) {
         "xfa_multiline_textfield_backspace";
     ScopedFPDFBitmap page_bitmap =
         RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-    CompareBitmapToPngWithExpectationSuffix(page_bitmap.get(),
-                                            kMultilineBackspaceBasename);
+    CompareBitmapWithExpectationSuffix(page_bitmap.get(),
+                                       kMultilineBackspaceBasename);
   }
 }
 
@@ -231,7 +231,7 @@ TEST_F(CFWLEditEmbedderTest, DateTimePickerTest) {
   {
     ScopedFPDFBitmap page_bitmap =
         RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-    CompareBitmapToPng(page_bitmap.get(), kSelectedFilename);
+    CompareBitmap(page_bitmap.get(), kSelectedFilename);
   }
 
   // Click down-arrow button, bringing up calendar widget.
@@ -266,8 +266,7 @@ TEST_F(CFWLEditEmbedderTest, ImageEditTest) {
   constexpr char kFilledBasename[] = "xfa_image_edit";
   ScopedFPDFBitmap page_bitmap =
       RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-  CompareBitmapToPngWithFuzzyExpectationSuffix(page_bitmap.get(),
-                                               kFilledBasename);
+  CompareBitmapWithFuzzyExpectationSuffix(page_bitmap.get(), kFilledBasename);
 }
 
 TEST_F(CFWLEditEmbedderTest, ComboBoxTest) {
@@ -281,7 +280,7 @@ TEST_F(CFWLEditEmbedderTest, ComboBoxTest) {
     constexpr char kFilledBasename[] = "filled_combox";
     ScopedFPDFBitmap page_bitmap =
         RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-    CompareBitmapToPngWithExpectationSuffix(page_bitmap.get(), kFilledBasename);
+    CompareBitmapWithExpectationSuffix(page_bitmap.get(), kFilledBasename);
   }
 
   // Click on down-arrow button, dropdown list appears.

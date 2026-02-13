@@ -207,8 +207,7 @@ TEST_F(FPDFTransformEmbedderTest, SetCropBox) {
       EXPECT_EQ(200, page_width);
       EXPECT_EQ(300, page_height);
       ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-      CompareBitmapToPngWithExpectationSuffix(bitmap.get(),
-                                              pdfium::kRectanglesPng);
+      CompareBitmapWithExpectationSuffix(bitmap.get(), pdfium::kRectanglesPng);
     }
 
     FPDFPage_SetCropBox(page.get(), 10, 20, 100, 150);
@@ -230,8 +229,7 @@ TEST_F(FPDFTransformEmbedderTest, SetCropBox) {
       EXPECT_EQ(90, page_width);
       EXPECT_EQ(130, page_height);
       ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-      CompareBitmapToPngWithExpectationSuffix(bitmap.get(),
-                                              "rectangles_cropped");
+      CompareBitmapWithExpectationSuffix(bitmap.get(), "rectangles_cropped");
     }
   }
 
@@ -255,7 +253,7 @@ TEST_F(FPDFTransformEmbedderTest, SetCropBox) {
     EXPECT_EQ(90, page_width);
     EXPECT_EQ(130, page_height);
     ScopedFPDFBitmap bitmap = RenderSavedPage(saved_page);
-    CompareBitmapToPngWithExpectationSuffix(bitmap.get(), "rectangles_cropped");
+    CompareBitmapWithExpectationSuffix(bitmap.get(), "rectangles_cropped");
 
     CloseSavedPage(saved_page);
     CloseSavedDocument();
@@ -279,8 +277,7 @@ TEST_F(FPDFTransformEmbedderTest, SetMediaBox) {
       EXPECT_EQ(200, page_width);
       EXPECT_EQ(300, page_height);
       ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-      CompareBitmapToPngWithExpectationSuffix(bitmap.get(),
-                                              pdfium::kRectanglesPng);
+      CompareBitmapWithExpectationSuffix(bitmap.get(), pdfium::kRectanglesPng);
     }
 
     FPDFPage_SetMediaBox(page.get(), 20, 30, 100, 150);
@@ -302,8 +299,7 @@ TEST_F(FPDFTransformEmbedderTest, SetMediaBox) {
       EXPECT_EQ(80, page_width);
       EXPECT_EQ(120, page_height);
       ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-      CompareBitmapToPngWithExpectationSuffix(bitmap.get(),
-                                              "rectangles_media_box");
+      CompareBitmapWithExpectationSuffix(bitmap.get(), "rectangles_media_box");
     }
   }
 
@@ -328,8 +324,7 @@ TEST_F(FPDFTransformEmbedderTest, SetMediaBox) {
     EXPECT_EQ(80, page_width);
     EXPECT_EQ(120, page_height);
     ScopedFPDFBitmap bitmap = RenderSavedPage(saved_page);
-    CompareBitmapToPngWithExpectationSuffix(bitmap.get(),
-                                            "rectangles_media_box");
+    CompareBitmapWithExpectationSuffix(bitmap.get(), "rectangles_media_box");
 
     CloseSavedPage(saved_page);
     CloseSavedDocument();
@@ -400,8 +395,7 @@ TEST_F(FPDFTransformEmbedderTest, TransFormWithClipAndSave) {
       EXPECT_EQ(200, page_width);
       EXPECT_EQ(300, page_height);
       ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-      CompareBitmapToPngWithExpectationSuffix(bitmap.get(),
-                                              pdfium::kRectanglesPng);
+      CompareBitmapWithExpectationSuffix(bitmap.get(), pdfium::kRectanglesPng);
     }
 
     {
@@ -418,8 +412,7 @@ TEST_F(FPDFTransformEmbedderTest, TransFormWithClipAndSave) {
       EXPECT_EQ(200, page_width);
       EXPECT_EQ(300, page_height);
       ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-      CompareBitmapToPngWithExpectationSuffix(bitmap.get(),
-                                              pdfium::kRectanglesPng);
+      CompareBitmapWithExpectationSuffix(bitmap.get(), pdfium::kRectanglesPng);
     }
   }
 
@@ -436,7 +429,7 @@ TEST_F(FPDFTransformEmbedderTest, TransFormWithClipAndSave) {
     EXPECT_EQ(200, page_width);
     EXPECT_EQ(300, page_height);
     ScopedFPDFBitmap bitmap = RenderSavedPage(saved_page);
-    CompareBitmapToPngWithExpectationSuffix(bitmap.get(), "rectangles_shrunk");
+    CompareBitmapWithExpectationSuffix(bitmap.get(), "rectangles_shrunk");
 
     CloseSavedPage(saved_page);
     CloseSavedDocument();
@@ -459,8 +452,7 @@ TEST_F(FPDFTransformEmbedderTest, TransFormWithClipAndSaveWithLocale) {
       EXPECT_EQ(200, page_width);
       EXPECT_EQ(300, page_height);
       ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-      CompareBitmapToPngWithExpectationSuffix(bitmap.get(),
-                                              pdfium::kRectanglesPng);
+      CompareBitmapWithExpectationSuffix(bitmap.get(), pdfium::kRectanglesPng);
     }
 
     {
@@ -477,8 +469,7 @@ TEST_F(FPDFTransformEmbedderTest, TransFormWithClipAndSaveWithLocale) {
       EXPECT_EQ(200, page_width);
       EXPECT_EQ(300, page_height);
       ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-      CompareBitmapToPngWithExpectationSuffix(bitmap.get(),
-                                              pdfium::kRectanglesPng);
+      CompareBitmapWithExpectationSuffix(bitmap.get(), pdfium::kRectanglesPng);
     }
   }
 
@@ -495,7 +486,7 @@ TEST_F(FPDFTransformEmbedderTest, TransFormWithClipAndSaveWithLocale) {
     EXPECT_EQ(200, page_width);
     EXPECT_EQ(300, page_height);
     ScopedFPDFBitmap bitmap = RenderSavedPage(saved_page);
-    CompareBitmapToPngWithExpectationSuffix(bitmap.get(), "rectangles_shrunk");
+    CompareBitmapWithExpectationSuffix(bitmap.get(), "rectangles_shrunk");
 
     CloseSavedPage(saved_page);
     CloseSavedDocument();

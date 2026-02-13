@@ -307,10 +307,10 @@ class EmbedderTest : public ::testing::Test,
 
   // Check `bitmap` matches `expectation_png_name`, where `expectation_png_name`
   // is the name of testing/resources/embedder_tests/expectation_png_name.png.
-  static void CompareBitmapToPng(FPDF_BITMAP bitmap,
-                                 std::string_view expectation_png_name);
+  static void CompareBitmap(FPDF_BITMAP bitmap,
+                            std::string_view expectation_png_name);
 
-  // Like CompareBitmapToPng(), except instead of just adding ".png" to
+  // Like CompareBitmap(), except instead of just adding ".png" to
   // `expectation_png_name`, this method will look for the expectation PNG using
   // several suffixes in order: "_$renderer_$os_$cpu.png", "_$renderer_$os.png",
   // "_$renderer.png", "_$os_$cpu.png", "_$os.png".
@@ -330,14 +330,14 @@ class EmbedderTest : public ::testing::Test,
   //
   // `max_pixel_per_channel_delta` can optionally be set to tolerate minor pixel
   // discrepancies. The default is exact matching.
-  static void CompareBitmapToPngWithExpectationSuffix(
+  static void CompareBitmapWithExpectationSuffix(
       FPDF_BITMAP bitmap,
       std::string_view expectation_png_name,
       int max_pixel_per_channel_delta = 0);
 
-  // Same as `CompareBitmapToPngWithExpectationSuffix()`, but automatically
+  // Same as `CompareBitmapWithExpectationSuffix()`, but automatically
   // applies platform-specific tolerance.
-  static void CompareBitmapToPngWithFuzzyExpectationSuffix(
+  static void CompareBitmapWithFuzzyExpectationSuffix(
       FPDF_BITMAP bitmap,
       std::string_view expectation_png_name);
 
@@ -358,20 +358,20 @@ class EmbedderTest : public ::testing::Test,
   FPDF_PAGE LoadSavedPage(int page_index);
   void CloseSavedPage(FPDF_PAGE page);
 
-  // See comments for CompareBitmapToPng(), and
-  // CompareBitmapToPngWithExpectationSuffix() above.
-  void VerifySavedRenderingToPng(FPDF_PAGE page,
-                                 std::string_view expectation_png_name);
-  void VerifySavedRenderingToPngWithExpectationSuffix(
+  // See comments for CompareBitmap() and CompareBitmapWithExpectationSuffix()
+  // above.
+  void VerifySavedRendering(FPDF_PAGE page,
+                            std::string_view expectation_png_name);
+  void VerifySavedRenderingWithExpectationSuffix(
       FPDF_PAGE page,
       std::string_view expectation_png_name);
-  void VerifySavedRenderingToPngWithFuzzyExpectationSuffix(
+  void VerifySavedRenderingWithFuzzyExpectationSuffix(
       FPDF_PAGE page,
       std::string_view expectation_png_name);
-  void VerifySavedDocumentToPng(std::string_view expectation_png_name);
-  void VerifySavedDocumentToPngWithExpectationSuffix(
+  void VerifySavedDocument(std::string_view expectation_png_name);
+  void VerifySavedDocumentWithExpectationSuffix(
       std::string_view expectation_png_name);
-  void VerifySavedDocumentToPngWithFuzzyExpectationSuffix(
+  void VerifySavedDocumentWithFuzzyExpectationSuffix(
       std::string_view expectation_png_name);
 
   void SetWholeFileAvailable();

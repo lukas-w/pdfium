@@ -93,16 +93,16 @@ class CPDFSecurityHandlerEmbedderTest : public EmbedderTest {
     ASSERT_TRUE(page);
 
     ScopedFPDFBitmap page_bitmap = RenderPage(page);
-    CompareBitmapToPngWithExpectationSuffix(page_bitmap.get(),
-                                            pdfium::kHelloWorldPng);
+    CompareBitmapWithExpectationSuffix(page_bitmap.get(),
+                                       pdfium::kHelloWorldPng);
   }
 
   void VerifyModifiedHelloWorldPage(FPDF_PAGE page) {
     ASSERT_TRUE(page);
 
     ScopedFPDFBitmap page_bitmap = RenderPage(page);
-    CompareBitmapToPngWithExpectationSuffix(page_bitmap.get(),
-                                            pdfium::kHelloWorldRemovedPng);
+    CompareBitmapWithExpectationSuffix(page_bitmap.get(),
+                                       pdfium::kHelloWorldRemovedPng);
   }
 };
 
@@ -154,7 +154,7 @@ TEST_F(CPDFSecurityHandlerEmbedderTest, PasswordAfterGenerateSave) {
     EXPECT_TRUE(FPDFPath_SetDrawMode(red_rect, FPDF_FILLMODE_ALTERNATE, 0));
     FPDFPage_InsertObject(page.get(), red_rect);
     ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-    CompareBitmapToPngWithExpectationSuffix(bitmap.get(), kBasename);
+    CompareBitmapWithExpectationSuffix(bitmap.get(), kBasename);
     EXPECT_TRUE(FPDFPage_GenerateContent(page.get()));
     SetWholeFileAvailable();
     EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
@@ -176,7 +176,7 @@ TEST_F(CPDFSecurityHandlerEmbedderTest, PasswordAfterGenerateSave) {
     ASSERT_TRUE(OpenSavedDocumentWithPassword(test.password));
     FPDF_PAGE page = LoadSavedPage(0);
     ASSERT_TRUE(page);
-    VerifySavedRenderingToPngWithExpectationSuffix(page, kBasename);
+    VerifySavedRenderingWithExpectationSuffix(page, kBasename);
     EXPECT_EQ(test.permissions, FPDF_GetDocPermissions(saved_document()));
 
     CloseSavedPage(page);

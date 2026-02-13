@@ -35,8 +35,7 @@ TEST_F(FPDFEditPageEmbedderTest, Rotation) {
       EXPECT_EQ(200, page_width);
       EXPECT_EQ(300, page_height);
       ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-      CompareBitmapToPngWithExpectationSuffix(bitmap.get(),
-                                              pdfium::kRectanglesPng);
+      CompareBitmapWithExpectationSuffix(bitmap.get(), pdfium::kRectanglesPng);
     }
 
     FPDFPage_SetRotation(page.get(), 1);
@@ -51,7 +50,7 @@ TEST_F(FPDFEditPageEmbedderTest, Rotation) {
       EXPECT_EQ(300, page_width);
       EXPECT_EQ(200, page_height);
       ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-      CompareBitmapToPngWithExpectationSuffix(bitmap.get(), kRotatedPng);
+      CompareBitmapWithExpectationSuffix(bitmap.get(), kRotatedPng);
     }
   }
 
@@ -69,7 +68,7 @@ TEST_F(FPDFEditPageEmbedderTest, Rotation) {
     EXPECT_EQ(300, page_width);
     EXPECT_EQ(200, page_height);
     ScopedFPDFBitmap bitmap = RenderSavedPage(saved_page);
-    CompareBitmapToPngWithExpectationSuffix(bitmap.get(), kRotatedPng);
+    CompareBitmapWithExpectationSuffix(bitmap.get(), kRotatedPng);
 
     CloseSavedPage(saved_page);
     CloseSavedDocument();
@@ -504,8 +503,7 @@ TEST_F(FPDFEditPageEmbedderTest, PageObjectActiveState) {
   {
     // Render the page as is.
     ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-    CompareBitmapToPngWithExpectationSuffix(bitmap.get(),
-                                            pdfium::kRectanglesPng);
+    CompareBitmapWithExpectationSuffix(bitmap.get(), pdfium::kRectanglesPng);
   }
 
   {
@@ -519,8 +517,7 @@ TEST_F(FPDFEditPageEmbedderTest, PageObjectActiveState) {
     EXPECT_EQ(8, FPDFPage_CountObjects(saved_page));
 
     ScopedFPDFBitmap bitmap = RenderSavedPage(saved_page);
-    CompareBitmapToPngWithExpectationSuffix(bitmap.get(),
-                                            pdfium::kRectanglesPng);
+    CompareBitmapWithExpectationSuffix(bitmap.get(), pdfium::kRectanglesPng);
 
     CloseSavedPage(saved_page);
     CloseSavedDocument();
@@ -558,8 +555,7 @@ TEST_F(FPDFEditPageEmbedderTest, PageObjectActiveState) {
 
     // The absence of the inactive page object affects the rendered result.
     ScopedFPDFBitmap bitmap = RenderSavedPage(saved_page);
-    CompareBitmapToPngWithExpectationSuffix(bitmap.get(),
-                                            kOneRectangleInactivePng);
+    CompareBitmapWithExpectationSuffix(bitmap.get(), kOneRectangleInactivePng);
 
     CloseSavedPage(saved_page);
     CloseSavedDocument();
@@ -580,7 +576,7 @@ TEST_F(FPDFEditPageEmbedderTest, Bug378120423) {
   {
     // Render the page as is.
     ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-    CompareBitmapToPng(bitmap.get(), kBug378120423Png);
+    CompareBitmap(bitmap.get(), kBug378120423Png);
     EXPECT_EQ(1, FPDFPage_CountObjects(page.get()));
   }
 
@@ -590,7 +586,7 @@ TEST_F(FPDFEditPageEmbedderTest, Bug378120423) {
   EXPECT_TRUE(FPDFPage_GenerateContent(page.get()));
   {
     ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-    CompareBitmapToPng(bitmap.get(), pdfium::kBlankPage200x200Png);
+    CompareBitmap(bitmap.get(), pdfium::kBlankPage200x200Png);
     // `page_obj` can still be found. It is just deactivated.
     EXPECT_EQ(1, FPDFPage_CountObjects(page.get()));
   }
@@ -603,7 +599,7 @@ TEST_F(FPDFEditPageEmbedderTest, Bug378120423) {
     ASSERT_TRUE(saved_page);
 
     ScopedFPDFBitmap bitmap = RenderSavedPage(saved_page);
-    CompareBitmapToPng(bitmap.get(), pdfium::kBlankPage200x200Png);
+    CompareBitmap(bitmap.get(), pdfium::kBlankPage200x200Png);
     // `page_obj` did not get written out to the saved PDF.
     EXPECT_EQ(0, FPDFPage_CountObjects(saved_page));
 
@@ -616,7 +612,7 @@ TEST_F(FPDFEditPageEmbedderTest, Bug378120423) {
   EXPECT_TRUE(FPDFPage_GenerateContent(page.get()));
   {
     ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-    CompareBitmapToPng(bitmap.get(), kBug378120423Png);
+    CompareBitmap(bitmap.get(), kBug378120423Png);
     EXPECT_EQ(1, FPDFPage_CountObjects(page.get()));
   }
 
@@ -628,7 +624,7 @@ TEST_F(FPDFEditPageEmbedderTest, Bug378120423) {
     ASSERT_TRUE(saved_page);
 
     ScopedFPDFBitmap bitmap = RenderSavedPage(saved_page);
-    CompareBitmapToPng(bitmap.get(), kBug378120423Png);
+    CompareBitmap(bitmap.get(), kBug378120423Png);
     EXPECT_EQ(1, FPDFPage_CountObjects(saved_page));
 
     CloseSavedPage(saved_page);
@@ -644,8 +640,7 @@ TEST_F(FPDFEditPageEmbedderTest, Bug378464305) {
   {
     // Sanity check rectangles.pdf before modifying it.
     ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-    CompareBitmapToPngWithExpectationSuffix(bitmap.get(),
-                                            pdfium::kRectanglesPng);
+    CompareBitmapWithExpectationSuffix(bitmap.get(), pdfium::kRectanglesPng);
     EXPECT_EQ(kOriginalObjectCount, FPDFPage_CountObjects(page.get()));
   }
 
@@ -668,7 +663,7 @@ TEST_F(FPDFEditPageEmbedderTest, Bug378464305) {
   constexpr char kNewPathPng[] = "bug_378464305";
   {
     ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-    CompareBitmapToPngWithExpectationSuffix(bitmap.get(), kNewPathPng);
+    CompareBitmapWithExpectationSuffix(bitmap.get(), kNewPathPng);
     EXPECT_EQ(kObjectCountWithNewPath, FPDFPage_CountObjects(page.get()));
   }
   {
@@ -679,7 +674,7 @@ TEST_F(FPDFEditPageEmbedderTest, Bug378464305) {
     ASSERT_TRUE(saved_page);
 
     ScopedFPDFBitmap bitmap = RenderSavedPage(saved_page);
-    CompareBitmapToPngWithExpectationSuffix(bitmap.get(), kNewPathPng);
+    CompareBitmapWithExpectationSuffix(bitmap.get(), kNewPathPng);
     EXPECT_EQ(kObjectCountWithNewPath, FPDFPage_CountObjects(saved_page));
 
     CloseSavedPage(saved_page);
@@ -691,8 +686,7 @@ TEST_F(FPDFEditPageEmbedderTest, Bug378464305) {
   EXPECT_TRUE(FPDFPage_GenerateContent(page.get()));
   {
     ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-    CompareBitmapToPngWithExpectationSuffix(bitmap.get(),
-                                            pdfium::kRectanglesPng);
+    CompareBitmapWithExpectationSuffix(bitmap.get(), pdfium::kRectanglesPng);
     // `path` can still be found. It is just deactivated.
     EXPECT_EQ(kObjectCountWithNewPath, FPDFPage_CountObjects(page.get()));
   }
@@ -705,8 +699,7 @@ TEST_F(FPDFEditPageEmbedderTest, Bug378464305) {
     ASSERT_TRUE(saved_page);
 
     ScopedFPDFBitmap bitmap = RenderSavedPage(saved_page);
-    CompareBitmapToPngWithExpectationSuffix(bitmap.get(),
-                                            pdfium::kRectanglesPng);
+    CompareBitmapWithExpectationSuffix(bitmap.get(), pdfium::kRectanglesPng);
     // `path` did not get written out to the saved PDF.
     EXPECT_EQ(kOriginalObjectCount, FPDFPage_CountObjects(saved_page));
 
@@ -719,7 +712,7 @@ TEST_F(FPDFEditPageEmbedderTest, Bug378464305) {
   EXPECT_TRUE(FPDFPage_GenerateContent(page.get()));
   {
     ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-    CompareBitmapToPngWithExpectationSuffix(bitmap.get(), kNewPathPng);
+    CompareBitmapWithExpectationSuffix(bitmap.get(), kNewPathPng);
     EXPECT_EQ(kObjectCountWithNewPath, FPDFPage_CountObjects(page.get()));
   }
 
@@ -731,7 +724,7 @@ TEST_F(FPDFEditPageEmbedderTest, Bug378464305) {
     ASSERT_TRUE(saved_page);
 
     ScopedFPDFBitmap bitmap = RenderSavedPage(saved_page);
-    CompareBitmapToPngWithExpectationSuffix(bitmap.get(), kNewPathPng);
+    CompareBitmapWithExpectationSuffix(bitmap.get(), kNewPathPng);
     EXPECT_EQ(kObjectCountWithNewPath, FPDFPage_CountObjects(saved_page));
 
     CloseSavedPage(saved_page);

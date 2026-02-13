@@ -1384,7 +1384,7 @@ TEST_F(FPDFFormFillEmbedderTest, FormText) {
     ScopedPage page = LoadScopedPage(0);
     ASSERT_TRUE(page);
     ScopedFPDFBitmap bitmap1 = RenderLoadedPage(page.get());
-    CompareBitmapToPngWithExpectationSuffix(bitmap1.get(), kTextFormPng);
+    CompareBitmapWithExpectationSuffix(bitmap1.get(), kTextFormPng);
 
     // Click on the textfield
     EXPECT_EQ(
@@ -1401,29 +1401,29 @@ TEST_F(FPDFFormFillEmbedderTest, FormText) {
     FORM_OnChar(form_handle(), page.get(), 'B', 0);
     FORM_OnChar(form_handle(), page.get(), 'C', 0);
     ScopedFPDFBitmap bitmap2 = RenderLoadedPage(page.get());
-    CompareBitmapToPngWithExpectationSuffix(bitmap2.get(),
-                                            kFocusedTextFormWithAbcPng);
+    CompareBitmapWithExpectationSuffix(bitmap2.get(),
+                                       kFocusedTextFormWithAbcPng);
 
     // Focus remains despite right clicking out of the textfield
     FORM_OnMouseMove(form_handle(), page.get(), 0, 15.0, 15.0);
     FORM_OnRButtonDown(form_handle(), page.get(), 0, 15.0, 15.0);
     FORM_OnRButtonUp(form_handle(), page.get(), 0, 15.0, 15.0);
     ScopedFPDFBitmap bitmap3 = RenderLoadedPage(page.get());
-    CompareBitmapToPngWithExpectationSuffix(bitmap3.get(),
-                                            kFocusedTextFormWithAbcPng);
+    CompareBitmapWithExpectationSuffix(bitmap3.get(),
+                                       kFocusedTextFormWithAbcPng);
 
     // Take out focus by clicking out of the textfield
     FORM_OnMouseMove(form_handle(), page.get(), 0, 15.0, 15.0);
     FORM_OnLButtonDown(form_handle(), page.get(), 0, 15.0, 15.0);
     FORM_OnLButtonUp(form_handle(), page.get(), 0, 15.0, 15.0);
     ScopedFPDFBitmap bitmap4 = RenderLoadedPage(page.get());
-    CompareBitmapToPngWithExpectationSuffix(bitmap4.get(),
-                                            kUnfocusedTextFormWithAbcPng);
+    CompareBitmapWithExpectationSuffix(bitmap4.get(),
+                                       kUnfocusedTextFormWithAbcPng);
 
     EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
   }
   // Check saved document
-  VerifySavedDocumentToPngWithExpectationSuffix(kUnfocusedTextFormWithAbcPng);
+  VerifySavedDocumentWithExpectationSuffix(kUnfocusedTextFormWithAbcPng);
 }
 
 // Tests using FPDF_REVERSE_BYTE_ORDER with FPDF_FFLDraw(). The two rendered
@@ -1434,13 +1434,13 @@ TEST_F(FPDFFormFillEmbedderTest, Bug1281) {
   ASSERT_TRUE(page);
 
   ScopedFPDFBitmap bitmap_normal = RenderLoadedPage(page.get());
-  CompareBitmapToPngWithExpectationSuffix(bitmap_normal.get(),
-                                          pdfium::kBug890322Png);
+  CompareBitmapWithExpectationSuffix(bitmap_normal.get(),
+                                     pdfium::kBug890322Png);
 
   ScopedFPDFBitmap bitmap_reverse_byte_order =
       RenderLoadedPageWithFlags(page.get(), FPDF_REVERSE_BYTE_ORDER);
-  CompareBitmapToPngWithFuzzyExpectationSuffix(bitmap_reverse_byte_order.get(),
-                                               "bug_890322_reverse");
+  CompareBitmapWithFuzzyExpectationSuffix(bitmap_reverse_byte_order.get(),
+                                          "bug_890322_reverse");
 }
 
 TEST_F(FPDFFormFillEmbedderTest, Bug1302455RenderOnly) {
@@ -1451,12 +1451,11 @@ TEST_F(FPDFFormFillEmbedderTest, Bug1302455RenderOnly) {
     ASSERT_TRUE(page);
 
     ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-    CompareBitmapToPngWithExpectationSuffix(bitmap.get(),
-                                            kBug1302455ReadOnlyPng);
+    CompareBitmapWithExpectationSuffix(bitmap.get(), kBug1302455ReadOnlyPng);
 
     EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
   }
-  VerifySavedDocumentToPngWithExpectationSuffix(kBug1302455ReadOnlyPng);
+  VerifySavedDocumentWithExpectationSuffix(kBug1302455ReadOnlyPng);
 }
 
 TEST_F(FPDFFormFillEmbedderTest, Bug1302455EditFirstForm) {
@@ -1477,12 +1476,12 @@ TEST_F(FPDFFormFillEmbedderTest, Bug1302455EditFirstForm) {
 
     FORM_ForceToKillFocus(form_handle());
     ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-    CompareBitmapToPngWithExpectationSuffix(bitmap.get(),
-                                            kBug1302455EditFirstFormPng);
+    CompareBitmapWithExpectationSuffix(bitmap.get(),
+                                       kBug1302455EditFirstFormPng);
 
     EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
   }
-  VerifySavedDocumentToPngWithExpectationSuffix(kBug1302455EditFirstFormPng);
+  VerifySavedDocumentWithExpectationSuffix(kBug1302455EditFirstFormPng);
 }
 
 TEST_F(FPDFFormFillEmbedderTest, Bug1302455EditSecondForm) {
@@ -1503,12 +1502,12 @@ TEST_F(FPDFFormFillEmbedderTest, Bug1302455EditSecondForm) {
 
     FORM_ForceToKillFocus(form_handle());
     ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-    CompareBitmapToPngWithExpectationSuffix(bitmap.get(),
-                                            kBug1302455EditSecondFormPng);
+    CompareBitmapWithExpectationSuffix(bitmap.get(),
+                                       kBug1302455EditSecondFormPng);
 
     EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
   }
-  VerifySavedDocumentToPngWithExpectationSuffix(kBug1302455EditSecondFormPng);
+  VerifySavedDocumentWithExpectationSuffix(kBug1302455EditSecondFormPng);
 }
 
 TEST_F(FPDFFormFillEmbedderTest, Bug1302455EditBothForms) {
@@ -1537,12 +1536,12 @@ TEST_F(FPDFFormFillEmbedderTest, Bug1302455EditBothForms) {
 
     FORM_ForceToKillFocus(form_handle());
     ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-    CompareBitmapToPngWithExpectationSuffix(bitmap.get(),
-                                            kBug1302455EditBothFormsPng);
+    CompareBitmapWithExpectationSuffix(bitmap.get(),
+                                       kBug1302455EditBothFormsPng);
 
     EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
   }
-  VerifySavedDocumentToPngWithExpectationSuffix(kBug1302455EditBothFormsPng);
+  VerifySavedDocumentWithExpectationSuffix(kBug1302455EditBothFormsPng);
 }
 
 TEST_F(FPDFFormFillEmbedderTest, RemoveFormFieldHighlight) {
@@ -1550,18 +1549,17 @@ TEST_F(FPDFFormFillEmbedderTest, RemoveFormFieldHighlight) {
   ScopedPage page = LoadScopedPage(0);
   ASSERT_TRUE(page);
   ScopedFPDFBitmap bitmap1 = RenderLoadedPage(page.get());
-  CompareBitmapToPngWithExpectationSuffix(bitmap1.get(), kTextFormPng);
+  CompareBitmapWithExpectationSuffix(bitmap1.get(), kTextFormPng);
 
   // Removing the highlight changes the rendering.
   FPDF_RemoveFormFieldHighlight(form_handle());
   ScopedFPDFBitmap bitmap2 = RenderLoadedPage(page.get());
-  CompareBitmapToPngWithExpectationSuffix(bitmap2.get(),
-                                          "text_form_no_highlight");
+  CompareBitmapWithExpectationSuffix(bitmap2.get(), "text_form_no_highlight");
 
   // Restoring it gives the original rendering.
   SetInitialFormFieldHighlight(form_handle());
   ScopedFPDFBitmap bitmap3 = RenderLoadedPage(page.get());
-  CompareBitmapToPngWithExpectationSuffix(bitmap3.get(), kTextFormPng);
+  CompareBitmapWithExpectationSuffix(bitmap3.get(), kTextFormPng);
 }
 
 TEST_F(FPDFFormFillEmbedderTest, HasFormInfoNone) {

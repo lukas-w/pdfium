@@ -168,7 +168,7 @@ class FPDFViewEmbedderTest : public EmbedderTest {
     EXPECT_TRUE(FPDFBitmap_FillRect(bitmap.get(), 0, 0, bitmap_width,
                                     bitmap_height, 0xFFFFFFFF));
     FPDF_RenderPageBitmapWithMatrix(bitmap.get(), page, &matrix, &rect, 0);
-    CompareBitmapToPngWithExpectationSuffix(bitmap.get(), expectation_png_name);
+    CompareBitmapWithExpectationSuffix(bitmap.get(), expectation_png_name);
   }
 
   void TestRenderPageBitmapWithFlags(FPDF_PAGE page,
@@ -176,7 +176,7 @@ class FPDFViewEmbedderTest : public EmbedderTest {
                                      std::string_view expectation_png_name) {
     ScopedFPDFBitmap bitmap = TestRenderPageBitmapWithFlagsImpl(page, flags);
     ASSERT_TRUE(bitmap);
-    CompareBitmapToPngWithExpectationSuffix(bitmap.get(), expectation_png_name);
+    CompareBitmapWithExpectationSuffix(bitmap.get(), expectation_png_name);
   }
 
   void TestRenderPageBitmapWithInternalMemory(
@@ -252,7 +252,7 @@ class FPDFViewEmbedderTest : public EmbedderTest {
 
     ScopedFPDFBitmap bitmap = SkPictureToPdfiumBitmap(
         std::move(picture), SkISize::Make(width, height));
-    CompareBitmapToPngWithExpectationSuffix(bitmap.get(), png_name);
+    CompareBitmapWithExpectationSuffix(bitmap.get(), png_name);
   }
 #endif  // defined(PDF_USE_SKIA)
 
@@ -303,10 +303,9 @@ class FPDFViewEmbedderTest : public EmbedderTest {
                                   bool fuzzy = false) {
     RenderPageToBitmap(page, bitmap);
     if (fuzzy) {
-      CompareBitmapToPngWithFuzzyExpectationSuffix(bitmap,
-                                                   expectation_png_name);
+      CompareBitmapWithFuzzyExpectationSuffix(bitmap, expectation_png_name);
     } else {
-      CompareBitmapToPngWithExpectationSuffix(bitmap, expectation_png_name);
+      CompareBitmapWithExpectationSuffix(bitmap, expectation_png_name);
     }
   }
 };
@@ -1041,7 +1040,7 @@ TEST_F(FPDFViewEmbedderTest, FPDFRenderPageBitmapWithMatrix) {
   EXPECT_FLOAT_EQ(300, page_height);
 
   ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-  CompareBitmapToPngWithExpectationSuffix(bitmap.get(), pdfium::kRectanglesPng);
+  CompareBitmapWithExpectationSuffix(bitmap.get(), pdfium::kRectanglesPng);
 
   FS_RECTF page_rect{0, 0, page_width, page_height};
 
@@ -2080,7 +2079,7 @@ TEST_F(FPDFViewEmbedderTest, RenderTransparencyOnWhiteBackground) {
   FPDF_RenderPageBitmap(bitmap.get(), page.get(), /*start_x=*/0,
                         /*start_y=*/0, kWidth, kHeight, /*rotate=*/0,
                         /*flags=*/0);
-  CompareBitmapToPng(bitmap.get(), pdfium::kBlankPage200x200Png);
+  CompareBitmap(bitmap.get(), pdfium::kBlankPage200x200Png);
 }
 
 TEST_F(FPDFViewEmbedderTest, Bug2112) {
@@ -2111,26 +2110,26 @@ TEST_F(FPDFViewEmbedderTest, BadFillRectInput) {
   ASSERT_TRUE(FPDFBitmap_FillRect(bitmap.get(), /*left=*/0, /*top=*/0,
                                   /*width=*/kWidth,
                                   /*height=*/kHeight, 0xFFFF0000));
-  CompareBitmapToPng(bitmap.get(), kExpectedFilename);
+  CompareBitmap(bitmap.get(), kExpectedFilename);
 
   // Empty rect dimensions is a no-op.
   ASSERT_TRUE(FPDFBitmap_FillRect(bitmap.get(), /*left=*/0, /*top=*/0,
                                   /*width=*/0,
                                   /*height=*/0, 0xFF0000FF));
-  CompareBitmapToPng(bitmap.get(), kExpectedFilename);
+  CompareBitmap(bitmap.get(), kExpectedFilename);
 
   // Rect dimension overflows are also no-ops.
   ASSERT_FALSE(FPDFBitmap_FillRect(
       bitmap.get(), /*left=*/std::numeric_limits<int>::max(),
       /*top=*/0, /*width=*/std::numeric_limits<int>::max(),
       /*height=*/kHeight, 0xFF0000FF));
-  CompareBitmapToPng(bitmap.get(), kExpectedFilename);
+  CompareBitmap(bitmap.get(), kExpectedFilename);
 
   ASSERT_FALSE(FPDFBitmap_FillRect(
       bitmap.get(), /*left=*/0,
       /*top=*/std::numeric_limits<int>::max(), /*width=*/kWidth,
       /*height=*/std::numeric_limits<int>::max(), 0xFF0000FF));
-  CompareBitmapToPng(bitmap.get(), kExpectedFilename);
+  CompareBitmap(bitmap.get(), kExpectedFilename);
 
   // Make sure null bitmap handle does not trigger a crash.
   ASSERT_FALSE(FPDFBitmap_FillRect(nullptr, 0, 0, kWidth, kHeight, 0xFF0000FF));

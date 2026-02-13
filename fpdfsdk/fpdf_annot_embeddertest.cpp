@@ -399,8 +399,7 @@ TEST_F(FPDFAnnotEmbedderTest, RenderAnnotWithOnlyRolloverAP) {
   // normal appearance should be generated, allowing the highlight annotation to
   // still display.
   ScopedFPDFBitmap bitmap = RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-  CompareBitmapToPng(bitmap.get(),
-                     "fpdf_annot_render_annot_with_only_rollover_ap");
+  CompareBitmap(bitmap.get(), "fpdf_annot_render_annot_with_only_rollover_ap");
 }
 
 TEST_F(FPDFAnnotEmbedderTest, RenderMultilineMarkupAnnotWithoutAP) {
@@ -410,8 +409,8 @@ TEST_F(FPDFAnnotEmbedderTest, RenderMultilineMarkupAnnotWithoutAP) {
   ASSERT_TRUE(page);
 
   ScopedFPDFBitmap bitmap = RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-  CompareBitmapToPngWithExpectationSuffix(bitmap.get(),
-                                          "annotation_markup_multiline_no_ap");
+  CompareBitmapWithExpectationSuffix(bitmap.get(),
+                                     "annotation_markup_multiline_no_ap");
 }
 
 TEST_F(FPDFAnnotEmbedderTest, ExtractHighlightLongContent) {
@@ -540,8 +539,8 @@ TEST_F(FPDFAnnotEmbedderTest, ExtractInkMultiple) {
   }
   {
     ScopedFPDFBitmap bitmap = RenderLoadedPageWithFlags(page, FPDF_ANNOT);
-    CompareBitmapToPngWithFuzzyExpectationSuffix(bitmap.get(),
-                                                 "annotation_ink_multiple");
+    CompareBitmapWithFuzzyExpectationSuffix(bitmap.get(),
+                                            "annotation_ink_multiple");
   }
   UnloadPageNoEvents(page);
 }
@@ -647,8 +646,7 @@ TEST_F(FPDFAnnotEmbedderTest, AddAndSaveLinkAnnotation) {
   ASSERT_TRUE(page);
   {
     ScopedFPDFBitmap bitmap = RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-    CompareBitmapToPngWithExpectationSuffix(bitmap.get(),
-                                            pdfium::kHelloWorldPng);
+    CompareBitmapWithExpectationSuffix(bitmap.get(), pdfium::kHelloWorldPng);
   }
   EXPECT_EQ(0, FPDFPage_GetAnnotCount(page.get()));
 
@@ -706,8 +704,8 @@ TEST_F(FPDFAnnotEmbedderTest, AddAndSaveLinkAnnotation) {
     ASSERT_TRUE(saved_doc);
     ScopedSavedPage saved_page = LoadScopedSavedPage(0);
     ASSERT_TRUE(saved_page);
-    VerifySavedRenderingToPngWithExpectationSuffix(saved_page.get(),
-                                                   pdfium::kHelloWorldPng);
+    VerifySavedRenderingWithExpectationSuffix(saved_page.get(),
+                                              pdfium::kHelloWorldPng);
     EXPECT_EQ(1, FPDFPage_GetAnnotCount(saved_page.get()));
 
     ScopedFPDFAnnotation annot(FPDFPage_GetAnnot(saved_page.get(), 0));
@@ -757,7 +755,7 @@ TEST_F(FPDFAnnotEmbedderTest, AddAndSaveUnderlineAnnotation) {
     ASSERT_TRUE(saved_doc);
     ScopedSavedPage saved_page = LoadScopedSavedPage(0);
     ASSERT_TRUE(saved_page);
-    VerifySavedRenderingToPngWithFuzzyExpectationSuffix(
+    VerifySavedRenderingWithFuzzyExpectationSuffix(
         saved_page.get(), "annotation_highlight_long_content_added_underline");
 
     // Check that the saved document has 2 annotations on the first page
@@ -873,7 +871,7 @@ TEST_F(FPDFAnnotEmbedderTest, ModifyRectQuadpointsWithAP) {
       "annotation_highlight_square_with_ap";
   {
     ScopedFPDFBitmap bitmap = RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-    CompareBitmapToPngWithFuzzyExpectationSuffix(
+    CompareBitmapWithFuzzyExpectationSuffix(
         bitmap.get(), kAnnotationHighlightSquareWithApPng);
   }
 
@@ -915,7 +913,7 @@ TEST_F(FPDFAnnotEmbedderTest, ModifyRectQuadpointsWithAP) {
     {
       ScopedFPDFBitmap bitmap =
           RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-      CompareBitmapToPngWithFuzzyExpectationSuffix(
+      CompareBitmapWithFuzzyExpectationSuffix(
           bitmap.get(), kAnnotationHighlightSquareWithApPng);
     }
 
@@ -937,7 +935,7 @@ TEST_F(FPDFAnnotEmbedderTest, ModifyRectQuadpointsWithAP) {
   // Check that updating the rectangle changes the annotation's position.
   {
     ScopedFPDFBitmap bitmap = RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-    CompareBitmapToPngWithFuzzyExpectationSuffix(
+    CompareBitmapWithFuzzyExpectationSuffix(
         bitmap.get(), "annotation_highlight_square_with_ap_modified_highlight");
   }
 
@@ -958,7 +956,7 @@ TEST_F(FPDFAnnotEmbedderTest, ModifyRectQuadpointsWithAP) {
     // Check that updating the rectangle changes the square annotation's
     // position.
     ScopedFPDFBitmap bitmap = RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-    CompareBitmapToPngWithFuzzyExpectationSuffix(
+    CompareBitmapWithFuzzyExpectationSuffix(
         bitmap.get(), "annotation_highlight_square_with_ap_modified_square");
   }
 }
@@ -1064,8 +1062,7 @@ TEST_F(FPDFAnnotEmbedderTest, AddAndModifyPath) {
   // Check that the page renders correctly.
   {
     ScopedFPDFBitmap bitmap = RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-    CompareBitmapToPngWithExpectationSuffix(bitmap.get(),
-                                            kAnnotationStampWithApPng);
+    CompareBitmapWithExpectationSuffix(bitmap.get(), kAnnotationStampWithApPng);
   }
 
   {
@@ -1090,7 +1087,7 @@ TEST_F(FPDFAnnotEmbedderTest, AddAndModifyPath) {
     {
       ScopedFPDFBitmap bitmap =
           RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-      CompareBitmapToPngWithExpectationSuffix(
+      CompareBitmapWithExpectationSuffix(
           bitmap.get(), "annotation_stamp_with_ap_modified_path");
     }
 
@@ -1111,8 +1108,8 @@ TEST_F(FPDFAnnotEmbedderTest, AddAndModifyPath) {
     {
       ScopedFPDFBitmap bitmap =
           RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-      CompareBitmapToPngWithExpectationSuffix(
-          bitmap.get(), "annotation_stamp_with_ap_two_paths");
+      CompareBitmapWithExpectationSuffix(bitmap.get(),
+                                         "annotation_stamp_with_ap_two_paths");
     }
 
     // Delete the newly added path object.
@@ -1124,7 +1121,7 @@ TEST_F(FPDFAnnotEmbedderTest, AddAndModifyPath) {
   // Check that the page renders the same as before.
   {
     ScopedFPDFBitmap bitmap = RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-    CompareBitmapToPngWithExpectationSuffix(
+    CompareBitmapWithExpectationSuffix(
         bitmap.get(), "annotation_stamp_with_ap_modified_path");
   }
 
@@ -1169,7 +1166,7 @@ TEST_F(FPDFAnnotEmbedderTest, AddAndModifyPath) {
     ASSERT_TRUE(saved_doc);
     ScopedSavedPage saved_page = LoadScopedSavedPage(0);
     ASSERT_TRUE(saved_page);
-    VerifySavedRenderingToPngWithExpectationSuffix(
+    VerifySavedRenderingWithExpectationSuffix(
         saved_page.get(), "annotation_stamp_with_ap_new_annot");
 
     // Check that the document has a correct count of annotations and objects.
@@ -1200,7 +1197,7 @@ TEST_F(FPDFAnnotEmbedderTest, ModifyAnnotationFlags) {
       "annotation_highlight_rollover_ap";
   {
     ScopedFPDFBitmap bitmap = RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-    CompareBitmapToPng(bitmap.get(), kAnnotationHighlightRolloverApPng);
+    CompareBitmap(bitmap.get(), kAnnotationHighlightRolloverApPng);
   }
 
   {
@@ -1231,7 +1228,7 @@ TEST_F(FPDFAnnotEmbedderTest, ModifyAnnotationFlags) {
     {
       ScopedFPDFBitmap bitmap =
           RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-      CompareBitmapToPng(bitmap.get(), pdfium::kBlankPage612By792Png);
+      CompareBitmap(bitmap.get(), pdfium::kBlankPage612By792Png);
     }
 
     // Unset the HIDDEN flag.
@@ -1247,7 +1244,7 @@ TEST_F(FPDFAnnotEmbedderTest, ModifyAnnotationFlags) {
     {
       ScopedFPDFBitmap bitmap =
           RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-      CompareBitmapToPng(bitmap.get(), kAnnotationHighlightRolloverApPng);
+      CompareBitmap(bitmap.get(), kAnnotationHighlightRolloverApPng);
     }
   }
 }
@@ -1262,8 +1259,7 @@ TEST_F(FPDFAnnotEmbedderTest, AddAndModifyImage) {
   // Check that the page renders correctly.
   {
     ScopedFPDFBitmap bitmap = RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-    CompareBitmapToPngWithExpectationSuffix(bitmap.get(),
-                                            kAnnotationStampWithApPng);
+    CompareBitmapWithExpectationSuffix(bitmap.get(), kAnnotationStampWithApPng);
   }
 
   static constexpr int kBitmapSize = 200;
@@ -1300,7 +1296,7 @@ TEST_F(FPDFAnnotEmbedderTest, AddAndModifyImage) {
   // Check that the page renders correctly with the new image object.
   {
     ScopedFPDFBitmap bitmap = RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-    CompareBitmapToPngWithFuzzyExpectationSuffix(
+    CompareBitmapWithFuzzyExpectationSuffix(
         bitmap.get(), "annotation_stamp_with_ap_new_image");
   }
 
@@ -1326,7 +1322,7 @@ TEST_F(FPDFAnnotEmbedderTest, AddAndModifyImage) {
   FPDFBitmap_Destroy(image_bitmap);
 
   // Test that the saved document renders the modified image object correctly.
-  VerifySavedDocumentToPngWithExpectationSuffix(
+  VerifySavedDocumentWithExpectationSuffix(
       "annotation_stamp_with_ap_modified_image");
 }
 
@@ -1340,8 +1336,7 @@ TEST_F(FPDFAnnotEmbedderTest, AddAndModifyText) {
   // Check that the page renders correctly.
   {
     ScopedFPDFBitmap bitmap = RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-    CompareBitmapToPngWithExpectationSuffix(bitmap.get(),
-                                            kAnnotationStampWithApPng);
+    CompareBitmapWithExpectationSuffix(bitmap.get(), kAnnotationStampWithApPng);
   }
 
   {
@@ -1371,7 +1366,7 @@ TEST_F(FPDFAnnotEmbedderTest, AddAndModifyText) {
   // Check that the page renders correctly with the new text object.
   {
     ScopedFPDFBitmap bitmap = RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-    CompareBitmapToPngWithFuzzyExpectationSuffix(
+    CompareBitmapWithFuzzyExpectationSuffix(
         bitmap.get(), "annotation_stamp_with_ap_new_text");
   }
 
@@ -1392,7 +1387,7 @@ TEST_F(FPDFAnnotEmbedderTest, AddAndModifyText) {
   // Check that the page renders correctly with the modified text object.
   {
     ScopedFPDFBitmap bitmap = RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-    CompareBitmapToPngWithFuzzyExpectationSuffix(
+    CompareBitmapWithFuzzyExpectationSuffix(
         bitmap.get(), "annotation_stamp_with_ap_modified_text");
   }
 
@@ -1400,8 +1395,7 @@ TEST_F(FPDFAnnotEmbedderTest, AddAndModifyText) {
   EXPECT_TRUE(FPDFPage_RemoveAnnot(page.get(), 2));
   {
     ScopedFPDFBitmap bitmap = RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-    CompareBitmapToPngWithExpectationSuffix(bitmap.get(),
-                                            kAnnotationStampWithApPng);
+    CompareBitmapWithExpectationSuffix(bitmap.get(), kAnnotationStampWithApPng);
   }
 }
 
@@ -1464,8 +1458,8 @@ TEST_F(FPDFAnnotEmbedderTest, GetSetStringValue) {
     ASSERT_TRUE(saved_doc);
     ScopedSavedPage saved_page = LoadScopedSavedPage(0);
     ASSERT_TRUE(saved_page);
-    VerifySavedRenderingToPngWithExpectationSuffix(saved_page.get(),
-                                                   kAnnotationStampWithApPng);
+    VerifySavedRenderingWithExpectationSuffix(saved_page.get(),
+                                              kAnnotationStampWithApPng);
 
     ScopedFPDFAnnotation new_annot(FPDFPage_GetAnnot(saved_page.get(), 0));
 
@@ -1980,7 +1974,7 @@ TEST_F(FPDFAnnotEmbedderTest, Bug1206) {
 
   for (size_t i = 0; i < 10; ++i) {
     ScopedFPDFBitmap bitmap = RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-    CompareBitmapToPngWithExpectationSuffix(bitmap.get(), "bug_1206");
+    CompareBitmapWithExpectationSuffix(bitmap.get(), "bug_1206");
 
     ASSERT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
     // TODO(https://crbug.com/42270200): This is wrong. The size should be
@@ -2563,8 +2557,8 @@ TEST_F(FPDFAnnotEmbedderTest, SetFontColor) {
       "freetext_annotation_without_da_modified";
   {
     ScopedFPDFBitmap bitmap = RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-    CompareBitmapToPngWithExpectationSuffix(bitmap.get(),
-                                            "freetext_annotation_without_da");
+    CompareBitmapWithExpectationSuffix(bitmap.get(),
+                                       "freetext_annotation_without_da");
 
     // Obtain the only annotation and set its text color.
     ScopedFPDFAnnotation annot(FPDFPage_GetAnnot(page.get(), 0));
@@ -2587,8 +2581,8 @@ TEST_F(FPDFAnnotEmbedderTest, SetFontColor) {
     EXPECT_EQ(180u, b);
 
     bitmap = RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-    CompareBitmapToPngWithExpectationSuffix(
-        bitmap.get(), kFreetextAnnotationWithoutDaModifiedPng);
+    CompareBitmapWithExpectationSuffix(bitmap.get(),
+                                       kFreetextAnnotationWithoutDaModifiedPng);
   }
 
   EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
@@ -2596,7 +2590,7 @@ TEST_F(FPDFAnnotEmbedderTest, SetFontColor) {
   ASSERT_TRUE(OpenSavedDocument());
   FPDF_PAGE saved_page = LoadSavedPage(0);
   ASSERT_TRUE(saved_page);
-  VerifySavedRenderingToPngWithExpectationSuffix(
+  VerifySavedRenderingWithExpectationSuffix(
       saved_page, kFreetextAnnotationWithoutDaModifiedPng);
 
   CloseSavedPage(saved_page);
@@ -2972,7 +2966,7 @@ TEST_F(FPDFAnnotEmbedderTest, FocusableAnnotRendering) {
   {
     // Check the initial rendering.
     ScopedFPDFBitmap bitmap = RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-    CompareBitmapToPngWithExpectationSuffix(bitmap.get(), "annots_page1");
+    CompareBitmapWithExpectationSuffix(bitmap.get(), "annots_page1");
   }
 
   // Make links and highlights focusable.
@@ -2995,8 +2989,7 @@ TEST_F(FPDFAnnotEmbedderTest, FocusableAnnotRendering) {
     EXPECT_EQ(FPDF_ANNOT_LINK, FPDFAnnot_GetSubtype(annot.get()));
     EXPECT_TRUE(FORM_SetFocusedAnnot(form_handle(), annot.get()));
     ScopedFPDFBitmap bitmap = RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-    CompareBitmapToPngWithExpectationSuffix(bitmap.get(),
-                                            "annots_page1_focus_link");
+    CompareBitmapWithExpectationSuffix(bitmap.get(), "annots_page1_focus_link");
   }
 
   {
@@ -3006,8 +2999,8 @@ TEST_F(FPDFAnnotEmbedderTest, FocusableAnnotRendering) {
     EXPECT_EQ(FPDF_ANNOT_HIGHLIGHT, FPDFAnnot_GetSubtype(annot.get()));
     EXPECT_TRUE(FORM_SetFocusedAnnot(form_handle(), annot.get()));
     ScopedFPDFBitmap bitmap = RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-    CompareBitmapToPngWithExpectationSuffix(bitmap.get(),
-                                            "annots_page1_focus_highlight");
+    CompareBitmapWithExpectationSuffix(bitmap.get(),
+                                       "annots_page1_focus_highlight");
   }
 }
 
@@ -3543,7 +3536,7 @@ TEST_F(FPDFAnnotEmbedderTest, AnnotationBorderRendering) {
     {
       ScopedFPDFBitmap bitmap =
           RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-      CompareBitmapToPngWithExpectationSuffix(bitmap.get(), "annots_page2");
+      CompareBitmapWithExpectationSuffix(bitmap.get(), "annots_page2");
     }
 
     EXPECT_TRUE(FPDFAnnot_SetBorder(annot.get(), /*horizontal_radius=*/2.0f,
@@ -3553,8 +3546,7 @@ TEST_F(FPDFAnnotEmbedderTest, AnnotationBorderRendering) {
     {
       ScopedFPDFBitmap bitmap =
           RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-      CompareBitmapToPngWithExpectationSuffix(bitmap.get(),
-                                              kAnnotsPage2ModifiedPng);
+      CompareBitmapWithExpectationSuffix(bitmap.get(), kAnnotsPage2ModifiedPng);
     }
   }
 
@@ -3566,8 +3558,8 @@ TEST_F(FPDFAnnotEmbedderTest, AnnotationBorderRendering) {
     ASSERT_TRUE(saved_doc);
     ScopedSavedPage saved_page = LoadScopedSavedPage(1);
     ASSERT_TRUE(saved_page);
-    VerifySavedRenderingToPngWithExpectationSuffix(saved_page.get(),
-                                                   kAnnotsPage2ModifiedPng);
+    VerifySavedRenderingWithExpectationSuffix(saved_page.get(),
+                                              kAnnotsPage2ModifiedPng);
   }
 }
 

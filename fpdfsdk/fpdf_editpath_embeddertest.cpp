@@ -88,8 +88,7 @@ TEST_F(FPDFEditPathEmbedderTest, GetAndSetMatrixForPath) {
 
   {
     ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-    CompareBitmapToPngWithExpectationSuffix(bitmap.get(),
-                                            pdfium::kRectanglesPng);
+    CompareBitmapWithExpectationSuffix(bitmap.get(), pdfium::kRectanglesPng);
   }
 
   FPDF_PAGEOBJECT path = FPDFPage_GetObject(page.get(), 0);
@@ -108,8 +107,7 @@ TEST_F(FPDFEditPathEmbedderTest, GetAndSetMatrixForPath) {
   ASSERT_TRUE(FPDFPageObj_SetMatrix(path, &matrix));
   {
     ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-    CompareBitmapToPngWithExpectationSuffix(bitmap.get(),
-                                            pdfium::kRectanglesPng);
+    CompareBitmapWithExpectationSuffix(bitmap.get(), pdfium::kRectanglesPng);
   }
 
   ASSERT_TRUE(FPDFPage_GenerateContent(page.get()));
@@ -117,11 +115,10 @@ TEST_F(FPDFEditPathEmbedderTest, GetAndSetMatrixForPath) {
 
   {
     ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-    CompareBitmapToPngWithExpectationSuffix(bitmap.get(),
-                                            pdfium::kRectanglesPng);
+    CompareBitmapWithExpectationSuffix(bitmap.get(), pdfium::kRectanglesPng);
   }
 
-  VerifySavedDocumentToPngWithExpectationSuffix(pdfium::kRectanglesPng);
+  VerifySavedDocumentWithExpectationSuffix(pdfium::kRectanglesPng);
 }
 
 TEST_F(FPDFEditPathEmbedderTest, GetAndSetMatrixForFormWithPath) {
@@ -131,8 +128,7 @@ TEST_F(FPDFEditPathEmbedderTest, GetAndSetMatrixForFormWithPath) {
 
   {
     ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-    CompareBitmapToPngWithExpectationSuffix(bitmap.get(),
-                                            pdfium::kRectanglesPng);
+    CompareBitmapWithExpectationSuffix(bitmap.get(), pdfium::kRectanglesPng);
   }
 
   FPDF_PAGEOBJECT form = FPDFPage_GetObject(page.get(), 0);
@@ -151,8 +147,7 @@ TEST_F(FPDFEditPathEmbedderTest, GetAndSetMatrixForFormWithPath) {
   ASSERT_TRUE(FPDFPageObj_SetMatrix(form, &matrix));
   {
     ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-    CompareBitmapToPngWithExpectationSuffix(bitmap.get(),
-                                            pdfium::kRectanglesPng);
+    CompareBitmapWithExpectationSuffix(bitmap.get(), pdfium::kRectanglesPng);
   }
 
   FPDF_PAGEOBJECT path = FPDFFormObj_GetObject(form, 0);
@@ -170,8 +165,7 @@ TEST_F(FPDFEditPathEmbedderTest, GetAndSetMatrixForFormWithPath) {
   ASSERT_TRUE(FPDFPageObj_SetMatrix(path, &matrix));
   {
     ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-    CompareBitmapToPngWithExpectationSuffix(bitmap.get(),
-                                            pdfium::kRectanglesPng);
+    CompareBitmapWithExpectationSuffix(bitmap.get(), pdfium::kRectanglesPng);
   }
 
   ASSERT_TRUE(FPDFPage_GenerateContent(page.get()));
@@ -179,11 +173,10 @@ TEST_F(FPDFEditPathEmbedderTest, GetAndSetMatrixForFormWithPath) {
 
   {
     ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-    CompareBitmapToPngWithExpectationSuffix(bitmap.get(),
-                                            pdfium::kRectanglesPng);
+    CompareBitmapWithExpectationSuffix(bitmap.get(), pdfium::kRectanglesPng);
   }
 
-  VerifySavedDocumentToPngWithExpectationSuffix(pdfium::kRectanglesPng);
+  VerifySavedDocumentWithExpectationSuffix(pdfium::kRectanglesPng);
 }
 
 TEST_F(FPDFEditPathEmbedderTest, AddPathToRectangles) {
@@ -193,8 +186,7 @@ TEST_F(FPDFEditPathEmbedderTest, AddPathToRectangles) {
 
   {
     ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-    CompareBitmapToPngWithExpectationSuffix(bitmap.get(),
-                                            pdfium::kRectanglesPng);
+    CompareBitmapWithExpectationSuffix(bitmap.get(), pdfium::kRectanglesPng);
   }
 
   ScopedFPDFPageObject path = CreateBlackTriangle();
@@ -203,8 +195,7 @@ TEST_F(FPDFEditPathEmbedderTest, AddPathToRectangles) {
 
   {
     ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-    CompareBitmapToPngWithExpectationSuffix(bitmap.get(),
-                                            kRectanglesAndTrianglePng);
+    CompareBitmapWithExpectationSuffix(bitmap.get(), kRectanglesAndTrianglePng);
   }
 
   EXPECT_TRUE(FPDFPage_GenerateContent(page.get()));
@@ -212,11 +203,10 @@ TEST_F(FPDFEditPathEmbedderTest, AddPathToRectangles) {
 
   {
     ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-    CompareBitmapToPngWithExpectationSuffix(bitmap.get(),
-                                            kRectanglesAndTrianglePng);
+    CompareBitmapWithExpectationSuffix(bitmap.get(), kRectanglesAndTrianglePng);
   }
 
-  VerifySavedDocumentToPngWithExpectationSuffix(kRectanglesAndTrianglePng);
+  VerifySavedDocumentWithExpectationSuffix(kRectanglesAndTrianglePng);
 }
 
 TEST_F(FPDFEditPathEmbedderTest, AddPathToRectanglesWithLeakyCTM) {
@@ -226,8 +216,7 @@ TEST_F(FPDFEditPathEmbedderTest, AddPathToRectanglesWithLeakyCTM) {
 
   {
     ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-    CompareBitmapToPngWithExpectationSuffix(bitmap.get(),
-                                            pdfium::kRectanglesPng);
+    CompareBitmapWithExpectationSuffix(bitmap.get(), pdfium::kRectanglesPng);
   }
 
   ScopedFPDFPageObject path = CreateBlackTriangle();
@@ -236,8 +225,7 @@ TEST_F(FPDFEditPathEmbedderTest, AddPathToRectanglesWithLeakyCTM) {
 
   {
     ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-    CompareBitmapToPngWithExpectationSuffix(bitmap.get(),
-                                            kRectanglesAndTrianglePng);
+    CompareBitmapWithExpectationSuffix(bitmap.get(), kRectanglesAndTrianglePng);
   }
 
   EXPECT_TRUE(FPDFPage_GenerateContent(page.get()));
@@ -245,9 +233,8 @@ TEST_F(FPDFEditPathEmbedderTest, AddPathToRectanglesWithLeakyCTM) {
 
   {
     ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-    CompareBitmapToPngWithExpectationSuffix(bitmap.get(),
-                                            kRectanglesAndTrianglePng);
+    CompareBitmapWithExpectationSuffix(bitmap.get(), kRectanglesAndTrianglePng);
   }
 
-  VerifySavedDocumentToPngWithExpectationSuffix(kRectanglesAndTrianglePng);
+  VerifySavedDocumentWithExpectationSuffix(kRectanglesAndTrianglePng);
 }
