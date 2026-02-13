@@ -50,17 +50,23 @@ class CPDFSecurityHandlerEmbedderTest : public EmbedderTest {
 
   void VerifySavedHelloWorldDocumentWithPassword(const char* password) {
     ASSERT_TRUE(OpenSavedDocumentWithPassword(password));
-    FPDF_PAGE page = LoadSavedPage(0);
-    VerifyHelloWorldPage(page);
-    CloseSavedPage(page);
+    // TODO(crbug.com/407147676): Remove this after
+    // OpenSavedDocumentWithPassword() is migrated to a Scoped method.
+    {
+      ScopedSavedPage page = LoadScopedSavedPage(0);
+      VerifyHelloWorldPage(page.get());
+    }
     CloseSavedDocument();
   }
 
   void VerifySavedModifiedHelloWorldDocumentWithPassword(const char* password) {
     ASSERT_TRUE(OpenSavedDocumentWithPassword(password));
-    FPDF_PAGE page = LoadSavedPage(0);
-    VerifyModifiedHelloWorldPage(page);
-    CloseSavedPage(page);
+    // TODO(crbug.com/407147676): Remove this after
+    // OpenSavedDocumentWithPassword() is migrated to a Scoped method.
+    {
+      ScopedSavedPage page = LoadScopedSavedPage(0);
+      VerifyModifiedHelloWorldPage(page.get());
+    }
     CloseSavedDocument();
   }
 
@@ -173,13 +179,14 @@ TEST_F(CPDFSecurityHandlerEmbedderTest, PasswordAfterGenerateSave) {
   } tests[] = {{"1234", 0xFFFFF2C0}, {"5678", 0xFFFFFFFC}};
 
   for (const auto& test : tests) {
+    // TODO(crbug.com/407147676): Replace with a scoped method.
     ASSERT_TRUE(OpenSavedDocumentWithPassword(test.password));
-    FPDF_PAGE page = LoadSavedPage(0);
-    ASSERT_TRUE(page);
-    VerifySavedRenderingWithExpectationSuffix(page, kBasename);
-    EXPECT_EQ(test.permissions, FPDF_GetDocPermissions(saved_document()));
-
-    CloseSavedPage(page);
+    {
+      ScopedSavedPage page = LoadScopedSavedPage(0);
+      ASSERT_TRUE(page);
+      VerifySavedRenderingWithExpectationSuffix(page.get(), kBasename);
+      EXPECT_EQ(test.permissions, FPDF_GetDocPermissions(saved_document()));
+    }
     CloseSavedDocument();
   }
 }

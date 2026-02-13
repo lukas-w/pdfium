@@ -121,12 +121,13 @@ TEST_F(FPDFSaveEmbedderTest, Bug42271133) {
   ASSERT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
 
   // Reload saved document.
-  ASSERT_TRUE(OpenSavedDocument());
-  FPDF_PAGE saved_page = LoadSavedPage(0);
+  ScopedSavedDoc saved_document = OpenScopedSavedDocument();
+  ASSERT_TRUE(saved_document);
+  ScopedSavedPage saved_page = LoadScopedSavedPage(0);
   ASSERT_TRUE(saved_page);
 
   // Assert path fill color is not changed to black.
-  auto path_obj = FPDFPage_GetObject(saved_page, 0);
+  auto path_obj = FPDFPage_GetObject(saved_page.get(), 0);
   ASSERT_TRUE(path_obj);
   unsigned int r;
   unsigned int g;
@@ -136,9 +137,6 @@ TEST_F(FPDFSaveEmbedderTest, Bug42271133) {
   EXPECT_EQ(180u, r);
   EXPECT_EQ(180u, g);
   EXPECT_EQ(180u, b);
-
-  CloseSavedPage(saved_page);
-  CloseSavedDocument();
 }
 
 TEST_F(FPDFSaveEmbedderTest, SaveLinearizedDoc) {
@@ -167,15 +165,14 @@ TEST_F(FPDFSaveEmbedderTest, SaveLinearizedDoc) {
   EXPECT_EQ(7986u, GetString().size());
 
   // Make sure new document renders the same as the old one.
-  ASSERT_TRUE(OpenSavedDocument());
+  ScopedSavedDoc saved_document = OpenScopedSavedDocument();
+  ASSERT_TRUE(saved_document);
   for (int i = 0; i < kPageCount; ++i) {
-    FPDF_PAGE page = LoadSavedPage(i);
+    ScopedSavedPage page = LoadScopedSavedPage(i);
     ASSERT_TRUE(page);
-    ScopedFPDFBitmap bitmap = RenderSavedPage(page);
+    ScopedFPDFBitmap bitmap = RenderSavedPage(page.get());
     EXPECT_EQ(original_md5[i], HashBitmap(bitmap.get()));
-    CloseSavedPage(page);
   }
-  CloseSavedDocument();
 }
 
 TEST_F(FPDFSaveEmbedderTest, Bug1409) {
@@ -192,13 +189,12 @@ TEST_F(FPDFSaveEmbedderTest, Bug1409) {
   ASSERT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
 
   // The new document should render as empty.
-  ASSERT_TRUE(OpenSavedDocument());
-  FPDF_PAGE saved_page = LoadSavedPage(0);
+  ScopedSavedDoc saved_document = OpenScopedSavedDocument();
+  ASSERT_TRUE(saved_document);
+  ScopedSavedPage saved_page = LoadScopedSavedPage(0);
   ASSERT_TRUE(saved_page);
-  ScopedFPDFBitmap bitmap = RenderSavedPage(saved_page);
+  ScopedFPDFBitmap bitmap = RenderSavedPage(saved_page.get());
   CompareBitmap(bitmap.get(), pdfium::kBlankPage612By792Png);
-  CloseSavedPage(saved_page);
-  CloseSavedDocument();
 
   EXPECT_THAT(GetString(), StartsWith("%PDF-1.7\r\n"));
   EXPECT_THAT(GetString(), HasSubstr("/Root "));

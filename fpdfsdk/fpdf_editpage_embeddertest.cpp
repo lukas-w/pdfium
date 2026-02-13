@@ -58,20 +58,20 @@ TEST_F(FPDFEditPageEmbedderTest, Rotation) {
     // Save a copy, open the copy, and render it.
     // Note that it renders the rotation.
     EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
-    ASSERT_TRUE(OpenSavedDocument());
-    FPDF_PAGE saved_page = LoadSavedPage(0);
+    ScopedSavedDoc saved_document = OpenScopedSavedDocument();
+    ASSERT_TRUE(saved_document);
+    ScopedSavedPage saved_page = LoadScopedSavedPage(0);
     ASSERT_TRUE(saved_page);
 
-    EXPECT_EQ(1, FPDFPage_GetRotation(saved_page));
-    const int page_width = static_cast<int>(FPDF_GetPageWidth(saved_page));
-    const int page_height = static_cast<int>(FPDF_GetPageHeight(saved_page));
+    EXPECT_EQ(1, FPDFPage_GetRotation(saved_page.get()));
+    const int page_width =
+        static_cast<int>(FPDF_GetPageWidth(saved_page.get()));
+    const int page_height =
+        static_cast<int>(FPDF_GetPageHeight(saved_page.get()));
     EXPECT_EQ(300, page_width);
     EXPECT_EQ(200, page_height);
-    ScopedFPDFBitmap bitmap = RenderSavedPage(saved_page);
+    ScopedFPDFBitmap bitmap = RenderSavedPage(saved_page.get());
     CompareBitmapWithExpectationSuffix(bitmap.get(), kRotatedPng);
-
-    CloseSavedPage(saved_page);
-    CloseSavedDocument();
   }
 }
 
@@ -467,11 +467,12 @@ TEST_F(FPDFEditPageEmbedderTest, VerifyDashArraySaved) {
     EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
   }
 
-  ASSERT_TRUE(OpenSavedDocument());
-  FPDF_PAGE page = LoadSavedPage(0);
+  ScopedSavedDoc saved_document = OpenScopedSavedDocument();
+  ASSERT_TRUE(saved_document);
+  ScopedSavedPage page = LoadScopedSavedPage(0);
   ASSERT_TRUE(page);
 
-  FPDF_PAGEOBJECT path = FPDFPage_GetObject(page, 0);
+  FPDF_PAGEOBJECT path = FPDFPage_GetObject(page.get(), 0);
   ASSERT_TRUE(path);
 
   float dash_array[] = {0, 0};
@@ -484,9 +485,6 @@ TEST_F(FPDFEditPageEmbedderTest, VerifyDashArraySaved) {
   float dash_phase = 0;
   ASSERT_TRUE(FPDFPageObj_GetDashPhase(path, &dash_phase));
   ASSERT_EQ(kDashPhase, dash_phase);
-
-  CloseSavedPage(page);
-  CloseSavedDocument();
 }
 
 TEST_F(FPDFEditPageEmbedderTest, PageObjectActiveState) {
@@ -509,18 +507,16 @@ TEST_F(FPDFEditPageEmbedderTest, PageObjectActiveState) {
   {
     // Save a copy, open the copy, and render it.
     EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
-    ASSERT_TRUE(OpenSavedDocument());
-    FPDF_PAGE saved_page = LoadSavedPage(0);
+    ScopedSavedDoc saved_document = OpenScopedSavedDocument();
+    ASSERT_TRUE(saved_document);
+    ScopedSavedPage saved_page = LoadScopedSavedPage(0);
     ASSERT_TRUE(saved_page);
 
     // Note that all page objects for the rectangles are present in the copy.
-    EXPECT_EQ(8, FPDFPage_CountObjects(saved_page));
+    EXPECT_EQ(8, FPDFPage_CountObjects(saved_page.get()));
 
-    ScopedFPDFBitmap bitmap = RenderSavedPage(saved_page);
+    ScopedFPDFBitmap bitmap = RenderSavedPage(saved_page.get());
     CompareBitmapWithExpectationSuffix(bitmap.get(), pdfium::kRectanglesPng);
-
-    CloseSavedPage(saved_page);
-    CloseSavedDocument();
   }
 
   // Mark one of the page objects as inactive.  It is still present in the page.
@@ -546,19 +542,17 @@ TEST_F(FPDFEditPageEmbedderTest, PageObjectActiveState) {
   {
     // Save a copy, open the copy, and render it.
     EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
-    ASSERT_TRUE(OpenSavedDocument());
-    FPDF_PAGE saved_page = LoadSavedPage(0);
+    ScopedSavedDoc saved_document = OpenScopedSavedDocument();
+    ASSERT_TRUE(saved_document);
+    ScopedSavedPage saved_page = LoadScopedSavedPage(0);
     ASSERT_TRUE(saved_page);
 
     // Note that a rectangle is absent from the copy.
-    EXPECT_EQ(7, FPDFPage_CountObjects(saved_page));
+    EXPECT_EQ(7, FPDFPage_CountObjects(saved_page.get()));
 
     // The absence of the inactive page object affects the rendered result.
-    ScopedFPDFBitmap bitmap = RenderSavedPage(saved_page);
+    ScopedFPDFBitmap bitmap = RenderSavedPage(saved_page.get());
     CompareBitmapWithExpectationSuffix(bitmap.get(), kOneRectangleInactivePng);
-
-    CloseSavedPage(saved_page);
-    CloseSavedDocument();
   }
 
   // Negative testing.
@@ -594,17 +588,15 @@ TEST_F(FPDFEditPageEmbedderTest, Bug378120423) {
   {
     // Save a copy, open the copy, and render it.
     EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
-    ASSERT_TRUE(OpenSavedDocument());
-    FPDF_PAGE saved_page = LoadSavedPage(0);
+    ScopedSavedDoc saved_document = OpenScopedSavedDocument();
+    ASSERT_TRUE(saved_document);
+    ScopedSavedPage saved_page = LoadScopedSavedPage(0);
     ASSERT_TRUE(saved_page);
 
-    ScopedFPDFBitmap bitmap = RenderSavedPage(saved_page);
+    ScopedFPDFBitmap bitmap = RenderSavedPage(saved_page.get());
     CompareBitmap(bitmap.get(), pdfium::kBlankPage200x200Png);
     // `page_obj` did not get written out to the saved PDF.
-    EXPECT_EQ(0, FPDFPage_CountObjects(saved_page));
-
-    CloseSavedPage(saved_page);
-    CloseSavedDocument();
+    EXPECT_EQ(0, FPDFPage_CountObjects(saved_page.get()));
   }
 
   // Reactivate `page_obj` and render.
@@ -619,16 +611,14 @@ TEST_F(FPDFEditPageEmbedderTest, Bug378120423) {
   {
     // Save a copy, open the copy, and render it.
     EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
-    ASSERT_TRUE(OpenSavedDocument());
-    FPDF_PAGE saved_page = LoadSavedPage(0);
+    ScopedSavedDoc saved_document = OpenScopedSavedDocument();
+    ASSERT_TRUE(saved_document);
+    ScopedSavedPage saved_page = LoadScopedSavedPage(0);
     ASSERT_TRUE(saved_page);
 
-    ScopedFPDFBitmap bitmap = RenderSavedPage(saved_page);
+    ScopedFPDFBitmap bitmap = RenderSavedPage(saved_page.get());
     CompareBitmap(bitmap.get(), kBug378120423Png);
-    EXPECT_EQ(1, FPDFPage_CountObjects(saved_page));
-
-    CloseSavedPage(saved_page);
-    CloseSavedDocument();
+    EXPECT_EQ(1, FPDFPage_CountObjects(saved_page.get()));
   }
 }
 
@@ -669,16 +659,14 @@ TEST_F(FPDFEditPageEmbedderTest, Bug378464305) {
   {
     // Save a copy, open the copy, and render it.
     EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
-    ASSERT_TRUE(OpenSavedDocument());
-    FPDF_PAGE saved_page = LoadSavedPage(0);
+    ScopedSavedDoc saved_document = OpenScopedSavedDocument();
+    ASSERT_TRUE(saved_document);
+    ScopedSavedPage saved_page = LoadScopedSavedPage(0);
     ASSERT_TRUE(saved_page);
 
-    ScopedFPDFBitmap bitmap = RenderSavedPage(saved_page);
+    ScopedFPDFBitmap bitmap = RenderSavedPage(saved_page.get());
     CompareBitmapWithExpectationSuffix(bitmap.get(), kNewPathPng);
-    EXPECT_EQ(kObjectCountWithNewPath, FPDFPage_CountObjects(saved_page));
-
-    CloseSavedPage(saved_page);
-    CloseSavedDocument();
+    EXPECT_EQ(kObjectCountWithNewPath, FPDFPage_CountObjects(saved_page.get()));
   }
 
   // Deactivate `path` and render.
@@ -694,17 +682,15 @@ TEST_F(FPDFEditPageEmbedderTest, Bug378464305) {
   {
     // Save a copy, open the copy, and render it.
     EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
-    ASSERT_TRUE(OpenSavedDocument());
-    FPDF_PAGE saved_page = LoadSavedPage(0);
+    ScopedSavedDoc saved_document = OpenScopedSavedDocument();
+    ASSERT_TRUE(saved_document);
+    ScopedSavedPage saved_page = LoadScopedSavedPage(0);
     ASSERT_TRUE(saved_page);
 
-    ScopedFPDFBitmap bitmap = RenderSavedPage(saved_page);
+    ScopedFPDFBitmap bitmap = RenderSavedPage(saved_page.get());
     CompareBitmapWithExpectationSuffix(bitmap.get(), pdfium::kRectanglesPng);
     // `path` did not get written out to the saved PDF.
-    EXPECT_EQ(kOriginalObjectCount, FPDFPage_CountObjects(saved_page));
-
-    CloseSavedPage(saved_page);
-    CloseSavedDocument();
+    EXPECT_EQ(kOriginalObjectCount, FPDFPage_CountObjects(saved_page.get()));
   }
 
   // Reactivate `path` and render.
@@ -719,15 +705,13 @@ TEST_F(FPDFEditPageEmbedderTest, Bug378464305) {
   {
     // Save a copy, open the copy, and render it.
     EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
-    ASSERT_TRUE(OpenSavedDocument());
-    FPDF_PAGE saved_page = LoadSavedPage(0);
+    ScopedSavedDoc saved_document = OpenScopedSavedDocument();
+    ASSERT_TRUE(saved_document);
+    ScopedSavedPage saved_page = LoadScopedSavedPage(0);
     ASSERT_TRUE(saved_page);
 
-    ScopedFPDFBitmap bitmap = RenderSavedPage(saved_page);
+    ScopedFPDFBitmap bitmap = RenderSavedPage(saved_page.get());
     CompareBitmapWithExpectationSuffix(bitmap.get(), kNewPathPng);
-    EXPECT_EQ(kObjectCountWithNewPath, FPDFPage_CountObjects(saved_page));
-
-    CloseSavedPage(saved_page);
-    CloseSavedDocument();
+    EXPECT_EQ(kObjectCountWithNewPath, FPDFPage_CountObjects(saved_page.get()));
   }
 }

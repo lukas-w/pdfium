@@ -2587,14 +2587,12 @@ TEST_F(FPDFAnnotEmbedderTest, SetFontColor) {
 
   EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
 
-  ASSERT_TRUE(OpenSavedDocument());
-  FPDF_PAGE saved_page = LoadSavedPage(0);
+  ScopedSavedDoc saved_doc = OpenScopedSavedDocument();
+  ASSERT_TRUE(saved_doc);
+  ScopedSavedPage saved_page = LoadScopedSavedPage(0);
   ASSERT_TRUE(saved_page);
   VerifySavedRenderingWithExpectationSuffix(
-      saved_page, kFreetextAnnotationWithoutDaModifiedPng);
-
-  CloseSavedPage(saved_page);
-  CloseSavedDocument();
+      saved_page.get(), kFreetextAnnotationWithoutDaModifiedPng);
 }
 
 TEST_F(FPDFAnnotEmbedderTest, SetFontColorNegative) {

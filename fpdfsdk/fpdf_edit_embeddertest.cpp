@@ -772,18 +772,16 @@ TEST_F(FPDFEditEmbedderTest, SetText) {
   EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
 
   // Re-open the file and check the changes were kept in the saved .pdf.
-  ASSERT_TRUE(OpenSavedDocument());
-  FPDF_PAGE saved_page = LoadSavedPage(0);
+  ScopedSavedDoc saved_document = OpenScopedSavedDocument();
+  ASSERT_TRUE(saved_document);
+  ScopedSavedPage saved_page = LoadScopedSavedPage(0);
   ASSERT_TRUE(saved_page);
-  EXPECT_EQ(2, FPDFPage_CountObjects(saved_page));
+  EXPECT_EQ(2, FPDFPage_CountObjects(saved_page.get()));
   {
-    ScopedFPDFBitmap page_bitmap = RenderPage(saved_page);
+    ScopedFPDFBitmap page_bitmap = RenderPage(saved_page.get());
     CompareBitmapWithExpectationSuffix(page_bitmap.get(),
                                        "hello_world_with_changed_text");
   }
-
-  CloseSavedPage(saved_page);
-  CloseSavedDocument();
 }
 
 TEST_F(FPDFEditEmbedderTest, SetCharcodesBadParams) {
@@ -847,17 +845,15 @@ TEST_F(FPDFEditEmbedderTest, SetTextKeepClippingPath) {
   EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
 
   // Open the saved copy and render it.
-  ASSERT_TRUE(OpenSavedDocument());
-  FPDF_PAGE saved_page = LoadSavedPage(0);
+  ScopedSavedDoc saved_document = OpenScopedSavedDocument();
+  ASSERT_TRUE(saved_document);
+  ScopedSavedPage saved_page = LoadScopedSavedPage(0);
   ASSERT_TRUE(saved_page);
 
   {
-    ScopedFPDFBitmap saved_bitmap = RenderSavedPage(saved_page);
+    ScopedFPDFBitmap saved_bitmap = RenderSavedPage(saved_page.get());
     CompareBitmapWithExpectationSuffix(saved_bitmap.get(), "bug_1558");
   }
-
-  CloseSavedPage(saved_page);
-  CloseSavedDocument();
 }
 
 TEST_F(FPDFEditEmbedderTest, Bug1574) {
@@ -896,17 +892,15 @@ TEST_F(FPDFEditEmbedderTest, Bug1574) {
   EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
 
   // Open the saved copy and render it.
-  ASSERT_TRUE(OpenSavedDocument());
-  FPDF_PAGE saved_page = LoadSavedPage(0);
+  ScopedSavedDoc saved_document = OpenScopedSavedDocument();
+  ASSERT_TRUE(saved_document);
+  ScopedSavedPage saved_page = LoadScopedSavedPage(0);
   ASSERT_TRUE(saved_page);
 
   {
-    ScopedFPDFBitmap saved_bitmap = RenderSavedPage(saved_page);
+    ScopedFPDFBitmap saved_bitmap = RenderSavedPage(saved_page.get());
     CompareBitmapWithExpectationSuffix(saved_bitmap.get(), "bug_1574");
   }
-
-  CloseSavedPage(saved_page);
-  CloseSavedDocument();
 }
 
 TEST_F(FPDFEditEmbedderTest, Bug1893) {
@@ -933,13 +927,13 @@ TEST_F(FPDFEditEmbedderTest, Bug1893) {
   ASSERT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
 
   {
-    ASSERT_TRUE(OpenSavedDocument());
-    FPDF_PAGE saved_page = LoadSavedPage(0);
-    ScopedFPDFBitmap bitmap = RenderSavedPageWithFlags(saved_page, FPDF_ANNOT);
+    ScopedSavedDoc saved_document = OpenScopedSavedDocument();
+    ASSERT_TRUE(saved_document);
+    ScopedSavedPage saved_page = LoadScopedSavedPage(0);
+    ScopedFPDFBitmap bitmap =
+        RenderSavedPageWithFlags(saved_page.get(), FPDF_ANNOT);
     CompareBitmapWithExpectationSuffix(bitmap.get(),
                                        "bug_1893_removed_underline");
-    CloseSavedPage(saved_page);
-    CloseSavedDocument();
   }
 }
 
@@ -1057,16 +1051,13 @@ TEST_F(FPDFEditEmbedderTest,
 
   // Save the document and verify it after reloading.
   ASSERT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
-  ASSERT_TRUE(OpenSavedDocument());
-  FPDF_PAGE saved_page1 = LoadSavedPage(0);
-  VerifySavedRenderingWithExpectationSuffix(saved_page1,
+  ScopedSavedDoc saved_document = OpenScopedSavedDocument();
+  ASSERT_TRUE(saved_document);
+  ScopedSavedPage saved_page1 = LoadScopedSavedPage(0);
+  VerifySavedRenderingWithExpectationSuffix(saved_page1.get(),
                                             kHelloWorldRemovedHelloWorldPng);
-  CloseSavedPage(saved_page1);
-  FPDF_PAGE saved_page2 = LoadSavedPage(1);
-  VerifySavedRenderingWithExpectationSuffix(saved_page2, kHelloWorldPng);
-  CloseSavedPage(saved_page2);
-  CloseSavedDocument();
-
+  ScopedSavedPage saved_page2 = LoadScopedSavedPage(1);
+  VerifySavedRenderingWithExpectationSuffix(saved_page2.get(), kHelloWorldPng);
   std::vector<std::string> split_saved_data = StringSplit(GetString(), '\n');
   // Verify removed/renamed resources are in the save PDF the correct number of
   // times.
@@ -1123,15 +1114,13 @@ TEST_F(FPDFEditEmbedderTest,
 
   // Save the document and verify it after reloading.
   ASSERT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
-  ASSERT_TRUE(OpenSavedDocument());
-  FPDF_PAGE saved_page1 = LoadSavedPage(0);
-  VerifySavedRenderingWithExpectationSuffix(saved_page1,
+  ScopedSavedDoc saved_document = OpenScopedSavedDocument();
+  ASSERT_TRUE(saved_document);
+  ScopedSavedPage saved_page1 = LoadScopedSavedPage(0);
+  VerifySavedRenderingWithExpectationSuffix(saved_page1.get(),
                                             kHelloWorldRemovedHelloWorldPng);
-  CloseSavedPage(saved_page1);
-  FPDF_PAGE saved_page2 = LoadSavedPage(1);
-  VerifySavedRenderingWithExpectationSuffix(saved_page2, kHelloWorldPng);
-  CloseSavedPage(saved_page2);
-  CloseSavedDocument();
+  ScopedSavedPage saved_page2 = LoadScopedSavedPage(1);
+  VerifySavedRenderingWithExpectationSuffix(saved_page2.get(), kHelloWorldPng);
 }
 
 TEST_F(FPDFEditEmbedderTest, RemoveTextObjectWithTwoPagesSharingResourcesDict) {
@@ -1181,15 +1170,13 @@ TEST_F(FPDFEditEmbedderTest, RemoveTextObjectWithTwoPagesSharingResourcesDict) {
 
   // Save the document and verify it after reloading.
   ASSERT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
-  ASSERT_TRUE(OpenSavedDocument());
-  FPDF_PAGE saved_page1 = LoadSavedPage(0);
-  VerifySavedRenderingWithExpectationSuffix(saved_page1,
+  ScopedSavedDoc saved_document = OpenScopedSavedDocument();
+  ASSERT_TRUE(saved_document);
+  ScopedSavedPage saved_page1 = LoadScopedSavedPage(0);
+  VerifySavedRenderingWithExpectationSuffix(saved_page1.get(),
                                             kHelloWorldRemovedHelloWorldPng);
-  CloseSavedPage(saved_page1);
-  FPDF_PAGE saved_page2 = LoadSavedPage(1);
-  VerifySavedRenderingWithExpectationSuffix(saved_page2, kHelloWorldPng);
-  CloseSavedPage(saved_page2);
-  CloseSavedDocument();
+  ScopedSavedPage saved_page2 = LoadScopedSavedPage(1);
+  VerifySavedRenderingWithExpectationSuffix(saved_page2.get(), kHelloWorldPng);
 }
 
 void CheckMarkCounts(FPDF_PAGE page,
@@ -1375,19 +1362,17 @@ TEST_F(FPDFEditEmbedderTest, RemoveMarkedObjectsPrime) {
   EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
 
   // Re-open the file and check the prime marks are not there anymore.
-  ASSERT_TRUE(OpenSavedDocument());
-  FPDF_PAGE saved_page = LoadSavedPage(0);
+  ScopedSavedDoc saved_document = OpenScopedSavedDocument();
+  ASSERT_TRUE(saved_document);
+  ScopedSavedPage saved_page = LoadScopedSavedPage(0);
   ASSERT_TRUE(saved_page);
-  EXPECT_EQ(11, FPDFPage_CountObjects(saved_page));
+  EXPECT_EQ(11, FPDFPage_CountObjects(saved_page.get()));
 
   {
-    ScopedFPDFBitmap page_bitmap = RenderPage(saved_page);
+    ScopedFPDFBitmap page_bitmap = RenderPage(saved_page.get());
     CompareBitmapWithExpectationSuffix(page_bitmap.get(),
                                        kTextInPageMarkedNonPrimesPng);
   }
-
-  CloseSavedPage(saved_page);
-  CloseSavedDocument();
 }
 
 TEST_F(FPDFEditEmbedderTest, RemoveMarks) {
@@ -1432,14 +1417,12 @@ TEST_F(FPDFEditEmbedderTest, RemoveMarks) {
   EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
 
   // Re-open the file and check the prime marks are not there anymore.
-  ASSERT_TRUE(OpenSavedDocument());
-  FPDF_PAGE saved_page = LoadSavedPage(0);
+  ScopedSavedDoc saved_document = OpenScopedSavedDocument();
+  ASSERT_TRUE(saved_document);
+  ScopedSavedPage saved_page = LoadScopedSavedPage(0);
   ASSERT_TRUE(saved_page);
 
-  CheckMarkCounts(saved_page, 1, kExpectedObjectCount, 0, 4, 9, 1);
-
-  CloseSavedPage(saved_page);
-  CloseSavedDocument();
+  CheckMarkCounts(saved_page.get(), 1, kExpectedObjectCount, 0, 4, 9, 1);
 }
 
 TEST_F(FPDFEditEmbedderTest, RemoveMarkParam) {
@@ -1487,13 +1470,14 @@ TEST_F(FPDFEditEmbedderTest, RemoveMarkParam) {
   EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
 
   // Re-open the file and check the "Factor" parameters are still gone.
-  ASSERT_TRUE(OpenSavedDocument());
-  FPDF_PAGE saved_page = LoadSavedPage(0);
+  ScopedSavedDoc saved_document = OpenScopedSavedDocument();
+  ASSERT_TRUE(saved_document);
+  ScopedSavedPage saved_page = LoadScopedSavedPage(0);
   ASSERT_TRUE(saved_page);
 
   size_t square_count = 0;
   for (int i = 0; i < kExpectedObjectCount; ++i) {
-    FPDF_PAGEOBJECT page_object = FPDFPage_GetObject(saved_page, i);
+    FPDF_PAGEOBJECT page_object = FPDFPage_GetObject(saved_page.get(), i);
 
     int mark_count = FPDFPageObj_CountMarks(page_object);
     for (int j = 0; j < mark_count; ++j) {
@@ -1519,9 +1503,6 @@ TEST_F(FPDFEditEmbedderTest, RemoveMarkParam) {
 
   // Verify the parameters are gone, but the marks are not.
   EXPECT_EQ(4u, square_count);
-
-  CloseSavedPage(saved_page);
-  CloseSavedDocument();
 }
 
 TEST_F(FPDFEditEmbedderTest, MaintainMarkedObjects) {
@@ -1544,14 +1525,12 @@ TEST_F(FPDFEditEmbedderTest, MaintainMarkedObjects) {
   EXPECT_TRUE(FPDFPage_GenerateContent(page.get()));
   EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
 
-  ASSERT_TRUE(OpenSavedDocument());
-  FPDF_PAGE saved_page = LoadSavedPage(0);
+  ScopedSavedDoc saved_document = OpenScopedSavedDocument();
+  ASSERT_TRUE(saved_document);
+  ScopedSavedPage saved_page = LoadScopedSavedPage(0);
   ASSERT_TRUE(saved_page);
 
-  CheckMarkCounts(saved_page, 2, 18, 8, 3, 9, 1);
-
-  CloseSavedPage(saved_page);
-  CloseSavedDocument();
+  CheckMarkCounts(saved_page.get(), 2, 18, 8, 3, 9, 1);
 }
 
 TEST_F(FPDFEditEmbedderTest, MaintainIndirectMarkedObjects) {
@@ -1574,14 +1553,12 @@ TEST_F(FPDFEditEmbedderTest, MaintainIndirectMarkedObjects) {
   EXPECT_TRUE(FPDFPage_GenerateContent(page.get()));
   EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
 
-  ASSERT_TRUE(OpenSavedDocument());
-  FPDF_PAGE saved_page = LoadSavedPage(0);
+  ScopedSavedDoc saved_document = OpenScopedSavedDocument();
+  ASSERT_TRUE(saved_document);
+  ScopedSavedPage saved_page = LoadScopedSavedPage(0);
   ASSERT_TRUE(saved_page);
 
-  CheckMarkCounts(saved_page, 2, 18, 8, 3, 9, 1);
-
-  CloseSavedPage(saved_page);
-  CloseSavedDocument();
+  CheckMarkCounts(saved_page.get(), 2, 18, 8, 3, 9, 1);
 }
 
 TEST_F(FPDFEditEmbedderTest, RemoveExistingPageObject) {
@@ -1605,12 +1582,11 @@ TEST_F(FPDFEditEmbedderTest, RemoveExistingPageObject) {
   FPDFPageObj_Destroy(page_object);
 
   // Re-open the file and check the page object count is still 1.
-  ASSERT_TRUE(OpenSavedDocument());
-  FPDF_PAGE saved_page = LoadSavedPage(0);
+  ScopedSavedDoc saved_document = OpenScopedSavedDocument();
+  ASSERT_TRUE(saved_document);
+  ScopedSavedPage saved_page = LoadScopedSavedPage(0);
   ASSERT_TRUE(saved_page);
-  EXPECT_EQ(1, FPDFPage_CountObjects(saved_page));
-  CloseSavedPage(saved_page);
-  CloseSavedDocument();
+  EXPECT_EQ(1, FPDFPage_CountObjects(saved_page.get()));
 }
 
 TEST_F(FPDFEditEmbedderTest, RemoveExistingPageObjectSplitStreamsNotLonely) {
@@ -1642,19 +1618,17 @@ TEST_F(FPDFEditEmbedderTest, RemoveExistingPageObjectSplitStreamsNotLonely) {
   FPDFPageObj_Destroy(page_object);
 
   // Re-open the file and check the page object count is still 2.
-  ASSERT_TRUE(OpenSavedDocument());
-  FPDF_PAGE saved_page = LoadSavedPage(0);
+  ScopedSavedDoc saved_document = OpenScopedSavedDocument();
+  ASSERT_TRUE(saved_document);
+  ScopedSavedPage saved_page = LoadScopedSavedPage(0);
   ASSERT_TRUE(saved_page);
 
-  EXPECT_EQ(2, FPDFPage_CountObjects(saved_page));
+  EXPECT_EQ(2, FPDFPage_CountObjects(saved_page.get()));
   {
-    ScopedFPDFBitmap page_bitmap = RenderPage(saved_page);
+    ScopedFPDFBitmap page_bitmap = RenderPage(saved_page.get());
     CompareBitmapWithExpectationSuffix(
         page_bitmap.get(), kHelloWorldSplitStreamsRemovedHelloWorldPng);
   }
-
-  CloseSavedPage(saved_page);
-  CloseSavedDocument();
 }
 
 TEST_F(FPDFEditEmbedderTest, RemoveExistingPageObjectSplitStreamsLonely) {
@@ -1683,18 +1657,16 @@ TEST_F(FPDFEditEmbedderTest, RemoveExistingPageObjectSplitStreamsLonely) {
   FPDFPageObj_Destroy(page_object);
 
   // Re-open the file and check the page object count is still 2.
-  ASSERT_TRUE(OpenSavedDocument());
-  FPDF_PAGE saved_page = LoadSavedPage(0);
+  ScopedSavedDoc saved_document = OpenScopedSavedDocument();
+  ASSERT_TRUE(saved_document);
+  ScopedSavedPage saved_page = LoadScopedSavedPage(0);
   ASSERT_TRUE(saved_page);
 
-  EXPECT_EQ(2, FPDFPage_CountObjects(saved_page));
+  EXPECT_EQ(2, FPDFPage_CountObjects(saved_page.get()));
   {
-    ScopedFPDFBitmap page_bitmap = RenderPage(saved_page);
+    ScopedFPDFBitmap page_bitmap = RenderPage(saved_page.get());
     CompareBitmapWithExpectationSuffix(page_bitmap.get(), kHelloWorldPng);
   }
-
-  CloseSavedPage(saved_page);
-  CloseSavedDocument();
 }
 
 TEST_F(FPDFEditEmbedderTest, GetContentStream) {
@@ -1795,15 +1767,16 @@ TEST_F(FPDFEditEmbedderTest, RemoveAllFromStream) {
 
   // Re-open the file and check the page object count is still 16, and that
   // content stream 1 was removed.
-  ASSERT_TRUE(OpenSavedDocument());
-  FPDF_PAGE saved_page = LoadSavedPage(0);
+  ScopedSavedDoc saved_document = OpenScopedSavedDocument();
+  ASSERT_TRUE(saved_document);
+  ScopedSavedPage saved_page = LoadScopedSavedPage(0);
   ASSERT_TRUE(saved_page);
 
   // Content stream 0: page objects 0-14.
   // Content stream 1: page object 15.
-  EXPECT_EQ(16, FPDFPage_CountObjects(saved_page));
+  EXPECT_EQ(16, FPDFPage_CountObjects(saved_page.get()));
   for (int i = 0; i < 16; i++) {
-    FPDF_PAGEOBJECT page_object = FPDFPage_GetObject(saved_page, i);
+    FPDF_PAGEOBJECT page_object = FPDFPage_GetObject(saved_page.get(), i);
     ASSERT_TRUE(page_object);
     CPDF_PageObject* cpdf_page_object =
         CPDFPageObjectFromFPDFPageObject(page_object);
@@ -1815,13 +1788,10 @@ TEST_F(FPDFEditEmbedderTest, RemoveAllFromStream) {
   }
 
   {
-    ScopedFPDFBitmap page_bitmap = RenderPage(saved_page);
+    ScopedFPDFBitmap page_bitmap = RenderPage(saved_page.get());
     CompareBitmapWithExpectationSuffix(page_bitmap.get(),
                                        kSplitStreamsRemovedStream1Png);
   }
-
-  CloseSavedPage(saved_page);
-  CloseSavedDocument();
 }
 
 TEST_F(FPDFEditEmbedderTest, RemoveAllFromSingleStream) {
@@ -1863,18 +1833,16 @@ TEST_F(FPDFEditEmbedderTest, RemoveAllFromSingleStream) {
   EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
 
   // Re-open the file and check the page object count is still 0.
-  ASSERT_TRUE(OpenSavedDocument());
-  FPDF_PAGE saved_page = LoadSavedPage(0);
+  ScopedSavedDoc saved_document = OpenScopedSavedDocument();
+  ASSERT_TRUE(saved_document);
+  ScopedSavedPage saved_page = LoadScopedSavedPage(0);
   ASSERT_TRUE(saved_page);
 
-  EXPECT_EQ(0, FPDFPage_CountObjects(saved_page));
+  EXPECT_EQ(0, FPDFPage_CountObjects(saved_page.get()));
   {
-    ScopedFPDFBitmap page_bitmap = RenderPage(saved_page);
+    ScopedFPDFBitmap page_bitmap = RenderPage(saved_page.get());
     CompareBitmap(page_bitmap.get(), kBlankPage200x200Png);
   }
-
-  CloseSavedPage(saved_page);
-  CloseSavedDocument();
 }
 
 TEST_F(FPDFEditEmbedderTest, RemoveFirstFromSingleStream) {
@@ -1921,23 +1889,21 @@ TEST_F(FPDFEditEmbedderTest, RemoveFirstFromSingleStream) {
   EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
 
   // Re-open the file and check the page object count is still 0.
-  ASSERT_TRUE(OpenSavedDocument());
-  FPDF_PAGE saved_page = LoadSavedPage(0);
+  ScopedSavedDoc saved_document = OpenScopedSavedDocument();
+  ASSERT_TRUE(saved_document);
+  ScopedSavedPage saved_page = LoadScopedSavedPage(0);
   ASSERT_TRUE(saved_page);
 
-  ASSERT_EQ(1, FPDFPage_CountObjects(saved_page));
-  page_object = FPDFPage_GetObject(saved_page, 0);
+  ASSERT_EQ(1, FPDFPage_CountObjects(saved_page.get()));
+  page_object = FPDFPage_GetObject(saved_page.get(), 0);
   ASSERT_TRUE(page_object);
   cpdf_page_object = CPDFPageObjectFromFPDFPageObject(page_object);
   ASSERT_EQ(0, cpdf_page_object->GetContentStream());
   {
-    ScopedFPDFBitmap page_bitmap = RenderPage(saved_page);
+    ScopedFPDFBitmap page_bitmap = RenderPage(saved_page.get());
     CompareBitmapWithExpectationSuffix(page_bitmap.get(),
                                        kHelloWorldRemovedHelloWorldPng);
   }
-
-  CloseSavedPage(saved_page);
-  CloseSavedDocument();
 }
 
 TEST_F(FPDFEditEmbedderTest, RemoveLastFromSingleStream) {
@@ -1985,23 +1951,21 @@ TEST_F(FPDFEditEmbedderTest, RemoveLastFromSingleStream) {
   EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
 
   // Re-open the file and check the page object count is still 0.
-  ASSERT_TRUE(OpenSavedDocument());
-  FPDF_PAGE saved_page = LoadSavedPage(0);
+  ScopedSavedDoc saved_document = OpenScopedSavedDocument();
+  ASSERT_TRUE(saved_document);
+  ScopedSavedPage saved_page = LoadScopedSavedPage(0);
   ASSERT_TRUE(saved_page);
 
-  ASSERT_EQ(1, FPDFPage_CountObjects(saved_page));
-  page_object = FPDFPage_GetObject(saved_page, 0);
+  ASSERT_EQ(1, FPDFPage_CountObjects(saved_page.get()));
+  page_object = FPDFPage_GetObject(saved_page.get(), 0);
   ASSERT_TRUE(page_object);
   cpdf_page_object = CPDFPageObjectFromFPDFPageObject(page_object);
   ASSERT_EQ(0, cpdf_page_object->GetContentStream());
   {
-    ScopedFPDFBitmap page_bitmap = RenderPage(saved_page);
+    ScopedFPDFBitmap page_bitmap = RenderPage(saved_page.get());
     CompareBitmapWithExpectationSuffix(page_bitmap.get(),
                                        kHelloWorldRemovedPng);
   }
-
-  CloseSavedPage(saved_page);
-  CloseSavedDocument();
 }
 
 TEST_F(FPDFEditEmbedderTest, RemoveAllFromMultipleStreams) {
@@ -2041,18 +2005,16 @@ TEST_F(FPDFEditEmbedderTest, RemoveAllFromMultipleStreams) {
   EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
 
   // Re-open the file and check the page object count is still 0.
-  ASSERT_TRUE(OpenSavedDocument());
-  FPDF_PAGE saved_page = LoadSavedPage(0);
+  ScopedSavedDoc saved_document = OpenScopedSavedDocument();
+  ASSERT_TRUE(saved_document);
+  ScopedSavedPage saved_page = LoadScopedSavedPage(0);
   ASSERT_TRUE(saved_page);
 
-  EXPECT_EQ(0, FPDFPage_CountObjects(saved_page));
+  EXPECT_EQ(0, FPDFPage_CountObjects(saved_page.get()));
   {
-    ScopedFPDFBitmap page_bitmap = RenderPage(saved_page);
+    ScopedFPDFBitmap page_bitmap = RenderPage(saved_page.get());
     CompareBitmap(page_bitmap.get(), kBlankPage200x200Png);
   }
-
-  CloseSavedPage(saved_page);
-  CloseSavedDocument();
 }
 
 TEST_F(FPDFEditEmbedderTest, InsertPageObjectAndSave) {
@@ -2076,12 +2038,11 @@ TEST_F(FPDFEditEmbedderTest, InsertPageObjectAndSave) {
   EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
 
   // Re-open the file and check the page object count is still 3.
-  ASSERT_TRUE(OpenSavedDocument());
-  FPDF_PAGE saved_page = LoadSavedPage(0);
+  ScopedSavedDoc saved_document = OpenScopedSavedDocument();
+  ASSERT_TRUE(saved_document);
+  ScopedSavedPage saved_page = LoadScopedSavedPage(0);
   ASSERT_TRUE(saved_page);
-  EXPECT_EQ(3, FPDFPage_CountObjects(saved_page));
-  CloseSavedPage(saved_page);
-  CloseSavedDocument();
+  EXPECT_EQ(3, FPDFPage_CountObjects(saved_page.get()));
 }
 
 TEST_F(FPDFEditEmbedderTest, InsertPageObjectEditAndSave) {
@@ -2109,12 +2070,11 @@ TEST_F(FPDFEditEmbedderTest, InsertPageObjectEditAndSave) {
   EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
 
   // Re-open the file and check the page object count is still 3.
-  ASSERT_TRUE(OpenSavedDocument());
-  FPDF_PAGE saved_page = LoadSavedPage(0);
+  ScopedSavedDoc saved_document = OpenScopedSavedDocument();
+  ASSERT_TRUE(saved_document);
+  ScopedSavedPage saved_page = LoadScopedSavedPage(0);
   ASSERT_TRUE(saved_page);
-  EXPECT_EQ(3, FPDFPage_CountObjects(saved_page));
-  CloseSavedPage(saved_page);
-  CloseSavedDocument();
+  EXPECT_EQ(3, FPDFPage_CountObjects(saved_page.get()));
 }
 
 TEST_F(FPDFEditEmbedderTest, InsertObjectAtIndex) {
@@ -2199,47 +2159,46 @@ TEST_F(FPDFEditEmbedderTest, InsertAndRemoveLargeFile) {
   EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
 
   // Re-open the file and check the rectangle added is still there.
-  ASSERT_TRUE(OpenSavedDocument());
-  FPDF_PAGE saved_page = LoadSavedPage(0);
-  ASSERT_TRUE(saved_page);
-  EXPECT_EQ(kOriginalObjectCount + 1, FPDFPage_CountObjects(saved_page));
   {
-    ScopedFPDFBitmap page_bitmap = RenderPage(saved_page);
-    CompareBitmapWithExpectationSuffix(page_bitmap.get(),
-                                       kManyRectanglesAddedBlackRectanglePng);
+    ScopedSavedDoc saved_document = OpenScopedSavedDocument();
+    ASSERT_TRUE(saved_document);
+    ScopedSavedPage saved_page = LoadScopedSavedPage(0);
+    ASSERT_TRUE(saved_page);
+    EXPECT_EQ(kOriginalObjectCount + 1,
+              FPDFPage_CountObjects(saved_page.get()));
+    {
+      ScopedFPDFBitmap page_bitmap = RenderPage(saved_page.get());
+      CompareBitmapWithExpectationSuffix(page_bitmap.get(),
+                                         kManyRectanglesAddedBlackRectanglePng);
+    }
+
+    // Remove the added rectangle.
+    FPDF_PAGEOBJECT added_object =
+        FPDFPage_GetObject(saved_page.get(), kOriginalObjectCount);
+    EXPECT_TRUE(FPDFPage_RemoveObject(saved_page.get(), added_object));
+    FPDFPageObj_Destroy(added_object);
+    {
+      ScopedFPDFBitmap page_bitmap = RenderPage(saved_page.get());
+      CompareBitmapWithExpectationSuffix(page_bitmap.get(), kManyRectanglesPng);
+    }
+    EXPECT_EQ(kOriginalObjectCount, FPDFPage_CountObjects(saved_page.get()));
+
+    // Save the file again.
+    EXPECT_TRUE(FPDFPage_GenerateContent(saved_page.get()));
+    EXPECT_TRUE(FPDF_SaveAsCopy(saved_document.get(), this, 0));
   }
-
-  // Remove the added rectangle.
-  FPDF_PAGEOBJECT added_object =
-      FPDFPage_GetObject(saved_page, kOriginalObjectCount);
-  EXPECT_TRUE(FPDFPage_RemoveObject(saved_page, added_object));
-  FPDFPageObj_Destroy(added_object);
-  {
-    ScopedFPDFBitmap page_bitmap = RenderPage(saved_page);
-    CompareBitmapWithExpectationSuffix(page_bitmap.get(), kManyRectanglesPng);
-  }
-  EXPECT_EQ(kOriginalObjectCount, FPDFPage_CountObjects(saved_page));
-
-  // Save the file again.
-  EXPECT_TRUE(FPDFPage_GenerateContent(saved_page));
-  EXPECT_TRUE(FPDF_SaveAsCopy(saved_document(), this, 0));
-
-  CloseSavedPage(saved_page);
-  CloseSavedDocument();
 
   // Re-open the file (again) and check the black rectangle was removed and the
   // rest is intact.
-  ASSERT_TRUE(OpenSavedDocument());
-  saved_page = LoadSavedPage(0);
+  ScopedSavedDoc resaved_document = OpenScopedSavedDocument();
+  ASSERT_TRUE(resaved_document);
+  ScopedSavedPage saved_page = LoadScopedSavedPage(0);
   ASSERT_TRUE(saved_page);
-  EXPECT_EQ(kOriginalObjectCount, FPDFPage_CountObjects(saved_page));
+  EXPECT_EQ(kOriginalObjectCount, FPDFPage_CountObjects(saved_page.get()));
   {
-    ScopedFPDFBitmap page_bitmap = RenderPage(saved_page);
+    ScopedFPDFBitmap page_bitmap = RenderPage(saved_page.get());
     CompareBitmapWithExpectationSuffix(page_bitmap.get(), kManyRectanglesPng);
   }
-
-  CloseSavedPage(saved_page);
-  CloseSavedDocument();
 }
 
 TEST_F(FPDFEditEmbedderTest, AddAndRemovePaths) {
@@ -2355,43 +2314,42 @@ TEST_F(FPDFEditEmbedderTest, EditOverExistingContent) {
   FPDFPage_InsertObject(page.get(), red_rect);
 
   static constexpr char kBug717Png[] = "bug_717";
+  static constexpr char kBug717AddedRectsPng[] = "bug_717_added_rects";
   ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
   CompareBitmapWithExpectationSuffix(bitmap.get(), kBug717Png);
   EXPECT_TRUE(FPDFPage_GenerateContent(page.get()));
 
   // Now save the result, closing the page and document
   EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
-
-  ASSERT_TRUE(OpenSavedDocument());
-  FPDF_PAGE saved_page = LoadSavedPage(0);
-  ASSERT_TRUE(saved_page);
-  VerifySavedRenderingWithExpectationSuffix(saved_page, kBug717Png);
-
-  ClearString();
-  // Add another opaque rectangle on top of the existing content
-  FPDF_PAGEOBJECT green_rect = FPDFPageObj_CreateNewRect(150, 700, 25, 50);
-  EXPECT_TRUE(FPDFPageObj_SetFillColor(green_rect, 0, 255, 0, 255));
-  EXPECT_TRUE(FPDFPath_SetDrawMode(green_rect, FPDF_FILLMODE_ALTERNATE, 0));
-  FPDFPage_InsertObject(saved_page, green_rect);
-
-  // Add another transparent rectangle on top of existing content
-  FPDF_PAGEOBJECT green_rect2 = FPDFPageObj_CreateNewRect(175, 700, 25, 50);
-  EXPECT_TRUE(FPDFPageObj_SetFillColor(green_rect2, 0, 255, 0, 100));
-  EXPECT_TRUE(FPDFPath_SetDrawMode(green_rect2, FPDF_FILLMODE_ALTERNATE, 0));
-  FPDFPage_InsertObject(saved_page, green_rect2);
-  static constexpr char kBug717AddedRectsPng[] = "bug_717_added_rects";
   {
-    ScopedFPDFBitmap new_bitmap = RenderSavedPage(saved_page);
-    CompareBitmapWithExpectationSuffix(new_bitmap.get(), kBug717AddedRectsPng);
+    ScopedSavedDoc saved_document = OpenScopedSavedDocument();
+    ASSERT_TRUE(saved_document);
+    ScopedSavedPage saved_page = LoadScopedSavedPage(0);
+    ASSERT_TRUE(saved_page);
+    VerifySavedRenderingWithExpectationSuffix(saved_page.get(), kBug717Png);
+
+    ClearString();
+    // Add another opaque rectangle on top of the existing content
+    FPDF_PAGEOBJECT green_rect = FPDFPageObj_CreateNewRect(150, 700, 25, 50);
+    EXPECT_TRUE(FPDFPageObj_SetFillColor(green_rect, 0, 255, 0, 255));
+    EXPECT_TRUE(FPDFPath_SetDrawMode(green_rect, FPDF_FILLMODE_ALTERNATE, 0));
+    FPDFPage_InsertObject(saved_page.get(), green_rect);
+
+    // Add another transparent rectangle on top of existing content
+    FPDF_PAGEOBJECT green_rect2 = FPDFPageObj_CreateNewRect(175, 700, 25, 50);
+    EXPECT_TRUE(FPDFPageObj_SetFillColor(green_rect2, 0, 255, 0, 100));
+    EXPECT_TRUE(FPDFPath_SetDrawMode(green_rect2, FPDF_FILLMODE_ALTERNATE, 0));
+    FPDFPage_InsertObject(saved_page.get(), green_rect2);
+    {
+      ScopedFPDFBitmap new_bitmap = RenderSavedPage(saved_page.get());
+      CompareBitmapWithExpectationSuffix(new_bitmap.get(),
+                                         kBug717AddedRectsPng);
+    }
+    EXPECT_TRUE(FPDFPage_GenerateContent(saved_page.get()));
+
+    // Now save the result, closing the page and document
+    EXPECT_TRUE(FPDF_SaveAsCopy(saved_document.get(), this, 0));
   }
-  EXPECT_TRUE(FPDFPage_GenerateContent(saved_page));
-
-  // Now save the result, closing the page and document
-  EXPECT_TRUE(FPDF_SaveAsCopy(saved_document(), this, 0));
-
-  CloseSavedPage(saved_page);
-  CloseSavedDocument();
-
   // Render the saved result
   VerifySavedDocumentWithExpectationSuffix(kBug717AddedRectsPng);
 }
@@ -2627,21 +2585,19 @@ TEST_F(FPDFEditEmbedderTest, SetTextRenderMode) {
   {
     // Open the saved copy and render it. Check that the changed text render
     // mode is kept in the saved copy.
-    ASSERT_TRUE(OpenSavedDocument());
-    FPDF_PAGE saved_page = LoadSavedPage(0);
+    ScopedSavedDoc saved_document = OpenScopedSavedDocument();
+    ASSERT_TRUE(saved_document);
+    ScopedSavedPage saved_page = LoadScopedSavedPage(0);
     ASSERT_TRUE(saved_page);
 
-    FPDF_PAGEOBJECT page_object = FPDFPage_GetObject(saved_page, 0);
+    FPDF_PAGEOBJECT page_object = FPDFPage_GetObject(saved_page.get(), 0);
     EXPECT_TRUE(page_object);
     EXPECT_EQ(FPDF_TEXTRENDERMODE_STROKE,
               FPDFTextObj_GetTextRenderMode(page_object));
 
-    ScopedFPDFBitmap bitmap = RenderSavedPage(saved_page);
+    ScopedFPDFBitmap bitmap = RenderSavedPage(saved_page.get());
     CompareBitmapWithExpectationSuffix(bitmap.get(),
                                        kTextRenderModeStrokeModePng);
-
-    CloseSavedPage(saved_page);
-    CloseSavedDocument();
   }
 }
 
@@ -3642,14 +3598,12 @@ TEST_F(FPDFEditEmbedderTest, AddMark) {
   EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
 
   // Re-open the file and check the new mark is present.
-  ASSERT_TRUE(OpenSavedDocument());
-  FPDF_PAGE saved_page = LoadSavedPage(0);
+  ScopedSavedDoc saved_document = OpenScopedSavedDocument();
+  ASSERT_TRUE(saved_document);
+  ScopedSavedPage saved_page = LoadScopedSavedPage(0);
   ASSERT_TRUE(saved_page);
 
-  CheckMarkCounts(saved_page, 1, 19, 8, 4, 9, 2);
-
-  CloseSavedPage(saved_page);
-  CloseSavedDocument();
+  CheckMarkCounts(saved_page.get(), 1, 19, 8, 4, 9, 2);
 }
 
 TEST_F(FPDFEditEmbedderTest, AddMarkCompressedStream) {
@@ -3684,18 +3638,16 @@ TEST_F(FPDFEditEmbedderTest, AddMarkCompressedStream) {
   EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
 
   // Re-open the file and check the new mark is present.
-  ASSERT_TRUE(OpenSavedDocument());
-  FPDF_PAGE saved_page = LoadSavedPage(0);
+  ScopedSavedDoc saved_document = OpenScopedSavedDocument();
+  ASSERT_TRUE(saved_document);
+  ScopedSavedPage saved_page = LoadScopedSavedPage(0);
   ASSERT_TRUE(saved_page);
 
   {
-    ScopedFPDFBitmap page_bitmap = RenderPage(saved_page);
+    ScopedFPDFBitmap page_bitmap = RenderPage(saved_page.get());
     CompareBitmapWithExpectationSuffix(page_bitmap.get(), kHelloWorldPng);
   }
-  CheckMarkCounts(saved_page, 0, 2, 0, 0, 0, 1);
-
-  CloseSavedPage(saved_page);
-  CloseSavedDocument();
+  CheckMarkCounts(saved_page.get(), 0, 2, 0, 0, 0, 1);
 }
 
 TEST_F(FPDFEditEmbedderTest, SetMarkParam) {
@@ -3743,19 +3695,17 @@ TEST_F(FPDFEditEmbedderTest, SetMarkParam) {
   EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
 
   // Re-open the file and cerify "Position" still maps to "End".
-  ASSERT_TRUE(OpenSavedDocument());
-  FPDF_PAGE saved_page = LoadSavedPage(0);
+  ScopedSavedDoc saved_document = OpenScopedSavedDocument();
+  ASSERT_TRUE(saved_document);
+  ScopedSavedPage saved_page = LoadScopedSavedPage(0);
   ASSERT_TRUE(saved_page);
 
-  CheckMarkCounts(saved_page, 1, kExpectedObjectCount, 8, 4, 9, 1);
-  page_object = FPDFPage_GetObject(saved_page, 18);
+  CheckMarkCounts(saved_page.get(), 1, kExpectedObjectCount, 8, 4, 9, 1);
+  page_object = FPDFPage_GetObject(saved_page.get(), 18);
   mark = FPDFPageObj_GetMark(page_object, 1);
   EXPECT_TRUE(FPDFPageObjMark_GetParamStringValue(
       mark, "Position", buffer, sizeof(buffer), &out_buffer_len));
   EXPECT_EQ(L"End", GetPlatformWString(buffer));
-
-  CloseSavedPage(saved_page);
-  CloseSavedDocument();
 }
 
 TEST_F(FPDFEditEmbedderTest, AddMarkedText) {
@@ -3850,12 +3800,13 @@ TEST_F(FPDFEditEmbedderTest, AddMarkedText) {
   FPDF_ClosePage(page);
 
   // Re-open the file and check the changes were kept in the saved .pdf.
-  ASSERT_TRUE(OpenSavedDocument());
-  FPDF_PAGE saved_page = LoadSavedPage(0);
+  ScopedSavedDoc saved_document = OpenScopedSavedDocument();
+  ASSERT_TRUE(saved_document);
+  ScopedSavedPage saved_page = LoadScopedSavedPage(0);
   ASSERT_TRUE(saved_page);
-  EXPECT_EQ(1, FPDFPage_CountObjects(saved_page));
+  EXPECT_EQ(1, FPDFPage_CountObjects(saved_page.get()));
 
-  text_object = FPDFPage_GetObject(saved_page, 0);
+  text_object = FPDFPage_GetObject(saved_page.get(), 0);
   EXPECT_TRUE(text_object);
   EXPECT_EQ(1, FPDFPageObj_CountMarks(text_object));
   mark = FPDFPageObj_GetMark(text_object, 0);
@@ -3866,9 +3817,6 @@ TEST_F(FPDFEditEmbedderTest, AddMarkedText) {
   EXPECT_EQ((14u + 1u) * 2, name_len);
   name = GetPlatformWString(buffer);
   EXPECT_EQ(L"Test Mark Name", name);
-
-  CloseSavedPage(saved_page);
-  CloseSavedDocument();
 }
 
 TEST_F(FPDFEditEmbedderTest, AddMarkedTextWithFloat) {
