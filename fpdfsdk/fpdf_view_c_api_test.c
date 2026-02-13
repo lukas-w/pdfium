@@ -122,6 +122,7 @@ int CheckPDFiumCApi() {
     CHK(FPDFDoc_GetAttachmentCount);
 
     // fpdf_catalog.h
+    CHK(FPDFCatalog_GetLanguage);
     CHK(FPDFCatalog_IsTagged);
     CHK(FPDFCatalog_SetLanguage);
 
