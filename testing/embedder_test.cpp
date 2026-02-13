@@ -960,6 +960,11 @@ EmbedderTest::ScopedSavedDoc EmbedderTest::OpenScopedSavedDocument() {
   return ScopedSavedDoc(this);
 }
 
+EmbedderTest::ScopedSavedDoc EmbedderTest::OpenScopedSavedDocumentWithPassword(
+    const char* password) {
+  return ScopedSavedDoc(this, password);
+}
+
 FPDF_DOCUMENT EmbedderTest::OpenSavedDocument() {
   return OpenSavedDocumentWithPassword(nullptr);
 }
@@ -1251,6 +1256,10 @@ EmbedderTest::ScopedSavedDoc::ScopedSavedDoc()
 
 EmbedderTest::ScopedSavedDoc::ScopedSavedDoc(EmbedderTest* test)
     : test_(test), doc_(test->OpenSavedDocument()) {}
+
+EmbedderTest::ScopedSavedDoc::ScopedSavedDoc(EmbedderTest* test,
+                                             const char* password)
+    : test_(test), doc_(test->OpenSavedDocumentWithPassword(password)) {}
 
 EmbedderTest::ScopedSavedDoc::ScopedSavedDoc(ScopedSavedDoc&& that) noexcept
     : test_(std::move(that.test_)), doc_(std::exchange(that.doc_, nullptr)) {}

@@ -94,6 +94,7 @@ class EmbedderTest : public ::testing::Test,
    public:
     ScopedSavedDoc();
     explicit ScopedSavedDoc(EmbedderTest* test);
+    ScopedSavedDoc(EmbedderTest* test, const char* password);
     ScopedSavedDoc(const ScopedSavedDoc&) = delete;
     ScopedSavedDoc& operator=(const ScopedSavedDoc&) = delete;
     ScopedSavedDoc(ScopedSavedDoc&&) noexcept;
@@ -351,6 +352,7 @@ class EmbedderTest : public ::testing::Test,
 
   // See comments in the respective non-Saved versions of these methods.
   ScopedSavedDoc OpenScopedSavedDocument();
+  ScopedSavedDoc OpenScopedSavedDocumentWithPassword(const char* password);
   FPDF_DOCUMENT OpenSavedDocument();
   FPDF_DOCUMENT OpenSavedDocumentWithPassword(const char* password);
   void CloseSavedDocument();
