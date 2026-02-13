@@ -1054,14 +1054,6 @@ void EmbedderTest::VerifySavedRenderingToPngWithFuzzyExpectationSuffix(
                                                expectation_png_name);
 }
 
-void EmbedderTest::VerifySavedRendering(FPDF_PAGE page,
-                                        int width,
-                                        int height,
-                                        const char* md5) {
-  ScopedFPDFBitmap bitmap = VerifySavedRenderingCommon(page);
-  CompareBitmap(bitmap.get(), width, height, md5);
-}
-
 ScopedFPDFBitmap EmbedderTest::VerifySavedRenderingCommon(FPDF_PAGE page) {
   CHECK(page);
   CHECK(saved_document());
@@ -1085,11 +1077,6 @@ void EmbedderTest::VerifySavedDocumentToPngWithFuzzyExpectationSuffix(
   ScopedFPDFBitmap bitmap = VerifySavedDocumentCommon();
   CompareBitmapToPngWithFuzzyExpectationSuffix(bitmap.get(),
                                                expectation_png_name);
-}
-
-void EmbedderTest::VerifySavedDocument(int width, int height, const char* md5) {
-  ScopedFPDFBitmap bitmap = VerifySavedDocumentCommon();
-  CompareBitmap(bitmap.get(), width, height, md5);
 }
 
 ScopedFPDFBitmap EmbedderTest::VerifySavedDocumentCommon() {
@@ -1200,31 +1187,6 @@ void EmbedderTest::CompareBitmapToPngWithFuzzyExpectationSuffix(
     std::string_view expectation_png_name) {
   CompareBitmapToPngWithExpectationSuffix(bitmap, expectation_png_name,
                                           GetPlatformMaxPixelDelta());
-}
-
-// static
-void EmbedderTest::CompareBitmap(FPDF_BITMAP bitmap,
-                                 int expected_width,
-                                 int expected_height,
-                                 const char* expected_md5sum) {
-  ASSERT_EQ(expected_width, FPDFBitmap_GetWidth(bitmap));
-  ASSERT_EQ(expected_height, FPDFBitmap_GetHeight(bitmap));
-
-  // The expected stride is calculated using the same formula as in
-  // CFX_DIBitmap::CalculatePitchAndSize(), which sets the bitmap stride.
-  const int expected_stride =
-      (expected_width * GetBitmapBytesPerPixel(bitmap) * 8 + 31) / 32 * 4;
-  ASSERT_EQ(expected_stride, FPDFBitmap_GetStride(bitmap));
-
-  if (!expected_md5sum) {
-    return;
-  }
-
-  std::string actual_md5sum = HashBitmap(bitmap);
-  EXPECT_EQ(expected_md5sum, actual_md5sum);
-  if (EmbedderTestEnvironment::GetInstance()->write_pngs()) {
-    WriteBitmapToPng(bitmap, actual_md5sum + ".png");
-  }
 }
 
 // static

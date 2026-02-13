@@ -310,7 +310,7 @@ class EmbedderTest : public ::testing::Test,
   static void CompareBitmapToPng(FPDF_BITMAP bitmap,
                                  std::string_view expectation_png_name);
 
-  // Like CompareBitmap(), except instead of just adding ".png" to
+  // Like CompareBitmapToPng(), except instead of just adding ".png" to
   // `expectation_png_name`, this method will look for the expectation PNG using
   // several suffixes in order: "_$renderer_$os_$cpu.png", "_$renderer_$os.png",
   // "_$renderer.png", "_$os_$cpu.png", "_$os.png".
@@ -341,13 +341,6 @@ class EmbedderTest : public ::testing::Test,
       FPDF_BITMAP bitmap,
       std::string_view expectation_png_name);
 
-  // Check `bitmap` to make sure it has the right dimensions and content.
-  // TODO(crbug.com/468228360): Switch to the CompareBitmap() overload above.
-  static void CompareBitmap(FPDF_BITMAP bitmap,
-                            int expected_width,
-                            int expected_height,
-                            const char* expected_md5sum);
-
   void ClearString() { data_string_.clear(); }
   const std::string& GetString() const { return data_string_; }
 
@@ -365,7 +358,7 @@ class EmbedderTest : public ::testing::Test,
   FPDF_PAGE LoadSavedPage(int page_index);
   void CloseSavedPage(FPDF_PAGE page);
 
-  // See comments for CompareBitmap(), CompareBitmapToPng(), and
+  // See comments for CompareBitmapToPng(), and
   // CompareBitmapToPngWithExpectationSuffix() above.
   void VerifySavedRenderingToPng(FPDF_PAGE page,
                                  std::string_view expectation_png_name);
@@ -375,16 +368,11 @@ class EmbedderTest : public ::testing::Test,
   void VerifySavedRenderingToPngWithFuzzyExpectationSuffix(
       FPDF_PAGE page,
       std::string_view expectation_png_name);
-  void VerifySavedRendering(FPDF_PAGE page,
-                            int width,
-                            int height,
-                            const char* md5);
   void VerifySavedDocumentToPng(std::string_view expectation_png_name);
   void VerifySavedDocumentToPngWithExpectationSuffix(
       std::string_view expectation_png_name);
   void VerifySavedDocumentToPngWithFuzzyExpectationSuffix(
       std::string_view expectation_png_name);
-  void VerifySavedDocument(int width, int height, const char* md5);
 
   void SetWholeFileAvailable();
 
