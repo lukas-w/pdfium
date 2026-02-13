@@ -12,7 +12,9 @@ TemporaryFileTest::TemporaryFileTest() = default;
 TemporaryFileTest::~TemporaryFileTest() = default;
 
 void TemporaryFileTest::SetUp() {
-  fd_ = mkstemp(temp_name_);
+  temp_name_ = testing::TempDir();
+  temp_name_ += "/pdfium_empty_XXXXXX";
+  fd_ = mkstemp(temp_name_.data());
   ASSERT_GE(fd_, 0);
 }
 
@@ -20,7 +22,7 @@ void TemporaryFileTest::TearDown() {
   if (fd_ != -1) {
     close(fd_);
   }
-  unlink(temp_name_);
+  unlink(temp_name_.c_str());
 }
 
 void TemporaryFileTest::WriteAndClose(pdfium::span<const uint8_t> data) {

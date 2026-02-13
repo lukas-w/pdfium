@@ -5,6 +5,8 @@
 #ifndef TESTING_TEMPORARY_FILE_TEST_H_
 #define TESTING_TEMPORARY_FILE_TEST_H_
 
+#include <string>
+
 #include "build/build_config.h"
 #include "core/fxcrt/span.h"
 #include "testing/gtest/include/gtest/gtest.h"
@@ -23,10 +25,10 @@ class TemporaryFileTest : public testing::Test {
 
   void WriteAndClose(pdfium::span<const uint8_t> data);
 
-  const char* temp_name() const { return temp_name_; }
+  const char* temp_name() const { return temp_name_.c_str(); }
 
  private:
-  char temp_name_[25] = "/tmp/pdfium_empty_XXXXXX";
+  std::string temp_name_;
   int fd_;
 };
 
