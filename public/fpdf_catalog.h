@@ -56,7 +56,7 @@ FPDFCatalog_GetLanguage(FPDF_DOCUMENT document,
 //
 // Returns TRUE on success.
 FPDF_EXPORT FPDF_BOOL FPDF_CALLCONV
-FPDFCatalog_SetLanguage(FPDF_DOCUMENT document, FPDF_BYTESTRING language);
+FPDFCatalog_SetLanguage(FPDF_DOCUMENT document, FPDF_WIDESTRING language);
 
 #ifdef __cplusplus
 }  // extern "C"

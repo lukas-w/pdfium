@@ -18,7 +18,8 @@ using FPDFCatalogTest = EmbedderTest;
 
 TEST_F(FPDFCatalogTest, SetLanguageInvalidDocument) {
   // Document cannot be nullptr.
-  EXPECT_FALSE(FPDFCatalog_SetLanguage(nullptr, "en-US"));
+  ScopedFPDFWideString en_us_str = GetFPDFWideString(L"en-US");
+  EXPECT_FALSE(FPDFCatalog_SetLanguage(nullptr, en_us_str.get()));
 
   ScopedFPDFDocument doc(FPDF_CreateNewDocument());
   CPDF_Document* cpdf_doc = CPDFDocumentFromFPDFDocument(doc.get());
@@ -29,7 +30,7 @@ TEST_F(FPDFCatalogTest, SetLanguageInvalidDocument) {
 
   // Catalog cannot be nullptr.
   cpdf_doc->SetRootForTesting(nullptr);
-  EXPECT_FALSE(FPDFCatalog_SetLanguage(doc.get(), "en-US"));
+  EXPECT_FALSE(FPDFCatalog_SetLanguage(doc.get(), en_us_str.get()));
 }
 
 TEST_F(FPDFCatalogTest, SetLanguageNewDocument) {
@@ -43,7 +44,8 @@ TEST_F(FPDFCatalogTest, SetLanguageNewDocument) {
   EXPECT_FALSE(catalog->GetStringFor("Lang"));
 
   // Add a new entry.
-  EXPECT_TRUE(FPDFCatalog_SetLanguage(doc.get(), "en-US"));
+  ScopedFPDFWideString en_us_str = GetFPDFWideString(L"en-US");
+  EXPECT_TRUE(FPDFCatalog_SetLanguage(doc.get(), en_us_str.get()));
 
   RetainPtr<const CPDF_String> result_language = catalog->GetStringFor("Lang");
   ASSERT_TRUE(result_language);
@@ -63,7 +65,8 @@ TEST_F(FPDFCatalogTest, SetLanguageExistingDocument) {
   EXPECT_EQ("en-US", result_language->GetString());
 
   // Replace the existing entry.
-  EXPECT_TRUE(FPDFCatalog_SetLanguage(document(), "hu"));
+  ScopedFPDFWideString hu_str = GetFPDFWideString(L"hu");
+  EXPECT_TRUE(FPDFCatalog_SetLanguage(document(), hu_str.get()));
 
   result_language = catalog->GetStringFor("Lang");
   ASSERT_TRUE(result_language);
@@ -83,7 +86,8 @@ TEST_F(FPDFCatalogTest, GetLanguageRoundTrip) {
   ScopedFPDFDocument doc(FPDF_CreateNewDocument());
 
   // Set language.
-  EXPECT_TRUE(FPDFCatalog_SetLanguage(doc.get(), "en-US"));
+  ScopedFPDFWideString en_us_str = GetFPDFWideString(L"en-US");
+  EXPECT_TRUE(FPDFCatalog_SetLanguage(doc.get(), en_us_str.get()));
 
   // Query size. Expected: "en-US" + NUL in UTF-16LE = 6 * 2 bytes.
   unsigned long size = FPDFCatalog_GetLanguage(doc.get(), nullptr, 0);

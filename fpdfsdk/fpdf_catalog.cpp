@@ -49,7 +49,7 @@ FPDFCatalog_GetLanguage(FPDF_DOCUMENT document,
 }
 
 FPDF_EXPORT FPDF_BOOL FPDF_CALLCONV
-FPDFCatalog_SetLanguage(FPDF_DOCUMENT document, FPDF_BYTESTRING language) {
+FPDFCatalog_SetLanguage(FPDF_DOCUMENT document, FPDF_WIDESTRING language) {
   if (!language) {
     return false;
   }
@@ -64,6 +64,9 @@ FPDFCatalog_SetLanguage(FPDF_DOCUMENT document, FPDF_BYTESTRING language) {
     return false;
   }
 
-  catalog->SetNewFor<CPDF_String>("Lang", language);
+  // SAFETY: required from caller.
+  catalog->SetNewFor<CPDF_String>(
+      "Lang",
+      UNSAFE_BUFFERS(WideStringFromFPDFWideString(language).AsStringView()));
   return true;
 }
