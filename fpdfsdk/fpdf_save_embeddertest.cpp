@@ -362,6 +362,9 @@ TEST_F(FPDFSaveWithFontSubsetEmbedderTest, SaveWithoutSubsetWithNewText) {
 
   ASSERT_NO_FATAL_FAILURE(InsertNewTextObject(page.get()));
 
+  ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
+  CompareBitmapWithExpectationSuffix(bitmap.get(), kSaveNewTextFilename);
+
   // Verify the file size increase is larger when not subsetting the new text's
   // font.
   EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
@@ -369,8 +372,7 @@ TEST_F(FPDFSaveWithFontSubsetEmbedderTest, SaveWithoutSubsetWithNewText) {
   EXPECT_EQ(5001u, GetString().size());
 
   // Verify the text is visible.
-  ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-  CompareBitmapWithExpectationSuffix(bitmap.get(), kSaveNewTextFilename);
+  VerifySavedDocumentWithExpectationSuffix(kSaveNewTextFilename);
 }
 
 TEST_F(FPDFSaveWithFontSubsetEmbedderTest, SaveWithSubsetWithNewText) {
@@ -380,6 +382,9 @@ TEST_F(FPDFSaveWithFontSubsetEmbedderTest, SaveWithSubsetWithNewText) {
 
   ASSERT_NO_FATAL_FAILURE(InsertNewTextObject(page.get()));
 
+  ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
+  CompareBitmapWithExpectationSuffix(bitmap.get(), kSaveNewTextFilename);
+
   // Verify the file size increase is smaller when subsetting the new text's
   // font.
   EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, FPDF_SUBSET_NEW_FONTS));
@@ -388,6 +393,5 @@ TEST_F(FPDFSaveWithFontSubsetEmbedderTest, SaveWithSubsetWithNewText) {
   EXPECT_EQ(5001u, GetString().size());
 
   // Verify the text is visible.
-  ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-  CompareBitmapWithExpectationSuffix(bitmap.get(), kSaveNewTextFilename);
+  VerifySavedDocumentWithExpectationSuffix(kSaveNewTextFilename);
 }
