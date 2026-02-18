@@ -152,7 +152,6 @@ class CFX_Face final : public Retainable, public Observable {
   const FXFT_FaceRec* GetRec() const { return rec_.get(); }
 
   bool IsTricky() const;
-  bool SetPixelSize(uint32_t width, uint32_t height);
   void AdjustVariationParams(int glyph_index, int dest_width, int weight);
 
   pdfium::span<const FT_CharMap> GetCharMaps() const;

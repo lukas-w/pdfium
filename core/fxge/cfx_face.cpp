@@ -350,12 +350,12 @@ RetainPtr<CFX_Face> CFX_Face::New(CFX_FontMgr* font_mgr,
                          &face_rec) != 0) {
     return nullptr;
   }
+
   // Private ctor.
   auto face = pdfium::WrapRetain(new CFX_Face(face_rec, std::move(desc)));
-  if (!face->SetPixelSize(64, 64)) {
+  if (FT_Set_Pixel_Sizes(face->GetRec(), 64, 64) != 0) {
     return nullptr;
   }
-
   return face;
 }
 
@@ -777,9 +777,6 @@ std::optional<FX_RECT> CFX_Face::GetFontGlyphBBox(uint32_t glyph_index) {
     result.top = std::min(result.top, static_cast<int>(GetAscender()));
     result.bottom = std::max(result.bottom, static_cast<int>(GetDescender()));
     FT_Done_Glyph(glyph);
-    if (!SetPixelSize(64, 64)) {
-      return std::nullopt;
-    }
     return result;
   }
   if (LoadGlyph(glyph_index, /*scale=*/false) != 0) {
@@ -923,11 +920,6 @@ void CFX_Face::SetCharMapByIndex(size_t index) {
 
 bool CFX_Face::SelectCharMap(fxge::FontEncoding encoding) {
   FT_Error error = FT_Select_Charmap(GetRec(), ToFTEncoding(encoding));
-  return !error;
-}
-
-bool CFX_Face::SetPixelSize(uint32_t width, uint32_t height) {
-  FT_Error error = FT_Set_Pixel_Sizes(GetRec(), width, height);
   return !error;
 }
 
