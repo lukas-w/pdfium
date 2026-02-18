@@ -80,6 +80,18 @@ source_set("test_support") {
   }
 }
 
+if (build_with_chromium && pdf_use_skia) {
+  source_set("discardable_memory_allocator") {
+    testonly = true
+    sources = [
+      "chromium_support/discardable_memory_allocator.cc",
+      "chromium_support/discardable_memory_allocator.h",
+    ]
+    deps = [ "//base/test:test_support" ]
+    configs += [ "../:pdfium_strict_config" ]
+  }
+}
+
 source_set("pixel_diff_utils") {
   testonly = true
   sources = [
@@ -318,11 +330,7 @@ executable("pdfium_test") {
   if (pdf_use_skia) {
     deps += [ "//skia" ]
     if (build_with_chromium) {
-      sources += [
-        "chromium_support/discardable_memory_allocator.cc",
-        "chromium_support/discardable_memory_allocator.h",
-      ]
-      deps += [ "//base/test:test_support" ]
+      deps += [ ":discardable_memory_allocator" ]
     }
   }
 

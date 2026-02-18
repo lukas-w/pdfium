@@ -389,6 +389,11 @@ test("pdfium_embeddertests") {
     use_raw_android_executable = true
   }
 
+  if (build_with_chromium && pdf_use_skia) {
+    deps += [ "testing:discardable_memory_allocator" ]
+    configs += [ "testing:pdfium_in_chromium_config" ]
+  }
+
   if (pdf_enable_v8) {
     deps += [
       "fxjs:embeddertests",
