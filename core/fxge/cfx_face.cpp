@@ -372,7 +372,6 @@ RetainPtr<CFX_Face> CFX_Face::NewFromSpanStream(
   if (!face) {
     return nullptr;
   }
-  face->SetPixelSize(0, 64);
   face->owned_font_stream_ = std::move(font_stream);
   return face;
 }
@@ -778,7 +777,7 @@ std::optional<FX_RECT> CFX_Face::GetFontGlyphBBox(uint32_t glyph_index) {
     result.top = std::min(result.top, static_cast<int>(GetAscender()));
     result.bottom = std::max(result.bottom, static_cast<int>(GetDescender()));
     FT_Done_Glyph(glyph);
-    if (!SetPixelSize(0, 64)) {
+    if (!SetPixelSize(64, 64)) {
       return std::nullopt;
     }
     return result;
