@@ -267,7 +267,6 @@ component("skia") {
 
   sources += skia_ports_sources
   sources += [
-    "//third_party/skia/src/ports/SkImageGenerator_none.cpp",
     "//third_party/skia/src/sfnt/SkOTTable_name.cpp",
     "//third_party/skia/src/sfnt/SkOTUtils.cpp",
 
