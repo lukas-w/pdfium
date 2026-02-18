@@ -13,6 +13,7 @@
 #include "core/fpdfapi/page/cpdf_imageobject.h"
 #include "core/fpdfapi/page/cpdf_page.h"
 #include "core/fpdfapi/page/cpdf_pagemodule.h"
+#include "core/fpdfapi/page/test_with_page_module.h"
 #include "core/fpdfapi/parser/cpdf_parser.h"
 #include "core/fpdfapi/render/cpdf_docrenderdata.h"
 #include "core/fxcrt/cfx_fileaccess_stream.h"
@@ -21,13 +22,13 @@
 
 namespace pdfium {
 
-TEST(CPDFPageImageCache, RenderBug1924) {
+using CPDFPageImageCacheTest = TestWithPageModule;
+
+TEST_F(CPDFPageImageCacheTest, RenderBug1924) {
   // If you render a page with a JPEG2000 image as a thumbnail (small picture)
   // first, the image that gets cached has a low resolution. If you afterwards
   // render it full-size, you should get a larger image - the image cache will
   // be regenerate.
-
-  InitializePageModule();
   {
     std::string file_path = PathService::GetTestFilePath("jpx_lzw.pdf");
     ASSERT_FALSE(file_path.empty());
@@ -81,7 +82,6 @@ TEST(CPDFPageImageCache, RenderBug1924) {
     ASSERT_TRUE(page->AsPDFPage());
     page->AsPDFPage()->ClearView();
   }
-  DestroyPageModule();
 }
 
 }  // namespace pdfium

@@ -153,6 +153,7 @@ pdfium_unittest_source_set("unittests") {
   ]
   deps = [
     ":page",
+    ":unit_test_support",
     "../parser",
     "../render",
   ]

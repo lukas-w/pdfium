@@ -29,6 +29,8 @@ class CFX_GEModule {
     virtual ~PlatformIface() = default;
 
     virtual void Init() = 0;
+    virtual void Terminate() = 0;
+
     virtual std::unique_ptr<SystemFontInfoIface>
     CreateDefaultSystemFontInfo() = 0;
 #if BUILDFLAG(IS_APPLE)
@@ -48,7 +50,7 @@ class CFX_GEModule {
   explicit CFX_GEModule(const char** pUserFontPaths);
   ~CFX_GEModule();
 
-  std::unique_ptr<PlatformIface> const platform_;
+  std::unique_ptr<PlatformIface> const platform_;  // Must outlive `font_mgr_`.
   std::unique_ptr<CFX_FontMgr> const font_mgr_;
 
   // Exclude because taken from public API.
