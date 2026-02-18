@@ -485,8 +485,7 @@ std::optional<std::array<uint8_t, 2>> CFX_Face::GetOs2Panose() {
   if (!os2) {
     return std::nullopt;
   }
-  // SAFETY: required from library.
-  return UNSAFE_BUFFERS(std::array<uint8_t, 2>{os2->panose[0], os2->panose[1]});
+  return std::array<uint8_t, 2>{os2->panose[0], os2->panose[1]};
 }
 #endif  // defined(PDF_ENABLE_XFA) || BUILDFLAG(IS_ANDROID)
 
