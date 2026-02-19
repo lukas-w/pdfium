@@ -23,6 +23,7 @@
 #include "core/fxcrt/retain_ptr.h"
 #include "core/fxcrt/unowned_ptr.h"
 #include "core/fxge/cfx_font.h"
+#include "core/fxge/text_char_pos.h"
 
 class CFX_DIBitmap;
 class CPDF_CIDFont;
@@ -96,6 +97,10 @@ class CPDF_Font : public Retainable, public Observable {
   virtual bool HasFontWidths() const;
 
   bool ShouldUseFont(uint32_t glyph_id, bool has_to_unicode) const;
+  std::vector<TextCharPos> GetCharPosList(
+      pdfium::span<const uint32_t> char_codes,
+      pdfium::span<const float> char_pos,
+      float font_size);
 
   ByteString GetBaseFontName() const { return base_font_name_; }
   std::optional<FX_Charset> GetSubstFontCharset() const;
@@ -157,6 +162,8 @@ class CPDF_Font : public Retainable, public Observable {
   void LoadUnicodeMap() const;  // logically const only.
   void LoadFontDescriptor(const CPDF_Dictionary* font_desc);
   void CheckFontMetrics();
+  bool ShouldApplyGlyphSpacingHeuristic(const CFX_Font* current_font,
+                                        bool is_vertical_writing) const;
 
   UnownedPtr<CPDF_Document> const document_;
   ByteString resource_name_;  // The resource name for this font.

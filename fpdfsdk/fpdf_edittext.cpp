@@ -23,7 +23,6 @@
 #include "core/fpdfapi/parser/cpdf_reference.h"
 #include "core/fpdfapi/parser/cpdf_stream.h"
 #include "core/fpdfapi/parser/cpdf_string.h"
-#include "core/fpdfapi/render/charposlist.h"
 #include "core/fpdfapi/render/cpdf_pagerendercontext.h"
 #include "core/fpdfapi/render/cpdf_rendercontext.h"
 #include "core/fpdfapi/render/cpdf_renderstatus.h"
@@ -1051,9 +1050,8 @@ FPDFFont_GetGlyphPath(FPDF_FONT font, uint32_t glyph, float font_size) {
   }
 
   uint32_t charcode = pFont->CharCodeFromUnicode(static_cast<wchar_t>(glyph));
-  std::vector<TextCharPos> pos =
-      GetCharPosList(pdfium::span_from_ref(charcode),
-                     pdfium::span<const float>(), pFont, font_size);
+  std::vector<TextCharPos> pos = pFont->GetCharPosList(
+      pdfium::span_from_ref(charcode), pdfium::span<const float>(), font_size);
   if (pos.empty()) {
     return nullptr;
   }
