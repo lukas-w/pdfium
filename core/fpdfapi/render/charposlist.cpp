@@ -16,56 +16,6 @@
 
 namespace {
 
-bool ShouldUseExistingFont(const CPDF_Font* font,
-                           uint32_t glyph_id,
-                           bool has_to_unicode) {
-  // Check for invalid glyph ID.
-  if (glyph_id == static_cast<uint32_t>(-1)) {
-    return false;
-  }
-
-  if (font->IsEmbedded()) {
-    return true;
-  }
-
-  if (!font->IsTrueTypeFont()) {
-    return true;
-  }
-
-  // For non-embedded TrueType fonts, a glyph ID of 0 may be invalid.
-  //
-  // When a "ToUnicode" entry exists in the font dictionary, it indicates
-  // a "ToUnicode" mapping file is used to convert from CIDs (which
-  // begins at decimal 0) to Unicode code. (See ToUnicode Mapping File
-  // Tutorial - Adobe
-  // https://www.adobe.com/content/dam/acom/en/devnet/acrobat/pdfs/5411.ToUnicode.pdf
-  // and
-  // https://www.freetype.org/freetype2/docs/tutorial/step1.html#section-6)
-  return glyph_id != 0 || has_to_unicode;
-}
-
-// The following is not a perfect solution and can be further improved.
-// For example, if `subst_font` is "Book" and the `base_font_name` is "Bookman",
-// this function will return "true" even though the actual font "Bookman"
-// is not loaded.
-// An exact string match is not possible here, because `subst_font_name`
-// will be the same value for different postscript names.
-// For example: "Times New Roman" as `subst_font_name` for all of these
-// `base_font_name` values: "TimesNewRoman,Bold", "TimesNewRomanPS-Bold",
-// "TimesNewRomanBold" and "TimesNewRoman-Bold".
-bool IsActualFontLoaded(const CFX_SubstFont* subst_font,
-                        const ByteString& base_font_name) {
-  // Skip if we loaded the actual font.
-  // example: TimesNewRoman,Bold -> Times New Roman
-  ByteString subst_font_name = subst_font->family_;
-  subst_font_name.Remove(' ');
-  subst_font_name.MakeLower();
-
-  std::optional<size_t> find =
-      base_font_name.Find(subst_font_name.AsStringView());
-  return find.has_value() && find.value() == 0;
-}
-
 bool ApplyGlyphSpacingHeuristic(const CPDF_Font* font,
                                 const CFX_Font* current_font,
                                 bool is_vertical_writing) {
@@ -89,7 +39,7 @@ bool ApplyGlyphSpacingHeuristic(const CPDF_Font* font,
     return false;
   }
 
-  return !IsActualFontLoaded(subst_font, base_font_name);
+  return !subst_font->IsActualFontLoaded(base_font_name);
 }
 
 }  // namespace
@@ -128,7 +78,7 @@ std::vector<TextCharPos> GetCharPosList(pdfium::span<const uint32_t> char_codes,
                    : text_char_pos.glyph_index_;
 #endif
     CFX_Font* current_font;
-    if (ShouldUseExistingFont(font, glyph_id, has_to_unicode)) {
+    if (font->ShouldUseFont(glyph_id, has_to_unicode)) {
       current_font = font->GetFont();
       text_char_pos.fallback_font_position_ = -1;
     } else {

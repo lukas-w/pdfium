@@ -19,6 +19,7 @@ class CFX_SubstFont {
   int GetOriginalWeight() const;
 #endif
   void UseChromeSerif();
+  bool IsActualFontLoaded(const ByteString& base_font_name) const;
 
   void SetIsBuiltInGenericFont() { flag_mm_ = true; }
   bool IsBuiltInGenericFont() const { return flag_mm_; }

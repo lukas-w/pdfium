@@ -361,6 +361,30 @@ bool CPDF_Font::IsStandardFont() const {
   return AsType1Font()->IsBase14Font();
 }
 
+bool CPDF_Font::ShouldUseFont(uint32_t glyph_id, bool has_to_unicode) const {
+  // Check for invalid glyph ID.
+  if (glyph_id == static_cast<uint32_t>(-1)) {
+    return false;
+  }
+  if (IsEmbedded()) {
+    return true;
+  }
+  if (!IsTrueTypeFont()) {
+    return true;
+  }
+
+  // For non-embedded TrueType fonts, a glyph ID of 0 may be invalid.
+  //
+  // When a "ToUnicode" entry exists in the font dictionary, it indicates
+  // a "ToUnicode" mapping file is used to convert from CIDs (which
+  // begins at decimal 0) to Unicode code. (See ToUnicode Mapping File
+  // Tutorial - Adobe
+  // https://www.adobe.com/content/dam/acom/en/devnet/acrobat/pdfs/5411.ToUnicode.pdf
+  // and
+  // https://www.freetype.org/freetype2/docs/tutorial/step1.html#section-6)
+  return glyph_id != 0 || has_to_unicode;
+}
+
 std::optional<FX_Charset> CPDF_Font::GetSubstFontCharset() const {
   CFX_SubstFont* font = font_.GetSubstFont();
   if (!font) {

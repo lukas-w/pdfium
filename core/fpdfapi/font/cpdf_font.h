@@ -95,6 +95,8 @@ class CPDF_Font : public Retainable, public Observable {
   virtual uint32_t CharCodeFromUnicode(wchar_t Unicode) const;
   virtual bool HasFontWidths() const;
 
+  bool ShouldUseFont(uint32_t glyph_id, bool has_to_unicode) const;
+
   ByteString GetBaseFontName() const { return base_font_name_; }
   std::optional<FX_Charset> GetSubstFontCharset() const;
   bool IsEmbedded() const { return IsType3Font() || font_file_ != nullptr; }
