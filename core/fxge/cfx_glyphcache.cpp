@@ -259,7 +259,7 @@ void CFX_GlyphCache::DestroyGlobals() {
   g_fontmgr = nullptr;
 }
 
-SkTypeface* CFX_GlyphCache::GetDeviceCache(const CFX_Font* font) {
+SkTypeface* CFX_GlyphCache::GetSkTypeface(const CFX_Font* font) {
   if (!typeface_ && g_fontmgr) {
     pdfium::span<const uint8_t> span = font->GetFontSpan();
     typeface_ = g_fontmgr->makeFromStream(

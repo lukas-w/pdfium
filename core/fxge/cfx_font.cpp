@@ -408,7 +408,7 @@ const CFX_Path* CFX_Font::LoadGlyphPath(uint32_t glyph_index,
 }
 
 #if defined(PDF_USE_SKIA)
-SkTypeface* CFX_Font::GetDeviceCache() const {
-  return GetOrCreateGlyphCache()->GetDeviceCache(this);
+SkTypeface* CFX_Font::GetSkTypeface() const {
+  return GetOrCreateGlyphCache()->GetSkTypeface(this);
 }
 #endif

@@ -130,7 +130,7 @@ class CFX_Font {
   int GetGlyphWidthImpl(uint32_t glyph_index, int dest_width, int weight) const;
 
 #if defined(PDF_USE_SKIA)
-  SkTypeface* GetDeviceCache() const;
+  SkTypeface* GetSkTypeface() const;
   bool IsSubstFontBold() const;
 #endif
 
