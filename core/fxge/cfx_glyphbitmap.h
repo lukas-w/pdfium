@@ -14,6 +14,7 @@ class CFX_DIBitmap;
 class CFX_GlyphBitmap {
  public:
   CFX_GlyphBitmap(int left, int top);
+  CFX_GlyphBitmap(int left, int top, RetainPtr<CFX_DIBitmap> bitmap);
   ~CFX_GlyphBitmap();
 
   CFX_GlyphBitmap(const CFX_GlyphBitmap&) = delete;

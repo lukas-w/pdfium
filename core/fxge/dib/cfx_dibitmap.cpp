@@ -137,16 +137,6 @@ RetainPtr<const CFX_DIBitmap> CFX_DIBitmap::RealizeIfNeeded() const {
 }
 #endif
 
-void CFX_DIBitmap::TakeOver(RetainPtr<CFX_DIBitmap>&& pSrcBitmap) {
-  buffer_ = std::move(pSrcBitmap->buffer_);
-  palette_ = std::move(pSrcBitmap->palette_);
-  pSrcBitmap->buffer_ = nullptr;
-  SetFormat(pSrcBitmap->GetFormat());
-  SetWidth(pSrcBitmap->GetWidth());
-  SetHeight(pSrcBitmap->GetHeight());
-  SetPitch(pSrcBitmap->GetPitch());
-}
-
 void CFX_DIBitmap::Clear(uint32_t color) {
   auto buffer = GetWritableBuffer();
   if (buffer.empty()) {

@@ -90,7 +90,6 @@ class CFX_DIBitmap final : public CFX_DIBBase {
         .first(static_cast<size_t>(GetWidth()));
   }
 
-  void TakeOver(RetainPtr<CFX_DIBitmap>&& pSrcBitmap);
   bool ConvertFormat(FXDIB_Format format);
   void Clear(uint32_t color);
 
