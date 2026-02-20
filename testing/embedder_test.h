@@ -353,9 +353,6 @@ class EmbedderTest : public ::testing::Test,
   // See comments in the respective non-Saved versions of these methods.
   ScopedSavedDoc OpenScopedSavedDocument();
   ScopedSavedDoc OpenScopedSavedDocumentWithPassword(const char* password);
-  FPDF_DOCUMENT OpenSavedDocument();
-  FPDF_DOCUMENT OpenSavedDocumentWithPassword(const char* password);
-  void CloseSavedDocument();
   ScopedSavedPage LoadScopedSavedPage(int page_index);
   FPDF_PAGE LoadSavedPage(int page_index);
   void CloseSavedPage(FPDF_PAGE page);
@@ -401,6 +398,16 @@ class EmbedderTest : public ::testing::Test,
 
   // Same as GetPageNumberForLoadedPage(), but with `saved_page_map_`.
   int GetPageNumberForSavedPage(FPDF_PAGE page) const;
+
+  // Helpers for opening saved documents. These are intended for internal use only. Callers
+  // should use the Scoped methods that manage lifetime automatically.
+  FPDF_DOCUMENT OpenSavedDocument();
+  FPDF_DOCUMENT OpenSavedDocumentWithPassword(const char* password);
+
+  // Closes a document opened via OpenSavedDocument(). This must only be invoked in documents
+  // opened by the helpers above. This is intended for internal use in the destructor of the
+  // scoped methods.
+  void CloseSavedDocument();
 
   void UnloadPageCommon(FPDF_PAGE page, bool do_events);
   FPDF_PAGE LoadPageCommon(int page_index, bool do_events);

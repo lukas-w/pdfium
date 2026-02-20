@@ -50,7 +50,8 @@ TEST_F(FPDFEditPathEmbedderTest, VerifyCorrectColoursReturned) {
   FPDF_ClosePage(page);
   page = nullptr;
 
-  ASSERT_TRUE(OpenSavedDocument());
+  ScopedSavedDoc saved_document = OpenScopedSavedDocument();
+  ASSERT_TRUE(saved_document);
   page = LoadSavedPage(0);
   ASSERT_TRUE(page);
 
@@ -78,7 +79,6 @@ TEST_F(FPDFEditPathEmbedderTest, VerifyCorrectColoursReturned) {
   }
 
   CloseSavedPage(page);
-  CloseSavedDocument();
 }
 
 TEST_F(FPDFEditPathEmbedderTest, GetAndSetMatrixForPath) {
