@@ -394,9 +394,44 @@ TEST_F(FPDFSaveWithFontSubsetEmbedderTest, SaveWithSubsetWithNewText) {
   // font, since text only contains a subset of the characters in the test font.
   EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, FPDF_SUBSET_NEW_FONTS));
   EXPECT_THAT(GetString(), StartsWith("%PDF-1.7\r\n"));
-  // TODO(crbug.com/476127152): File size increase should be smaller.
-  EXPECT_EQ(5001u, GetString().size());
+  EXPECT_EQ(4481u, GetString().size());
 
   // Verify the text is visible.
   VerifySavedDocumentWithExpectationSuffix(kSaveNewTextFilename);
+}
+
+TEST_F(FPDFSaveWithFontSubsetEmbedderTest,
+       SaveWithSubsetMultipleFontsMultipleTexts) {
+  ASSERT_TRUE(OpenDocument("hello_world.pdf"));
+  ScopedPage page = LoadScopedPage(0);
+  ASSERT_TRUE(page);
+
+  ScopedFPDFFont font1 = LoadTestFont(PathService::GetThirdPartyFilePath(
+      "NotoSansCJK/NotoSansSC-Regular.subset.otf"));
+  ASSERT_TRUE(font1);
+
+  ScopedFPDFWideString text1 = GetFPDFWideString(L"这是第一句。");
+  ASSERT_NO_FATAL_FAILURE(InsertNewTextObject(
+      page.get(), font1.get(), text1.get(), CFX_PointF(10.0f, 10.0f)));
+
+  ScopedFPDFFont font2 = LoadTestFont(PathService::GetThirdPartyFilePath(
+      "test_fonts/test_fonts/Arimo-Regular.ttf"));
+  ASSERT_TRUE(font2);
+
+  ScopedFPDFWideString text2 = GetFPDFWideString(L"Hello again.");
+  ASSERT_NO_FATAL_FAILURE(InsertNewTextObject(
+      page.get(), font2.get(), text2.get(), CFX_PointF(10.0f, 150.0f)));
+
+  constexpr char kSaveMultipleFontsFilename[] = "save_multiple_fonts";
+  ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
+  CompareBitmapWithExpectationSuffix(bitmap.get(), kSaveMultipleFontsFilename);
+
+  EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, FPDF_SUBSET_NEW_FONTS));
+  EXPECT_THAT(GetString(), StartsWith("%PDF-1.7\r\n"));
+  // Subsetting reduces the file from ~259KB to ~24.3KB. Allow a tolerance of
+  // +/- 500 bytes to accommodate any potential internal changes.
+  EXPECT_NEAR(GetString().size(), 24300u, 500u);
+
+  // Verify the text is visible.
+  VerifySavedDocumentWithExpectationSuffix(kSaveMultipleFontsFilename);
 }

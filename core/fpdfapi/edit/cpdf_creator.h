@@ -34,7 +34,6 @@ class CPDF_Creator {
     kNoOriginal = (1 << 1),
     kRemoveSecurityDeprecated = 3,
     kRemoveSecurity = (1 << 2),
-    // TODO(crbug.com/42270430): Implement font subsetting.
     kSubsetNewFonts = (1 << 3),
   };
 
@@ -100,6 +99,7 @@ class CPDF_Creator {
   bool security_changed_ = false;
   bool is_incremental_ = false;
   bool is_original_ = false;
+  bool subset_new_fonts_ = false;
 };
 
 #endif  // CORE_FPDFAPI_EDIT_CPDF_CREATOR_H_

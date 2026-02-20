@@ -10,9 +10,11 @@
 
 #include <algorithm>
 #include <array>
+#include <map>
 #include <set>
 #include <utility>
 
+#include "core/fpdfapi/edit/cpdf_fontsubsetter.h"
 #include "core/fpdfapi/parser/cpdf_array.h"
 #include "core/fpdfapi/parser/cpdf_crypto_handler.h"
 #include "core/fpdfapi/parser/cpdf_dictionary.h"
@@ -210,15 +212,24 @@ bool CPDF_Creator::WriteOldObjs() {
 }
 
 bool CPDF_Creator::WriteNewObjs() {
+  std::map<uint32_t, RetainPtr<const CPDF_Object>> font_obj_overrides;
+  if (subset_new_fonts_) {
+    CPDF_FontSubsetter subsetter(document_);
+    font_obj_overrides = subsetter.GenerateObjectOverrides(new_obj_num_array_);
+  }
   for (size_t i = cur_obj_num_; i < new_obj_num_array_.size(); ++i) {
     uint32_t objnum = new_obj_num_array_[i];
-    RetainPtr<const CPDF_Object> pObj = document_->GetIndirectObject(objnum);
-    if (!pObj) {
+    RetainPtr<const CPDF_Object> obj = document_->GetIndirectObject(objnum);
+    if (!obj) {
       continue;
     }
 
     object_offsets_[objnum] = archive_->CurrentOffset();
-    if (!WriteIndirectObj(pObj->GetObjNum(), pObj.Get())) {
+
+    auto it = font_obj_overrides.find(objnum);
+    const CPDF_Object* obj_to_write =
+        it != font_obj_overrides.end() ? it->second.Get() : obj.Get();
+    if (!WriteIndirectObj(objnum, obj_to_write)) {
       return false;
     }
   }
@@ -618,6 +629,7 @@ bool CPDF_Creator::Create(Mask<CreateFlags> flags, int32_t file_version) {
 
   is_incremental_ = !!(flags & CreateFlags::kIncremental);
   is_original_ = !(flags & CreateFlags::kNoOriginal);
+  subset_new_fonts_ = !!(flags & CreateFlags::kSubsetNewFonts);
 
   if (file_version >= 10 && file_version <= 17) {
     file_version_ = file_version;

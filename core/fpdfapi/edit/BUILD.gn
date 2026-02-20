@@ -9,6 +9,8 @@ source_set("edit") {
   sources = [
     "cpdf_creator.cpp",
     "cpdf_creator.h",
+    "cpdf_fontsubsetter.cpp",
+    "cpdf_fontsubsetter.h",
     "cpdf_npagetooneexporter.cpp",
     "cpdf_npagetooneexporter.h",
     "cpdf_pagecontentgenerator.cpp",
@@ -33,6 +35,7 @@ source_set("edit") {
     "../font",
     "../page",
     "../parser",
+    "//third_party/harfbuzz-ng",
   ]
   visibility = [ "../../../*" ]
 }
@@ -72,6 +75,13 @@ pdfium_unittest_source_set("unittests") {
 }
 
 pdfium_embeddertest_source_set("embeddertests") {
-  sources = [ "cpdf_creator_embeddertest.cpp" ]
+  sources = [
+    "cpdf_creator_embeddertest.cpp",
+    "cpdf_fontsubsetter_embeddertest.cpp",
+  ]
+  deps = [
+    ":edit",
+    "../parser",
+  ]
   pdfium_root_dir = "../../../"
 }
