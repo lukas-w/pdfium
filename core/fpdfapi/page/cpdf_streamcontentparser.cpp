@@ -42,6 +42,7 @@
 #include "core/fxcrt/compiler_specific.h"
 #include "core/fxcrt/containers/contains.h"
 #include "core/fxcrt/fx_safe_types.h"
+#include "core/fxcrt/numerics/safe_conversions.h"
 #include "core/fxcrt/scoped_set_insertion.h"
 #include "core/fxcrt/span.h"
 #include "core/fxcrt/stl_util.h"
@@ -560,6 +561,14 @@ std::vector<float> CPDF_StreamContentParser::GetNumbers(size_t count) const {
   return values;
 }
 
+std::optional<int> CPDF_StreamContentParser::GetInteger(uint32_t index) const {
+  float num = GetNumber(index);
+  if (!pdfium::IsValueInRangeForNumericType<int>(num)) {
+    return std::nullopt;
+  }
+  return static_cast<int>(num);
+}
+
 CFX_PointF CPDF_StreamContentParser::GetPoint(uint32_t index) const {
   return CFX_PointF(GetNumber(index + 1), GetNumber(index));
 }
@@ -978,12 +987,12 @@ void CPDF_StreamContentParser::Handle_BeginImageData() {}
 
 void CPDF_StreamContentParser::Handle_SetLineJoin() {
   cur_states_->mutable_graph_state().SetLineJoin(
-      static_cast<CFX_GraphStateData::LineJoin>(GetInteger(0)));
+      static_cast<CFX_GraphStateData::LineJoin>(GetInteger(0).value_or(0)));
 }
 
 void CPDF_StreamContentParser::Handle_SetLineCap() {
   cur_states_->mutable_graph_state().SetLineCap(
-      static_cast<CFX_GraphStateData::LineCap>(GetInteger(0)));
+      static_cast<CFX_GraphStateData::LineCap>(GetInteger(0).value_or(0)));
 }
 
 void CPDF_StreamContentParser::Handle_SetCMYKColor_Fill() {
@@ -1461,7 +1470,7 @@ void CPDF_StreamContentParser::OnChangeTextMatrix() {
 
 void CPDF_StreamContentParser::Handle_SetTextRenderMode() {
   TextRenderingMode mode;
-  if (SetTextRenderingModeFromInt(GetInteger(0), &mode)) {
+  if (SetTextRenderingModeFromInt(GetInteger(0).value_or(0), &mode)) {
     cur_states_->mutable_text_state().SetTextMode(mode);
   }
 }
