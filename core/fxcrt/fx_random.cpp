@@ -126,10 +126,10 @@ void FX_Random_MT_Close(void* context) {
   FX_Free(context);
 }
 
-void FX_Random_GenerateMT(pdfium::span<uint32_t> pBuffer) {
+void FX_Random_MT_Fill(pdfium::span<uint32_t> buffer) {
   void* context = ContextFromNextGlobalSeed();
-  for (size_t i = 0; i < pBuffer.size(); ++i) {
-    pBuffer[i] = FX_Random_MT_Generate(context);
+  for (uint32_t& val : buffer) {
+    val = FX_Random_MT_Generate(context);
   }
   FX_Random_MT_Close(context);
 }

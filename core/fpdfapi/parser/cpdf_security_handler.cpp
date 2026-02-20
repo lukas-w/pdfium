@@ -588,7 +588,7 @@ void CPDF_SecurityHandler::OnCreate(CPDF_Dictionary* pEncryptDict,
 
   if (revision_ >= 5) {
     uint32_t random[4];
-    FX_Random_GenerateMT(random);
+    FX_Random_MT_Fill(random);
     CRYPT_sha2_context sha;
     CRYPT_SHA256Start(&sha);
     CRYPT_SHA256Update(&sha, pdfium::as_byte_span(random));
@@ -701,7 +701,7 @@ void CPDF_SecurityHandler::AES256_SetPerms(CPDF_Dictionary* pEncryptDict) {
   // In ISO 32000 Supplement for ExtensionLevel 3, Algorithm 3.10 says bytes 12
   // to 15 should be random data.
   uint32_t random_value;
-  FX_Random_GenerateMT(pdfium::span_from_ref(random_value));
+  FX_Random_MT_Fill(pdfium::span_from_ref(random_value));
   fxcrt::Copy(pdfium::byte_span_from_ref(random_value),
               pdfium::span(buf).subspan<12, 4>());
 
