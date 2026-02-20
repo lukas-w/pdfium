@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 
+#include "core/fxcrt/fx_coordinates.h"
 #include "core/fxcrt/fx_string.h"
 #include "public/cpp/fpdf_scopers.h"
 #include "public/fpdf_edit.h"
@@ -313,13 +314,7 @@ class FPDFSaveWithFontSubsetEmbedderTest : public FPDFSaveEmbedderTest {
  public:
   static constexpr char kSaveNewTextFilename[] = "save_new_text";
 
-  ScopedFPDFFont LoadTestFont() {
-    std::string font_path = PathService::GetThirdPartyFilePath(
-        "NotoSansCJK/NotoSansSC-Regular.subset.otf");
-    if (font_path.empty()) {
-      return nullptr;
-    }
-
+  ScopedFPDFFont LoadTestFont(const std::string& font_path) {
     std::vector<uint8_t> font_data = GetFileContents(font_path.c_str());
     if (font_data.empty()) {
       return nullptr;
@@ -330,18 +325,16 @@ class FPDFSaveWithFontSubsetEmbedderTest : public FPDFSaveEmbedderTest {
         /*cid=*/true));
   }
 
-  void InsertNewTextObject(const FPDF_PAGE& page) {
-    ScopedFPDFFont font = LoadTestFont();
-    ASSERT_TRUE(font);
-
+  void InsertNewTextObject(const FPDF_PAGE& page,
+                           FPDF_FONT font,
+                           FPDF_WIDESTRING text,
+                           const CFX_PointF& point) {
     FPDF_PAGEOBJECT text_obj =
-        FPDFPageObj_CreateTextObj(document(), font.get(), 24.0f);
+        FPDFPageObj_CreateTextObj(document(), font, 24.0f);
 
-    // `text` only contains a subset of the characters in the test font.
-    ScopedFPDFWideString text = GetFPDFWideString(L"这是第一句。");
-    ASSERT_TRUE(FPDFText_SetText(text_obj, text.get()));
+    ASSERT_TRUE(FPDFText_SetText(text_obj, text));
 
-    const FS_MATRIX matrix{1, 0, 0, 1, 10, 10};
+    const FS_MATRIX matrix{1.0f, 0.0f, 0.0f, 1.0f, point.x, point.y};
     ASSERT_TRUE(FPDFPageObj_TransformF(text_obj, &matrix));
     FPDFPage_InsertObject(page, text_obj);
     ASSERT_TRUE(FPDFPage_GenerateContent(page));
@@ -360,7 +353,13 @@ TEST_F(FPDFSaveWithFontSubsetEmbedderTest, SaveWithoutSubsetWithNewText) {
   ScopedPage page = LoadScopedPage(0);
   ASSERT_TRUE(page);
 
-  ASSERT_NO_FATAL_FAILURE(InsertNewTextObject(page.get()));
+  ScopedFPDFFont font = LoadTestFont(PathService::GetThirdPartyFilePath(
+      "NotoSansCJK/NotoSansSC-Regular.subset.otf"));
+  ASSERT_TRUE(font);
+
+  ScopedFPDFWideString text = GetFPDFWideString(L"这是第一句。");
+  ASSERT_NO_FATAL_FAILURE(InsertNewTextObject(
+      page.get(), font.get(), text.get(), CFX_PointF(10.0f, 10.0f)));
 
   ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
   CompareBitmapWithExpectationSuffix(bitmap.get(), kSaveNewTextFilename);
@@ -380,13 +379,19 @@ TEST_F(FPDFSaveWithFontSubsetEmbedderTest, SaveWithSubsetWithNewText) {
   ScopedPage page = LoadScopedPage(0);
   ASSERT_TRUE(page);
 
-  ASSERT_NO_FATAL_FAILURE(InsertNewTextObject(page.get()));
+  ScopedFPDFFont font = LoadTestFont(PathService::GetThirdPartyFilePath(
+      "NotoSansCJK/NotoSansSC-Regular.subset.otf"));
+  ASSERT_TRUE(font);
+
+  ScopedFPDFWideString text = GetFPDFWideString(L"这是第一句。");
+  ASSERT_NO_FATAL_FAILURE(InsertNewTextObject(
+      page.get(), font.get(), text.get(), CFX_PointF(10.0f, 10.0f)));
 
   ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
   CompareBitmapWithExpectationSuffix(bitmap.get(), kSaveNewTextFilename);
 
   // Verify the file size increase is smaller when subsetting the new text's
-  // font.
+  // font, since text only contains a subset of the characters in the test font.
   EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, FPDF_SUBSET_NEW_FONTS));
   EXPECT_THAT(GetString(), StartsWith("%PDF-1.7\r\n"));
   // TODO(crbug.com/476127152): File size increase should be smaller.
