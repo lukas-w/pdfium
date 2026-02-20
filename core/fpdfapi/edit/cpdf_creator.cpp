@@ -112,13 +112,10 @@ bool CFX_FileBufferArchive::WriteBlock(pdfium::span<const uint8_t> buffer) {
 }
 
 std::array<uint32_t, 4> GenerateFileID(uint32_t dwSeed1, uint32_t dwSeed2) {
-  void* context1 = FX_Random_MT_Start(dwSeed1);
-  void* context2 = FX_Random_MT_Start(dwSeed2);
-  std::array<uint32_t, 4> buffer = {
-      FX_Random_MT_Generate(context1), FX_Random_MT_Generate(context1),
-      FX_Random_MT_Generate(context2), FX_Random_MT_Generate(context2)};
-  FX_Random_MT_Close(context1);
-  FX_Random_MT_Close(context2);
+  FX_Random random1(dwSeed1);
+  FX_Random random2(dwSeed2);
+  std::array<uint32_t, 4> buffer = {random1.Generate(), random1.Generate(),
+                                    random2.Generate(), random2.Generate()};
   return buffer;
 }
 

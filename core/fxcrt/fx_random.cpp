@@ -6,14 +6,14 @@
 
 #include "core/fxcrt/fx_random.h"
 
+#include <stdint.h>
+
 #include <array>
 
 #include "build/build_config.h"
-#include "core/fxcrt/fx_memory.h"
 #include "core/fxcrt/fx_string.h"
 #include "core/fxcrt/fx_system.h"
 
-#define MT_N 848
 #define MT_M 456
 #define MT_Matrix_A 0x9908b0df
 #define MT_Upper_Mask 0x80000000
@@ -27,11 +27,6 @@
 #endif
 
 namespace {
-
-struct MTContext {
-  uint32_t mti;
-  std::array<uint32_t, MT_N> mt;
-};
 
 bool g_bHaveGlobalSeed = false;
 uint32_t g_nGlobalSeed = 0;
@@ -69,7 +64,7 @@ uint32_t GenerateSeedFromEnvironment() {
   return seed;
 }
 
-void* ContextFromNextGlobalSeed() {
+uint32_t GetNextGlobalSeed() {
   if (!g_bHaveGlobalSeed) {
 #if BUILDFLAG(IS_WIN)
     if (!GenerateSeedFromCryptoRandom(&g_nGlobalSeed)) {
@@ -80,56 +75,56 @@ void* ContextFromNextGlobalSeed() {
 #endif
     g_bHaveGlobalSeed = true;
   }
-  return FX_Random_MT_Start(++g_nGlobalSeed);
+  return ++g_nGlobalSeed;
 }
 
 }  // namespace
 
-void* FX_Random_MT_Start(uint32_t dwSeed) {
-  MTContext* context = FX_Alloc(MTContext, 1);
-  context->mt[0] = dwSeed;
-  for (uint32_t i = 1; i < MT_N; i++) {
-    const uint32_t prev = context->mt[i - 1];
-    context->mt[i] = (1812433253UL * (prev ^ (prev >> 30)) + i);
+FX_Random::FX_Random(uint32_t seed) {
+  context_.mt[0] = seed;
+  for (uint32_t i = 1; i < kN; i++) {
+    const uint32_t prev = context_.mt[i - 1];
+    context_.mt[i] = (1812433253UL * (prev ^ (prev >> 30)) + i);
   }
-  context->mti = MT_N;
-  return context;
+  context_.mti = kN;
 }
 
-uint32_t FX_Random_MT_Generate(void* context) {
-  MTContext* pMTC = static_cast<MTContext*>(context);
+FX_Random::~FX_Random() = default;
+
+// static
+void FX_Random::Fill(pdfium::span<uint32_t> buffer) {
+  FX_Random next_generator(GetNextGlobalSeed());
+  for (uint32_t& val : buffer) {
+    val = next_generator.Generate();
+  }
+}
+
+uint32_t FX_Random::Generate() {
   uint32_t v;
-  if (pMTC->mti >= MT_N) {
+  if (context_.mti >= kN) {
     static constexpr std::array<uint32_t, 2> mag = {{0, MT_Matrix_A}};
     uint32_t kk;
-    for (kk = 0; kk < MT_N - MT_M; kk++) {
-      v = (pMTC->mt[kk] & MT_Upper_Mask) | (pMTC->mt[kk + 1] & MT_Lower_Mask);
-      pMTC->mt[kk] = pMTC->mt[kk + MT_M] ^ (v >> 1) ^ mag[v & 1];
+    for (kk = 0; kk < kN - MT_M; kk++) {
+      v = (context_.mt[kk] & MT_Upper_Mask) |
+          (context_.mt[kk + 1] & MT_Lower_Mask);
+      context_.mt[kk] = context_.mt[kk + MT_M] ^ (v >> 1) ^ mag[v & 1];
     }
-    for (; kk < MT_N - 1; kk++) {
-      v = (pMTC->mt[kk] & MT_Upper_Mask) | (pMTC->mt[kk + 1] & MT_Lower_Mask);
-      pMTC->mt[kk] = pMTC->mt[kk + (MT_M - MT_N)] ^ (v >> 1) ^ mag[v & 1];
+    for (; kk < kN - 1; kk++) {
+      v = (context_.mt[kk] & MT_Upper_Mask) |
+          (context_.mt[kk + 1] & MT_Lower_Mask);
+      // `MT_M - kN` underflows, but this is safe because unsigned underflow is
+      // well-defined.
+      context_.mt[kk] = context_.mt[kk + (MT_M - kN)] ^ (v >> 1) ^ mag[v & 1];
     }
-    v = (pMTC->mt[MT_N - 1] & MT_Upper_Mask) | (pMTC->mt[0] & MT_Lower_Mask);
-    pMTC->mt[MT_N - 1] = pMTC->mt[MT_M - 1] ^ (v >> 1) ^ mag[v & 1];
-    pMTC->mti = 0;
+    v = (context_.mt[kN - 1] & MT_Upper_Mask) |
+        (context_.mt[0] & MT_Lower_Mask);
+    context_.mt[kN - 1] = context_.mt[MT_M - 1] ^ (v >> 1) ^ mag[v & 1];
+    context_.mti = 0;
   }
-  v = pMTC->mt[pMTC->mti++];
+  v = context_.mt[context_.mti++];
   v ^= (v >> 11);
   v ^= (v << 7) & 0x9d2c5680UL;
   v ^= (v << 15) & 0xefc60000UL;
   v ^= (v >> 18);
   return v;
-}
-
-void FX_Random_MT_Close(void* context) {
-  FX_Free(context);
-}
-
-void FX_Random_MT_Fill(pdfium::span<uint32_t> buffer) {
-  void* context = ContextFromNextGlobalSeed();
-  for (uint32_t& val : buffer) {
-    val = FX_Random_MT_Generate(context);
-  }
-  FX_Random_MT_Close(context);
 }
