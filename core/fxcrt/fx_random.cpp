@@ -78,16 +78,19 @@ uint32_t GetNextGlobalSeed() {
   return ++g_nGlobalSeed;
 }
 
+std::array<uint32_t, FX_Random::kN> InitState(uint32_t seed) {
+  std::array<uint32_t, FX_Random::kN> state;
+  state[0] = seed;
+  for (uint32_t i = 1; i < FX_Random::kN; i++) {
+    const uint32_t prev = state[i - 1];
+    state[i] = (1812433253UL * (prev ^ (prev >> 30)) + i);
+  }
+  return state;
+}
+
 }  // namespace
 
-FX_Random::FX_Random(uint32_t seed) {
-  context_.mt[0] = seed;
-  for (uint32_t i = 1; i < kN; i++) {
-    const uint32_t prev = context_.mt[i - 1];
-    context_.mt[i] = (1812433253UL * (prev ^ (prev >> 30)) + i);
-  }
-  context_.mti = kN;
-}
+FX_Random::FX_Random(uint32_t seed) : mti_(kN), mt_(InitState(seed)) {}
 
 FX_Random::~FX_Random() = default;
 
@@ -101,27 +104,24 @@ void FX_Random::Fill(pdfium::span<uint32_t> buffer) {
 
 uint32_t FX_Random::Generate() {
   uint32_t v;
-  if (context_.mti >= kN) {
+  if (mti_ >= kN) {
     static constexpr std::array<uint32_t, 2> mag = {{0, MT_Matrix_A}};
     uint32_t kk;
     for (kk = 0; kk < kN - MT_M; kk++) {
-      v = (context_.mt[kk] & MT_Upper_Mask) |
-          (context_.mt[kk + 1] & MT_Lower_Mask);
-      context_.mt[kk] = context_.mt[kk + MT_M] ^ (v >> 1) ^ mag[v & 1];
+      v = (mt_[kk] & MT_Upper_Mask) | (mt_[kk + 1] & MT_Lower_Mask);
+      mt_[kk] = mt_[kk + MT_M] ^ (v >> 1) ^ mag[v & 1];
     }
     for (; kk < kN - 1; kk++) {
-      v = (context_.mt[kk] & MT_Upper_Mask) |
-          (context_.mt[kk + 1] & MT_Lower_Mask);
+      v = (mt_[kk] & MT_Upper_Mask) | (mt_[kk + 1] & MT_Lower_Mask);
       // `MT_M - kN` underflows, but this is safe because unsigned underflow is
       // well-defined.
-      context_.mt[kk] = context_.mt[kk + (MT_M - kN)] ^ (v >> 1) ^ mag[v & 1];
+      mt_[kk] = mt_[kk + (MT_M - kN)] ^ (v >> 1) ^ mag[v & 1];
     }
-    v = (context_.mt[kN - 1] & MT_Upper_Mask) |
-        (context_.mt[0] & MT_Lower_Mask);
-    context_.mt[kN - 1] = context_.mt[MT_M - 1] ^ (v >> 1) ^ mag[v & 1];
-    context_.mti = 0;
+    v = (mt_[kN - 1] & MT_Upper_Mask) | (mt_[0] & MT_Lower_Mask);
+    mt_[kN - 1] = mt_[MT_M - 1] ^ (v >> 1) ^ mag[v & 1];
+    mti_ = 0;
   }
-  v = context_.mt[context_.mti++];
+  v = mt_[mti_++];
   v ^= (v >> 11);
   v ^= (v << 7) & 0x9d2c5680UL;
   v ^= (v << 15) & 0xefc60000UL;

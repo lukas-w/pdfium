@@ -17,6 +17,8 @@
 // A Mersenne Twister (MT) pseudo-random number generator.
 class FX_Random {
  public:
+  static constexpr size_t kN = 848;
+
   explicit FX_Random(uint32_t seed);
 
   FX_Random(const FX_Random&) = delete;
@@ -32,14 +34,8 @@ class FX_Random {
   uint32_t Generate();
 
  private:
-  static constexpr size_t kN = 848;
-
-  struct MTContext {
-    uint32_t mti;
-    std::array<uint32_t, kN> mt;
-  };
-
-  MTContext context_;
+  uint32_t mti_;
+  std::array<uint32_t, kN> mt_;
 };
 
 #endif  // CORE_FXCRT_FX_RANDOM_H_
