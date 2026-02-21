@@ -1425,13 +1425,11 @@ TEST_F(FPDFTextEmbedderTest, GetText) {
   ASSERT_TRUE(text_object);
 
   // Positive testing.
-  static constexpr char kHelloText[] = "Hello, world!";
-  // Return value includes the terminating NUL that is provided.
-  static constexpr unsigned long kHelloUTF16Size = std::size(kHelloText) * 2;
-  static constexpr wchar_t kHelloWideText[] = L"Hello, world!";
+  static constexpr std::wstring_view kHelloWideText(L"Hello, world!");
   unsigned long size =
       FPDFTextObj_GetText(text_object, text_page.get(), nullptr, 0);
-  ASSERT_EQ(kHelloUTF16Size, size);
+  // `size` is in bytes and includes the terminating NUL.
+  ASSERT_EQ(2 * (kHelloWideText.size() + 1), size);
 
   std::vector<unsigned short> buffer(size);
   ASSERT_EQ(size, FPDFTextObj_GetText(text_object, text_page.get(),
@@ -1449,9 +1447,44 @@ TEST_F(FPDFTextEmbedderTest, GetText) {
   buffer[1] = '\0';
   size = FPDFTextObj_GetText(text_object, text_page.get(), buffer.data(),
                              buffer.size());
-  ASSERT_EQ(kHelloUTF16Size, size);
+  ASSERT_EQ(2 * (kHelloWideText.size() + 1), size);
   ASSERT_EQ('x', buffer[0]);
   ASSERT_EQ('\0', buffer[1]);
+}
+
+TEST_F(FPDFTextEmbedderTest, GetTextShouldNotGetInvisibleSpaces) {
+  static constexpr int kExpectedPageObjectCount = 5;
+  static constexpr std::array<std::wstring_view, kExpectedPageObjectCount>
+      kExpectedText = {
+          std::wstring_view(L""),
+          std::wstring_view(L""),
+          std::wstring_view(L""),
+          std::wstring_view(L"Hello, world!"),
+          std::wstring_view(L"Goodbye, world!"),
+      };
+  ASSERT_TRUE(OpenDocument("hello_world_with_invisible_spaces.pdf"));
+  ScopedPage page = LoadScopedPage(0);
+  ASSERT_TRUE(page);
+
+  ScopedFPDFTextPage text_page(FPDFText_LoadPage(page.get()));
+  ASSERT_TRUE(text_page);
+
+  ASSERT_EQ(kExpectedPageObjectCount, FPDFPage_CountObjects(page.get()));
+  for (int i = 0; i < kExpectedPageObjectCount; ++i) {
+    SCOPED_TRACE(testing::Message() << "Object " << i);
+    FPDF_PAGEOBJECT text_object = FPDFPage_GetObject(page.get(), i);
+    ASSERT_TRUE(text_object);
+
+    unsigned long size =
+        FPDFTextObj_GetText(text_object, text_page.get(), nullptr, 0);
+    // `size` is in bytes and includes the terminating NUL.
+    ASSERT_EQ(2 * (kExpectedText[i].size() + 1), size);
+
+    std::vector<unsigned short> buffer(size);
+    ASSERT_EQ(size, FPDFTextObj_GetText(text_object, text_page.get(),
+                                        buffer.data(), size));
+    ASSERT_EQ(kExpectedText[i], GetPlatformWString(buffer.data()));
+  }
 }
 
 TEST_F(FPDFTextEmbedderTest, CroppedText) {
