@@ -1378,8 +1378,10 @@ RenderDeviceDriverIface::StartResult CFX_AggDeviceDriver::StartDIBits(
                                 alpha, argb, matrix, options, rgb_byte_order_)};
 }
 
-bool CFX_AggDeviceDriver::ContinueDIBits(CFX_AggImageRenderer* pHandle,
-                                         PauseIndicatorIface* pPause) {
+bool CFX_AggDeviceDriver::ContinueDIBits(
+    RenderDeviceDriverIface::Continuation* continuation,
+    PauseIndicatorIface* pPause) {
+  auto* pHandle = static_cast<CFX_AggImageRenderer*>(continuation);
   return bitmap_->GetBuffer().empty() || pHandle->Continue(pPause);
 }
 

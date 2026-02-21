@@ -35,7 +35,6 @@
 #include "core/fxcrt/fx_safe_types.h"
 #include "core/fxcrt/maybe_owned.h"
 #include "core/fxcrt/zip.h"
-#include "core/fxge/agg/cfx_agg_imagerenderer.h"
 #include "core/fxge/cfx_defaultrenderdevice.h"
 #include "core/fxge/cfx_fillrenderoptions.h"
 #include "core/fxge/cfx_path.h"
@@ -437,8 +436,8 @@ bool CPDF_ImageRenderer::StartDIBBase() {
           dibbase_, alpha_, fill_argb_, image_matrix_, resample_options_,
           blend_type_);
   if (result.result == RenderDeviceDriverIface::Result::kSuccess) {
-    device_handle_ = std::move(result.agg_image_renderer);
-    if (device_handle_) {
+    continuation_ = std::move(result.continuation);
+    if (continuation_) {
       mode_ = Mode::kBlend;
       return true;
     }
@@ -616,7 +615,7 @@ bool CPDF_ImageRenderer::ContinueDefault(PauseIndicatorIface* pPause) {
 }
 
 bool CPDF_ImageRenderer::ContinueBlend(PauseIndicatorIface* pPause) {
-  return render_status_->GetRenderDevice()->ContinueDIBits(device_handle_.get(),
+  return render_status_->GetRenderDevice()->ContinueDIBits(continuation_.get(),
                                                            pPause);
 }
 

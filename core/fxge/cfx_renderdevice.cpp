@@ -1051,9 +1051,10 @@ RenderDeviceDriverIface::StartResult CFX_RenderDevice::StartDIBitsWithBlend(
                                      options, blend_mode);
 }
 
-bool CFX_RenderDevice::ContinueDIBits(CFX_AggImageRenderer* handle,
-                                      PauseIndicatorIface* pPause) {
-  return device_driver_->ContinueDIBits(handle, pPause);
+bool CFX_RenderDevice::ContinueDIBits(
+    RenderDeviceDriverIface::Continuation* continuation,
+    PauseIndicatorIface* pPause) {
+  return device_driver_->ContinueDIBits(continuation, pPause);
 }
 
 #if defined(PDF_USE_SKIA)

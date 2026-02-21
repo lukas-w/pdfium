@@ -9,7 +9,6 @@
 #include <utility>
 
 #include "core/fxcrt/fx_coordinates.h"
-#include "core/fxge/agg/cfx_agg_imagerenderer.h"
 #include "core/fxge/cfx_path.h"
 #include "core/fxge/dib/cfx_dibitmap.h"
 
@@ -45,7 +44,7 @@ RetainPtr<const CFX_DIBitmap> RenderDeviceDriverIface::GetBackDrop() const {
   return RetainPtr<const CFX_DIBitmap>();
 }
 
-bool RenderDeviceDriverIface::ContinueDIBits(CFX_AggImageRenderer* handle,
+bool RenderDeviceDriverIface::ContinueDIBits(Continuation* continuation,
                                              PauseIndicatorIface* pPause) {
   return false;
 }
@@ -89,7 +88,7 @@ void RenderDeviceDriverIface::SyncInternalBitmaps() {}
 
 RenderDeviceDriverIface::StartResult::StartResult(
     Result result,
-    std::unique_ptr<CFX_AggImageRenderer> agg_image_renderer)
-    : result(result), agg_image_renderer(std::move(agg_image_renderer)) {}
+    std::unique_ptr<Continuation> continuation)
+    : result(result), continuation(std::move(continuation)) {}
 
 RenderDeviceDriverIface::StartResult::~StartResult() = default;

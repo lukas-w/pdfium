@@ -13,7 +13,6 @@
 #include "core/fxcrt/fx_string.h"
 #include "core/fxcrt/fx_system.h"
 #include "core/fxcrt/notreached.h"
-#include "core/fxge/agg/cfx_agg_imagerenderer.h"
 #include "core/fxge/cfx_font.h"
 #include "core/fxge/dib/cfx_dibbase.h"
 #include "core/fxge/dib/cfx_dibitmap.h"

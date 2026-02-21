@@ -17,7 +17,6 @@
 #include "core/fxcrt/fx_system.h"
 #include "core/fxcrt/notreached.h"
 #include "core/fxcrt/retain_ptr.h"
-#include "core/fxge/agg/cfx_agg_imagerenderer.h"
 #include "core/fxge/cfx_fillrenderoptions.h"
 #include "core/fxge/cfx_path.h"
 #include "core/fxge/dib/cfx_dibbase.h"
