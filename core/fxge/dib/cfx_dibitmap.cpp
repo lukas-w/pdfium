@@ -574,7 +574,8 @@ bool CFX_DIBitmap::CompositeBitmap(int dest_left,
   }
 
   if (!GetOverlapRect(dest_left, dest_top, width, height, source->GetWidth(),
-                      source->GetHeight(), src_left, src_top, pClipRgn)) {
+                      source->GetHeight(), src_left, src_top,
+                      pClipRgn ? &pClipRgn->GetBox() : nullptr)) {
     return true;
   }
 
@@ -642,7 +643,8 @@ bool CFX_DIBitmap::CompositeMask(int dest_left,
   }
 
   if (!GetOverlapRect(dest_left, dest_top, width, height, pMask->GetWidth(),
-                      pMask->GetHeight(), src_left, src_top, pClipRgn)) {
+                      pMask->GetHeight(), src_left, src_top,
+                      pClipRgn ? &pClipRgn->GetBox() : nullptr)) {
     return true;
   }
 

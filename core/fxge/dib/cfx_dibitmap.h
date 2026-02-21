@@ -21,6 +21,8 @@
 #include "core/fxge/dib/cfx_dibbase.h"
 #include "core/fxge/dib/fx_dib.h"
 
+class CFX_AggClipRgn;
+
 class CFX_DIBitmap final : public CFX_DIBBase {
  public:
   struct PitchAndSize {
