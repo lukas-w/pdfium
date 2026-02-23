@@ -8,14 +8,6 @@ import("../../testing/test.gni")
 
 source_set("fxge") {
   sources = [
-    "agg/cfx_agg_bitmapcomposer.cpp",
-    "agg/cfx_agg_bitmapcomposer.h",
-    "agg/cfx_agg_cliprgn.cpp",
-    "agg/cfx_agg_cliprgn.h",
-    "agg/cfx_agg_devicedriver.cpp",
-    "agg/cfx_agg_devicedriver.h",
-    "agg/cfx_agg_imagerenderer.cpp",
-    "agg/cfx_agg_imagerenderer.h",
     "calculate_pitch.cpp",
     "calculate_pitch.h",
     "cfx_color.cpp",
@@ -112,10 +104,7 @@ source_set("fxge") {
     "../../:pdfium_noshorten_config",
   ]
 
-  deps = [
-    "../../third_party:fx_agg",
-    "../fxcrt",
-  ]
+  deps = [ "../fxcrt" ]
 
   public_deps = []
   defines = []
@@ -131,6 +120,20 @@ source_set("fxge") {
       "cfx_unicodeencodingex.cpp",
       "cfx_unicodeencodingex.h",
     ]
+  }
+
+  if (pdf_use_agg) {
+    sources += [
+      "agg/cfx_agg_bitmapcomposer.cpp",
+      "agg/cfx_agg_bitmapcomposer.h",
+      "agg/cfx_agg_cliprgn.cpp",
+      "agg/cfx_agg_cliprgn.h",
+      "agg/cfx_agg_devicedriver.cpp",
+      "agg/cfx_agg_devicedriver.h",
+      "agg/cfx_agg_imagerenderer.cpp",
+      "agg/cfx_agg_imagerenderer.h",
+    ]
+    deps += [ "../../third_party:fx_agg" ]
   }
 
   if (pdf_use_skia) {

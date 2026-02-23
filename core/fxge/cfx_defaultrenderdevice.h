@@ -65,6 +65,7 @@ class CFX_DefaultRenderDevice final : public CFX_RenderDevice {
                   RetainPtr<CFX_DIBitmap> pBackdropBitmap,
                   bool bGroupKnockout);
 
+#if defined(PDF_USE_AGG)
   bool AttachAggImpl(RetainPtr<CFX_DIBitmap> pBitmap,
                      bool bRgbByteOrder,
                      RetainPtr<CFX_DIBitmap> pBackdropBitmap,
@@ -74,6 +75,7 @@ class CFX_DefaultRenderDevice final : public CFX_RenderDevice {
                  int height,
                  FXDIB_Format format,
                  RetainPtr<CFX_DIBitmap> pBackdropBitmap);
+#endif
 
 #if defined(PDF_USE_SKIA)
   bool AttachSkiaImpl(RetainPtr<CFX_DIBitmap> pBitmap,

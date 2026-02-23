@@ -6,8 +6,11 @@
 
 #include <utility>
 
-#include "core/fxge/agg/cfx_agg_devicedriver.h"
 #include "core/fxge/dib/cfx_dibitmap.h"
+
+#if defined(PDF_USE_AGG)
+#include "core/fxge/agg/cfx_agg_devicedriver.h"
+#endif
 
 #if defined(PDF_USE_SKIA)
 #include "core/fxge/skia/fx_skia_device.h"
@@ -73,8 +76,12 @@ bool CFX_DefaultRenderDevice::CFX_DefaultRenderDevice::AttachImpl(
                           std::move(pBackdropBitmap), bGroupKnockout);
   }
 #endif
+#if defined(PDF_USE_AGG)
   return AttachAggImpl(std::move(pBitmap), bRgbByteOrder,
                        std::move(pBackdropBitmap), bGroupKnockout);
+#else
+  return false;
+#endif
 }
 
 bool CFX_DefaultRenderDevice::Create(int width,
@@ -93,7 +100,11 @@ bool CFX_DefaultRenderDevice::CreateWithBackdrop(
     return CreateSkia(width, height, format, backdrop);
   }
 #endif
+#if defined(PDF_USE_AGG)
   return CreateAgg(width, height, format, backdrop);
+#else
+  return false;
+#endif
 }
 
 void CFX_DefaultRenderDevice::Clear(uint32_t color) {
@@ -103,5 +114,7 @@ void CFX_DefaultRenderDevice::Clear(uint32_t color) {
     return;
   }
 #endif
+#if defined(PDF_USE_AGG)
   static_cast<pdfium::CFX_AggDeviceDriver*>(GetDeviceDriver())->Clear(color);
+#endif
 }

@@ -154,6 +154,9 @@ config("pdfium_public_config") {
     }
   }
 
+  if (pdf_use_agg) {
+    defines += [ "PDF_USE_AGG" ]
+  }
   if (pdf_use_skia) {
     defines += [ "PDF_USE_SKIA" ]
   }
