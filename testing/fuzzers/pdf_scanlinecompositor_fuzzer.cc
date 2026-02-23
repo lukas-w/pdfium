@@ -6,8 +6,8 @@
 #include <memory>
 #include <utility>
 
+#include "core/fxcrt/fx_coordinates.h"
 #include "core/fxcrt/fx_safe_types.h"
-#include "core/fxge/agg/cfx_agg_cliprgn.h"
 #include "core/fxge/dib/cfx_dibitmap.h"
 #include "core/fxge/dib/fx_dib.h"
 #include "testing/fuzzers/pdfium_fuzzer_util.h"
@@ -77,18 +77,17 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
     return 0;
   }
 
-  std::unique_ptr<CFX_AggClipRgn> clip_rgn;
-  if (is_clip) {
-    clip_rgn = std::make_unique<CFX_AggClipRgn>(width, height);
-  }
+  FX_RECT clip_rect(0, 0, width, height);
   if (src_bitmap->IsMaskFormat()) {
     dest_bitmap->CompositeMask(dest_left, dest_top, width, height,
                                std::move(src_bitmap), argb, src_left, src_top,
-                               blend_mode, clip_rgn.get(), is_rgb_byte_order);
+                               blend_mode, is_clip ? &clip_rect : nullptr,
+                               nullptr, is_rgb_byte_order);
   } else {
     dest_bitmap->CompositeBitmap(dest_left, dest_top, width, height,
                                  std::move(src_bitmap), src_left, src_top,
-                                 blend_mode, clip_rgn.get(), is_rgb_byte_order);
+                                 blend_mode, is_clip ? &clip_rect : nullptr,
+                                 nullptr, is_rgb_byte_order);
   }
   return 0;
 }

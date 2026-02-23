@@ -594,7 +594,7 @@ void RenderBitmap(CFX_RenderDevice* device,
 
   dest->Clear(0xffffffff);
   dest->CompositeBitmap(0, 0, size_x_bm, size_y_bm, std::move(source), 0, 0,
-                        BlendMode::kNormal, nullptr, false);
+                        BlendMode::kNormal);
 
   if (device->GetDeviceType() == DeviceType::kPrinter) {
     device->StretchDIBits(std::move(dest), mask_area.left, mask_area.top,
@@ -678,7 +678,7 @@ FPDF_EXPORT FPDF_BOOL FPDF_CALLCONV FPDF_RenderPage(HDC dc,
                               pBitmap->GetPitch() * size_y),
                           -1);
         dest_bitmap->CompositeBitmap(0, 0, size_x, size_y, pBitmap, 0, 0,
-                                     BlendMode::kNormal, nullptr, false);
+                                     BlendMode::kNormal);
         win_dc.StretchDIBits(std::move(dest_bitmap), 0, 0, size_x, size_y);
         bitsStretched = true;
       }

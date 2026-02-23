@@ -24,7 +24,6 @@
 #include "core/fxcrt/numerics/safe_conversions.h"
 #include "core/fxcrt/span.h"
 #include "core/fxcrt/span_util.h"
-#include "core/fxge/agg/cfx_agg_cliprgn.h"
 #include "core/fxge/calculate_pitch.h"
 #include "core/fxge/cfx_defaultrenderdevice.h"
 #include "core/fxge/dib/cfx_scanlinecompositor.h"
@@ -559,8 +558,21 @@ bool CFX_DIBitmap::CompositeBitmap(int dest_left,
                                    RetainPtr<const CFX_DIBBase> source,
                                    int src_left,
                                    int src_top,
+                                   BlendMode blend_type) {
+  return CompositeBitmap(dest_left, dest_top, width, height, source, src_left,
+                         src_top, blend_type, nullptr, nullptr, false);
+}
+
+bool CFX_DIBitmap::CompositeBitmap(int dest_left,
+                                   int dest_top,
+                                   int width,
+                                   int height,
+                                   RetainPtr<const CFX_DIBBase> source,
+                                   int src_left,
+                                   int src_top,
                                    BlendMode blend_type,
-                                   const CFX_AggClipRgn* pClipRgn,
+                                   const FX_RECT* clip_rect,
+                                   RetainPtr<CFX_DIBitmap> clip_mask,
                                    bool bRgbByteOrder) {
   // Should have called CompositeMask().
   CHECK(!source->IsMaskFormat());
@@ -573,15 +585,13 @@ bool CFX_DIBitmap::CompositeBitmap(int dest_left,
   }
 
   if (!GetOverlapRect(dest_left, dest_top, width, height, source->GetWidth(),
-                      source->GetHeight(), src_left, src_top,
-                      pClipRgn ? &pClipRgn->GetBox() : nullptr)) {
+                      source->GetHeight(), src_left, src_top, clip_rect)) {
     return true;
   }
 
   FX_RECT clip_box;
-  RetainPtr<CFX_DIBitmap> pClipMask = pClipRgn ? pClipRgn->GetMask() : nullptr;
-  if (pClipMask) {
-    clip_box = pClipRgn->GetBox();
+  if (clip_mask) {
+    clip_box = *clip_rect;
   }
   CFX_ScanlineCompositor compositor;
   if (!compositor.Init(GetFormat(), source->GetFormat(),
@@ -605,8 +615,8 @@ bool CFX_DIBitmap::CompositeBitmap(int dest_left,
         source->GetScanline(src_top + row)
             .subspan(static_cast<size_t>(src_left * src_bytes_per_pixel));
     pdfium::span<const uint8_t> clip_scan;
-    if (pClipMask) {
-      clip_scan = pClipMask->GetWritableScanline(dest_top + row - clip_box.top)
+    if (clip_mask) {
+      clip_scan = clip_mask->GetWritableScanline(dest_top + row - clip_box.top)
                       .subspan(static_cast<size_t>(dest_left - clip_box.left));
     }
     if (bRgb) {
@@ -627,8 +637,22 @@ bool CFX_DIBitmap::CompositeMask(int dest_left,
                                  uint32_t color,
                                  int src_left,
                                  int src_top,
+                                 BlendMode blend_type) {
+  return CompositeMask(dest_left, dest_top, width, height, pMask, color,
+                       src_left, src_top, blend_type, nullptr, nullptr, false);
+}
+
+bool CFX_DIBitmap::CompositeMask(int dest_left,
+                                 int dest_top,
+                                 int width,
+                                 int height,
+                                 RetainPtr<const CFX_DIBBase> pMask,
+                                 uint32_t color,
+                                 int src_left,
+                                 int src_top,
                                  BlendMode blend_type,
-                                 const CFX_AggClipRgn* pClipRgn,
+                                 const FX_RECT* clip_rect,
+                                 RetainPtr<CFX_DIBitmap> clip_mask,
                                  bool bRgbByteOrder) {
   // Should have called CompositeBitmap().
   CHECK(pMask->IsMaskFormat());
@@ -642,8 +666,7 @@ bool CFX_DIBitmap::CompositeMask(int dest_left,
   }
 
   if (!GetOverlapRect(dest_left, dest_top, width, height, pMask->GetWidth(),
-                      pMask->GetHeight(), src_left, src_top,
-                      pClipRgn ? &pClipRgn->GetBox() : nullptr)) {
+                      pMask->GetHeight(), src_left, src_top, clip_rect)) {
     return true;
   }
 
@@ -653,9 +676,8 @@ bool CFX_DIBitmap::CompositeMask(int dest_left,
   }
 
   FX_RECT clip_box;
-  RetainPtr<CFX_DIBitmap> pClipMask = pClipRgn ? pClipRgn->GetMask() : nullptr;
-  if (pClipMask) {
-    clip_box = pClipRgn->GetBox();
+  if (clip_mask) {
+    clip_box = *clip_rect;
   }
   const int src_bpp = pMask->GetBPP();
   const int bytes_per_pixel = GetBPP() / 8;
@@ -670,8 +692,8 @@ bool CFX_DIBitmap::CompositeMask(int dest_left,
             .subspan(static_cast<size_t>(dest_left * bytes_per_pixel));
     pdfium::span<const uint8_t> src_scan = pMask->GetScanline(src_top + row);
     pdfium::span<const uint8_t> clip_scan;
-    if (pClipMask) {
-      clip_scan = pClipMask->GetScanline(dest_top + row - clip_box.top)
+    if (clip_mask) {
+      clip_scan = clip_mask->GetScanline(dest_top + row - clip_box.top)
                       .subspan(static_cast<size_t>(dest_left - clip_box.left));
     }
     if (src_bpp == 1) {

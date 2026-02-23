@@ -21,8 +21,6 @@
 #include "core/fxge/dib/cfx_dibbase.h"
 #include "core/fxge/dib/fx_dib.h"
 
-class CFX_AggClipRgn;
-
 class CFX_DIBitmap final : public CFX_DIBBase {
  public:
   struct PitchAndSize {
@@ -122,8 +120,18 @@ class CFX_DIBitmap final : public CFX_DIBBase {
                        RetainPtr<const CFX_DIBBase> source,
                        int src_left,
                        int src_top,
+                       BlendMode blend_type);
+
+  bool CompositeBitmap(int dest_left,
+                       int dest_top,
+                       int width,
+                       int height,
+                       RetainPtr<const CFX_DIBBase> source,
+                       int src_left,
+                       int src_top,
                        BlendMode blend_type,
-                       const CFX_AggClipRgn* pClipRgn,
+                       const FX_RECT* clip_rect,
+                       RetainPtr<CFX_DIBitmap> clip_mask,
                        bool bRgbByteOrder);
 
   bool CompositeMask(int dest_left,
@@ -134,8 +142,19 @@ class CFX_DIBitmap final : public CFX_DIBBase {
                      uint32_t color,
                      int src_left,
                      int src_top,
+                     BlendMode blend_type);
+
+  bool CompositeMask(int dest_left,
+                     int dest_top,
+                     int width,
+                     int height,
+                     RetainPtr<const CFX_DIBBase> pMask,
+                     uint32_t color,
+                     int src_left,
+                     int src_top,
                      BlendMode blend_type,
-                     const CFX_AggClipRgn* pClipRgn,
+                     const FX_RECT* clip_rect,
+                     RetainPtr<CFX_DIBitmap> clip_mask,
                      bool bRgbByteOrder);
 
   void CompositeOneBPPMask(int dest_left,

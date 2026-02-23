@@ -1106,7 +1106,7 @@ bool CPDF_RenderStatus::ProcessType3Text(CPDF_TextObject* textobj,
     bitmap->CompositeMask(
         point->x, point->y, glyph.glyph_->GetBitmap()->GetWidth(),
         glyph.glyph_->GetBitmap()->GetHeight(), glyph.glyph_->GetBitmap(),
-        fill_argb, 0, 0, BlendMode::kNormal, nullptr, false);
+        fill_argb, 0, 0, BlendMode::kNormal);
   }
   device_->SetBitMask(std::move(bitmap), rect.left, rect.top, fill_argb);
   return true;
@@ -1353,20 +1353,19 @@ void CPDF_RenderStatus::CompositeDIBitmap(
 
       pClone->CompositeBitmap(0, 0, pClone->GetWidth(), pClone->GetHeight(),
                               device_->GetBitmap(), rect.left, rect.top,
-                              BlendMode::kNormal, nullptr, false);
+                              BlendMode::kNormal);
       left = std::min(left, 0);
       top = std::min(top, 0);
       if (bitmap->IsMaskFormat()) {
 #if BUILDFLAG(IS_WIN)
         pClone->CompositeMask(0, 0, pClone->GetWidth(), pClone->GetHeight(),
-                              bitmap, mask_argb, left, top, blend_mode, nullptr,
-                              false);
+                              bitmap, mask_argb, left, top, blend_mode);
 #else
         NOTREACHED();
 #endif
       } else {
         pClone->CompositeBitmap(0, 0, pClone->GetWidth(), pClone->GetHeight(),
-                                bitmap, left, top, blend_mode, nullptr, false);
+                                bitmap, left, top, blend_mode);
       }
     } else {
       pClone = bitmap;
@@ -1395,15 +1394,13 @@ void CPDF_RenderStatus::CompositeDIBitmap(
   if (bitmap->IsMaskFormat()) {
 #if BUILDFLAG(IS_WIN)
     backdrop->CompositeMask(left - bbox.left, top - bbox.top, width, height,
-                            std::move(bitmap), mask_argb, 0, 0, blend_mode,
-                            nullptr, false);
+                            std::move(bitmap), mask_argb, 0, 0, blend_mode);
 #else
     NOTREACHED();
 #endif
   } else {
     backdrop->CompositeBitmap(left - bbox.left, top - bbox.top, width, height,
-                              std::move(bitmap), 0, 0, blend_mode, nullptr,
-                              false);
+                              std::move(bitmap), 0, 0, blend_mode);
   }
 
   auto new_backdrop = pdfium::MakeRetain<CFX_DIBitmap>();
@@ -1412,7 +1409,7 @@ void CPDF_RenderStatus::CompositeDIBitmap(
   new_backdrop->Clear(0xffffffff);
   new_backdrop->CompositeBitmap(0, 0, new_backdrop->GetWidth(),
                                 new_backdrop->GetHeight(), std::move(backdrop),
-                                0, 0, BlendMode::kNormal, nullptr, false);
+                                0, 0, BlendMode::kNormal);
   device_->SetDIBits(std::move(new_backdrop), bbox.left, bbox.top);
 }
 
