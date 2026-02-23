@@ -119,7 +119,7 @@ def get_properties_by_name(name):
         properties.update({"renderers": renderers})
 
     if name.endswith("cxx23"):
-      properties.update({"use_cxx23": True})
+        properties.update({"use_cxx23": True})
 
     return properties
 
@@ -384,6 +384,13 @@ luci.recipe(
     use_python3 = True,
 )
 
+luci.recipe(
+    name = "security/metadata_validator",
+    cipd_package = _CIPD_PACKAGE,
+    use_bbagent = True,
+    use_python3 = True,
+)
+
 # Buckets
 luci.bucket(
     name = "ci",
@@ -451,6 +458,23 @@ luci.builder(
             "runhooks": True,
             "timeout_s": 480,
         },
+    },
+)
+
+luci.builder(
+    name = "metadata_validator",
+    bucket = "try",
+    executable = "security/metadata_validator",
+    service_account = "pdfium-try-builder@chops-service-accounts.iam.gserviceaccount.com",
+    dimensions = {
+        "cores": "8",
+        "cpu": "x86-64",
+        "os": "Ubuntu-24.04",
+        "pool": "luci.flex.try",
+    },
+    properties = {
+        "builder_group": "tryserver.client.pdfium",
+        "repo_name": "pdfium",
     },
 )
 
@@ -532,6 +556,11 @@ luci.list_view_entry(
     builder = "try/pdfium_presubmit",
 )
 
+luci.list_view_entry(
+    list_view = "try",
+    builder = "try/metadata_validator",
+)
+
 # CQ
 luci.cq(
     status_host = "chromium-cq-status.appspot.com",
@@ -572,6 +601,13 @@ luci.cq_group(
         luci.cq_tryjob_verifier(
             builder = "pdfium:try/pdfium_presubmit",
             disable_reuse = True,
+        ),
+        luci.cq_tryjob_verifier(
+            builder = "pdfium:try/metadata_validator",
+            location_filters = [
+                cq.location_filter(path_regexp = r".*/README\.chromium"),
+                cq.location_filter(path_regexp = r".*/README\.pdfium"),
+            ],
         ),
     ],
 )
