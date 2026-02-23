@@ -32,13 +32,14 @@ void CFX_AggClipRgn::IntersectRect(const FX_RECT& rect) {
 void CFX_AggClipRgn::IntersectMaskRect(FX_RECT rect,
                                        FX_RECT mask_rect,
                                        RetainPtr<CFX_DIBitmap> pOldMask) {
-  type_ = kMaskF;
   box_ = rect;
   box_.Intersect(mask_rect);
   if (box_.IsEmpty()) {
     type_ = kRectI;
+    mask_ = nullptr;
     return;
   }
+  type_ = kMaskF;
   if (box_ == mask_rect) {
     mask_ = std::move(pOldMask);
     return;
