@@ -568,7 +568,6 @@ bool CFX_DIBitmap::CompositeBitmap(int dest_left,
   if (!buffer_) {
     return false;
   }
-
   if (GetBPP() < 8) {
     return false;
   }
@@ -579,10 +578,9 @@ bool CFX_DIBitmap::CompositeBitmap(int dest_left,
     return true;
   }
 
-  RetainPtr<CFX_DIBitmap> pClipMask;
   FX_RECT clip_box;
-  if (pClipRgn && pClipRgn->GetType() != CFX_AggClipRgn::kRectI) {
-    pClipMask = pClipRgn->GetMask();
+  RetainPtr<CFX_DIBitmap> pClipMask = pClipRgn ? pClipRgn->GetMask() : nullptr;
+  if (pClipMask) {
     clip_box = pClipRgn->GetBox();
   }
   CFX_ScanlineCompositor compositor;
@@ -591,6 +589,7 @@ bool CFX_DIBitmap::CompositeBitmap(int dest_left,
                        bRgbByteOrder)) {
     return false;
   }
+
   const int dest_bytes_per_pixel = GetBPP() / 8;
   const int src_bytes_per_pixel = source->GetBPP() / 8;
   const bool bRgb = src_bytes_per_pixel > 1;
@@ -653,10 +652,9 @@ bool CFX_DIBitmap::CompositeMask(int dest_left,
     return true;
   }
 
-  RetainPtr<CFX_DIBitmap> pClipMask;
   FX_RECT clip_box;
-  if (pClipRgn && pClipRgn->GetType() != CFX_AggClipRgn::kRectI) {
-    pClipMask = pClipRgn->GetMask();
+  RetainPtr<CFX_DIBitmap> pClipMask = pClipRgn ? pClipRgn->GetMask() : nullptr;
+  if (pClipMask) {
     clip_box = pClipRgn->GetBox();
   }
   const int src_bpp = pMask->GetBPP();
