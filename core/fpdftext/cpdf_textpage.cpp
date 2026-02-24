@@ -840,28 +840,19 @@ void CPDF_TextPage::CloseTempLine() {
   }
 
   WideString str = temp_text_buf_.MakeString();
-  if (str.GetLength() > 1) {
-    bool bPrevSpace = false;
-    for (size_t i = 0; i < str.GetLength(); ++i) {
-      if (str[i] != ' ') {
-        bPrevSpace = false;
-        continue;
-      }
-      if (bPrevSpace) {
-        temp_text_buf_.Delete(i, 1);
-        temp_char_list_.erase(temp_char_list_.begin() + i);
-        str.Delete(i);
-        --i;
-      }
-      bPrevSpace = true;
+  bool bPrevSpace = false;
+  for (size_t i = 0; i < str.GetLength(); ++i) {
+    if (str[i] != ' ') {
+      bPrevSpace = false;
+      continue;
     }
-
-    const size_t last_idx = str.GetLength() - 1;
-    if (bPrevSpace && last_idx > 0 && str[last_idx] == ' ') {
-      temp_text_buf_.Delete(last_idx, 1);
-      temp_char_list_.erase(temp_char_list_.begin() + last_idx);
-      str.Delete(last_idx);
+    if (bPrevSpace) {
+      temp_text_buf_.Delete(i, 1);
+      temp_char_list_.erase(temp_char_list_.begin() + i);
+      str.Delete(i);
+      --i;
     }
+    bPrevSpace = true;
   }
   CFX_BidiString bidi(str);
   if (rtl_) {
@@ -894,6 +885,10 @@ void CPDF_TextPage::ProcessTextObject(
     const CFX_Matrix& form_matrix,
     const CPDF_PageObjectHolder* pObjList,
     CPDF_PageObjectHolder::const_iterator ObjPos) {
+  if (fabs(pTextObj->GetRect().Width()) < kSizeEpsilon) {
+    return;
+  }
+
   size_t count = text_objects_.size();
   TransformedTextObject new_obj;
   new_obj.text_obj_ = pTextObj;
@@ -1088,6 +1083,9 @@ void CPDF_TextPage::SwapTempTextBuf(size_t iCharListStartAppend,
 
 void CPDF_TextPage::ProcessTextObject(const TransformedTextObject& obj) {
   CPDF_TextObject* const pTextObj = obj.text_obj_;
+  if (fabs(pTextObj->GetRect().Width()) < kSizeEpsilon) {
+    return;
+  }
 
   const CFX_Matrix form_matrix = obj.form_matrix_;
   const MarkedContentState ePreMKC = PreMarkedContent(pTextObj);
