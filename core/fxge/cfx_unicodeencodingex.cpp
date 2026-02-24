@@ -69,22 +69,6 @@ uint32_t CFX_UnicodeEncodingEx::GlyphFromCharCode(uint32_t charcode) {
   return 0;
 }
 
-uint32_t CFX_UnicodeEncodingEx::CharCodeFromUnicode(wchar_t Unicode) const {
-  if (encoding_id_ == fxge::FontEncoding::kUnicode ||
-      encoding_id_ == fxge::FontEncoding::kSymbol) {
-    return Unicode;
-  }
-  RetainPtr<CFX_Face> face = font_->GetFace();
-  for (size_t i = 0; i < face->GetCharMapCount(); i++) {
-    fxge::FontEncoding encoding_id = face->GetCharMapEncodingByIndex(i);
-    if (encoding_id == fxge::FontEncoding::kUnicode ||
-        encoding_id == fxge::FontEncoding::kSymbol) {
-      return Unicode;
-    }
-  }
-  return kInvalidCharCode;
-}
-
 std::unique_ptr<CFX_UnicodeEncodingEx> FX_CreateFontEncodingEx(CFX_Font* font) {
   if (!font || !font->GetFace()) {
     return nullptr;

@@ -109,14 +109,14 @@ void CBC_OneDimWriter::CalcTextInfo(const ByteString& text,
                                     float geWidth,
                                     int32_t fontSize,
                                     float& charsLen) {
-  std::unique_ptr<CFX_UnicodeEncodingEx> encoding =
+  std::unique_ptr<CFX_UnicodeEncoding> encoding =
       FX_CreateFontEncodingEx(cFont);
 
   const size_t length = text.GetLength();
   std::vector<uint32_t> charcodes(length);
   float charWidth = 0;
   for (size_t i = 0; i < length; ++i) {
-    charcodes[i] = encoding->CharCodeFromUnicode(text[i]);
+    charcodes[i] = text[i];
     int32_t glyph_code = encoding->GlyphFromCharCode(charcodes[i]);
     int glyph_value = cFont->GetGlyphWidth(glyph_code);
     float temp = glyph_value * fontSize / 1000.0;
