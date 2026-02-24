@@ -6,13 +6,20 @@
 
 #include <stdint.h>
 
+#include <array>
 #include <numeric>
 #include <string>
 #include <vector>
 
+#include "core/fpdfapi/font/cpdf_font.h"
+#include "core/fpdfapi/parser/cpdf_dictionary.h"
 #include "core/fpdfapi/parser/cpdf_document.h"
+#include "core/fpdfapi/parser/cpdf_name.h"
 #include "core/fpdfapi/parser/cpdf_stream.h"
+#include "core/fxcrt/bytestring.h"
+#include "core/fxcrt/fx_extension.h"
 #include "core/fxcrt/retain_ptr.h"
+#include "core/fxge/fx_font.h"
 #include "public/fpdf_edit.h"
 #include "public/fpdfview.h"
 #include "testing/embedder_test.h"
@@ -22,18 +29,26 @@
 #include "testing/utils/file_util.h"
 #include "testing/utils/path_service.h"
 
-using ::testing::Contains;
 using ::testing::IsEmpty;
 using ::testing::Matcher;
 using ::testing::UnorderedElementsAre;
 
 namespace {
 
+constexpr char kArimoBaseFontName[] = "Arimo-Regular";
+constexpr char kLohitTamilBaseFontName[] = "Lohit-Tamil";
+constexpr char kNotoSansBaseFontName[] = "NotoSansCJKjp-Regular";
+
+constexpr size_t kSubsettedFontPrefixWithPlusLength =
+    kSubsettedFontPrefixLength + 1;
+
+// These are cheating slightly to avoid a layering violation, since this file
+// cannot include fpdfsdk/cpdfsdk_helpers.h.
 CPDF_Document* CPDFDocumentFromFPDFDocument(FPDF_DOCUMENT document) {
-  // This is cheating slightly to avoid a layering violation, since this file
-  // cannot include fpdfsdk/cpdfsdk_helpers.h to get access to
-  // CPDFDocumentFromFPDFDocument().
   return reinterpret_cast<CPDF_Document*>(document);
+}
+CPDF_Font* CPDFFontFromFPDFFont(FPDF_FONT font) {
+  return reinterpret_cast<CPDF_Font*>(font);
 }
 
 // Returns the file path for a test font provided by the third-party test_fonts.
@@ -51,6 +66,39 @@ std::vector<uint32_t> GetTestNewObjNums() {
   std::vector<uint32_t> test_obj_nums(100);
   std::iota(test_obj_nums.begin(), test_obj_nums.end(), 1);
   return test_obj_nums;
+}
+
+// Returns if `actual_name` follows the "XXXXXX+BaseName" pattern, where 'X' is
+// an uppercase letter.
+bool IsSubsetFontName(const ByteString& actual_name,
+                      const std::string& expected_base) {
+  if (actual_name.GetLength() !=
+      kSubsettedFontPrefixWithPlusLength + expected_base.length()) {
+    return false;
+  }
+
+  // Check the first '+' is in the correct position..
+  std::optional<size_t> first_plus = actual_name.Find('+');
+  if (!first_plus.has_value() ||
+      first_plus.value() != kSubsettedFontPrefixLength) {
+    return false;
+  }
+
+  // Check there is not an additional '+'.
+  std::optional<size_t> last_plus = actual_name.ReverseFind('+');
+  if (!last_plus.has_value() || first_plus.value() != last_plus.value()) {
+    return false;
+  }
+
+  // Check for the tag.
+  for (char ch : actual_name.First(kSubsettedFontPrefixLength)) {
+    if (!FXSYS_IsUpperASCII(ch)) {
+      return false;
+    }
+  }
+
+  return actual_name.Substr(kSubsettedFontPrefixWithPlusLength) ==
+         expected_base.c_str();
 }
 
 // Matcher that verifies the stream size is strictly within the range min
@@ -73,6 +121,57 @@ MATCHER_P2(StreamSizeIsWithinRange, min_size, max_size, "") {
   return true;
 }
 
+// Matches the Root Font, checking for a valid subset font name.
+MATCHER_P(IsRootFont, base_name, "") {
+  const auto& [obj_num, obj] = arg;
+  if (!obj || !obj->IsDictionary()) {
+    return false;
+  }
+
+  const CPDF_Dictionary* dict = obj->AsDictionary();
+  if (dict->GetNameFor("Type") != "Font" ||
+      dict->GetNameFor("Subtype") != "Type0" ||
+      dict->GetNameFor("Encoding") != "Identity-H" ||
+      !dict->KeyExist("DescendantFonts")) {
+    return false;
+  }
+
+  return IsSubsetFontName(dict->GetNameFor("BaseFont"), base_name);
+}
+
+// Matches the CID Font, checking for a valid subset font name.
+MATCHER_P(IsCIDFont, base_name, "") {
+  const auto& [obj_num, obj] = arg;
+  if (!obj || !obj->IsDictionary()) {
+    return false;
+  }
+
+  const CPDF_Dictionary* dict = obj->AsDictionary();
+  if (dict->GetNameFor("Type") != "Font" ||
+      dict->GetNameFor("Subtype") != "CIDFontType2" ||
+      !dict->KeyExist("CIDSystemInfo")) {
+    return false;
+  }
+
+  return IsSubsetFontName(dict->GetNameFor("BaseFont"), base_name);
+}
+
+// Matches the FontDescriptor, checking for a valid subset font name.
+MATCHER_P(IsFontDescriptor, base_name, "") {
+  const auto& [obj_num, obj] = arg;
+  if (!obj || !obj->IsDictionary()) {
+    return false;
+  }
+
+  const CPDF_Dictionary* dict = obj->AsDictionary();
+  if (dict->GetNameFor("Type") != "FontDescriptor" ||
+      !dict->KeyExist("FontFile2")) {
+    return false;
+  }
+
+  return IsSubsetFontName(dict->GetNameFor("FontName"), base_name);
+}
+
 }  // namespace
 
 // Prints overrides nicely for debugging purposes.
@@ -83,9 +182,27 @@ void PrintTo(const RetainPtr<const CPDF_Object>& obj, std::ostream* os) {
   }
 
   *os << "(Obj type=" << obj->GetType();
-  if (obj->IsStream()) {
+  if (obj->IsDictionary()) {
+    const CPDF_Dictionary* dict = obj->AsDictionary();
+    *os << " {";
+
+    static constexpr std::array<const char*, 4> kKeys = {
+        "Type", "Subtype", "BaseFont", "FontName"};
+    bool first = true;
+    for (const char* key : kKeys) {
+      if (dict->KeyExist(key)) {
+        if (!first) {
+          *os << ", ";
+        }
+        *os << key << "=" << dict->GetObjectFor(key)->GetString();
+        first = false;
+      }
+    }
+    *os << "}";
+  } else if (obj->IsStream()) {
     *os << " size=" << obj->AsStream()->GetRawSize();
   }
+
   *os << ")";
 }
 
@@ -147,11 +264,15 @@ TEST_F(CPDFFontSubsetterTest, OpenType) {
 
   CPDF_FontSubsetter subsetter(CPDFDocumentFromFPDFDocument(document()));
   auto overrides = subsetter.GenerateObjectOverrides(GetTestNewObjNums());
-  ASSERT_EQ(1u, overrides.size());
+  ASSERT_EQ(4u, overrides.size());
 
   // Subset size is ~2.5% of the original font file, i.e. ~450 KB.
-  EXPECT_THAT(overrides, Contains(StreamSizeIsWithinRange(
-                             original_size * 0.02, original_size * 0.03)));
+  EXPECT_THAT(
+      overrides,
+      UnorderedElementsAre(
+          StreamSizeIsWithinRange(original_size * 0.02, original_size * 0.03),
+          IsRootFont(kNotoSansBaseFontName), IsCIDFont(kNotoSansBaseFontName),
+          IsFontDescriptor(kNotoSansBaseFontName)));
 }
 
 TEST_F(CPDFFontSubsetterTest, TrueType) {
@@ -175,11 +296,15 @@ TEST_F(CPDFFontSubsetterTest, TrueType) {
 
   CPDF_FontSubsetter subsetter(CPDFDocumentFromFPDFDocument(document()));
   auto overrides = subsetter.GenerateObjectOverrides(GetTestNewObjNums());
-  ASSERT_EQ(1u, overrides.size());
+  ASSERT_EQ(4u, overrides.size());
 
   // Subset size is ~3% of the original font file, i.e. ~13 KB.
-  EXPECT_THAT(overrides, Contains(StreamSizeIsWithinRange(
-                             original_size * 0.025, original_size * 0.035)));
+  EXPECT_THAT(
+      overrides,
+      UnorderedElementsAre(
+          StreamSizeIsWithinRange(original_size * 0.025, original_size * 0.035),
+          IsRootFont(kArimoBaseFontName), IsCIDFont(kArimoBaseFontName),
+          IsFontDescriptor(kArimoBaseFontName)));
 }
 
 TEST_F(CPDFFontSubsetterTest, SingleFontMultipleTexts) {
@@ -205,11 +330,15 @@ TEST_F(CPDFFontSubsetterTest, SingleFontMultipleTexts) {
 
   CPDF_FontSubsetter subsetter(CPDFDocumentFromFPDFDocument(document()));
   auto overrides = subsetter.GenerateObjectOverrides(GetTestNewObjNums());
-  ASSERT_EQ(1u, overrides.size());
+  ASSERT_EQ(4u, overrides.size());
 
   // Subset size is ~3.5% of the original font file, i.e. ~15 KB.
-  EXPECT_THAT(overrides, Contains(StreamSizeIsWithinRange(
-                             original_size * 0.03, original_size * 0.04)));
+  EXPECT_THAT(
+      overrides,
+      UnorderedElementsAre(
+          StreamSizeIsWithinRange(original_size * 0.03, original_size * 0.04),
+          IsRootFont(kArimoBaseFontName), IsCIDFont(kArimoBaseFontName),
+          IsFontDescriptor(kArimoBaseFontName)));
 }
 
 TEST_F(CPDFFontSubsetterTest, MultipleFontsMultipleTexts) {
@@ -244,13 +373,58 @@ TEST_F(CPDFFontSubsetterTest, MultipleFontsMultipleTexts) {
 
   CPDF_FontSubsetter subsetter(CPDFDocumentFromFPDFDocument(document()));
   auto overrides = subsetter.GenerateObjectOverrides(GetTestNewObjNums());
-  ASSERT_EQ(2u, overrides.size());
+  ASSERT_EQ(8u, overrides.size());
 
   // Subset size for `font_data1` is ~6% of the original file, i.e. ~3 KB.
   // Subset size for `font_data2` is ~3% of the original file, i.e. ~13.3 KB.
-  EXPECT_THAT(overrides, UnorderedElementsAre(
-                             StreamSizeIsWithinRange(original_size1 * 0.055,
-                                                     original_size1 * 0.065),
-                             StreamSizeIsWithinRange(original_size2 * 0.025,
-                                                     original_size2 * 0.035)));
+  EXPECT_THAT(overrides,
+              UnorderedElementsAre(
+                  StreamSizeIsWithinRange(original_size1 * 0.055,
+                                          original_size1 * 0.065),
+                  IsRootFont(kLohitTamilBaseFontName),
+                  IsCIDFont(kLohitTamilBaseFontName),
+                  IsFontDescriptor(kLohitTamilBaseFontName),
+                  StreamSizeIsWithinRange(original_size2 * 0.025,
+                                          original_size2 * 0.035),
+                  IsRootFont(kArimoBaseFontName), IsCIDFont(kArimoBaseFontName),
+                  IsFontDescriptor(kArimoBaseFontName)));
+}
+
+TEST_F(CPDFFontSubsetterTest, ReplaceExistingPrefix) {
+  CreateEmptyDocument();
+  ScopedFPDFPage page(FPDFPage_New(document(), 0, 400, 400));
+
+  const std::string font_path = GetTestFontFilePath("Arimo-Regular.ttf");
+  ASSERT_FALSE(font_path.empty());
+
+  // The file size for `font_path` is ~436 KB.
+  std::vector<uint8_t> font_data = GetFileContents(font_path.c_str());
+  size_t original_size = font_data.size();
+  ASSERT_GT(original_size, 0u);
+
+  ScopedFPDFFont font(FPDFText_LoadFont(document(), font_data.data(),
+                                        font_data.size(), FPDF_FONT_TRUETYPE,
+                                        /*cid=*/true));
+
+  // Manually insert an existing prefix to the font name.
+  CPDF_Font* cfont = CPDFFontFromFPDFFont(font.get());
+  RetainPtr<CPDF_Dictionary> font_dict = cfont->GetMutableFontDict();
+  ASSERT_TRUE(font_dict);
+
+  font_dict->SetNewFor<CPDF_Name>("BaseFont", "AAAAAA+Arimo-Regular");
+
+  ASSERT_NO_FATAL_FAILURE(
+      InsertNewTextObject(L"Hello world", page.get(), font.get()));
+
+  CPDF_FontSubsetter subsetter(CPDFDocumentFromFPDFDocument(document()));
+  auto overrides = subsetter.GenerateObjectOverrides(GetTestNewObjNums());
+  ASSERT_EQ(4u, overrides.size());
+
+  // Subset size is ~3% of the original font file, i.e. ~13 KB.
+  EXPECT_THAT(
+      overrides,
+      UnorderedElementsAre(
+          StreamSizeIsWithinRange(original_size * 0.025, original_size * 0.035),
+          IsRootFont(kArimoBaseFontName), IsCIDFont(kArimoBaseFontName),
+          IsFontDescriptor(kArimoBaseFontName)));
 }

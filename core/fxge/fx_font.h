@@ -7,6 +7,7 @@
 #ifndef CORE_FXGE_FX_FONT_H_
 #define CORE_FXGE_FX_FONT_H_
 
+#include <stddef.h>
 #include <stdint.h>
 
 #include <vector>
@@ -67,6 +68,10 @@ enum class FontAntiAliasingMode : int {
 constexpr uint16_t kNamePlatformAppleUnicode = 0;
 constexpr uint16_t kNamePlatformMac = 1;
 constexpr uint16_t kNamePlatformWindows = 3;
+
+// The length of the font subset prefix, as defined in ISO 32000-1:2008 spec,
+// section 9.6.4 "Font Subsets".
+constexpr size_t kSubsettedFontPrefixLength = 6;
 
 class TextGlyphPos;
 
