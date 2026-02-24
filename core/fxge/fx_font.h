@@ -120,4 +120,8 @@ ByteString AdobeNameFromUnicode(wchar_t unicode);
 // NormalizeFontMetric() handles that with `saturated_cast()`.
 int NormalizeFontMetric(int64_t value, uint16_t upem);
 
+// Removes the "XXXXXX+" prefix from a subsetted font name if present. The
+// prefix must be 6 uppercase ASCII letters followed by a '+'.
+void MaybeRemoveSubsettedFontPrefix(ByteString& font_name);
+
 #endif  // CORE_FXGE_FX_FONT_H_
