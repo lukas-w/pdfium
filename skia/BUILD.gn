@@ -351,6 +351,14 @@ component("skia") {
     sources += skia_ports_fontmgr_android_sources
   }
 
+  if (is_win) {
+    sources += [ "//third_party/skia/src/ports/SkLog_win.cpp" ]
+  } else if (is_android) {
+    sources += [ "//third_party/skia/src/ports/SkLog_android.cpp" ]
+  } else {
+    sources += [ "//third_party/skia/src/ports/SkLog_stdio.cpp" ]
+  }
+
   if (is_win || (is_apple && use_blink)) {
     # Add the FreeType custom font manager as a fallback backend for variable fonts.
     sources += skia_ports_fontmgr_custom_sources
