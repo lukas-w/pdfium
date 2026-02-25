@@ -73,7 +73,7 @@ float CalculateBaseSpace(const CPDF_TextObject* pTextObj,
   float base_space = spacing;
   for (size_t i = 0; i < nItems; ++i) {
     CPDF_TextObject::Item item = pTextObj->GetItemInfo(i);
-    if (item.char_code_ == 0xffffffff) {
+    if (item.char_code_ == CPDF_Font::kInvalidCharCode) {
       float kerning = -fontsize_h * item.origin_.x / 1000;
       base_space = std::min(base_space, kerning + spacing);
       bAllChar = false;
@@ -169,7 +169,7 @@ bool IsRightToLeft(const CPDF_TextObject& text_obj) {
   str.Reserve(nItems);
   for (size_t i = 0; i < nItems; ++i) {
     CPDF_TextObject::Item item = text_obj.GetItemInfo(i);
-    if (item.char_code_ == 0xffffffff) {
+    if (item.char_code_ == CPDF_Font::kInvalidCharCode) {
       continue;
     }
     WideString unicode = font->UnicodeFromCharCode(item.char_code_);
@@ -1383,7 +1383,7 @@ void CPDF_TextPage::ProcessTextObjectItems(CPDF_TextObject* text_object,
   const size_t nItems = text_object->CountItems();
   for (size_t i = 0; i < nItems; ++i) {
     CPDF_TextObject::Item item = text_object->GetItemInfo(i);
-    if (item.char_code_ == 0xffffffff) {
+    if (item.char_code_ == CPDF_Font::kInvalidCharCode) {
       WideStringView str = temp_text_buf_.AsStringView();
       if (str.IsEmpty()) {
         str = text_buf_.AsStringView();
