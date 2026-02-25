@@ -21,7 +21,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
   // Only used one byte, but align with uint16_t for string below.
   span = span.subspan(sizeof(uint16_t));
 
-  auto barcode = CFX_Barcode::Create(type);
+  auto barcode = std::make_unique<CFX_Barcode>(type);
 
   // TODO(tsepez): Setup more options from |data|.
   barcode->SetModuleHeight(300);
