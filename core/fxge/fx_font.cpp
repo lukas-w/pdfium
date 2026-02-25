@@ -60,7 +60,8 @@ FX_RECT GetGlyphsBBox(const std::vector<TextGlyphPos>& glyphs,
       continue;
     }
 
-    int char_width = glyph.glyph_->GetBitmap()->GetWidth();
+    RetainPtr<const CFX_DIBitmap> glyph_bitmap = glyph.glyph_->GetBitmap();
+    int char_width = glyph_bitmap->GetWidth();
     if (anti_alias_is_lcd) {
       char_width /= 3;
     }
@@ -72,7 +73,7 @@ FX_RECT GetGlyphsBBox(const std::vector<TextGlyphPos>& glyphs,
     }
 
     FX_SAFE_INT32 char_bottom = point.value().y;
-    char_bottom += glyph.glyph_->GetBitmap()->GetHeight();
+    char_bottom += glyph_bitmap->GetHeight();
     if (!char_bottom.IsValid()) {
       continue;
     }

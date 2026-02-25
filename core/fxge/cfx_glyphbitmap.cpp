@@ -17,3 +17,11 @@ CFX_GlyphBitmap::CFX_GlyphBitmap(int left,
     : left_(left), top_(top), bitmap_(std::move(bitmap)) {}
 
 CFX_GlyphBitmap::~CFX_GlyphBitmap() = default;
+
+RetainPtr<CFX_DIBitmap> CFX_GlyphBitmap::GetWritableBitmap() {
+  return bitmap_;
+}
+
+RetainPtr<const CFX_DIBitmap> CFX_GlyphBitmap::GetBitmap() const {
+  return bitmap_;
+}

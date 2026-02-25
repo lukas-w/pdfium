@@ -1094,7 +1094,12 @@ bool CPDF_RenderStatus::ProcessType3Text(CPDF_TextObject* textobj,
   }
 
   for (const TextGlyphPos& glyph : glyphs) {
-    if (!glyph.glyph_ || !glyph.glyph_->GetBitmap()->IsMaskFormat()) {
+    if (!glyph.glyph_) {
+      continue;
+    }
+
+    RetainPtr<const CFX_DIBitmap> glyph_bitmap = glyph.glyph_->GetBitmap();
+    if (!glyph_bitmap->IsMaskFormat()) {
       continue;
     }
 
@@ -1106,7 +1111,7 @@ bool CPDF_RenderStatus::ProcessType3Text(CPDF_TextObject* textobj,
     bitmap->CompositeMask(
         point->x, point->y, glyph.glyph_->GetBitmap()->GetWidth(),
         glyph.glyph_->GetBitmap()->GetHeight(), glyph.glyph_->GetBitmap(),
-        fill_argb, 0, 0, BlendMode::kNormal);
+        fill_argb, /*src_left=*/0, /*src_top=*/0, BlendMode::kNormal);
   }
   device_->SetBitMask(std::move(bitmap), rect.left, rect.top, fill_argb);
   return true;

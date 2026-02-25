@@ -589,12 +589,13 @@ std::unique_ptr<CFX_GlyphBitmap> CFX_Face::RenderGlyph(
   const FXDIB_Format format = anti_alias == FontAntiAliasingMode::kMono
                                   ? FXDIB_Format::k1bppMask
                                   : FXDIB_Format::k8bppMask;
-  if (!pGlyphBitmap->GetBitmap()->Create(dib_width, bitmap.rows, format)) {
+  RetainPtr<CFX_DIBitmap> glyph_bitmap = pGlyphBitmap->GetWritableBitmap();
+  if (!glyph_bitmap->Create(dib_width, bitmap.rows, format)) {
     return nullptr;
   }
 
-  int dest_pitch = pGlyphBitmap->GetBitmap()->GetPitch();
-  uint8_t* pDestBuf = pGlyphBitmap->GetBitmap()->GetWritableBuffer().data();
+  const int dest_pitch = glyph_bitmap->GetPitch();
+  uint8_t* pDestBuf = glyph_bitmap->GetWritableBuffer().data();
   const uint8_t* pSrcBuf = bitmap.buffer;
   UNSAFE_TODO({
     if (anti_alias != FontAntiAliasingMode::kMono &&

@@ -205,7 +205,7 @@ void SetAlpha(bool has_alpha, pdfium::span<uint8_t> alpha) {
 }
 
 void DrawNormalTextHelper(const RetainPtr<CFX_DIBitmap>& bitmap,
-                          const RetainPtr<CFX_DIBitmap>& pGlyph,
+                          const CFX_DIBitmap* pGlyph,
                           int nrows,
                           int left,
                           int top,
@@ -1214,10 +1214,11 @@ bool CFX_RenderDevice::DrawNormalText(pdfium::span<const TextCharPos> pCharPos,
         continue;
       }
 
-      const RetainPtr<CFX_DIBitmap>& pGlyph = glyph.glyph_->GetBitmap();
+      RetainPtr<const CFX_DIBitmap> glyph_bitmap = glyph.glyph_->GetBitmap();
       bitmap->CompositeOneBPPMask(point.value().x, point.value().y,
-                                  pGlyph->GetWidth(), pGlyph->GetHeight(),
-                                  pGlyph, 0, 0);
+                                  glyph_bitmap->GetWidth(),
+                                  glyph_bitmap->GetHeight(), glyph_bitmap,
+                                  /*src_left=*/0, /*src_top=*/0);
     }
     return SetBitMask(std::move(bitmap), bmp_rect.left, bmp_rect.top,
                       fill_color);
@@ -1258,13 +1259,13 @@ bool CFX_RenderDevice::DrawNormalText(pdfium::span<const TextCharPos> pCharPos,
       continue;
     }
 
-    const RetainPtr<CFX_DIBitmap>& pGlyph = glyph.glyph_->GetBitmap();
-    int ncols = pGlyph->GetWidth();
-    int nrows = pGlyph->GetHeight();
+    RetainPtr<const CFX_DIBitmap> glyph_bitmap = glyph.glyph_->GetBitmap();
+    int ncols = glyph_bitmap->GetWidth();
+    int nrows = glyph_bitmap->GetHeight();
     if (anti_alias == FontAntiAliasingMode::kNormal) {
       if (!bitmap->CompositeMask(point.value().x, point.value().y, ncols, nrows,
-                                 pGlyph, fill_color, 0, 0,
-                                 BlendMode::kNormal)) {
+                                 glyph_bitmap, fill_color, /*src_left=*/0,
+                                 /*src_top=*/0, BlendMode::kNormal)) {
         return false;
       }
       continue;
@@ -1283,8 +1284,8 @@ bool CFX_RenderDevice::DrawNormalText(pdfium::span<const TextCharPos> pCharPos,
       continue;
     }
 
-    DrawNormalTextHelper(bitmap, pGlyph, nrows, point->x, point->y, start_col,
-                         end_col, normalize, x_subpixel, bgra);
+    DrawNormalTextHelper(bitmap, glyph_bitmap, nrows, point->x, point->y,
+                         start_col, end_col, normalize, x_subpixel, bgra);
   }
 
   if (bitmap->IsMaskFormat()) {
