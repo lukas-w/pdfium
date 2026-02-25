@@ -2008,12 +2008,13 @@ TEST_F(FPDFViewEmbedderTest, Bug2087) {
 
   std::string agg_checksum;
   const FPDF_LIBRARY_CONFIG kAggConfig = {
-      .version = 4,
+      .version = 5,
       .m_pUserFontPaths = nullptr,
       .m_pIsolate = nullptr,
       .m_v8EmbedderSlot = 0,
       .m_pPlatform = nullptr,
       .m_RendererType = FPDF_RENDERERTYPE_AGG,
+      .m_FontLibraryType = FPDF_FONTBACKENDTYPE_FREETYPE,
   };
   FPDF_InitLibraryWithConfig(&kAggConfig);
   ASSERT_TRUE(OpenDocument("rectangles.pdf"));
