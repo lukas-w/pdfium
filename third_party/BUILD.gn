@@ -528,7 +528,7 @@ if (pdf_enable_xfa_tiff) {
 if (pdf_use_partition_alloc) {
   group("pdfium_pa") {
     public_deps = [
-      "//base/allocator/partition_allocator/src/partition_alloc:partition_alloc_buildflags",
+      "//base/allocator/partition_allocator/src/partition_alloc:buildflags",
       "//base/allocator/partition_allocator/src/partition_alloc:raw_ptr",
     ]
     deps = [ "//base/allocator/partition_allocator/src/partition_alloc" ]
