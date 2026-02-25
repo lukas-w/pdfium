@@ -15,9 +15,11 @@
 #include "core/fpdfapi/parser/cpdf_dictionary.h"
 #include "core/fpdfapi/parser/cpdf_document.h"
 #include "core/fpdfapi/parser/cpdf_name.h"
+#include "core/fpdfapi/parser/cpdf_number.h"
 #include "core/fpdfapi/parser/cpdf_stream.h"
 #include "core/fxcrt/bytestring.h"
 #include "core/fxcrt/fx_extension.h"
+#include "core/fxcrt/numerics/safe_conversions.h"
 #include "core/fxcrt/retain_ptr.h"
 #include "core/fxge/fx_font.h"
 #include "public/fpdf_edit.h"
@@ -113,7 +115,15 @@ MATCHER_P2(StreamSizeIsWithinRange, min_size, max_size, "") {
   if (actual_size < min_size || actual_size >= max_size) {
     return false;
   }
-  return true;
+
+  RetainPtr<const CPDF_Number> length1 =
+      obj->GetDict()->GetNumberFor("Length1");
+  if (!length1 || !length1->IsInteger()) {
+    return false;
+  }
+
+  int length = length1->GetInteger();
+  return length >= 0 && pdfium::checked_cast<size_t>(length) == actual_size;
 }
 
 // Matches the Root Font, checking for a valid subset font name.
