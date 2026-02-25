@@ -162,7 +162,7 @@ config("skia_config") {
     defines += [ "GR_GL_FUNCTION_TYPE=__stdcall" ]
   }
 
-  if (pdf_enable_fontations) {
+  if (pdf_enable_fontations || pdf_enable_rust_png) {
     include_dirs += [ "$root_gen_dir/third_party/skia" ]
   }
 
@@ -359,6 +359,7 @@ component("skia") {
 
   if (pdf_enable_fontations) {
     sources += skia_ports_typeface_fontations_sources
+    sources += skia_ports_fontmgr_fontations_sources
 
     # Fontations Rust/C++ bridge interfaces.
     deps += [
