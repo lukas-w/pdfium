@@ -71,9 +71,9 @@ std::vector<uint32_t> GetTestNewObjNums() {
 // Returns if `actual_name` follows the "XXXXXX+BaseName" pattern, where 'X' is
 // an uppercase letter.
 bool IsSubsetFontName(const ByteString& actual_name,
-                      const std::string& expected_base) {
+                      ByteStringView expected_base_name) {
   if (actual_name.GetLength() !=
-      kSubsettedFontPrefixWithPlusLength + expected_base.length()) {
+      kSubsettedFontPrefixWithPlusLength + expected_base_name.GetLength()) {
     return false;
   }
 
@@ -98,32 +98,27 @@ bool IsSubsetFontName(const ByteString& actual_name,
   }
 
   return actual_name.Substr(kSubsettedFontPrefixWithPlusLength) ==
-         expected_base.c_str();
+         expected_base_name;
 }
 
 // Matcher that verifies the stream size is strictly within the range min
 // inclusive, max exclusive.
 MATCHER_P2(StreamSizeIsWithinRange, min_size, max_size, "") {
-  const auto& [obj_num, obj] = arg;
-
+  const auto& obj = arg.second;
   if (!obj || !obj->IsStream()) {
-    *result_listener << "is not a stream (obj_num: " << obj_num << ")";
     return false;
   }
 
   size_t actual_size = obj->AsStream()->GetRawSize();
   if (actual_size < min_size || actual_size >= max_size) {
-    *result_listener << "stream size " << actual_size
-                     << " is outside expected range (" << min_size << ", "
-                     << max_size << ")";
     return false;
   }
   return true;
 }
 
 // Matches the Root Font, checking for a valid subset font name.
-MATCHER_P(IsRootFont, base_name, "") {
-  const auto& [obj_num, obj] = arg;
+MATCHER_P(IsRootFont, expected_base_name, "") {
+  const auto& obj = arg.second;
   if (!obj || !obj->IsDictionary()) {
     return false;
   }
@@ -136,12 +131,12 @@ MATCHER_P(IsRootFont, base_name, "") {
     return false;
   }
 
-  return IsSubsetFontName(dict->GetNameFor("BaseFont"), base_name);
+  return IsSubsetFontName(dict->GetNameFor("BaseFont"), expected_base_name);
 }
 
 // Matches the CID Font, checking for a valid subset font name.
-MATCHER_P(IsCIDFont, base_name, "") {
-  const auto& [obj_num, obj] = arg;
+MATCHER_P(IsCIDFont, expected_base_name, "") {
+  const auto& obj = arg.second;
   if (!obj || !obj->IsDictionary()) {
     return false;
   }
@@ -153,12 +148,12 @@ MATCHER_P(IsCIDFont, base_name, "") {
     return false;
   }
 
-  return IsSubsetFontName(dict->GetNameFor("BaseFont"), base_name);
+  return IsSubsetFontName(dict->GetNameFor("BaseFont"), expected_base_name);
 }
 
 // Matches the FontDescriptor, checking for a valid subset font name.
-MATCHER_P(IsFontDescriptor, base_name, "") {
-  const auto& [obj_num, obj] = arg;
+MATCHER_P(IsFontDescriptor, expected_base_name, "") {
+  const auto& obj = arg.second;
   if (!obj || !obj->IsDictionary()) {
     return false;
   }
@@ -169,7 +164,7 @@ MATCHER_P(IsFontDescriptor, base_name, "") {
     return false;
   }
 
-  return IsSubsetFontName(dict->GetNameFor("FontName"), base_name);
+  return IsSubsetFontName(dict->GetNameFor("FontName"), expected_base_name);
 }
 
 }  // namespace
