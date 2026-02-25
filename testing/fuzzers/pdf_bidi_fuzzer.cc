@@ -21,8 +21,8 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
   }
 
   auto font = std::make_unique<CFX_Font>();
-  font->LoadSubst("Arial", true, 0, pdfium::kFontWeightNormal, 0,
-                  FX_CodePage::kDefANSI, false);
+  font->LoadSubstFace("Arial", true, 0, pdfium::kFontWeightNormal, 0,
+                      FX_CodePage::kDefANSI, false);
   assert(font);
 
   CFGAS_RTFBreak rtf_break(CFGAS_Break::LayoutStyle::kExpandTab);

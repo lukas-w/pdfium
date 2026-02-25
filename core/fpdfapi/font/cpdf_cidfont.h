@@ -84,7 +84,7 @@ class CPDF_CIDFont final : public CPDF_Font {
   void LoadGB2312();
   int GetGlyphIndex(uint32_t unicodeb, bool* pVertGlyph);
   int GetVerticalGlyph(int index, bool* pVertGlyph);
-  void LoadSubstFont();
+  void LoadSubstFace();
   wchar_t GetUnicodeFromCharCode(uint32_t charcode) const;
 
   RetainPtr<const CPDF_CMap> cmap_;

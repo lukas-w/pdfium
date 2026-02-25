@@ -674,7 +674,8 @@ FPDF_EXPORT FPDF_FONT FPDF_CALLCONV FPDFText_LoadFont(FPDF_DOCUMENT document,
   // TODO(npm): Maybe use FT_Get_X11_Font_Format to check format? Otherwise, we
   // are allowing giving any font that can be loaded on freetype and setting it
   // as any font type.
-  if (!pFont->LoadEmbedded(span, /*force_vertical=*/false, /*object_tag=*/0)) {
+  if (!pFont->LoadFaceFromSpan(span, /*force_vertical=*/false,
+                               /*object_tag=*/0)) {
     return nullptr;
   }
 
@@ -718,8 +719,8 @@ FPDFText_LoadCidType2Font(FPDF_DOCUMENT document,
 
   // TODO(thestig): Consider checking the font format. See similar comment in
   // FPDFText_LoadFont() above.
-  if (!font->LoadEmbedded(font_span, /*force_vertical=*/false,
-                          /*object_tag=*/0)) {
+  if (!font->LoadFaceFromSpan(font_span, /*force_vertical=*/false,
+                              /*object_tag=*/0)) {
     return nullptr;
   }
 

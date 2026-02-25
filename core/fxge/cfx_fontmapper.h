@@ -67,7 +67,7 @@ class CFX_FontMapper {
   void AddInstalledFont(const ByteString& name, FX_Charset charset);
   void LoadInstalledFonts();
 
-  RetainPtr<CFX_Face> FindSubstFont(const ByteString& face_name,
+  RetainPtr<CFX_Face> FindSubstFace(const ByteString& face_name,
                                     bool is_truetype,
                                     uint32_t flags,
                                     int weight,

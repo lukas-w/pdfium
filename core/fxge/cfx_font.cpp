@@ -186,17 +186,29 @@ CFX_Font::~CFX_Font() {
 #endif
 }
 
-void CFX_Font::LoadSubst(const ByteString& face_name,
-                         bool bTrueType,
-                         uint32_t flags,
-                         int weight,
-                         int italic_angle,
-                         FX_CodePage code_page,
-                         bool bVertical) {
+bool CFX_Font::LoadFaceFromSpan(pdfium::span<const uint8_t> src_span,
+                                bool force_vertical,
+                                uint64_t object_tag) {
+  vertical_ = force_vertical;
+  object_tag_ = object_tag;
+  font_data_allocation_ = DataVector<uint8_t>(src_span.begin(), src_span.end());
+  face_ = CFX_Face::New(CFX_GEModule::Get()->GetFontMgr(), nullptr,
+                        font_data_allocation_, 0);
+  font_data_ = font_data_allocation_;
+  return !!face_;
+}
+
+void CFX_Font::LoadSubstFace(const ByteString& face_name,
+                             bool bTrueType,
+                             uint32_t flags,
+                             int weight,
+                             int italic_angle,
+                             FX_CodePage code_page,
+                             bool bVertical) {
   vertical_ = bVertical;
   object_tag_ = 0;
   subst_font_ = std::make_unique<CFX_SubstFont>();
-  face_ = CFX_GEModule::Get()->GetFontMgr()->GetBuiltinMapper()->FindSubstFont(
+  face_ = CFX_GEModule::Get()->GetFontMgr()->GetBuiltinMapper()->FindSubstFace(
       face_name, bTrueType, flags, weight, italic_angle, code_page,
       subst_font_.get());
   if (face_) {
@@ -228,18 +240,6 @@ int CFX_Font::GetGlyphWidthImpl(uint32_t glyph_index,
 
   return face_->GetGlyphWidth(glyph_index, dest_width, weight,
                               subst_font_.get());
-}
-
-bool CFX_Font::LoadEmbedded(pdfium::span<const uint8_t> src_span,
-                            bool force_vertical,
-                            uint64_t object_tag) {
-  vertical_ = force_vertical;
-  object_tag_ = object_tag;
-  font_data_allocation_ = DataVector<uint8_t>(src_span.begin(), src_span.end());
-  face_ = CFX_Face::New(CFX_GEModule::Get()->GetFontMgr(), nullptr,
-                        font_data_allocation_, 0);
-  font_data_ = font_data_allocation_;
-  return !!face_;
 }
 
 bool CFX_Font::IsTTFont() const {

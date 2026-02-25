@@ -62,17 +62,18 @@ class CFX_Font {
   CFX_Font();
   ~CFX_Font();
 
-  void LoadSubst(const ByteString& face_name,
-                 bool bTrueType,
-                 uint32_t flags,
-                 int weight,
-                 int italic_angle,
-                 FX_CodePage code_page,
-                 bool bVertical);
+  bool LoadFaceFromSpan(pdfium::span<const uint8_t> src_span,
+                        bool force_vertical,
+                        uint64_t object_tag);
 
-  bool LoadEmbedded(pdfium::span<const uint8_t> src_span,
-                    bool force_vertical,
-                    uint64_t object_tag);
+  void LoadSubstFace(const ByteString& face_name,
+                     bool bTrueType,
+                     uint32_t flags,
+                     int weight,
+                     int italic_angle,
+                     FX_CodePage code_page,
+                     bool bVertical);
+
   RetainPtr<CFX_Face> GetFace() const { return face_; }
   bool HasFace() const { return !!face_; }
   bool HasFaceRec() const { return face_ && face_->HasFaceRec(); }

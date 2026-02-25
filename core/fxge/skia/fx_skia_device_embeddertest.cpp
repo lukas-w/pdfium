@@ -64,9 +64,9 @@ void CommonTest(CFX_SkiaDeviceDriver* driver, const State& state) {
   charPos[0].font_char_width_ = 4;
 
   CFX_Font font;
-  font.LoadSubst("Courier", /*bTrueType=*/true, /*flags=*/0,
-                 /*weight=*/400, /*italic_angle=*/0, FX_CodePage::kShiftJIS,
-                 /*bVertical=*/false);
+  font.LoadSubstFace("Courier", /*bTrueType=*/true, /*flags=*/0,
+                     /*weight=*/400, /*italic_angle=*/0, FX_CodePage::kShiftJIS,
+                     /*bVertical=*/false);
   float fontSize = 20;
   CFX_Path clipPath;
   CFX_Path clipPath2;

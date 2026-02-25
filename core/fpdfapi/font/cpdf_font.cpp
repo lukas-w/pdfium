@@ -214,7 +214,7 @@ void CPDF_Font::LoadFontDescriptor(const CPDF_Dictionary* font_desc) {
     return;
   }
 
-  if (!font_.LoadEmbedded(font_file_->GetSpan(), IsVertWriting(), key)) {
+  if (!font_.LoadFaceFromSpan(font_file_->GetSpan(), IsVertWriting(), key)) {
     document_->MaybePurgeFontFileStreamAcc(std::move(font_file_));
   }
 }
@@ -560,7 +560,7 @@ uint32_t CPDF_Font::FallbackFontFromCharcode(uint32_t charcode) {
     font_fallbacks_.push_back(std::make_unique<CFX_Font>());
     FX_SAFE_INT32 safe_weight = stem_v_;
     safe_weight *= 5;
-    font_fallbacks_[0]->LoadSubst(
+    font_fallbacks_.front()->LoadSubstFace(
         "Arial", IsTrueTypeFont(), flags_,
         safe_weight.ValueOrDefault(pdfium::kFontWeightNormal), italic_angle_,
         FX_CodePage::kDefANSI, IsVertWriting());

@@ -306,8 +306,9 @@ void CPDF_SimpleFont::LoadSubstFont() {
       weight > pdfium::kFontWeightExtraBold) {
     weight = pdfium::kFontWeightNormal;
   }
-  font_.LoadSubst(base_font_name_, IsTrueTypeFont(), flags_, weight,
-                  italic_angle_, FX_CodePage::kDefANSI, /*bVertical=*/false);
+  font_.LoadSubstFace(base_font_name_, IsTrueTypeFont(), flags_, weight,
+                      italic_angle_, FX_CodePage::kDefANSI,
+                      /*bVertical=*/false);
 }
 
 bool CPDF_SimpleFont::IsUnicodeCompatible() const {

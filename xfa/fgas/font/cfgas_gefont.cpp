@@ -94,8 +94,8 @@ bool CFGAS_GEFont::LoadFontInternal(const wchar_t* pszFontFamily,
     csFontFamily += ",Italic";
   }
 
-  font_->LoadSubst(csFontFamily, true, dwFontStyles, iWeight, 0, wCodePage,
-                   false);
+  font_->LoadSubstFace(csFontFamily, true, dwFontStyles, iWeight, 0, wCodePage,
+                       false);
   return font_->HasFace() && InitFont();
 }
 #endif  // BUILDFLAG(IS_WIN)

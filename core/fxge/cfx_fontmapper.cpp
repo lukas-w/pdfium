@@ -604,7 +604,7 @@ RetainPtr<CFX_Face> CFX_FontMapper::UseExternalSubst(
   return face;
 }
 
-RetainPtr<CFX_Face> CFX_FontMapper::FindSubstFont(const ByteString& name,
+RetainPtr<CFX_Face> CFX_FontMapper::FindSubstFace(const ByteString& name,
                                                   bool is_truetype,
                                                   uint32_t flags,
                                                   int weight,
@@ -781,7 +781,7 @@ RetainPtr<CFX_Face> CFX_FontMapper::FindSubstFont(const ByteString& name,
                               subst_font);
     }
 #endif
-    return FindSubstFont(family, is_truetype,
+    return FindSubstFace(family, is_truetype,
                          flags & ~pdfium::kFontStyleSymbolic, weight,
                          italic_angle, FX_CodePage::kDefANSI, subst_font);
   }
