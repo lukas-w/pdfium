@@ -103,27 +103,24 @@ pdfium::span<uint8_t> CBC_OneDimWriter::AppendPattern(
   return target.subspan(added);
 }
 
-void CBC_OneDimWriter::CalcTextInfo(const ByteString& text,
-                                    pdfium::span<TextCharPos> charPos,
-                                    CFX_Font* cFont,
-                                    float geWidth,
-                                    int32_t fontSize,
-                                    float& charsLen) {
+float CBC_OneDimWriter::CalcTextInfo(const ByteString& text,
+                                     pdfium::span<TextCharPos> charPos,
+                                     CFX_Font* cFont,
+                                     float geWidth,
+                                     int32_t fontSize) {
   std::unique_ptr<CFX_UnicodeEncoding> encoding =
       FX_CreateFontEncodingEx(cFont);
 
   const size_t length = text.GetLength();
   std::vector<uint32_t> charcodes(length);
-  float charWidth = 0;
+  float char_width = 0;
   for (size_t i = 0; i < length; ++i) {
     charcodes[i] = text[i];
     int32_t glyph_code = encoding->GlyphFromCharCode(charcodes[i]);
     int glyph_value = cFont->GetGlyphWidth(glyph_code);
-    float temp = glyph_value * fontSize / 1000.0;
-    charWidth += temp;
+    char_width += (glyph_value * fontSize / 1000.0);
   }
-  charsLen = charWidth;
-  float leftPositon = (float)(geWidth - charsLen) / 2.0f;
+  float leftPositon = (float)(geWidth - char_width) / 2.0f;
   if (leftPositon < 0 && geWidth == 0) {
     leftPositon = 0;
   }
@@ -147,6 +144,7 @@ void CBC_OneDimWriter::CalcTextInfo(const ByteString& text,
 #endif
     penX += (float)(charPos[i].font_char_width_) * (float)fontSize / 1000.0f;
   }
+  return char_width;
 }
 
 void CBC_OneDimWriter::ShowDeviceChars(CFX_RenderDevice* device,
@@ -184,7 +182,6 @@ bool CBC_OneDimWriter::ShowChars(WideStringView contents,
 
   ByteString str = FX_UTF8Encode(contents);
   std::vector<TextCharPos> charpos(str.GetLength());
-  float charsLen = 0;
   float geWidth = 0;
   if (loc_text_loc_ == BC_TEXT_LOC::kAboveEmbed ||
       loc_text_loc_ == BC_TEXT_LOC::kBelowEmbed) {
@@ -195,8 +192,8 @@ bool CBC_OneDimWriter::ShowChars(WideStringView contents,
   }
   int32_t iFontSize = static_cast<int32_t>(fabs(font_size_));
   int32_t iTextHeight = iFontSize + 1;
-  CalcTextInfo(str, charpos, font_, geWidth, iFontSize, charsLen);
-  if (charsLen < 1) {
+  float char_width = CalcTextInfo(str, charpos, font_, geWidth, iFontSize);
+  if (char_width < 1) {
     return true;
   }
 
@@ -204,9 +201,9 @@ bool CBC_OneDimWriter::ShowChars(WideStringView contents,
   int32_t locY = 0;
   switch (loc_text_loc_) {
     case BC_TEXT_LOC::kAboveEmbed:
-      locX = static_cast<int32_t>(barWidth - charsLen) / 2;
+      locX = static_cast<int32_t>(barWidth - char_width) / 2;
       locY = 0;
-      geWidth = charsLen;
+      geWidth = char_width;
       break;
     case BC_TEXT_LOC::kAbove:
       locX = 0;
@@ -214,9 +211,9 @@ bool CBC_OneDimWriter::ShowChars(WideStringView contents,
       geWidth = (float)barWidth;
       break;
     case BC_TEXT_LOC::kBelowEmbed:
-      locX = static_cast<int32_t>(barWidth - charsLen) / 2;
+      locX = static_cast<int32_t>(barWidth - char_width) / 2;
       locY = height_ - iTextHeight;
-      geWidth = charsLen;
+      geWidth = char_width;
       break;
     case BC_TEXT_LOC::kBelow:
     default:
