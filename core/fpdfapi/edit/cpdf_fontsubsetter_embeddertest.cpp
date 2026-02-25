@@ -243,6 +243,21 @@ TEST_F(CPDFFontSubsetterTest, NoNewText) {
               IsEmpty());
 }
 
+TEST_F(CPDFFontSubsetterTest, StandardFont) {
+  CreateEmptyDocument();
+  ScopedFPDFPage page(FPDFPage_New(document(), 0, 400, 400));
+
+  ScopedFPDFFont font(FPDFText_LoadStandardFont(document(), "Helvetica"));
+  ASSERT_TRUE(font);
+
+  ASSERT_NO_FATAL_FAILURE(
+      InsertNewTextObject(L"Hello world", page.get(), font.get()));
+
+  CPDF_FontSubsetter subsetter(CPDFDocumentFromFPDFDocument(document()));
+  EXPECT_THAT(subsetter.GenerateObjectOverrides(GetTestNewObjNums()),
+              IsEmpty());
+}
+
 TEST_F(CPDFFontSubsetterTest, OpenType) {
   CreateEmptyDocument();
   ScopedFPDFPage page(FPDFPage_New(document(), 0, 400, 400));
