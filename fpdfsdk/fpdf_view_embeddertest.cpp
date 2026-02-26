@@ -2007,6 +2007,7 @@ TEST_F(FPDFViewEmbedderTest, Bug2087) {
   FPDF_DestroyLibrary();
 
   std::string agg_checksum;
+#if defined(PDF_USE_AGG)
   const FPDF_LIBRARY_CONFIG kAggConfig = {
       .version = 5,
       .m_pUserFontPaths = nullptr,
@@ -2025,6 +2026,7 @@ TEST_F(FPDFViewEmbedderTest, Bug2087) {
   }
   CloseDocument();
   FPDF_DestroyLibrary();
+#endif  // PDF_USE_AGG
 
   std::string skia_checksum;
   const FPDF_LIBRARY_CONFIG kSkiaConfig = {
