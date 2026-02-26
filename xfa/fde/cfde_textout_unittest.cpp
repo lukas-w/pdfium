@@ -30,7 +30,7 @@ class CFDETextOutTest : public testing::Test {
 
   void SetUp() override {
 #if defined(PDF_USE_SKIA)
-    CFX_GlyphCache::InitializeGlobals();
+    CFX_GlyphCache::InitializeGlobals(CFX_GlyphCache::FontBackend::kFreeType);
 #endif
     CFX_Size bitmap_size = GetBitmapSize();
     bitmap_ = MakeRetain<CFX_DIBitmap>();

@@ -26,13 +26,17 @@
 #include "third_party/skia/include/core/SkTypeface.h"        // nogncheck
 #include "third_party/skia/include/ports/SkFontMgr_empty.h"  // nogncheck
 
+#if defined(PDF_ENABLE_FONTATIONS)
+#include "third_party/skia/include/ports/SkFontMgr_Fontations.h"  // nogncheck
+#endif  // defined(PDF_ENABLE_FONTATIONS)
+
 #if BUILDFLAG(IS_WIN)
 #include "third_party/skia/include/ports/SkTypeface_win.h"  // nogncheck
 #elif BUILDFLAG(IS_APPLE)
 #include "third_party/skia/include/ports/SkFontMgr_mac_ct.h"  // nogncheck
-#endif
+#endif  // BUILDFLAG(IS_WIN)
 
-#endif
+#endif  // PDF_USE_SKIA
 
 #if BUILDFLAG(IS_APPLE)
 #include "core/fxge/cfx_textrenderoptions.h"
@@ -220,28 +224,39 @@ int CFX_GlyphCache::GetGlyphWidth(const CFX_Font* font,
 
 #if defined(PDF_USE_SKIA_CUSTOM_FONT_MANAGER)
 extern sk_sp<SkFontMgr> pdfium_skia_custom_font_manager();
-#endif
+#endif  // defined(PDF_USE_SKIA_CUSTOM_FONT_MANAGER)
 
 namespace {
 
 // A singleton SkFontMgr which can be used to decode raw font data or
 // otherwise get access to system fonts.
+
 SkFontMgr* g_fontmgr = nullptr;
+
+CFX_GlyphCache::FontBackend g_font_backend =
+    CFX_GlyphCache::FontBackend::kFreeType;
 
 sk_sp<SkFontMgr> CreateSkiaFontManager() {
 #if defined(PDF_USE_SKIA_CUSTOM_FONT_MANAGER)
   return pdfium_skia_custom_font_manager();
-#else
+#else  // defined(PDF_USE_SKIA_CUSTOM_FONT_MANAGER)
+#if defined(PDF_ENABLE_FONTATIONS)
+  if (g_font_backend == CFX_GlyphCache::FontBackend::kFontations) {
+    // This is a SkFontMgr which will use Fontations to decode font data.
+    return SkFontMgr_New_Fontations_Empty();
+  }
+#endif  // defined(PDF_ENABLE_FONTATIONS)
   // This is a SkFontMgr which will use FreeType to decode font data.
   return SkFontMgr_New_Custom_Empty();
-#endif
+#endif  // defined(PDF_USE_SKIA_CUSTOM_FONT_MANAGER)
 }
 
 }  // namespace
 
 // static
-void CFX_GlyphCache::InitializeGlobals() {
+void CFX_GlyphCache::InitializeGlobals(FontBackend backend) {
   CHECK(!g_fontmgr);
+  g_font_backend = backend;
 #if BUILDFLAG(IS_WIN)
   g_fontmgr = SkFontMgr_New_DirectWrite().release();
 #elif BUILDFLAG(IS_APPLE)

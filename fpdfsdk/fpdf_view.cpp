@@ -232,7 +232,14 @@ FPDF_InitLibraryWithConfig(const FPDF_LIBRARY_CONFIG* config) {
   pdfium::InitializePageModule();
 
 #if defined(PDF_USE_SKIA)
-  CFX_GlyphCache::InitializeGlobals();
+  CFX_GlyphCache::FontBackend backend = CFX_GlyphCache::FontBackend::kFreeType;
+  if (config && config->version >= 5 &&
+      config->m_FontLibraryType != FPDF_FONTBACKENDTYPE_FREETYPE) {
+    CHECK_EQ(config->m_FontLibraryType, FPDF_FONTBACKENDTYPE_FONTATIONS);
+    CHECK_EQ(config->m_RendererType, FPDF_RENDERERTYPE_SKIA);
+    backend = CFX_GlyphCache::FontBackend::kFontations;
+  }
+  CFX_GlyphCache::InitializeGlobals(backend);
 #endif
 
 #ifdef PDF_ENABLE_XFA
@@ -243,11 +250,12 @@ FPDF_InitLibraryWithConfig(const FPDF_LIBRARY_CONFIG* config) {
     void* platform = config->version >= 3 ? config->m_pPlatform : nullptr;
     IJS_Runtime::Initialize(config->m_v8EmbedderSlot, config->m_pIsolate,
                             platform);
-
-    if (config->version >= 4) {
-      SetRendererType(config->m_RendererType);
-    }
   }
+
+  if (config && config->version >= 4) {
+    SetRendererType(config->m_RendererType);
+  }
+
   g_bLibraryInitialized = true;
 }
 
