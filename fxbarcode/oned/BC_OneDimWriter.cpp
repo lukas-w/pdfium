@@ -29,13 +29,13 @@
 #include <vector>
 
 #include "build/build_config.h"
+#include "core/fxge/cfx_charmap_resolver.h"
 #include "core/fxge/cfx_defaultrenderdevice.h"
 #include "core/fxge/cfx_fillrenderoptions.h"
 #include "core/fxge/cfx_font.h"
 #include "core/fxge/cfx_graphstatedata.h"
 #include "core/fxge/cfx_path.h"
 #include "core/fxge/cfx_renderdevice.h"
-#include "core/fxge/cfx_unicodeencodingex.h"
 #include "core/fxge/text_char_pos.h"
 #include "fxbarcode/BC_Writer.h"
 
@@ -108,15 +108,15 @@ float CBC_OneDimWriter::CalcTextInfo(const ByteString& text,
                                      CFX_Font* cFont,
                                      float geWidth,
                                      int32_t fontSize) {
-  std::unique_ptr<CFX_UnicodeEncoding> encoding =
-      FX_CreateFontEncodingEx(cFont);
+  std::unique_ptr<CFX_CharmapResolver> charmap_resolver =
+      CFX_CharmapResolver::CreateAlternate(cFont);
 
   const size_t length = text.GetLength();
   std::vector<uint32_t> charcodes(length);
   float char_width = 0;
   for (size_t i = 0; i < length; ++i) {
     charcodes[i] = text[i];
-    int32_t glyph_code = encoding->GlyphFromCharCode(charcodes[i]);
+    int32_t glyph_code = charmap_resolver->GlyphFromCharCode(charcodes[i]);
     int glyph_value = cFont->GetGlyphWidth(glyph_code);
     char_width += (glyph_value * fontSize / 1000.0);
   }
@@ -129,7 +129,7 @@ float CBC_OneDimWriter::CalcTextInfo(const ByteString& text,
   float left = leftPositon;
   float top = 0.0;
   charPos[0].origin_ = CFX_PointF(penX + left, penY + top);
-  charPos[0].glyph_index_ = encoding->GlyphFromCharCode(charcodes[0]);
+  charPos[0].glyph_index_ = charmap_resolver->GlyphFromCharCode(charcodes[0]);
   charPos[0].font_char_width_ = cFont->GetGlyphWidth(charPos[0].glyph_index_);
 #if BUILDFLAG(IS_APPLE)
   charPos[0].ext_gid_ = charPos[0].glyph_index_;
@@ -137,7 +137,7 @@ float CBC_OneDimWriter::CalcTextInfo(const ByteString& text,
   penX += (float)(charPos[0].font_char_width_) * (float)fontSize / 1000.0f;
   for (size_t i = 1; i < length; i++) {
     charPos[i].origin_ = CFX_PointF(penX + left, penY + top);
-    charPos[i].glyph_index_ = encoding->GlyphFromCharCode(charcodes[i]);
+    charPos[i].glyph_index_ = charmap_resolver->GlyphFromCharCode(charcodes[i]);
     charPos[i].font_char_width_ = cFont->GetGlyphWidth(charPos[i].glyph_index_);
 #if BUILDFLAG(IS_APPLE)
     charPos[i].ext_gid_ = charPos[i].glyph_index_;

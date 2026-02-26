@@ -10,6 +10,8 @@ source_set("fxge") {
   sources = [
     "calculate_pitch.cpp",
     "calculate_pitch.h",
+    "cfx_charmap_resolver.cpp",
+    "cfx_charmap_resolver.h",
     "cfx_color.cpp",
     "cfx_color.h",
     "cfx_defaultrenderdevice.cpp",
@@ -44,8 +46,6 @@ source_set("fxge") {
     "cfx_substfont.cpp",
     "cfx_substfont.h",
     "cfx_textrenderoptions.h",
-    "cfx_unicodeencoding.cpp",
-    "cfx_unicodeencoding.h",
     "dib/blend.cpp",
     "dib/blend.h",
     "dib/cfx_bitmapstorer.cpp",
@@ -113,13 +113,6 @@ source_set("fxge") {
     # ft_adobe_glyph_list is not exported from the Freetype shared library so we
     # need it defined in component builds and builds using system freetype.
     defines += [ "DEFINE_PS_TABLES_DATA" ]
-  }
-
-  if (pdf_enable_xfa) {
-    sources += [
-      "cfx_unicodeencodingex.cpp",
-      "cfx_unicodeencodingex.h",
-    ]
   }
 
   if (pdf_use_agg) {
