@@ -24,8 +24,10 @@
 #include "core/fpdfapi/parser/cpdf_document.h"
 #include "core/fpdfapi/parser/cpdf_name.h"
 #include "core/fpdfapi/parser/cpdf_number.h"
+#include "core/fpdfapi/parser/cpdf_reference.h"
 #include "core/fpdfapi/parser/cpdf_stream.h"
 #include "core/fpdfapi/parser/cpdf_stream_acc.h"
+#include "core/fxcrt/byteorder.h"
 #include "core/fxcrt/bytestring.h"
 #include "core/fxcrt/check.h"
 #include "core/fxcrt/compiler_specific.h"
@@ -34,6 +36,7 @@
 #include "core/fxcrt/fx_random.h"
 #include "core/fxcrt/retain_ptr.h"
 #include "core/fxcrt/span.h"
+#include "core/fxge/cfx_fontmapper.h"
 #include "core/fxge/fx_font.h"
 
 namespace {
@@ -143,33 +146,68 @@ CPDF_FontSubsetter::GenerateObjectOverrides(
       continue;
     }
 
+    // OpenType fonts containing CFF data have an "OTTO" tag at the start of the
+    // file.
+    bool is_opentype_cff = false;
+    if (original_stream_span.size() > 4) {
+      // OpenType fonts use big-endian order.
+      uint32_t tag = fxcrt::GetUInt32MSBFirst(original_stream_span.first<4>());
+      is_opentype_cff = tag == CFX_FontMapper::MakeTag('O', 'T', 'T', 'O');
+    }
+
     // Override the font file stream.
-    // TODO(crbug.com/476127152): Correctly support OpenType CFF.
+    // See ISO 32000-1:2008 section 9.9 "Embedded Font Programs" for OpenType
+    // CFF font entries.
     auto subsetted_font_dict = pdfium::MakeRetain<CPDF_Dictionary>();
-    // TrueType fonts requires a Length1 entry.
-    subsetted_font_dict->SetNewFor<CPDF_Number>(
-        "Length1", static_cast<int>(subsetted_font_data.size()));
+    if (is_opentype_cff) {
+      subsetted_font_dict->SetNewFor<CPDF_Name>("Subtype", "OpenType");
+    } else {
+      // Only Type 1 and TrueType fonts require a Length1 entry.
+      subsetted_font_dict->SetNewFor<CPDF_Number>(
+          "Length1", static_cast<int>(subsetted_font_data.size()));
+    }
     overrides[obj_num] = pdfium::MakeRetain<CPDF_Stream>(
         std::move(subsetted_font_data), std::move(subsetted_font_dict));
 
     // Override the root font dict.
-    RetainPtr<CPDF_Object> new_root_font = candidate.root_font->Clone();
-    new_root_font->AsMutableDictionary()->SetNewFor<CPDF_Name>(
-        "BaseFont", candidate.subset_font_name);
+    RetainPtr<CPDF_Dictionary> new_root_font =
+        ToDictionary(candidate.root_font->Clone());
+    new_root_font->SetNewFor<CPDF_Name>("BaseFont", candidate.subset_font_name);
     overrides[candidate.root_font->GetObjNum()] = new_root_font;
 
     // Override the CID font dict if necessary.
     if (candidate.cid_font) {
-      RetainPtr<CPDF_Object> new_cid_font = candidate.cid_font->Clone();
-      new_cid_font->AsMutableDictionary()->SetNewFor<CPDF_Name>(
-          "BaseFont", candidate.subset_font_name);
+      RetainPtr<CPDF_Dictionary> new_cid_font =
+          ToDictionary(candidate.cid_font->Clone());
+      new_cid_font->SetNewFor<CPDF_Name>("BaseFont",
+                                         candidate.subset_font_name);
+      if (is_opentype_cff) {
+        new_cid_font->SetNewFor<CPDF_Name>("Subtype", "CIDFontType0");
+      }
       overrides[candidate.cid_font->GetObjNum()] = new_cid_font;
     }
 
     // Override the font descriptor.
-    RetainPtr<CPDF_Object> new_descriptor = candidate.descriptor->Clone();
-    new_descriptor->AsMutableDictionary()->SetNewFor<CPDF_Name>(
-        "FontName", candidate.subset_font_name);
+    RetainPtr<CPDF_Dictionary> new_descriptor =
+        ToDictionary(candidate.descriptor->Clone());
+    new_descriptor->SetNewFor<CPDF_Name>("FontName",
+                                         candidate.subset_font_name);
+    if (is_opentype_cff) {
+      // Always set the symbolic flag and remove the nonsymbolic flag. A
+      // subsetted font's character set may not be a strict subset of the
+      // "standard Latin character set." Furthermore, the mapping (whether GIDs
+      // in a simple font or CIDs in a composite font) is unique to the subset.
+      // Marking it symbolic prevents PDF readers from applying font
+      // substitution strategies that would result in incorrect glyphs. See ISO
+      // 32000-1:2008, section 9.8.2 "Font Descriptor Flags".
+      int flags = new_descriptor->GetIntegerFor("Flags");
+      flags |= 0x04;
+      flags &= ~0x20;
+      new_descriptor->SetNewFor<CPDF_Number>("Flags", flags);
+
+      new_descriptor->RemoveFor("FontFile2");
+      new_descriptor->SetNewFor<CPDF_Reference>("FontFile3", doc_, obj_num);
+    }
     overrides[candidate.descriptor->GetObjNum()] = new_descriptor;
   }
   return overrides;
