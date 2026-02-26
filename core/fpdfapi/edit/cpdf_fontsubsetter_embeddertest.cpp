@@ -107,11 +107,12 @@ bool IsSubsetFontName(const ByteString& actual_name,
 // inclusive, max exclusive.
 MATCHER_P2(StreamSizeIsWithinRange, min_size, max_size, "") {
   const auto& obj = arg.second;
-  if (!obj || !obj->IsStream()) {
+  const CPDF_Stream* stream = ToStream(obj);
+  if (!stream) {
     return false;
   }
 
-  size_t actual_size = obj->AsStream()->GetRawSize();
+  size_t actual_size = stream->GetRawSize();
   if (actual_size < min_size || actual_size >= max_size) {
     return false;
   }
@@ -129,11 +130,11 @@ MATCHER_P2(StreamSizeIsWithinRange, min_size, max_size, "") {
 // Matches the Root Font, checking for a valid subset font name.
 MATCHER_P(IsRootFont, expected_base_name, "") {
   const auto& obj = arg.second;
-  if (!obj || !obj->IsDictionary()) {
+  const CPDF_Dictionary* dict = ToDictionary(obj);
+  if (!dict) {
     return false;
   }
 
-  const CPDF_Dictionary* dict = obj->AsDictionary();
   if (dict->GetNameFor("Type") != "Font" ||
       dict->GetNameFor("Subtype") != "Type0" ||
       dict->GetNameFor("Encoding") != "Identity-H" ||
@@ -147,11 +148,11 @@ MATCHER_P(IsRootFont, expected_base_name, "") {
 // Matches the CID Font, checking for a valid subset font name.
 MATCHER_P(IsCIDFont, expected_base_name, "") {
   const auto& obj = arg.second;
-  if (!obj || !obj->IsDictionary()) {
+  const CPDF_Dictionary* dict = ToDictionary(obj);
+  if (!dict) {
     return false;
   }
 
-  const CPDF_Dictionary* dict = obj->AsDictionary();
   if (dict->GetNameFor("Type") != "Font" ||
       dict->GetNameFor("Subtype") != "CIDFontType2" ||
       !dict->KeyExist("CIDSystemInfo")) {
@@ -164,11 +165,11 @@ MATCHER_P(IsCIDFont, expected_base_name, "") {
 // Matches the FontDescriptor, checking for a valid subset font name.
 MATCHER_P(IsFontDescriptor, expected_base_name, "") {
   const auto& obj = arg.second;
-  if (!obj || !obj->IsDictionary()) {
+  const CPDF_Dictionary* dict = ToDictionary(obj);
+  if (!dict) {
     return false;
   }
 
-  const CPDF_Dictionary* dict = obj->AsDictionary();
   if (dict->GetNameFor("Type") != "FontDescriptor" ||
       !dict->KeyExist("FontFile2")) {
     return false;
