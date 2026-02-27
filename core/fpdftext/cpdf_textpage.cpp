@@ -190,7 +190,7 @@ int GetCharWidth(uint32_t charCode, CPDF_Font* font) {
     return 0;
   }
 
-  int w = font->GetCharWidthF(charCode);
+  int w = font->GetCharWidth(charCode);
   if (w > 0) {
     return w;
   }
@@ -216,7 +216,7 @@ float CalculateSpaceThreshold(CPDF_Font* font,
   const uint32_t space_charcode = font->CharCodeFromUnicode(' ');
   float threshold = 0;
   if (space_charcode != CPDF_Font::kInvalidCharCode) {
-    threshold = fontsize_h * font->GetCharWidthF(space_charcode) / 1000;
+    threshold = fontsize_h * font->GetCharWidth(space_charcode) / 1000;
   }
   if (threshold > fontsize_h / 3) {
     threshold = 0;

@@ -782,7 +782,7 @@ FPDF_EXPORT FPDF_BOOL FPDF_CALLCONV FPDFFont_GetGlyphWidth(FPDF_FONT font,
     uint16_t cid = pCIDFont->CIDFromCharCode(charcode);
     *width = pCIDFont->GetVertWidth(cid) * font_size / 1000.f;
   } else {
-    *width = pFont->GetCharWidthF(charcode) * font_size / 1000.f;
+    *width = pFont->GetCharWidth(charcode) * font_size / 1000.f;
   }
 
   return true;

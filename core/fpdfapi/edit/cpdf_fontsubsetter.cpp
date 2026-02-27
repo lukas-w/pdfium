@@ -315,7 +315,7 @@ void CPDF_FontSubsetter::AddUsedText(const CPDF_TextObject* text,
     }
 
     if (subset_widths) {
-      int width = font->GetCharWidthF(char_code);
+      int width = font->GetCharWidth(char_code);
       if (width >= 0) {
         candidate.char_code_to_width[char_code] = static_cast<uint32_t>(width);
       }

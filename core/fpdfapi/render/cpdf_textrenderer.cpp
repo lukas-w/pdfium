@@ -127,7 +127,7 @@ void CPDF_TextRenderer::DrawTextString(CFX_RenderDevice* pDevice,
     if (i) {
       positions[i - 1] = cur_pos;
     }
-    cur_pos += pFont->GetCharWidthF(codes[i]) * font_size / 1000;
+    cur_pos += pFont->GetCharWidth(codes[i]) * font_size / 1000;
   }
   CFX_Matrix new_matrix = matrix;
   new_matrix.e = origin_x;

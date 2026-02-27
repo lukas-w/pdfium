@@ -216,7 +216,7 @@ class FPDFEditEmbedderTest : public EmbedderTest {
         size_t inner_idx = 0;
         for (cur_cid = cid; cur_cid < cid + cnt; cur_cid++) {
           int width = arr->GetFloatAt(inner_idx++);
-          EXPECT_EQ(width, typed_font->GetCharWidthF(cur_cid))
+          EXPECT_EQ(width, typed_font->GetCharWidth(cur_cid))
               << " at cid " << cur_cid;
         }
         num_cids_checked += cnt;
@@ -228,7 +228,7 @@ class FPDFEditEmbedderTest : public EmbedderTest {
       ASSERT_FALSE(++idx == widths_array->size());
       int width = widths_array->GetFloatAt(idx);
       for (cur_cid = cid; cur_cid <= last_cid; cur_cid++) {
-        EXPECT_EQ(width, typed_font->GetCharWidthF(cur_cid))
+        EXPECT_EQ(width, typed_font->GetCharWidth(cur_cid))
             << " at cid " << cur_cid;
       }
       num_cids_checked += last_cid - cid + 1;

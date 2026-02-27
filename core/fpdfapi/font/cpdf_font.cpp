@@ -300,7 +300,7 @@ int CPDF_Font::GetStringWidth(ByteStringView pString) {
   size_t offset = 0;
   int width = 0;
   while (offset < pString.GetLength()) {
-    width += GetCharWidthF(GetNextChar(pString, &offset));
+    width += GetCharWidth(GetNextChar(pString, &offset));
   }
   return width;
 }
@@ -460,7 +460,7 @@ std::vector<TextCharPos> CPDF_Font::GetCharPosList(
     }
 
     if (!IsEmbedded() && !IsCIDFont()) {
-      text_char_pos.font_char_width_ = GetCharWidthF(char_code);
+      text_char_pos.font_char_width_ = GetCharWidth(char_code);
     } else {
       text_char_pos.font_char_width_ = 0;
     }
@@ -470,7 +470,7 @@ std::vector<TextCharPos> CPDF_Font::GetCharPosList(
 
     float scaling_factor = 1.0f;
     if (ShouldApplyGlyphSpacingHeuristic(current_font, is_vertical_writing)) {
-      int pdf_glyph_width = GetCharWidthF(char_code);
+      int pdf_glyph_width = GetCharWidth(char_code);
       int font_glyph_width =
           current_font->GetGlyphWidth(text_char_pos.glyph_index_);
       if (font_glyph_width && pdf_glyph_width > font_glyph_width + 1) {

@@ -247,7 +247,7 @@ float CPDF_TextObject::GetCharWidth(uint32_t charcode) const {
   RetainPtr<CPDF_Font> font = GetFont();
   const CPDF_CIDFont* pCIDFont = font->AsCIDFont();
   if (!IsVertWritingCIDFont(pCIDFont)) {
-    return font->GetCharWidthF(charcode) * fontsize;
+    return font->GetCharWidth(charcode) * fontsize;
   }
 
   uint16_t cid = pCIDFont->CIDFromCharCode(charcode);
@@ -325,7 +325,7 @@ float CPDF_TextObject::CalcPositionDataInternal(
       const float char_right = curpos + char_rect.right * fontsize / 1000;
       min_x = std::min({min_x, char_left, char_right});
       max_x = std::max({max_x, char_left, char_right});
-      charwidth = font->GetCharWidthF(charcode) * fontsize / 1000;
+      charwidth = font->GetCharWidth(charcode) * fontsize / 1000;
     }
     curpos += charwidth;
     if (charcode == ' ' && (!pCIDFont || pCIDFont->GetCharSize(' ') == 1)) {

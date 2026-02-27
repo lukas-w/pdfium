@@ -128,7 +128,7 @@ class CPDF_Font : public Retainable, public Observable {
   // of [100, 900].
   std::optional<int> GetFontWeight() const;
 
-  virtual int GetCharWidthF(uint32_t charcode) = 0;
+  virtual int GetCharWidth(uint32_t charcode) = 0;
   virtual FX_RECT GetCharBBox(uint32_t charcode) = 0;
 
   // Can return nullptr for stock Type1 fonts. Always returns non-null for other
