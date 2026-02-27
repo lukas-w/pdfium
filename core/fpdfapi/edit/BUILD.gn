@@ -9,6 +9,8 @@ source_set("edit") {
   sources = [
     "cpdf_creator.cpp",
     "cpdf_creator.h",
+    "cpdf_font_util.cpp",
+    "cpdf_font_util.h",
     "cpdf_fontsubsetter.cpp",
     "cpdf_fontsubsetter.h",
     "cpdf_npagetooneexporter.cpp",

@@ -6,10 +6,10 @@
 #include <limits>
 #include <map>
 #include <memory>
-#include <sstream>
 #include <utility>
 #include <vector>
 
+#include "core/fpdfapi/edit/cpdf_font_util.h"
 #include "core/fpdfapi/font/cpdf_cidfont.h"
 #include "core/fpdfapi/font/cpdf_font.h"
 #include "core/fpdfapi/page/cpdf_docpagedata.h"
@@ -33,8 +33,6 @@
 #include "core/fxcrt/check_op.h"
 #include "core/fxcrt/compiler_specific.h"
 #include "core/fxcrt/containers/contains.h"
-#include "core/fxcrt/fx_extension.h"
-#include "core/fxcrt/fx_string_wrappers.h"
 #include "core/fxcrt/numerics/safe_conversions.h"
 #include "core/fxcrt/span_util.h"
 #include "core/fxcrt/stl_util.h"
@@ -80,8 +78,6 @@ static_assert(static_cast<int>(TextRenderingMode::MODE_LAST) ==
               "TextRenderingMode::MODE_LAST value mismatch");
 
 namespace {
-
-constexpr uint32_t kMaxBfCharBfRangeEntries = 100;
 
 ByteString BaseFontNameForType(const CFX_Font* font, int font_type) {
   ByteString name = font_type == FPDF_FONT_TYPE1 ? font->GetPsName()
@@ -218,213 +214,6 @@ RetainPtr<CPDF_Array> CreateWidthsArray(
   return widths_array;
 }
 
-const char kToUnicodeStart[] =
-    "/CIDInit /ProcSet findresource begin\n"
-    "12 dict begin\n"
-    "begincmap\n"
-    "/CIDSystemInfo\n"
-    "<</Registry (Adobe)\n"
-    "/Ordering (Identity)\n"
-    "/Supplement 0\n"
-    ">> def\n"
-    "/CMapName /Adobe-Identity-H def\n"
-    "/CMapType 2 def\n"
-    "1 begincodespacerange\n"
-    "<0000> <FFFF>\n"
-    "endcodespacerange\n";
-
-const char kToUnicodeEnd[] =
-    "endcmap\n"
-    "CMapName currentdict /CMap defineresource pop\n"
-    "end\n"
-    "end\n";
-
-void AddCharcode(fxcrt::ostringstream& buffer, uint32_t number) {
-  CHECK_LE(number, 0xFFFF);
-  buffer << "<";
-  char ans[4];
-  FXSYS_IntToFourHexChars(number, ans);
-  for (char c : ans) {
-    buffer << c;
-  }
-  buffer << ">";
-}
-
-// PDF spec 1.7 Section 5.9.2: "Unicode character sequences as expressed in
-// UTF-16BE encoding." See https://en.wikipedia.org/wiki/UTF-16#Description
-void AddUnicode(fxcrt::ostringstream& buffer, uint32_t unicode) {
-  if (pdfium::IsHighSurrogate(unicode) || pdfium::IsLowSurrogate(unicode)) {
-    unicode = 0;
-  }
-
-  char unicode_buf[8];
-  pdfium::span<const char> unicode_span = FXSYS_ToUTF16BE(unicode, unicode_buf);
-  CHECK(!unicode_span.empty());
-  buffer << "<";
-  for (char c : unicode_span) {
-    buffer << c;
-  }
-  buffer << ">";
-}
-
-// Loads the charcode to unicode mapping into a stream
-RetainPtr<CPDF_Stream> LoadUnicode(
-    CPDF_Document* doc,
-    const std::multimap<uint32_t, uint32_t>& to_unicode) {
-  // A map charcode->unicode
-  std::map<uint32_t, uint32_t> char_to_unicode_map;
-  // A map <char_start, char_end> to vector v of unicode characters of size (end
-  // - start + 1). This abbreviates: start->v[0], start+1->v[1], etc. PDF spec
-  // 1.7 Section 5.9.2 says that only the last byte of the unicode may change.
-  std::map<std::pair<uint32_t, uint32_t>, std::vector<uint32_t>>
-      char_range_to_unicodes_map;
-  // A map <start, end> -> unicode
-  // This abbreviates: start->unicode, start+1->unicode+1, etc.
-  // PDF spec 1.7 Section 5.9.2 says that only the last byte of the unicode may
-  // change.
-  std::map<std::pair<uint32_t, uint32_t>, uint32_t>
-      char_range_to_consecutive_unicodes_map;
-
-  // Calculate the maps
-  for (auto it = to_unicode.begin(); it != to_unicode.end(); ++it) {
-    uint32_t first_charcode = it->first;
-    uint32_t first_unicode = it->second;
-    {
-      auto next_it = std::next(it);
-      if (next_it == to_unicode.end() || first_charcode + 1 != next_it->first) {
-        char_to_unicode_map[first_charcode] = first_unicode;
-        continue;
-      }
-    }
-    ++it;
-    uint32_t current_charcode = it->first;
-    uint32_t current_unicode = it->second;
-    if (current_charcode % 256 == 0) {
-      char_to_unicode_map[first_charcode] = first_unicode;
-      char_to_unicode_map[current_charcode] = current_unicode;
-      continue;
-    }
-    const size_t max_extra = 255 - (current_charcode % 256);
-    auto next_it = std::next(it);
-    if (first_unicode + 1 != current_unicode) {
-      // Consecutive charcodes mapping to non-consecutive unicodes
-      std::vector<uint32_t> unicodes = {first_unicode, current_unicode};
-      for (size_t i = 0; i < max_extra; ++i) {
-        if (next_it == to_unicode.end() ||
-            current_charcode + 1 != next_it->first) {
-          break;
-        }
-        ++it;
-        ++current_charcode;
-        unicodes.push_back(it->second);
-        next_it = std::next(it);
-      }
-      CHECK_EQ(it->first - first_charcode + 1, unicodes.size());
-      char_range_to_unicodes_map[std::make_pair(first_charcode, it->first)] =
-          std::move(unicodes);
-      continue;
-    }
-    // Consecutive charcodes mapping to consecutive unicodes
-    for (size_t i = 0; i < max_extra; ++i) {
-      if (next_it == to_unicode.end() ||
-          current_charcode + 1 != next_it->first ||
-          current_unicode + 1 != next_it->second) {
-        break;
-      }
-      ++it;
-      ++current_charcode;
-      ++current_unicode;
-      next_it = std::next(it);
-    }
-    char_range_to_consecutive_unicodes_map[std::make_pair(
-        first_charcode, current_charcode)] = first_unicode;
-  }
-
-  fxcrt::ostringstream buffer;
-  buffer << kToUnicodeStart;
-
-  {
-    // Add `char_to_unicode_map` to `buffer`.
-    uint32_t to_process =
-        pdfium::checked_cast<uint32_t>(char_to_unicode_map.size());
-    auto it = char_to_unicode_map.begin();
-    while (to_process) {
-      const uint32_t to_process_this_iteration =
-          std::min(to_process, kMaxBfCharBfRangeEntries);
-      buffer << to_process_this_iteration << " beginbfchar\n";
-      for (uint32_t i = 0; i < to_process_this_iteration; ++i) {
-        CHECK(it != char_to_unicode_map.end());
-        AddCharcode(buffer, it->first);
-        buffer << " ";
-        AddUnicode(buffer, it->second);
-        buffer << "\n";
-        ++it;
-      }
-      buffer << "endbfchar\n";
-      to_process -= to_process_this_iteration;
-    }
-  }
-
-  {
-    // Add `char_range_to_unicodes_map` to `buffer`.
-    uint32_t to_process =
-        pdfium::checked_cast<uint32_t>(char_range_to_unicodes_map.size());
-    auto it = char_range_to_unicodes_map.begin();
-    while (to_process) {
-      const uint32_t to_process_this_iteration =
-          std::min(to_process, kMaxBfCharBfRangeEntries);
-      buffer << to_process_this_iteration << " beginbfrange\n";
-      for (uint32_t i = 0; i < to_process_this_iteration; ++i) {
-        CHECK(it != char_range_to_unicodes_map.end());
-        const std::pair<uint32_t, uint32_t>& charcode_range = it->first;
-        AddCharcode(buffer, charcode_range.first);
-        buffer << " ";
-        AddCharcode(buffer, charcode_range.second);
-        buffer << " [";
-        auto unicodes = pdfium::span(it->second);
-        AddUnicode(buffer, unicodes[0]);
-        for (uint32_t code : unicodes.subspan(1u)) {
-          buffer << " ";
-          AddUnicode(buffer, code);
-        }
-        buffer << "]\n";
-        ++it;
-      }
-      buffer << "endbfrange\n";
-      to_process -= to_process_this_iteration;
-    }
-  }
-
-  {
-    // Add `char_range_to_consecutive_unicodes_map` to `buffer`.
-    uint32_t to_process = pdfium::checked_cast<uint32_t>(
-        char_range_to_consecutive_unicodes_map.size());
-    auto it = char_range_to_consecutive_unicodes_map.begin();
-    while (to_process) {
-      const uint32_t to_process_this_iteration =
-          std::min(to_process, kMaxBfCharBfRangeEntries);
-      buffer << to_process_this_iteration << " beginbfrange\n";
-      for (uint32_t i = 0; i < to_process_this_iteration; ++i) {
-        CHECK(it != char_range_to_consecutive_unicodes_map.end());
-        const std::pair<uint32_t, uint32_t>& charcode_range = it->first;
-        AddCharcode(buffer, charcode_range.first);
-        buffer << " ";
-        AddCharcode(buffer, charcode_range.second);
-        buffer << " ";
-        AddUnicode(buffer, it->second);
-        buffer << "\n";
-        ++it;
-      }
-      buffer << "endbfrange\n";
-      to_process -= to_process_this_iteration;
-    }
-  }
-
-  buffer << kToUnicodeEnd;
-  auto stream = doc->NewIndirect<CPDF_Stream>(&buffer);
-  return stream;
-}
-
 void CreateDescendantFontsArray(CPDF_Document* doc,
                                 CPDF_Dictionary* font_dict,
                                 uint32_t cid_font_dict_obj_num) {
@@ -524,9 +313,8 @@ RetainPtr<CPDF_Font> LoadCompositeFont(CPDF_Document* doc,
 
   CreateDescendantFontsArray(doc, font_dict.Get(), cid_font_dict->GetObjNum());
 
-  RetainPtr<CPDF_Stream> to_unicode_stream = LoadUnicode(doc, to_unicode);
-  font_dict->SetNewFor<CPDF_Reference>("ToUnicode", doc,
-                                       to_unicode_stream->GetObjNum());
+  font_dict->SetNewFor<CPDF_Reference>(
+      "ToUnicode", doc, doc->AddIndirectObject(LoadUnicode(to_unicode)));
   return CPDF_DocPageData::FromDocument(doc)->GetFont(font_dict);
 }
 
