@@ -187,6 +187,14 @@ CPDF_FontSubsetter::GenerateObjectOverrides(
         new_cid_font->SetNewFor<CPDF_Name>("Subtype", "CIDFontType0");
       }
       overrides[candidate.cid_font->GetObjNum()] = new_cid_font;
+
+      // Override widths if necessary.
+      RetainPtr<const CPDF_Array> original_widths =
+          candidate.cid_font->GetArrayFor("W");
+      if (original_widths) {
+        overrides[original_widths->GetObjNum()] =
+            CreateWidthsArray(candidate.char_code_to_width);
+      }
     }
 
     // Override the font descriptor.
@@ -288,12 +296,15 @@ void CPDF_FontSubsetter::CollectSubsetCandidatesFromPage(
       candidate.cid_font = cid_font;
       candidate.descriptor = descriptor;
     }
-    AddUsedText(text, candidate);
+
+    bool subset_widths = cid_font && cid_font->GetArrayFor("W");
+    AddUsedText(text, candidate, subset_widths);
   }
 }
 
 void CPDF_FontSubsetter::AddUsedText(const CPDF_TextObject* text,
-                                     SubsetCandidate& candidate) {
+                                     SubsetCandidate& candidate,
+                                     bool subset_widths) {
   CPDF_Font* font = text->GetFont();
   const std::vector<uint32_t>& char_codes = text->GetCharCodes();
   std::set<uint32_t>& used_gids = candidate.used_gids;
@@ -302,6 +313,14 @@ void CPDF_FontSubsetter::AddUsedText(const CPDF_TextObject* text,
     if (gid != -1) {
       used_gids.insert(static_cast<uint32_t>(gid));
     }
+
+    if (subset_widths) {
+      int width = font->GetCharWidthF(char_code);
+      if (width >= 0) {
+        candidate.char_code_to_width[char_code] = static_cast<uint32_t>(width);
+      }
+    }
+
     WideString unicode = font->UnicodeFromCharCode(char_code);
     if (!unicode.IsEmpty()) {
       candidate.char_code_to_unicode.emplace(char_code,

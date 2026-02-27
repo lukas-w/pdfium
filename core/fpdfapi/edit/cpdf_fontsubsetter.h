@@ -61,6 +61,9 @@ class CPDF_FontSubsetter {
     // The set of GIDs used by text.
     std::set<uint32_t> used_gids;
 
+    // Mapping of char codes to their widths.
+    std::map<uint32_t, uint32_t> char_code_to_width;
+
     // Mapping of char codes to unicode, allowing duplicate entries.
     std::multimap<uint32_t, uint32_t> char_code_to_unicode;
   };
@@ -75,8 +78,11 @@ class CPDF_FontSubsetter {
       CPDF_Page* page,
       pdfium::span<const uint32_t> new_obj_nums);
 
-  // Adds the characters used in `text` to `candidate`.
-  void AddUsedText(const CPDF_TextObject* text, SubsetCandidate& candidate);
+  // Adds the characters used in `text` to `candidate`. Also adds widths to
+  // `candidate` if `subset_widths` is true.
+  void AddUsedText(const CPDF_TextObject* text,
+                   SubsetCandidate& candidate,
+                   bool subset_widths);
 
   UnownedPtr<CPDF_Document> const doc_;
 
