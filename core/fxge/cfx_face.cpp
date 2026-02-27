@@ -323,7 +323,7 @@ class ScopedFaceTransform {
  public:
   FX_STACK_ALLOCATED();
 
-  ScopedFaceTransform(FXFT_FaceRec* rec, FT_Matrix* matrix) : rec_(rec) {
+  ScopedFaceTransform(FT_FaceRec* rec, FT_Matrix* matrix) : rec_(rec) {
     FT_Set_Transform(rec_, matrix, nullptr);
   }
 
@@ -333,7 +333,7 @@ class ScopedFaceTransform {
   }
 
  private:
-  UnownedPtr<FXFT_FaceRec> const rec_;
+  UnownedPtr<FT_FaceRec> const rec_;
 };
 
 }  // namespace
@@ -343,7 +343,7 @@ RetainPtr<CFX_Face> CFX_Face::New(CFX_FontMgr* font_mgr,
                                   RetainPtr<Retainable> desc,
                                   pdfium::span<const uint8_t> data,
                                   uint32_t face_index) {
-  FXFT_FaceRec* face_rec = nullptr;
+  FT_FaceRec* face_rec = nullptr;
   if (FT_New_Memory_Face(font_mgr->GetFTLibrary(), data.data(),
                          pdfium::checked_cast<FT_Long>(data.size()),
                          pdfium::checked_cast<FT_Long>(face_index),
@@ -534,7 +534,7 @@ std::unique_ptr<CFX_GlyphBitmap> CFX_Face::RenderGlyph(
   if (!IsTtOt()) {
     load_flags |= FT_LOAD_NO_HINTING;
   }
-  FXFT_FaceRec* rec = GetRec();
+  FT_FaceRec* rec = GetRec();
   int error = FT_Load_Glyph(rec, glyph_index, load_flags);
   if (error) {
     // if an error is returned, try to reload glyphs without hinting.
@@ -627,7 +627,7 @@ std::unique_ptr<CFX_Path> CFX_Face::LoadGlyphPath(
     int dest_width,
     bool is_vertical,
     const CFX_SubstFont* subst_font) {
-  FXFT_FaceRec* rec = GetRec();
+  FT_FaceRec* rec = GetRec();
   FT_Set_Pixel_Sizes(rec, 0, 64);
   FT_Matrix ft_matrix = {65536, 0, 0, 65536};
   if (subst_font) {
@@ -701,7 +701,7 @@ int CFX_Face::GetGlyphWidth(uint32_t glyph_index,
     AdjustVariationParams(glyph_index, dest_width, weight);
   }
 
-  FXFT_FaceRec* rec = GetRec();
+  FT_FaceRec* rec = GetRec();
   int err = FT_Load_Glyph(
       rec, glyph_index, FT_LOAD_NO_SCALE | FT_LOAD_IGNORE_GLOBAL_ADVANCE_WIDTH);
   if (err) {
@@ -792,7 +792,7 @@ std::optional<FX_RECT> CFX_Face::GetFontGlyphBBox(uint32_t glyph_index) {
 
 FX_RECT CFX_Face::GetCharBBox(uint32_t code, int glyph_index) {
   FX_RECT rect;
-  FXFT_FaceRec* rec = GetRec();
+  FT_FaceRec* rec = GetRec();
   if (IsTricky()) {
     int err =
         FT_Load_Glyph(rec, glyph_index, FT_LOAD_IGNORE_GLOBAL_ADVANCE_WIDTH);
@@ -937,7 +937,7 @@ bool CFX_Face::CanEmbed() {
 }
 #endif
 
-CFX_Face::CFX_Face(FXFT_FaceRec* rec, RetainPtr<Retainable> pDesc)
+CFX_Face::CFX_Face(FT_FaceRec* rec, RetainPtr<Retainable> pDesc)
     : rec_(rec), desc_(std::move(pDesc)) {
   DCHECK(rec_);
 }
@@ -949,7 +949,7 @@ void CFX_Face::AdjustVariationParams(int glyph_index,
                                      int weight) {
   DCHECK_GE(dest_width, 0);
 
-  FXFT_FaceRec* rec = GetRec();
+  FT_FaceRec* rec = GetRec();
   ScopedFXFTMMVar variation_desc(rec);
   if (!variation_desc) {
     return;
