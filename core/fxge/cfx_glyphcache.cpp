@@ -13,6 +13,7 @@
 #include "build/build_config.h"
 #include "core/fxcrt/fx_codepage.h"
 #include "core/fxcrt/span.h"
+#include "core/fxcrt/to_underlying.h"
 #include "core/fxge/cfx_defaultrenderdevice.h"
 #include "core/fxge/cfx_font.h"
 #include "core/fxge/cfx_glyphbitmap.h"
@@ -90,11 +91,12 @@ UniqueKeyGen::UniqueKeyGen(const CFX_Font* font,
   if (bNative) {
     if (font->GetSubstFont()) {
       Initialize({nMatrixA, nMatrixB, nMatrixC, nMatrixD, dest_width,
-                  static_cast<int>(anti_alias), font->GetSubstFont()->weight_,
+                  fxcrt::to_underlying(anti_alias),
+                  font->GetSubstFont()->weight_,
                   font->GetSubstFont()->italic_angle_, font->IsVertical(), 3});
     } else {
       Initialize({nMatrixA, nMatrixB, nMatrixC, nMatrixD, dest_width,
-                  static_cast<int>(anti_alias), 3});
+                  fxcrt::to_underlying(anti_alias), 3});
     }
     return;
   }
@@ -103,11 +105,11 @@ UniqueKeyGen::UniqueKeyGen(const CFX_Font* font,
   CHECK(!bNative);
   if (font->GetSubstFont()) {
     Initialize({nMatrixA, nMatrixB, nMatrixC, nMatrixD, dest_width,
-                static_cast<int>(anti_alias), font->GetSubstFont()->weight_,
+                fxcrt::to_underlying(anti_alias), font->GetSubstFont()->weight_,
                 font->GetSubstFont()->italic_angle_, font->IsVertical()});
   } else {
     Initialize({nMatrixA, nMatrixB, nMatrixC, nMatrixD, dest_width,
-                static_cast<int>(anti_alias)});
+                fxcrt::to_underlying(anti_alias)});
   }
 }
 
