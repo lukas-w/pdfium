@@ -276,7 +276,7 @@ MATCHER(IsToUnicode, "") {
 }  // namespace
 
 // Prints overrides nicely for debugging purposes.
-void PrintTo(const CPDF_Object* obj, std::ostream* os) {
+void PrintTo(const RetainPtr<const CPDF_Object>& obj, std::ostream* os) {
   if (!obj) {
     *os << "nullptr";
     return;

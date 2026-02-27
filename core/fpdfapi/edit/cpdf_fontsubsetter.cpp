@@ -280,6 +280,9 @@ void CPDF_FontSubsetter::CollectSubsetCandidatesFromPage(
       continue;
     }
 
+    // Internally, all embedded font file streams are set as "FontFile" or
+    // "FontFile2". HarfBuzz does not support subsetting Type 1 fonts, so fonts
+    // with "FontFile" are ignored.
     RetainPtr<const CPDF_Stream> font_stream =
         descriptor->GetStreamFor("FontFile2");
     if (!font_stream) {

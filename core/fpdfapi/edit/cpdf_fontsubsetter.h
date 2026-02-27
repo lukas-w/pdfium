@@ -26,6 +26,7 @@ class CPDF_TextObject;
 // in order to subset new embedded fonts. CPDF_FontSubsetter only creates new
 // PDF objects and does not modify any existing PDF objects. Use during saving
 // to create objects that should override existing objects when writing the PDF.
+// CPDF_FontSubsetter does not support Type 1 fonts.
 class CPDF_FontSubsetter {
  public:
   explicit CPDF_FontSubsetter(CPDF_Document* doc);
