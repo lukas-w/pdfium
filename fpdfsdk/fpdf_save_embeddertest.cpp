@@ -437,7 +437,7 @@ TEST_F(FPDFSaveWithFontSubsetEmbedderTest, SaveWithSubsetWithNewText) {
   // font, since text only contains a subset of the characters in the test font.
   EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, FPDF_SUBSET_NEW_FONTS));
   EXPECT_THAT(GetString(), StartsWith("%PDF-1.7\r\n"));
-  EXPECT_EQ(4505u, GetString().size());
+  EXPECT_EQ(4471u, GetString().size());
 
   // Verify the text is visible.
   VerifySavedDocumentWithExpectationSuffix(kSaveNewTextFilename);
@@ -473,9 +473,9 @@ TEST_F(FPDFSaveWithFontSubsetEmbedderTest,
 
   EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, FPDF_SUBSET_NEW_FONTS));
   EXPECT_THAT(GetString(), StartsWith("%PDF-1.7\r\n"));
-  // Subsetting reduces the file from ~259KB to ~24.3KB. Allow a tolerance of
+  // Subsetting reduces the file from ~259KB to ~20.5KB. Allow a tolerance of
   // +/- 500 bytes to accommodate any potential internal changes.
-  EXPECT_NEAR(GetString().size(), 24300u, 500u);
+  EXPECT_NEAR(GetString().size(), 20500u, 500u);
 
   // Verify the text is visible.
   VerifySavedDocumentWithExpectationSuffix(kSaveMultipleFontsFilename);

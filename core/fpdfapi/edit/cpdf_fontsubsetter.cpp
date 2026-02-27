@@ -16,6 +16,7 @@
 #include <utility>
 #include <vector>
 
+#include "core/fpdfapi/edit/cpdf_font_util.h"
 #include "core/fpdfapi/font/cpdf_font.h"
 #include "core/fpdfapi/page/cpdf_page.h"
 #include "core/fpdfapi/page/cpdf_textobject.h"
@@ -36,6 +37,7 @@
 #include "core/fxcrt/fx_random.h"
 #include "core/fxcrt/retain_ptr.h"
 #include "core/fxcrt/span.h"
+#include "core/fxcrt/widestring.h"
 #include "core/fxge/cfx_fontmapper.h"
 #include "core/fxge/fx_font.h"
 
@@ -209,6 +211,14 @@ CPDF_FontSubsetter::GenerateObjectOverrides(
       new_descriptor->SetNewFor<CPDF_Reference>("FontFile3", doc_, obj_num);
     }
     overrides[candidate.descriptor->GetObjNum()] = new_descriptor;
+
+    // Override ToUnicode.
+    RetainPtr<const CPDF_Stream> to_unicode =
+        candidate.root_font->GetStreamFor("ToUnicode");
+    if (to_unicode) {
+      overrides[to_unicode->GetObjNum()] =
+          LoadUnicode(candidate.char_code_to_unicode);
+    }
   }
   return overrides;
 }
@@ -291,6 +301,11 @@ void CPDF_FontSubsetter::AddUsedText(const CPDF_TextObject* text,
     int gid = font->GlyphFromCharCode(char_code, /*pVertGlyph=*/nullptr);
     if (gid != -1) {
       used_gids.insert(static_cast<uint32_t>(gid));
+    }
+    WideString unicode = font->UnicodeFromCharCode(char_code);
+    if (!unicode.IsEmpty()) {
+      candidate.char_code_to_unicode.emplace(char_code,
+                                             static_cast<uint32_t>(unicode[0]));
     }
   }
 }

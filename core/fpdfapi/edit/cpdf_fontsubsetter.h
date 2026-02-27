@@ -60,6 +60,9 @@ class CPDF_FontSubsetter {
 
     // The set of GIDs used by text.
     std::set<uint32_t> used_gids;
+
+    // Mapping of char codes to unicode, allowing duplicate entries.
+    std::multimap<uint32_t, uint32_t> char_code_to_unicode;
   };
 
   // Gets the subset candidates from all pages. `new_obj_nums` must be sorted in
