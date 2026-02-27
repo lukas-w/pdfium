@@ -60,16 +60,10 @@ class CFGAS_FontDescriptor {
   struct Rank {
    public:
     UNOWNED_PTR_EXCLUSION CFGAS_FontDescriptor* font;  // POD struct.
-    int32_t nPenalty;
+    int32_t penalty;
 
-    bool operator>(const Rank& other) const {
-      return nPenalty > other.nPenalty;
-    }
-    bool operator<(const Rank& other) const {
-      return nPenalty < other.nPenalty;
-    }
-    friend inline bool operator==(const Rank& lhs, const Rank& rhs) {
-      return lhs.nPenalty == rhs.nPenalty;
+    friend auto operator<=>(const Rank& lhs, const Rank& rhs) {
+      return lhs.penalty <=> rhs.penalty;
     }
   };
 
@@ -149,7 +143,7 @@ class CFGAS_FontMgr {
   bool fonts_enumerated_ = false;
   std::vector<std::unique_ptr<CFGAS_FontDescriptor>> installed_fonts_;
   std::map<uint32_t, std::vector<CFGAS_FontDescriptor::Rank>>
-      hash_to_candidate_map_;
+      hash_to_candidates_map_;
 #endif  // BUILDFLAG(IS_WIN)
 };
 

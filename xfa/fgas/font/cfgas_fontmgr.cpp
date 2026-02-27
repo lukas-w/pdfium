@@ -621,11 +621,11 @@ RetainPtr<CFGAS_GEFont> CFGAS_FontMgr::GetFontByUnicodeImpl(
     uint32_t dwHash,
     FX_CodePage wCodePage,
     uint16_t /* wBitField*/) {
-  if (!pdfium::Contains(hash_to_candidate_map_, dwHash)) {
-    hash_to_candidate_map_[dwHash] =
+  if (!pdfium::Contains(hash_to_candidates_map_, dwHash)) {
+    hash_to_candidates_map_[dwHash] =
         MatchFonts(wCodePage, dwFontStyles, pszFontFamily, wUnicode);
   }
-  for (const auto& info : hash_to_candidate_map_[dwHash]) {
+  for (const auto& info : hash_to_candidates_map_[dwHash]) {
     CFGAS_FontDescriptor* pDesc = info.font;
     if (!pDesc->VerifyUnicode(wUnicode)) {
       continue;
@@ -780,15 +780,15 @@ RetainPtr<CFGAS_GEFont> CFGAS_FontMgr::GetFontByCodePage(
   RetainPtr<CFGAS_GEFont> font =
       CFGAS_GEFont::LoadFont(pFD->wsFontFace, dwFontStyles, wCodePage);
 #else   // BUILDFLAG(IS_WIN)
-  if (!pdfium::Contains(hash_to_candidate_map_, dwHash)) {
-    hash_to_candidate_map_[dwHash] =
+  if (!pdfium::Contains(hash_to_candidates_map_, dwHash)) {
+    hash_to_candidates_map_[dwHash] =
         MatchFonts(wCodePage, dwFontStyles, WideString(pszFontFamily), 0);
   }
-  if (hash_to_candidate_map_[dwHash].empty()) {
+  if (hash_to_candidates_map_[dwHash].empty()) {
     return nullptr;
   }
 
-  CFGAS_FontDescriptor* pDesc = hash_to_candidate_map_[dwHash].front().font;
+  CFGAS_FontDescriptor* pDesc = hash_to_candidates_map_[dwHash].front().font;
   RetainPtr<CFGAS_GEFont> font =
       LoadFontInternal(pDesc->face_name_, pDesc->face_index_);
 #endif  // BUILDFLAG(IS_WIN)
