@@ -621,11 +621,11 @@ RetainPtr<CFGAS_GEFont> CFGAS_FontMgr::GetFontByUnicodeImpl(
     uint32_t dwHash,
     FX_CodePage wCodePage,
     uint16_t /* wBitField*/) {
-  if (!pdfium::Contains(hash_2candidate_list_, dwHash)) {
-    hash_2candidate_list_[dwHash] =
+  if (!pdfium::Contains(hash_to_candidate_map_, dwHash)) {
+    hash_to_candidate_map_[dwHash] =
         MatchFonts(wCodePage, dwFontStyles, pszFontFamily, wUnicode);
   }
-  for (const auto& info : hash_2candidate_list_[dwHash]) {
+  for (const auto& info : hash_to_candidate_map_[dwHash]) {
     CFGAS_FontDescriptor* pDesc = info.font;
     if (!pDesc->VerifyUnicode(wUnicode)) {
       continue;
@@ -660,13 +660,13 @@ RetainPtr<CFGAS_GEFont> CFGAS_FontMgr::LoadFontInternal(
   return CFGAS_GEFont::LoadFont(std::move(internal_font));
 }
 
-std::vector<CFGAS_FontDescriptorInfo> CFGAS_FontMgr::MatchFonts(
+std::vector<CFGAS_FontDescriptor::Rank> CFGAS_FontMgr::MatchFonts(
     FX_CodePage wCodePage,
     uint32_t dwFontStyles,
     const WideString& FontName,
     wchar_t wcUnicode) {
   EnsureFontsEnumerated();
-  std::vector<CFGAS_FontDescriptorInfo> matched_fonts;
+  std::vector<CFGAS_FontDescriptor::Rank> matched_fonts;
   for (const auto& font : installed_fonts_) {
     int32_t nPenalty =
         CalcPenalty(font.get(), wCodePage, dwFontStyles, FontName, wcUnicode);
@@ -780,15 +780,15 @@ RetainPtr<CFGAS_GEFont> CFGAS_FontMgr::GetFontByCodePage(
   RetainPtr<CFGAS_GEFont> font =
       CFGAS_GEFont::LoadFont(pFD->wsFontFace, dwFontStyles, wCodePage);
 #else   // BUILDFLAG(IS_WIN)
-  if (!pdfium::Contains(hash_2candidate_list_, dwHash)) {
-    hash_2candidate_list_[dwHash] =
+  if (!pdfium::Contains(hash_to_candidate_map_, dwHash)) {
+    hash_to_candidate_map_[dwHash] =
         MatchFonts(wCodePage, dwFontStyles, WideString(pszFontFamily), 0);
   }
-  if (hash_2candidate_list_[dwHash].empty()) {
+  if (hash_to_candidate_map_[dwHash].empty()) {
     return nullptr;
   }
 
-  CFGAS_FontDescriptor* pDesc = hash_2candidate_list_[dwHash].front().font;
+  CFGAS_FontDescriptor* pDesc = hash_to_candidate_map_[dwHash].front().font;
   RetainPtr<CFGAS_GEFont> font =
       LoadFontInternal(pDesc->face_name_, pDesc->face_index_);
 #endif  // BUILDFLAG(IS_WIN)
