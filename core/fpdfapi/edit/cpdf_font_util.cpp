@@ -12,7 +12,9 @@
 #include <utility>
 #include <vector>
 
+#include "core/fpdfapi/parser/cpdf_array.h"
 #include "core/fpdfapi/parser/cpdf_document.h"
+#include "core/fpdfapi/parser/cpdf_number.h"
 #include "core/fpdfapi/parser/cpdf_stream.h"
 #include "core/fxcrt/check_op.h"
 #include "core/fxcrt/fx_extension.h"
@@ -76,6 +78,44 @@ void AddUnicode(fxcrt::ostringstream& buffer, uint32_t unicode) {
 }
 
 }  // namespace
+
+RetainPtr<CPDF_Array> CreateWidthsArray(
+    const std::map<uint32_t, uint32_t>& widths) {
+  auto widths_array = pdfium::MakeRetain<CPDF_Array>();
+  for (auto it = widths.begin(); it != widths.end(); ++it) {
+    auto next_it = std::next(it);
+
+    if (next_it != widths.end() && next_it->first == it->first + 1 &&
+        next_it->second == it->second) {
+      // The array can have a group c_first c_last w: all CIDs in the range from
+      // c_first to c_last will have width w
+      widths_array->AppendNew<CPDF_Number>(static_cast<int>(it->first));
+
+      while (next_it != widths.end() && next_it->first == it->first + 1 &&
+             next_it->second == it->second) {
+        it = next_it;
+        next_it = std::next(it);
+      }
+      widths_array->AppendNew<CPDF_Number>(static_cast<int>(it->first));
+      widths_array->AppendNew<CPDF_Number>(static_cast<int>(it->second));
+      continue;
+    }
+    // Otherwise we can have a group of the form c [w1 w2 ...]: c has width
+    // w1, c+1 has width w2, etc.
+    // A group may contain only a single item, e.g. c[w]
+    widths_array->AppendNew<CPDF_Number>(static_cast<int>(it->first));
+    auto current_width_array = pdfium::MakeRetain<CPDF_Array>();
+    current_width_array->AppendNew<CPDF_Number>(static_cast<int>(it->second));
+
+    while (next_it != widths.end() && next_it->first == it->first + 1) {
+      it = next_it;
+      next_it = std::next(it);
+      current_width_array->AppendNew<CPDF_Number>(static_cast<int>(it->second));
+    }
+    widths_array->Append(std::move(current_width_array));
+  }
+  return widths_array;
+}
 
 RetainPtr<CPDF_Stream> LoadUnicode(
     const std::multimap<uint32_t, uint32_t>& to_unicode) {

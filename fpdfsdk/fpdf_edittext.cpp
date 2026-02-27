@@ -175,45 +175,6 @@ RetainPtr<CPDF_Dictionary> LoadFontDesc(CPDF_Document* doc,
   return font_descriptor_dict;
 }
 
-RetainPtr<CPDF_Array> CreateWidthsArray(
-    CPDF_Document* doc,
-    const std::map<uint32_t, uint32_t>& widths) {
-  auto widths_array = doc->NewIndirect<CPDF_Array>();
-  for (auto it = widths.begin(); it != widths.end(); ++it) {
-    auto next_it = std::next(it);
-
-    if (next_it != widths.end() && next_it->first == it->first + 1 &&
-        next_it->second == it->second) {
-      // The array can have a group c_first c_last w: all CIDs in the range from
-      // c_first to c_last will have width w
-      widths_array->AppendNew<CPDF_Number>(static_cast<int>(it->first));
-
-      while (next_it != widths.end() && next_it->first == it->first + 1 &&
-             next_it->second == it->second) {
-        it = next_it;
-        next_it = std::next(it);
-      }
-      widths_array->AppendNew<CPDF_Number>(static_cast<int>(it->first));
-      widths_array->AppendNew<CPDF_Number>(static_cast<int>(it->second));
-      continue;
-    }
-    // Otherwise we can have a group of the form c [w1 w2 ...]: c has width
-    // w1, c+1 has width w2, etc.
-    // A group may contain only a single item, e.g. c[w]
-    widths_array->AppendNew<CPDF_Number>(static_cast<int>(it->first));
-    auto current_width_array = pdfium::MakeRetain<CPDF_Array>();
-    current_width_array->AppendNew<CPDF_Number>(static_cast<int>(it->second));
-
-    while (next_it != widths.end() && next_it->first == it->first + 1) {
-      it = next_it;
-      next_it = std::next(it);
-      current_width_array->AppendNew<CPDF_Number>(static_cast<int>(it->second));
-    }
-    widths_array->Append(std::move(current_width_array));
-  }
-  return widths_array;
-}
-
 void CreateDescendantFontsArray(CPDF_Document* doc,
                                 CPDF_Dictionary* font_dict,
                                 uint32_t cid_font_dict_obj_num) {
@@ -306,8 +267,8 @@ RetainPtr<CPDF_Font> LoadCompositeFont(CPDF_Document* doc,
     }
     to_unicode.emplace(item.glyph_index, item.char_code);
   }
-  RetainPtr<CPDF_Array> widths_array = CreateWidthsArray(doc, widths);
-  cid_font_dict->SetNewFor<CPDF_Reference>("W", doc, widths_array->GetObjNum());
+  cid_font_dict->SetNewFor<CPDF_Reference>(
+      "W", doc, doc->AddIndirectObject(CreateWidthsArray(widths)));
 
   // TODO(npm): Support vertical writing
 
@@ -351,8 +312,8 @@ RetainPtr<CPDF_Font> LoadCustomCompositeFont(
     widths[static_cast<uint32_t>(i) / 2] = font->GetGlyphWidth(glyph_index);
   }
 
-  RetainPtr<CPDF_Array> widths_array = CreateWidthsArray(doc, widths);
-  cid_font_dict->SetNewFor<CPDF_Reference>("W", doc, widths_array->GetObjNum());
+  cid_font_dict->SetNewFor<CPDF_Reference>(
+      "W", doc, doc->AddIndirectObject(CreateWidthsArray(widths)));
 
   auto cid_to_gid_map = doc->NewIndirect<CPDF_Stream>(cid_to_gid_map_span);
   cid_font_dict->SetNewFor<CPDF_Reference>("CIDToGIDMap", doc,
