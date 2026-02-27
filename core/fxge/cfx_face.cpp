@@ -579,43 +579,45 @@ std::unique_ptr<CFX_GlyphBitmap> CFX_Face::RenderGlyph(
     return nullptr;
   }
 
-  const FT_Bitmap& bitmap = glyph->bitmap;
-  if (bitmap.width > kMaxGlyphDimension || bitmap.rows > kMaxGlyphDimension) {
+  const FT_Bitmap& ft_bitmap = glyph->bitmap;
+  if (ft_bitmap.width > kMaxGlyphDimension ||
+      ft_bitmap.rows > kMaxGlyphDimension) {
     return nullptr;
   }
-  int dib_width = bitmap.width;
-  auto pGlyphBitmap =
-      std::make_unique<CFX_GlyphBitmap>(glyph->bitmap_left, glyph->bitmap_top);
+  int dib_width = ft_bitmap.width;
   const FXDIB_Format format = anti_alias == FontAntiAliasingMode::kMono
                                   ? FXDIB_Format::k1bppMask
                                   : FXDIB_Format::k8bppMask;
-  RetainPtr<CFX_DIBitmap> glyph_bitmap = pGlyphBitmap->GetWritableBitmap();
-  if (!glyph_bitmap->Create(dib_width, bitmap.rows, format)) {
+  RetainPtr<CFX_DIBitmap> new_bitmap = pdfium::MakeRetain<CFX_DIBitmap>();
+  if (!new_bitmap->Create(dib_width, ft_bitmap.rows, format)) {
     return nullptr;
   }
+  auto pGlyphBitmap = std::make_unique<CFX_GlyphBitmap>(
+      glyph->bitmap_left, glyph->bitmap_top, new_bitmap);
 
-  const int dest_pitch = glyph_bitmap->GetPitch();
-  uint8_t* pDestBuf = glyph_bitmap->GetWritableBuffer().data();
-  const uint8_t* pSrcBuf = bitmap.buffer;
+  const int dest_pitch = new_bitmap->GetPitch();
+  uint8_t* pDestBuf = new_bitmap->GetWritableBuffer().data();
+  const uint8_t* pSrcBuf = ft_bitmap.buffer;
   UNSAFE_TODO({
     if (anti_alias != FontAntiAliasingMode::kMono &&
-        bitmap.pixel_mode == FT_PIXEL_MODE_MONO) {
+        ft_bitmap.pixel_mode == FT_PIXEL_MODE_MONO) {
       unsigned int bytes = anti_alias == FontAntiAliasingMode::kLcd ? 3 : 1;
-      for (unsigned int i = 0; i < bitmap.rows; i++) {
-        for (unsigned int n = 0; n < bitmap.width; n++) {
+      for (unsigned int i = 0; i < ft_bitmap.rows; i++) {
+        for (unsigned int n = 0; n < ft_bitmap.width; n++) {
           uint8_t data =
-              (pSrcBuf[i * bitmap.pitch + n / 8] & (0x80 >> (n % 8))) ? 255 : 0;
+              (pSrcBuf[i * ft_bitmap.pitch + n / 8] & (0x80 >> (n % 8))) ? 255
+                                                                         : 0;
           for (unsigned int b = 0; b < bytes; b++) {
             pDestBuf[i * dest_pitch + n * bytes + b] = data;
           }
         }
       }
     } else {
-      FXSYS_memset(pDestBuf, 0, dest_pitch * bitmap.rows);
-      int rowbytes = std::min(abs(bitmap.pitch), dest_pitch);
-      for (unsigned int row = 0; row < bitmap.rows; row++) {
-        FXSYS_memcpy(pDestBuf + row * dest_pitch, pSrcBuf + row * bitmap.pitch,
-                     rowbytes);
+      FXSYS_memset(pDestBuf, 0, dest_pitch * ft_bitmap.rows);
+      int rowbytes = std::min(abs(ft_bitmap.pitch), dest_pitch);
+      for (unsigned int row = 0; row < ft_bitmap.rows; row++) {
+        FXSYS_memcpy(pDestBuf + row * dest_pitch,
+                     pSrcBuf + row * ft_bitmap.pitch, rowbytes);
       }
     }
   });

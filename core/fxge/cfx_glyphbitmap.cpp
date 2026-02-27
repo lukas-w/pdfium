@@ -8,9 +8,6 @@
 
 #include "core/fxge/dib/cfx_dibitmap.h"
 
-CFX_GlyphBitmap::CFX_GlyphBitmap(int left, int top)
-    : CFX_GlyphBitmap(left, top, pdfium::MakeRetain<CFX_DIBitmap>()) {}
-
 CFX_GlyphBitmap::CFX_GlyphBitmap(int left,
                                  int top,
                                  RetainPtr<CFX_DIBitmap> bitmap)
