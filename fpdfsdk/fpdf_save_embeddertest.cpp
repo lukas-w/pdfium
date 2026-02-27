@@ -2,16 +2,20 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <algorithm>
 #include <array>
+#include <iterator>
 #include <string>
 #include <vector>
 
 #include "core/fxcrt/fx_coordinates.h"
 #include "core/fxcrt/fx_string.h"
+#include "core/fxcrt/span.h"
 #include "public/cpp/fpdf_scopers.h"
 #include "public/fpdf_edit.h"
 #include "public/fpdf_ppo.h"
 #include "public/fpdf_save.h"
+#include "public/fpdf_text.h"
 #include "public/fpdfview.h"
 #include "testing/embedder_test.h"
 #include "testing/embedder_test_constants.h"
@@ -21,6 +25,7 @@
 #include "testing/utils/file_util.h"
 #include "testing/utils/path_service.h"
 
+using testing::ElementsAreArray;
 using testing::HasSubstr;
 using testing::Not;
 using testing::StartsWith;
@@ -313,6 +318,18 @@ TEST_F(FPDFSaveEmbedderTest, IncrementalSaveWithModifications) {
 class FPDFSaveWithFontSubsetEmbedderTest : public FPDFSaveEmbedderTest {
  public:
   static constexpr char kSaveNewTextFilename[] = "save_new_text";
+  static constexpr std::array<FPDF_WCHAR, 38> kExpectedSingleTextAdded = {
+      // "Hello, world!\r\n"
+      'H', 'e', 'l', 'l', 'o', ',', ' ', 'w', 'o', 'r', 'l', 'd', '!', '\r',
+      '\n',
+      // "Goodbye, world!\r\n"
+      'G', 'o', 'o', 'd', 'b', 'y', 'e', ',', ' ', 'w', 'o', 'r', 'l', 'd', '!',
+      '\r', '\n',
+      // "这是第一句。"
+      0x8FD9, 0x662F, 0x7B2C, 0x2F00, 0x53E5, 0x3002};
+  static constexpr std::array<FPDF_WCHAR, 14> kExpectedSecondTextAdded = {
+      // "Hello again."
+      '\r', '\n', 'H', 'e', 'l', 'l', 'o', ' ', 'a', 'g', 'a', 'i', 'n', '.'};
 
   ScopedFPDFFont LoadTestFont(const std::string& font_path) {
     std::vector<uint8_t> font_data = GetFileContents(font_path.c_str());
@@ -338,6 +355,30 @@ class FPDFSaveWithFontSubsetEmbedderTest : public FPDFSaveEmbedderTest {
     ASSERT_TRUE(FPDFPageObj_TransformF(text_obj, &matrix));
     FPDFPage_InsertObject(page, text_obj);
     ASSERT_TRUE(FPDFPage_GenerateContent(page));
+  }
+
+  // `expected` must not include the NUL terminator.
+  void TestExtractedFont(pdfium::span<const FPDF_WCHAR> expected) {
+    ScopedSavedDoc saved_doc = OpenScopedSavedDocument();
+    ASSERT_TRUE(saved_doc);
+    ScopedSavedPage saved_page = LoadScopedSavedPage(0);
+    ASSERT_TRUE(saved_page);
+    ScopedFPDFTextPage text_page(FPDFText_LoadPage(saved_page.get()));
+    ASSERT_TRUE(text_page);
+
+    size_t expected_size = expected.size();
+    int actual_count = FPDFText_CountChars(text_page.get());
+    ASSERT_EQ(static_cast<int>(expected_size), actual_count);
+
+    // Includes the NUL terminator.
+    std::vector<FPDF_WCHAR> actual_buffer(actual_count + 1);
+    ASSERT_EQ(actual_count + 1,
+              FPDFText_GetText(text_page.get(), 0, actual_count,
+                               actual_buffer.data()));
+
+    EXPECT_THAT(pdfium::span(actual_buffer).first(expected_size),
+                ElementsAreArray(expected));
+    EXPECT_EQ(0, actual_buffer.back());
   }
 };
 
@@ -372,6 +413,8 @@ TEST_F(FPDFSaveWithFontSubsetEmbedderTest, SaveWithoutSubsetWithNewText) {
 
   // Verify the text is visible.
   VerifySavedDocumentWithExpectationSuffix(kSaveNewTextFilename);
+
+  TestExtractedFont(kExpectedSingleTextAdded);
 }
 
 TEST_F(FPDFSaveWithFontSubsetEmbedderTest, SaveWithSubsetWithNewText) {
@@ -398,6 +441,8 @@ TEST_F(FPDFSaveWithFontSubsetEmbedderTest, SaveWithSubsetWithNewText) {
 
   // Verify the text is visible.
   VerifySavedDocumentWithExpectationSuffix(kSaveNewTextFilename);
+
+  TestExtractedFont(kExpectedSingleTextAdded);
 }
 
 TEST_F(FPDFSaveWithFontSubsetEmbedderTest,
@@ -434,4 +479,14 @@ TEST_F(FPDFSaveWithFontSubsetEmbedderTest,
 
   // Verify the text is visible.
   VerifySavedDocumentWithExpectationSuffix(kSaveMultipleFontsFilename);
+
+  std::vector<FPDF_WCHAR> expected_multiple_text_added;
+  expected_multiple_text_added.reserve(kExpectedSingleTextAdded.size() +
+                                       kExpectedSecondTextAdded.size());
+  std::ranges::copy(kExpectedSingleTextAdded,
+                    std::back_inserter(expected_multiple_text_added));
+  std::ranges::copy(kExpectedSecondTextAdded,
+                    std::back_inserter(expected_multiple_text_added));
+
+  TestExtractedFont(expected_multiple_text_added);
 }
