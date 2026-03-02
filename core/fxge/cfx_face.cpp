@@ -604,13 +604,9 @@ std::unique_ptr<CFX_GlyphBitmap> CFX_Face::RenderGlyph(
 
   if (anti_alias != FontAntiAliasingMode::kMono &&
       ft_bitmap.pixel_mode == FT_PIXEL_MODE_MONO) {
-    unsigned int bytes = anti_alias == FontAntiAliasingMode::kLcd ? 3 : 1;
     for (unsigned int i = 0; i < ft_bitmap.rows; i++) {
       for (unsigned int n = 0; n < ft_bitmap.width; n++) {
-        uint8_t data = (src_span[n / 8] & (0x80 >> (n % 8))) ? 255 : 0;
-        for (unsigned int b = 0; b < bytes; b++) {
-          dest_span[n * bytes + b] = data;
-        }
+        dest_span[n] = (src_span[n / 8] & (0x80 >> (n % 8))) ? 255 : 0;
       }
       dest_span = dest_span.subspan(dest_pitch);
       src_span = src_span.subspan(src_pitch);
