@@ -108,7 +108,7 @@ function testPushButtonPropertiesCase(field) {
 
 function testBadPushButtonPropertiesCase(field) {
   try {
-    testRIProperty(field, "buttonPosition", 7); // not checked.
+    testRIProperty(field, "buttonPosition", 0); // clamped from 7.
   } catch (e) {
     app.alert("Unexpected error: " + e);
   }
