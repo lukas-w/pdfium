@@ -595,30 +595,33 @@ std::unique_ptr<CFX_GlyphBitmap> CFX_Face::RenderGlyph(
   auto pGlyphBitmap = std::make_unique<CFX_GlyphBitmap>(
       glyph->bitmap_left, glyph->bitmap_top, new_bitmap);
 
-  const int dest_pitch = new_bitmap->GetPitch();
+  const uint32_t dest_pitch = new_bitmap->GetPitch();
+  const uint32_t src_pitch = abs(ft_bitmap.pitch);
   pdfium::span<uint8_t> dest_span = new_bitmap->GetWritableBuffer();
-  const uint8_t* pSrcBuf = ft_bitmap.buffer;
+  pdfium::span<const uint8_t> src_span =
+      UNSAFE_TODO(pdfium::span<const uint8_t>(ft_bitmap.buffer,
+                                              src_pitch * ft_bitmap.rows));
+
   if (anti_alias != FontAntiAliasingMode::kMono &&
       ft_bitmap.pixel_mode == FT_PIXEL_MODE_MONO) {
     unsigned int bytes = anti_alias == FontAntiAliasingMode::kLcd ? 3 : 1;
     for (unsigned int i = 0; i < ft_bitmap.rows; i++) {
       for (unsigned int n = 0; n < ft_bitmap.width; n++) {
-        uint8_t data = (UNSAFE_TODO(pSrcBuf[i * ft_bitmap.pitch + n / 8]) &
-                        (0x80 >> (n % 8)))
-                           ? 255
-                           : 0;
+        uint8_t data = (src_span[n / 8] & (0x80 >> (n % 8))) ? 255 : 0;
         for (unsigned int b = 0; b < bytes; b++) {
-          dest_span[i * dest_pitch + n * bytes + b] = data;
+          dest_span[n * bytes + b] = data;
         }
       }
+      dest_span = dest_span.subspan(dest_pitch);
+      src_span = src_span.subspan(src_pitch);
     }
   } else {
-    std::ranges::fill(dest_span.first(dest_pitch * ft_bitmap.rows), 0);
-    int rowbytes = std::min(abs(ft_bitmap.pitch), dest_pitch);
+    std::ranges::fill(dest_span, 0);
+    const uint32_t rowbytes = std::min(src_pitch, dest_pitch);
     for (unsigned int row = 0; row < ft_bitmap.rows; row++) {
-      fxcrt::spancpy(dest_span.subspan(row * dest_pitch),
-                     UNSAFE_TODO(pdfium::span(pSrcBuf + row * ft_bitmap.pitch,
-                                              static_cast<size_t>(rowbytes))));
+      fxcrt::spancpy(dest_span, src_span.first(rowbytes));
+      dest_span = dest_span.subspan(dest_pitch);
+      src_span = src_span.subspan(src_pitch);
     }
   }
   return pGlyphBitmap;
