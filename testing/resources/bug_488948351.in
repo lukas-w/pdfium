@@ -1,0 +1,106 @@
+{{header}}
+{{object 1 0}} <<
+  /Type /Catalog
+  /Pages 2 0 R
+>>
+endobj
+{{object 2 0}} <<
+  /Type /Pages
+  /MediaBox [0 0 200 200]
+  /Count 1
+  /Kids [3 0 R]
+>>
+endobj
+{{object 3 0}} <<
+  /Type /Page
+  /Parent 2 0 R
+  /Resources <<
+    /Font <<
+      /F1 5 0 R
+    >>
+  >>
+  /Contents 4 0 R
+>>
+endobj
+{{object 4 0}} <<
+  {{streamlen}}
+>>
+stream
+BT 1 0 0 1 50 100 Tm /F1 12 Tf (") Tj ET
+BT 12 0 0 12 56 100 Tm /F1 1 Tf (") Tj ET
+endstream
+endobj
+{{object 5 0}} <<
+  /Type /Font
+  /Subtype /TrueType
+  /BaseFont /AAAAAI+CambriaMath
+  /FirstChar 33
+  /FontDescriptor 6 0 R
+  /LastChar 34
+  /ToUnicode 7 0 R
+  /Widths [579 579]
+>>
+endobj
+{{object 6 0}} <<
+  /Type /FontDescriptor
+  /Ascent 950
+  /AvgWidth 615
+  /CapHeight 667
+  /Descent -222
+  /Flags 4
+  /FontBBox [-1475 -2464 2867 3117]
+  /FontFile2 8 0 R
+  /FontName /AAAAAI+CambriaMath
+  /ItalicAngle 0
+  /MaxWidth 2919
+  /StemV 0
+  /XHeight 467
+>>
+endobj
+{{object 7 0}} <<
+  {{streamlen}}
+>>
+stream
+/CIDInit /ProcSet findresource begin
+12 dict begin
+begincmap
+/CIDSystemInfo <<
+  /Registry (Adobe)
+  /Ordering (UCS)
+  /Supplement 0
+>> def
+/CMapName /Adobe-Identity-UCS def
+/CMapType 2 def
+1 begincodespacerange
+<00><FF>
+endcodespacerange
+endcmap
+CMapName currentdict /CMap defineresource pop
+end
+end
+endstream
+endobj
+{{object 8 0}} <<
+<<
+  /Filter [/ASCII85Decode /FlateDecode]
+  /Length1 883
+  {{streamlen}}
+>>
+stream
+GhOYs.SXL4?t`qUAme0T9e9ZP"3)#t+d8KrR0Mbs!:d=QeAN%,TA^:lRq2R'T^jEp67!kcU]S]"!"qCS
+q8k>d"sCaERof\KTA^7k/*&#=VF%f:!?h=Le-:jSUD_8n=MR$G"p"pVL,K5?c6\&\E-\m)Bbp/)@cI3#
+^+r6#J;&22Rpc]!0D7.bq-rp79C/FlHQ\XgBEHsop0%DH)&U;e^6nh(,5)Ub&i*j,F^`qCZB1a^M!'A4
+5ZI5,YVGVJBgn[tN)9*I(hPNc#.edr!s;18CC#OsK+<M7"#*+\9hjuAbjCcl:"5DmpmB^!:$idWNT?Hp
+7=Z@AAm%TC;.WZq5t+'NAhn!4do$cZPNI(r;_V%1j@lfBFEU<cPMoTJd8<^RAJ^fNpua:LF5e8L`ogf?
+W`l:bP5<1ab2,E..RnGQEdG%2DOP<`[Vi[63pIV=Cj?C)rd2L;lZX8jpKq]dY$toAV?,g\XS`LH$k0.*
+5_g6K0sW<ug+e4cW5k^8`.mD@<d(?UqA-)/K!DDIXFE-#3!?&1`Kdu)b*iL'`RZIs2d?m:QlMmC/Zkcr
+)%`F&'I:)R?,BFmI=f(f=_:F6?!M/7KTU8ANDaN.@8d:,J-&5`B1F=LKogtHZigi2Mrt"g%sF'Q"+r;5
+c(]7&+Bho>:#4<$NnN(+$lFZON2FspA7JtFFtk/543^[B44i<!,i$J<@RF;bJZqTE*G]$"`n'fu+u3f.
+)&;7$="?$j4_eN/jI5MrO;-V$a2;C*R,nn+R:;j>GJhL-=/<F9[53BacnE9t+[77jRQ?+pZ-<J`0fXc8
+Vm^YUDGj>DU2OKI!54&Z3W~>
+endstream
+endobj
+{{xref}}
+{{trailer}}
+{{startxref}}
+%%EOF

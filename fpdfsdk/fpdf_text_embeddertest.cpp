@@ -2094,6 +2094,51 @@ TEST_F(FPDFTextEmbedderTest, Bug399689604) {
   EXPECT_NEAR(100.0f, rect.top, 0.001f);
 }
 
+TEST_F(FPDFTextEmbedderTest, Bug488948351) {
+  static constexpr double kExpectedCharWidth = 4.944;
+  static constexpr double kExpectedCharHeight = 7.668;
+  static constexpr double kExpectedCharTop = 107.584;
+  static constexpr float kExpectedLooseCharWidth = 6.948f;
+  // TODO(crbug.com/488948351): This is too big.
+  static constexpr float kExpectedLooseCharHeight = 66.972f;
+  static constexpr float kExpectedLooseCharTop = 137.404f;
+
+  ASSERT_TRUE(OpenDocument("bug_488948351.pdf"));
+  ScopedPage page = LoadScopedPage(0);
+  ASSERT_TRUE(page);
+
+  ScopedFPDFTextPage text_page(FPDFText_LoadPage(page.get()));
+  ASSERT_TRUE(text_page);
+  ASSERT_EQ(2, FPDFText_CountChars(text_page.get()));
+
+  double left;
+  double right;
+  double bottom;
+  double top;
+  ASSERT_TRUE(
+      FPDFText_GetCharBox(text_page.get(), 0, &left, &right, &bottom, &top));
+  EXPECT_NEAR(kExpectedCharWidth, right - left, 0.001);
+  EXPECT_NEAR(kExpectedCharHeight, top - bottom, 0.001);
+  EXPECT_NEAR(kExpectedCharTop, top, 0.001);
+
+  FS_RECTF rect;
+  ASSERT_TRUE(FPDFText_GetLooseCharBox(text_page.get(), 0, &rect));
+  EXPECT_NEAR(kExpectedLooseCharWidth, rect.right - rect.left, 0.001f);
+  EXPECT_NEAR(kExpectedLooseCharHeight, rect.top - rect.bottom, 0.001f);
+  EXPECT_NEAR(kExpectedLooseCharTop, rect.top, 0.001f);
+
+  ASSERT_TRUE(
+      FPDFText_GetCharBox(text_page.get(), 1, &left, &right, &bottom, &top));
+  EXPECT_NEAR(kExpectedCharWidth, right - left, 0.001);
+  EXPECT_NEAR(kExpectedCharHeight, top - bottom, 0.001);
+  EXPECT_NEAR(kExpectedCharTop, top, 0.001);
+
+  ASSERT_TRUE(FPDFText_GetLooseCharBox(text_page.get(), 1, &rect));
+  EXPECT_NEAR(kExpectedLooseCharWidth, rect.right - rect.left, 0.001f);
+  EXPECT_NEAR(kExpectedLooseCharHeight, rect.top - rect.bottom, 0.001f);
+  EXPECT_NEAR(kExpectedLooseCharTop, rect.top, 0.001f);
+}
+
 TEST_F(FPDFTextEmbedderTest, SmallType3Glyph) {
   ASSERT_TRUE(OpenDocument("bug_1591.pdf"));
   ScopedPage page = LoadScopedPage(0);
