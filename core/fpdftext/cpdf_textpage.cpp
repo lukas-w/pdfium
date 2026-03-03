@@ -313,8 +313,9 @@ CFX_FloatRect GetLooseBounds(const CPDF_TextPage::CharInfo& charinfo) {
       return char_box;
     }
 
-    FX_RECT font_bbox = font->GetFontBBox();
-    if (font_bbox.Valid() && font_bbox.Height() != 0) {
+    const int ascent = font->GetTypeAscent();
+    const int descent = font->GetTypeDescent();
+    if (ascent != descent) {
       // Compute `left` and `right` based on the individual character's `width`.
       float width = text_object->GetCharWidth(charinfo.char_code());
       CFX_Matrix inverse_matrix = charinfo.matrix().GetInverse();
@@ -322,11 +323,8 @@ CFX_FloatRect GetLooseBounds(const CPDF_TextPage::CharInfo& charinfo) {
       float left = original_origin.x;
       float right = original_origin.x + (is_vert_writing ? -width : width);
 
-      // Compute `bottom` and `top` based on the font bounding box. This allows
-      // the bounds to include diacritics, whereas using the ascent / descent
-      // values will not.
-      float bottom = font_bbox.bottom * font_size / 1000;
-      float top = font_bbox.top * font_size / 1000;
+      float bottom = original_origin.y + descent * font_size / 1000;
+      float top = original_origin.y + ascent * font_size / 1000;
       CFX_FloatRect char_box = charinfo.matrix().TransformRect(
           CFX_FloatRect(left, bottom, right, top));
       char_box.Union(charinfo.char_box());

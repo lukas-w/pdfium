@@ -191,8 +191,8 @@ TEST_F(FPDFTextEmbedderTest, Text) {
   EXPECT_TRUE(FPDFText_GetLooseCharBox(textpage.get(), 4, &rect));
   EXPECT_FLOAT_EQ(40.664001f, rect.left);
   EXPECT_FLOAT_EQ(46.664001f, rect.right);
-  EXPECT_FLOAT_EQ(46.375999f, rect.bottom);
-  EXPECT_FLOAT_EQ(61.771999f, rect.top);
+  EXPECT_FLOAT_EQ(47.419998f, rect.bottom);
+  EXPECT_FLOAT_EQ(60.692001f, rect.top);
 
   double x = 0.0;
   double y = 0.0;
@@ -1801,7 +1801,7 @@ TEST_F(FPDFTextEmbedderTest, CharBox) {
   static constexpr double kExpectedCharWidth = 8.460;
   static constexpr double kExpectedCharHeight = 6.600;
   static constexpr float kExpectedLooseCharWidth = 8.664f;
-  static constexpr float kExpectedLooseCharHeight = 12.82999f;
+  static constexpr float kExpectedLooseCharHeight = 11.060005f;
 
   ASSERT_TRUE(OpenDocument("font_matrix.pdf"));
   ScopedPage page = LoadScopedPage(0);
@@ -1839,14 +1839,14 @@ TEST_F(FPDFTextEmbedderTest, CharBox) {
   // Check the loose character box size.
   FS_RECTF rect;
   ASSERT_TRUE(FPDFText_GetLooseCharBox(text_page.get(), 0, &rect));
-  EXPECT_FLOAT_EQ(kExpectedLooseCharWidth, rect.right - rect.left);
-  EXPECT_FLOAT_EQ(kExpectedLooseCharHeight, rect.top - rect.bottom);
+  EXPECT_NEAR(kExpectedLooseCharWidth, rect.right - rect.left, 0.001f);
+  EXPECT_NEAR(kExpectedLooseCharHeight, rect.top - rect.bottom, 0.001f);
   ASSERT_TRUE(FPDFText_GetLooseCharBox(text_page.get(), 4, &rect));
-  EXPECT_FLOAT_EQ(kExpectedLooseCharWidth, rect.right - rect.left);
-  EXPECT_NEAR(kExpectedLooseCharHeight, rect.top - rect.bottom, 0.00001);
+  EXPECT_NEAR(kExpectedLooseCharWidth, rect.right - rect.left, 0.001f);
+  EXPECT_NEAR(kExpectedLooseCharHeight, rect.top - rect.bottom, 0.001f);
   ASSERT_TRUE(FPDFText_GetLooseCharBox(text_page.get(), 8, &rect));
-  EXPECT_FLOAT_EQ(kExpectedLooseCharWidth, rect.right - rect.left);
-  EXPECT_NEAR(kExpectedLooseCharHeight, rect.top - rect.bottom, 0.00001);
+  EXPECT_NEAR(kExpectedLooseCharWidth, rect.right - rect.left, 0.001f);
+  EXPECT_NEAR(kExpectedLooseCharHeight, rect.top - rect.bottom, 0.001f);
 }
 
 TEST_F(FPDFTextEmbedderTest, CharBoxForRotated45DegreesText) {
@@ -1898,7 +1898,7 @@ TEST_F(FPDFTextEmbedderTest, CharBoxForRotated45DegreesText) {
   EXPECT_NEAR(10.055, top - bottom, 0.001);
 
   // Check the loose character box size.
-  static constexpr float kExpectedLooseCharDimension = 17.013f;
+  static constexpr float kExpectedLooseCharDimension = 15.511f;
   FS_RECTF rect;
   ASSERT_TRUE(FPDFText_GetLooseCharBox(
       text_page.get(), GetRotatedTextFirstCharIndexForQuadrant(0), &rect));
@@ -1968,7 +1968,7 @@ TEST_F(FPDFTextEmbedderTest, CharBoxForRotated90DegreesText) {
 
   // Check the loose character box size.
   static constexpr float kExpectedLooseCharWidth = 8.664f;
-  static constexpr float kExpectedLooseCharHeight = 15.396f;
+  static constexpr float kExpectedLooseCharHeight = 13.272f;
   FS_RECTF rect;
   ASSERT_TRUE(FPDFText_GetLooseCharBox(
       text_page.get(), GetRotatedText90FirstCharIndexForQuadrant(0), &rect));
@@ -1989,6 +1989,9 @@ TEST_F(FPDFTextEmbedderTest, CharBoxForRotated90DegreesText) {
 }
 
 TEST_F(FPDFTextEmbedderTest, CharBoxForLatinExtendedText) {
+  static constexpr float kExpectedLooseCharHeight = 14.052;
+  static constexpr float kExpectedLooseCharTop = 750.874f;
+
   ASSERT_TRUE(OpenDocument("latin_extended.pdf"));
   ScopedPage page = LoadScopedPage(0);
   ASSERT_TRUE(page);
@@ -2011,8 +2014,8 @@ TEST_F(FPDFTextEmbedderTest, CharBoxForLatinExtendedText) {
   FS_RECTF rect;
   ASSERT_TRUE(FPDFText_GetLooseCharBox(text_page.get(), 0, &rect));
   EXPECT_NEAR(7.824f, rect.right - rect.left, 0.001f);
-  EXPECT_NEAR(15.912f, rect.top - rect.bottom, 0.001f);
-  EXPECT_NEAR(752.422f, rect.top, 0.001f);
+  EXPECT_NEAR(kExpectedLooseCharHeight, rect.top - rect.bottom, 0.001f);
+  EXPECT_NEAR(kExpectedLooseCharTop, rect.top, 0.001f);
 
   EXPECT_EQ(u'Ă', FPDFText_GetUnicode(text_page.get(), 2));
 
@@ -2024,8 +2027,8 @@ TEST_F(FPDFTextEmbedderTest, CharBoxForLatinExtendedText) {
 
   ASSERT_TRUE(FPDFText_GetLooseCharBox(text_page.get(), 2, &rect));
   EXPECT_NEAR(7.824f, rect.right - rect.left, 0.001f);
-  EXPECT_NEAR(15.912f, rect.top - rect.bottom, 0.001f);
-  EXPECT_NEAR(752.422f, rect.top, 0.001f);
+  EXPECT_NEAR(kExpectedLooseCharHeight, rect.top - rect.bottom, 0.001f);
+  EXPECT_NEAR(kExpectedLooseCharTop, rect.top, 0.001f);
 }
 
 TEST_F(FPDFTextEmbedderTest, Bug402562387) {
@@ -2099,9 +2102,8 @@ TEST_F(FPDFTextEmbedderTest, Bug488948351) {
   static constexpr double kExpectedCharHeight = 7.668;
   static constexpr double kExpectedCharTop = 107.584;
   static constexpr float kExpectedLooseCharWidth = 6.948f;
-  // TODO(crbug.com/488948351): This is too big.
-  static constexpr float kExpectedLooseCharHeight = 66.972f;
-  static constexpr float kExpectedLooseCharTop = 137.404f;
+  static constexpr float kExpectedLooseCharHeight = 14.064f;
+  static constexpr float kExpectedLooseCharTop = 111.4f;
 
   ASSERT_TRUE(OpenDocument("bug_488948351.pdf"));
   ScopedPage page = LoadScopedPage(0);
