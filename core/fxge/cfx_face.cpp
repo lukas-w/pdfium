@@ -640,7 +640,7 @@ std::unique_ptr<CFX_GlyphBitmap> CFX_Face::RenderGlyph(
   UNSAFE_TODO({
     if (anti_alias != FontAntiAliasingMode::kMono &&
         bitmap.pixel_mode == FT_PIXEL_MODE_MONO) {
-      unsigned int bytes = anti_alias == FontAntiAliasingMode::kLcd ? 3 : 1;
+      unsigned int bytes = 1;
       for (unsigned int i = 0; i < bitmap.rows; i++) {
         for (unsigned int n = 0; n < bitmap.width; n++) {
           uint8_t data =
