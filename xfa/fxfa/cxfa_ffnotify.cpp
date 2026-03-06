@@ -453,9 +453,12 @@ void CXFA_FFNotify::OnValueChanged(CXFA_Node* pSender,
         doc_->GetDocView()->UpdateUIDisplay(pWidgetNode, nullptr);
         pDocView->AddCalculateNode(pWidgetNode);
         pDocView->AddValidateNode(pWidgetNode);
-      } else if (pWidgetNode->GetParent()->GetElementType() ==
-                 XFA_Element::ExclGroup) {
-        doc_->GetDocView()->UpdateUIDisplay(pWidgetNode, nullptr);
+      } else {
+        CXFA_Node* widget_parent = pWidgetNode->GetParent();
+        if (widget_parent &&
+            widget_parent->GetElementType() == XFA_Element::ExclGroup) {
+          doc_->GetDocView()->UpdateUIDisplay(pWidgetNode, nullptr);
+        }
       }
       return;
     }
