@@ -945,7 +945,7 @@ bool CFX_SkiaDeviceDriver::TryDrawText(pdfium::span<const TextCharPos> char_pos,
   skPaint.setColor(color);
 
   SkFont font = SkFontFromCFXFont(pFont, font_size, options);
-  if (pFont->HasFaceRec()) {  // exclude placeholder test fonts
+  if (pFont->HasFace()) {  // exclude placeholder test fonts
     font.setTypeface(sk_ref_sp(pFont->GetFace()->GetOrCreateSkTypeface()));
   }
 

@@ -147,8 +147,6 @@ class CFX_Face final : public Retainable, public Observable {
   bool CanEmbed();
 #endif
 
-  bool HasFaceRec() const { return !!GetRec(); }
-
 #if defined(PDF_USE_SKIA)
   SkTypeface* GetOrCreateSkTypeface();
 #endif
