@@ -94,11 +94,11 @@ vars = {
   # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling build
   # and whatever else without interference from each other.
-  'build_revision': '06d247cb917bb5fac3103b1b7dccb75368a553ce',
+  'build_revision': 'c9202dd8ca1d4255bd9e505988b945746ddb378a',
   # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling buildtools
   # and whatever else without interference from each other.
-  'buildtools_revision': '6a18683f555b4ac8b05ac8395c29c84483ac9588',
+  'buildtools_revision': 'fef8d6947fa54202e8a00c58d5ac8fd15780bc33',
   # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling catapult
   # and whatever else without interference from each other.
@@ -110,7 +110,7 @@ vars = {
   # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling clang
   # and whatever else without interference from each other.
-  'clang_revision': 'a1542f2952bcc47640d5cfbc39bb8f6926a1bf6a',
+  'clang_revision': 'c5563f5d680277c5e0e46daef3b7b0594f27ee94',
   # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling code_coverage
   # and whatever else without interference from each other.
@@ -196,7 +196,7 @@ vars = {
   # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling llvm-libc
   # and whatever else without interference from each other.
-  'llvm_libc_revision': '603c242115079d3a208638a6e56f842c0801d0bd',
+  'llvm_libc_revision': '044963a253be3b8b2a63a1b2e0f3e361b01bc186',
   # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling markupsafe
   # and whatever else without interference from each other.
@@ -224,7 +224,7 @@ vars = {
   # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling rust
   # and whatever else without interference from each other.
-  'rust_revision': '7da7c8be1f1b4ba32dcfd73ddc59ea48a376c041',
+  'rust_revision': '99af94d26d9b9859e672b11de62836efedfc6c0d',
   # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling simdutf
   # and whatever else without interference from each other.
@@ -232,7 +232,7 @@ vars = {
   # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling siso
   # and whatever else without interference from each other.
-  'siso_version': 'git_revision:ed57223a0bd19f8f2767a01b24311e8843ea2890',
+  'siso_version': 'git_revision:bea0f245b6973702ddcb457090706d03145855f8',
   # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling skia
   # and whatever else without interference from each other.
@@ -252,7 +252,7 @@ vars = {
   # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling tools_rust
   # and whatever else without interference from each other.
-  'tools_rust_revision': '8a3ca2dfc91599656a0f154da9254da7a95e8ee4',
+  'tools_rust_revision': '86b5fd79d4b80995610e5e6eb822ae1243e52384',
   # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling tools_win_revision
   # and whatever else without interference from each other.
@@ -461,157 +461,157 @@ deps = {
     'objects': [
       {
         # The Android libclang_rt.builtins libraries are currently only included in the Linux clang package.
-        'object_name': 'Linux_x64/clang-llvmorg-23-init-2224-g5bd8dadb-1.tar.xz',
-        'sha256sum': 'd373cde5b6f1c0da245ebcad93e4883252323c1ff283df96f0eb2e9180f1a537',
-        'size_bytes': 57692132,
-        'generation': 1769798229467453,
+        'object_name': 'Linux_x64/clang-llvmorg-23-init-5669-g8a0be0bc-1.tar.xz',
+        'sha256sum': '750b331006635281d7d90696629f67db748ba62004c46675eccb8af144141847',
+        'size_bytes': 58029996,
+        'generation': 1772218390302503,
         'condition': '(host_os == "linux" or checkout_android) and non_git_source',
       },
       {
-        'object_name': 'Linux_x64/clang-tidy-llvmorg-23-init-2224-g5bd8dadb-1.tar.xz',
-        'sha256sum': '334d3f2eaf1abf19a34539faff8d20674ca0654994b330be1e240df3d6f925e8',
-        'size_bytes': 14414652,
-        'generation': 1769798229616278,
+        'object_name': 'Linux_x64/clang-tidy-llvmorg-23-init-5669-g8a0be0bc-1.tar.xz',
+        'sha256sum': 'd53439bb6ac13c8d2c30c20555ded434039802f70d4119c0138bd77d03552223',
+        'size_bytes': 14392856,
+        'generation': 1772218390323510,
         'condition': 'host_os == "linux" and checkout_clang_tidy and non_git_source',
       },
       {
-        'object_name': 'Linux_x64/clangd-llvmorg-23-init-2224-g5bd8dadb-1.tar.xz',
-        'sha256sum': '2b439769a7072f488c9c792bbbd7527215d8c0f3791bcedb2233c604e2ac736f',
-        'size_bytes': 14647728,
-        'generation': 1769798229728240,
+        'object_name': 'Linux_x64/clangd-llvmorg-23-init-5669-g8a0be0bc-1.tar.xz',
+        'sha256sum': 'a24613fb7afce42c076bb95d1b671ac028746b379e88070c126f0aab17a4c34e',
+        'size_bytes': 14635272,
+        'generation': 1772218390330947,
         'condition': 'host_os == "linux" and checkout_clangd and non_git_source',
       },
       {
-        'object_name': 'Linux_x64/llvm-code-coverage-llvmorg-23-init-2224-g5bd8dadb-1.tar.xz',
-        'sha256sum': '62ecd25bd5d8820fa694c68687b262bd85cce5512e640341eac80648a182a8bf',
-        'size_bytes': 2325696,
-        'generation': 1769798229958559,
+        'object_name': 'Linux_x64/llvm-code-coverage-llvmorg-23-init-5669-g8a0be0bc-1.tar.xz',
+        'sha256sum': '8dcd816a83361b7924093ccba92dfe6bd29af2cf8af58bf7ce785b38c5027a8b',
+        'size_bytes': 2328908,
+        'generation': 1772218390452408,
         'condition': 'host_os == "linux" and checkout_clang_coverage_tools and non_git_source',
       },
       {
-        'object_name': 'Linux_x64/llvmobjdump-llvmorg-23-init-2224-g5bd8dadb-1.tar.xz',
-        'sha256sum': '28df84ef25bae64ab82a48295bd09aa6689e436449bd78cdc83f58ef05bfdd6a',
-        'size_bytes': 5818392,
-        'generation': 1769798229787736,
+        'object_name': 'Linux_x64/llvmobjdump-llvmorg-23-init-5669-g8a0be0bc-1.tar.xz',
+        'sha256sum': '0a15d6b8c2b774b0706618d2afa123b9c87af2ec12e74dc44346df4c4690b670',
+        'size_bytes': 5780116,
+        'generation': 1772218390340688,
         'condition': '((checkout_linux or checkout_mac or checkout_android) and host_os == "linux") and non_git_source',
       },
       {
-        'object_name': 'Mac/clang-llvmorg-23-init-2224-g5bd8dadb-1.tar.xz',
-        'sha256sum': '0d785b952cdbba91e5ca4c72c8e12d3f9a5cc44fb37d58be87a62bdb3a0b191e',
-        'size_bytes': 54770836,
-        'generation': 1769798231469873,
+        'object_name': 'Mac/clang-llvmorg-23-init-5669-g8a0be0bc-1.tar.xz',
+        'sha256sum': '2661847eb275079358ab186eaf7f85d6139d44c7413a731dfac7f5ed1ec34a01',
+        'size_bytes': 54827776,
+        'generation': 1772218392155773,
         'condition': 'host_os == "mac" and host_cpu == "x64"',
       },
       {
-        'object_name': 'Mac/clang-mac-runtime-library-llvmorg-23-init-2224-g5bd8dadb-1.tar.xz',
-        'sha256sum': 'd6f35ab337540994ee942f0300469bc627041b54cd0e8f1942db94da795ab8de',
-        'size_bytes': 1010540,
-        'generation': 1769798240394528,
+        'object_name': 'Mac/clang-mac-runtime-library-llvmorg-23-init-5669-g8a0be0bc-1.tar.xz',
+        'sha256sum': '69918295c163ec5a20aede81d4100bbd41e01142d32e0555366bba05141f7bf2',
+        'size_bytes': 1010608,
+        'generation': 1772218399449599,
         'condition': 'checkout_mac and not host_os == "mac"',
       },
       {
-        'object_name': 'Mac/clang-tidy-llvmorg-23-init-2224-g5bd8dadb-1.tar.xz',
-        'sha256sum': '0a89c1cc843537ab4a81b69f03923b8e29778b89c156341a5d589b8742f0c44f',
-        'size_bytes': 14492308,
-        'generation': 1769798231635674,
+        'object_name': 'Mac/clang-tidy-llvmorg-23-init-5669-g8a0be0bc-1.tar.xz',
+        'sha256sum': 'b8013fe5d2410db4f365ec8779972415d1d0a08042a3a43f823a0da712108cff',
+        'size_bytes': 14280488,
+        'generation': 1772218392176137,
         'condition': 'host_os == "mac" and host_cpu == "x64" and checkout_clang_tidy',
       },
       {
-        'object_name': 'Mac/clangd-llvmorg-23-init-2224-g5bd8dadb-1.tar.xz',
-        'sha256sum': '768e49e08e0e07d536fea63bcfb7e138409972d8da1493419f438ea39947b50c',
-        'size_bytes': 16432880,
-        'generation': 1769798231738122,
+        'object_name': 'Mac/clangd-llvmorg-23-init-5669-g8a0be0bc-1.tar.xz',
+        'sha256sum': '508098b26e74bd7f5cdcc40a2ed2db24e2bdde15e0f1c14ce94f685f991b3dd6',
+        'size_bytes': 15455912,
+        'generation': 1772218392186146,
         'condition': 'host_os == "mac" and host_cpu == "x64" and checkout_clangd',
       },
       {
-        'object_name': 'Mac/llvm-code-coverage-llvmorg-23-init-2224-g5bd8dadb-1.tar.xz',
-        'sha256sum': 'ec463ac915dd97d60715622799bf67b99ad56675917d1d12940c90da0846079a',
-        'size_bytes': 2358616,
-        'generation': 1769798231966010,
+        'object_name': 'Mac/llvm-code-coverage-llvmorg-23-init-5669-g8a0be0bc-1.tar.xz',
+        'sha256sum': '46c33f13a68fc14005560c01a91215b5cab54c07e920a714264352e46af1350c',
+        'size_bytes': 2376304,
+        'generation': 1772218392292978,
         'condition': 'host_os == "mac" and host_cpu == "x64" and checkout_clang_coverage_tools',
       },
       {
-        'object_name': 'Mac/llvmobjdump-llvmorg-23-init-2224-g5bd8dadb-1.tar.xz',
-        'sha256sum': '163ff23c49a6980d96bc540bd68fcfe6f2574ff7488446290dea8e378d659392',
-        'size_bytes': 5693264,
-        'generation': 1769798231791100,
+        'object_name': 'Mac/llvmobjdump-llvmorg-23-init-5669-g8a0be0bc-1.tar.xz',
+        'sha256sum': '6a92e3f21b3a035f406313d24688bb1b312a9a0ec423ff808752b6638104aff3',
+        'size_bytes': 5699700,
+        'generation': 1772218392189830,
         'condition': 'host_os == "mac" and host_cpu == "x64"',
       },
       {
-        'object_name': 'Mac_arm64/clang-llvmorg-23-init-2224-g5bd8dadb-1.tar.xz',
-        'sha256sum': '45c4c6fa65d92ca1b7dc7e6221589cf7e7f3ae2b22300277150761f670e1b1b0',
-        'size_bytes': 45722620,
-        'generation': 1769798241897042,
+        'object_name': 'Mac_arm64/clang-llvmorg-23-init-5669-g8a0be0bc-1.tar.xz',
+        'sha256sum': '909be0f896bcf140c710548ccda4673c0aea2480e28d10803c19b1689b36acd5',
+        'size_bytes': 45847044,
+        'generation': 1772218401088162,
         'condition': 'host_os == "mac" and host_cpu == "arm64"',
       },
       {
-        'object_name': 'Mac_arm64/clang-tidy-llvmorg-23-init-2224-g5bd8dadb-1.tar.xz',
-        'sha256sum': '32439ff7d3f5c6f431f3d543c1a59d0ea3c5f2639c4e77203f51b4e5e5aa6200',
-        'size_bytes': 12463612,
-        'generation': 1769798242077766,
+        'object_name': 'Mac_arm64/clang-tidy-llvmorg-23-init-5669-g8a0be0bc-1.tar.xz',
+        'sha256sum': '83dc8d90529730ae503e684ea0047a0baec2b0c4a81941d1bb4196feea6ba264',
+        'size_bytes': 12444972,
+        'generation': 1772218401143017,
         'condition': 'host_os == "mac" and host_cpu == "arm64" and checkout_clang_tidy',
       },
       {
-        'object_name': 'Mac_arm64/clangd-llvmorg-23-init-2224-g5bd8dadb-1.tar.xz',
-        'sha256sum': '4692dabe1495a5055db075b42b1b81511fef14a3d85fd7c374e83d4376d5a31f',
-        'size_bytes': 12850940,
-        'generation': 1769798242197514,
+        'object_name': 'Mac_arm64/clangd-llvmorg-23-init-5669-g8a0be0bc-1.tar.xz',
+        'sha256sum': '3b7ff06ccd41b0a1fb165e182a35bcd74ae49172f1720cd276eb5feac0e3dd9f',
+        'size_bytes': 12816980,
+        'generation': 1772218401144631,
         'condition': 'host_os == "mac" and host_cpu == "arm64" and checkout_clangd',
       },
       {
-        'object_name': 'Mac_arm64/llvm-code-coverage-llvmorg-23-init-2224-g5bd8dadb-1.tar.xz',
-        'sha256sum': 'c52db431571b4d55cb7b6452b3c8524f890632d6909a09af93dbd488e0594918',
-        'size_bytes': 1981792,
-        'generation': 1769798242410391,
+        'object_name': 'Mac_arm64/llvm-code-coverage-llvmorg-23-init-5669-g8a0be0bc-1.tar.xz',
+        'sha256sum': '67148555d00427a3eaa8aeefb8c4c4e1271d585315bdbf0d28d20fd78957e309',
+        'size_bytes': 1988008,
+        'generation': 1772218401224240,
         'condition': 'host_os == "mac" and host_cpu == "arm64" and checkout_clang_coverage_tools',
       },
       {
-        'object_name': 'Mac_arm64/llvmobjdump-llvmorg-23-init-2224-g5bd8dadb-1.tar.xz',
-        'sha256sum': '0295ceffc9d4208b998ff51b4a7a0a89827a87f83b8ccbcbf6db4f904f8caff0',
-        'size_bytes': 5432532,
-        'generation': 1769798242264216,
+        'object_name': 'Mac_arm64/llvmobjdump-llvmorg-23-init-5669-g8a0be0bc-1.tar.xz',
+        'sha256sum': 'a31075e7f46ed77c62ecec424722bec8335ef306a4701660f19b713229c49afa',
+        'size_bytes': 5421552,
+        'generation': 1772218401116635,
         'condition': 'host_os == "mac" and host_cpu == "arm64"',
       },
       {
-        'object_name': 'Win/clang-llvmorg-23-init-2224-g5bd8dadb-1.tar.xz',
-        'sha256sum': '2751f2de8cf1da96916fe124e1d5f6823b3c7810cb0e1436d58f82565a9676d5',
-        'size_bytes': 48990064,
-        'generation': 1769798253319534,
+        'object_name': 'Win/clang-llvmorg-23-init-5669-g8a0be0bc-1.tar.xz',
+        'sha256sum': 'f2c9d2a8accf7ed2e3c19b3f67fb94e60365411a536fb9d71391dd2d4e7e14bb',
+        'size_bytes': 49546756,
+        'generation': 1772218410442709,
         'condition': 'host_os == "win"',
       },
       {
-        'object_name': 'Win/clang-tidy-llvmorg-23-init-2224-g5bd8dadb-1.tar.xz',
-        'sha256sum': '2e55b255c435e666804f6d1967f24b6be85f29515f4a8a890631df0139e6d442',
-        'size_bytes': 14394780,
-        'generation': 1769798253490087,
+        'object_name': 'Win/clang-tidy-llvmorg-23-init-5669-g8a0be0bc-1.tar.xz',
+        'sha256sum': '99e00bbb404557db32df4e7a183ac520c526fe0e143ca380dfb2d0c33a2025b5',
+        'size_bytes': 14462056,
+        'generation': 1772218410470169,
         'condition': 'host_os == "win" and checkout_clang_tidy',
       },
       {
-        'object_name': 'Win/clang-win-runtime-library-llvmorg-23-init-2224-g5bd8dadb-1.tar.xz',
-        'sha256sum': 'f1d21f63b5839dce9e53d965cca7b7252b39b2a0f13c447f151df01cdc33f1f7',
-        'size_bytes': 2545304,
-        'generation': 1769798262175764,
+        'object_name': 'Win/clang-win-runtime-library-llvmorg-23-init-5669-g8a0be0bc-1.tar.xz',
+        'sha256sum': '62e9c022223e0fa6ff855c25dcee524818f04c570127ed7e74895b320a10100a',
+        'size_bytes': 2597584,
+        'generation': 1772218417651221,
         'condition': 'checkout_win and not host_os == "win"',
       },
       {
-        'object_name': 'Win/clangd-llvmorg-23-init-2224-g5bd8dadb-1.tar.xz',
-        'sha256sum': '6568f82ef6d3b8f19fae1e00f8534135edf86f195b0296f150784cc70d2dac93',
-        'size_bytes': 14793848,
-        'generation': 1769798253604910,
+        'object_name': 'Win/clangd-llvmorg-23-init-5669-g8a0be0bc-1.tar.xz',
+        'sha256sum': '6a3ab3afb8d2e7f4a04eecd8073993586665ede3929308a0fa0119d9382b1e2d',
+        'size_bytes': 14887416,
+        'generation': 1772218410483998,
        'condition': 'host_os == "win" and checkout_clangd',
       },
       {
-        'object_name': 'Win/llvm-code-coverage-llvmorg-23-init-2224-g5bd8dadb-1.tar.xz',
-        'sha256sum': 'c96bb29efd1b4efae7a33cdc81f1d2d6104f9ad0d971a4c1b340cec6a5821fde',
-        'size_bytes': 2421196,
-        'generation': 1769798253771930,
+        'object_name': 'Win/llvm-code-coverage-llvmorg-23-init-5669-g8a0be0bc-1.tar.xz',
+        'sha256sum': '4bd610d2fbcc6e2bd8fd2df8d8c23a915373f8c987701d295314e8b33d457075',
+        'size_bytes': 2479300,
+        'generation': 1772218410570017,
         'condition': 'host_os == "win" and checkout_clang_coverage_tools',
       },
       {
-        'object_name': 'Win/llvmobjdump-llvmorg-23-init-2224-g5bd8dadb-1.tar.xz',
-        'sha256sum': '54d94b4e1560870f94dee78c16c7828f95c185f363321fe605aa286d88104bfd',
-        'size_bytes': 5798400,
-        'generation': 1769798253622689,
+        'object_name': 'Win/llvmobjdump-llvmorg-23-init-5669-g8a0be0bc-1.tar.xz',
+        'sha256sum': '2ee77b6240b76353840439b38e7009d9f1fb8e97930dbbef3b1ff805ee981c5f',
+        'size_bytes': 5846184,
+        'generation': 1772218410487302,
         'condition': '(checkout_linux or checkout_mac or checkout_android) and host_os == "win"',
       },
     ]
@@ -651,31 +651,31 @@ deps = {
     'bucket': 'chromium-browser-clang',
     'objects': [
       {
-        'object_name': 'Linux_x64/rust-toolchain-7d8ebe3128fc87f3da1ad64240e63ccf07b8f0bd-1-llvmorg-23-init-2224-g5bd8dadb.tar.xz',
-        'sha256sum': 'aff16507e3f1623a9948cf9b14bd90827fd702b58adbc5f5cc277b60682a6608',
-        'size_bytes': 265701736,
-        'generation': 1769798222913076,
+        'object_name': 'Linux_x64/rust-toolchain-6f54d591c3116ee7f8ce9321ddeca286810cc142-2-llvmorg-23-init-5669-g8a0be0bc.tar.xz',
+        'sha256sum': '71ea8d8f981d1093ac30e884aefca789962a2eb6e0c31dcddc6fdc83a33c5bd6',
+        'size_bytes': 270756972,
+        'generation': 1772730062708394,
         'condition': 'host_os == "linux" and non_git_source',
       },
       {
-        'object_name': 'Mac/rust-toolchain-7d8ebe3128fc87f3da1ad64240e63ccf07b8f0bd-1-llvmorg-23-init-2224-g5bd8dadb.tar.xz',
-        'sha256sum': 'b4f5f9fea80c7199f30353b04b725144dad3d3248bd50c5396393039239eabc8',
-        'size_bytes': 253418688,
-        'generation': 1769798224554022,
+        'object_name': 'Mac/rust-toolchain-6f54d591c3116ee7f8ce9321ddeca286810cc142-2-llvmorg-23-init-5669-g8a0be0bc.tar.xz',
+        'sha256sum': '434ada87593ad29df8eb6bb266d37edcdc7380d1bafbf907f7d39c22d5739084',
+        'size_bytes': 258367196,
+        'generation': 1772730064822309,
         'condition': 'host_os == "mac" and host_cpu == "x64"',
       },
       {
-        'object_name': 'Mac_arm64/rust-toolchain-7d8ebe3128fc87f3da1ad64240e63ccf07b8f0bd-1-llvmorg-23-init-2224-g5bd8dadb.tar.xz',
-        'sha256sum': '1f834a3c7afe6492da33fb206e211d21a1883e9c77f14d49e545b3dc805b7be4',
-        'size_bytes': 237004668,
-        'generation': 1769798226076367,
+        'object_name': 'Mac_arm64/rust-toolchain-6f54d591c3116ee7f8ce9321ddeca286810cc142-2-llvmorg-23-init-5669-g8a0be0bc.tar.xz',
+        'sha256sum': 'c8e89b991e325f8bfd64fc7a04cfa0eb0b7a953af01fc0a23f0a4b1c1dc34280',
+        'size_bytes': 241717196,
+        'generation': 1772730066996695,
         'condition': 'host_os == "mac" and host_cpu == "arm64"',
       },
       {
-        'object_name': 'Win/rust-toolchain-7d8ebe3128fc87f3da1ad64240e63ccf07b8f0bd-1-llvmorg-23-init-2224-g5bd8dadb.tar.xz',
-        'sha256sum': '5f1a4c77bf196fad61de37acbd5fa5554d20185e1ea9d43b83481e68db170b69',
-        'size_bytes': 402720500,
-        'generation': 1769798227622501,
+        'object_name': 'Win/rust-toolchain-6f54d591c3116ee7f8ce9321ddeca286810cc142-2-llvmorg-23-init-5669-g8a0be0bc.tar.xz',
+        'sha256sum': '2a2463ffc005f0c98be420203bd5a0d5b54b1b6669bb2a9d491cfcab2338f851',
+        'size_bytes': 409485148,
+        'generation': 1772730069048739,
         'condition': 'host_os == "win"',
       },
     ],
