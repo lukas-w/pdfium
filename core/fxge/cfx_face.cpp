@@ -38,9 +38,9 @@ struct OUTLINE_PARAMS {
   UnownedPtr<CFX_Path> path_;
   FT_Pos cur_x_;
   FT_Pos cur_y_;
-  float coord_unit_;
 };
 
+constexpr float kCoordUnit = 64 * 64.0f;
 constexpr int kThousandthMinInt = std::numeric_limits<int>::min() / 1000;
 constexpr int kThousandthMaxInt = std::numeric_limits<int>::max() / 1000;
 
@@ -148,9 +148,8 @@ int Outline_MoveTo(const FT_Vector* to, void* user) {
   Outline_CheckEmptyContour(param);
 
   param->path_->ClosePath();
-  param->path_->AppendPoint(
-      CFX_PointF(to->x / param->coord_unit_, to->y / param->coord_unit_),
-      CFX_Path::Point::Type::kMove);
+  param->path_->AppendPoint(CFX_PointF(to->x / kCoordUnit, to->y / kCoordUnit),
+                            CFX_Path::Point::Type::kMove);
 
   param->cur_x_ = to->x;
   param->cur_y_ = to->y;
@@ -160,9 +159,8 @@ int Outline_MoveTo(const FT_Vector* to, void* user) {
 int Outline_LineTo(const FT_Vector* to, void* user) {
   OUTLINE_PARAMS* param = static_cast<OUTLINE_PARAMS*>(user);
 
-  param->path_->AppendPoint(
-      CFX_PointF(to->x / param->coord_unit_, to->y / param->coord_unit_),
-      CFX_Path::Point::Type::kLine);
+  param->path_->AppendPoint(CFX_PointF(to->x / kCoordUnit, to->y / kCoordUnit),
+                            CFX_Path::Point::Type::kLine);
 
   param->cur_x_ = to->x;
   param->cur_y_ = to->y;
@@ -173,20 +171,18 @@ int Outline_ConicTo(const FT_Vector* control, const FT_Vector* to, void* user) {
   OUTLINE_PARAMS* param = static_cast<OUTLINE_PARAMS*>(user);
 
   param->path_->AppendPoint(
-      CFX_PointF((param->cur_x_ + (control->x - param->cur_x_) * 2 / 3) /
-                     param->coord_unit_,
-                 (param->cur_y_ + (control->y - param->cur_y_) * 2 / 3) /
-                     param->coord_unit_),
+      CFX_PointF(
+          (param->cur_x_ + (control->x - param->cur_x_) * 2 / 3) / kCoordUnit,
+          (param->cur_y_ + (control->y - param->cur_y_) * 2 / 3) / kCoordUnit),
       CFX_Path::Point::Type::kBezier);
 
   param->path_->AppendPoint(
-      CFX_PointF((control->x + (to->x - control->x) / 3) / param->coord_unit_,
-                 (control->y + (to->y - control->y) / 3) / param->coord_unit_),
+      CFX_PointF((control->x + (to->x - control->x) / 3) / kCoordUnit,
+                 (control->y + (to->y - control->y) / 3) / kCoordUnit),
       CFX_Path::Point::Type::kBezier);
 
-  param->path_->AppendPoint(
-      CFX_PointF(to->x / param->coord_unit_, to->y / param->coord_unit_),
-      CFX_Path::Point::Type::kBezier);
+  param->path_->AppendPoint(CFX_PointF(to->x / kCoordUnit, to->y / kCoordUnit),
+                            CFX_Path::Point::Type::kBezier);
 
   param->cur_x_ = to->x;
   param->cur_y_ = to->y;
@@ -199,17 +195,16 @@ int Outline_CubicTo(const FT_Vector* control1,
                     void* user) {
   OUTLINE_PARAMS* param = static_cast<OUTLINE_PARAMS*>(user);
 
-  param->path_->AppendPoint(CFX_PointF(control1->x / param->coord_unit_,
-                                       control1->y / param->coord_unit_),
-                            CFX_Path::Point::Type::kBezier);
-
-  param->path_->AppendPoint(CFX_PointF(control2->x / param->coord_unit_,
-                                       control2->y / param->coord_unit_),
-                            CFX_Path::Point::Type::kBezier);
+  param->path_->AppendPoint(
+      CFX_PointF(control1->x / kCoordUnit, control1->y / kCoordUnit),
+      CFX_Path::Point::Type::kBezier);
 
   param->path_->AppendPoint(
-      CFX_PointF(to->x / param->coord_unit_, to->y / param->coord_unit_),
+      CFX_PointF(control2->x / kCoordUnit, control2->y / kCoordUnit),
       CFX_Path::Point::Type::kBezier);
+
+  param->path_->AppendPoint(CFX_PointF(to->x / kCoordUnit, to->y / kCoordUnit),
+                            CFX_Path::Point::Type::kBezier);
 
   param->cur_x_ = to->x;
   param->cur_y_ = to->y;
@@ -674,10 +669,11 @@ std::unique_ptr<CFX_Path> CFX_Face::LoadGlyphPath(
   funcs.delta = 0;
 
   auto pPath = std::make_unique<CFX_Path>();
-  OUTLINE_PARAMS params;
-  params.path_ = pPath.get();
-  params.cur_x_ = params.cur_y_ = 0;
-  params.coord_unit_ = 64 * 64.0;
+  OUTLINE_PARAMS params = {
+      .path_ = pPath.get(),
+      .cur_x_ = 0,
+      .cur_y_ = 0,
+  };
 
   FT_Outline_Decompose(&rec->glyph->outline, &funcs, &params);
   if (pPath->GetPoints().empty()) {
