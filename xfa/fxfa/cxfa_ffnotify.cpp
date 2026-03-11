@@ -448,17 +448,17 @@ void CXFA_FFNotify::OnValueChanged(CXFA_Node* pSender,
 
   if (eAttr == XFA_Attribute::Value) {
     pDocView->AddCalculateNodeNotify(pSender);
-    if (eType == XFA_Element::Value || bIsContainerNode) {
-      if (bIsContainerNode) {
+    if (bIsContainerNode) {
+      doc_->GetDocView()->UpdateUIDisplay(pWidgetNode, nullptr);
+      pDocView->AddCalculateNode(pWidgetNode);
+      pDocView->AddValidateNode(pWidgetNode);
+      return;
+    }
+    if (eType == XFA_Element::Value) {
+      CXFA_Node* widget_parent = pWidgetNode->GetParent();
+      if (widget_parent &&
+          widget_parent->GetElementType() == XFA_Element::ExclGroup) {
         doc_->GetDocView()->UpdateUIDisplay(pWidgetNode, nullptr);
-        pDocView->AddCalculateNode(pWidgetNode);
-        pDocView->AddValidateNode(pWidgetNode);
-      } else {
-        CXFA_Node* widget_parent = pWidgetNode->GetParent();
-        if (widget_parent &&
-            widget_parent->GetElementType() == XFA_Element::ExclGroup) {
-          doc_->GetDocView()->UpdateUIDisplay(pWidgetNode, nullptr);
-        }
       }
       return;
     }
