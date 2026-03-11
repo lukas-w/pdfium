@@ -1,0 +1,157 @@
+%PDF-1.7
+% ò¤ô
+1 0 obj <<
+  /Type /Catalog
+  /Pages 2 0 R
+>>
+endobj
+2 0 obj <<
+  /Type /Pages
+  /MediaBox [0 0 200 200]
+  /Count 1
+  /Kids [3 0 R]
+>>
+endobj
+3 0 obj <<
+  /Type /Page
+  /Parent 2 0 R
+  /Resources <<
+    /Font <<
+      /F1 4 0 R
+      /F2 5 0 R
+    >>
+  >>
+  /Contents 6 0 R
+>>
+endobj
+4 0 obj <<
+  /Type /Font
+  /Subtype /Type1
+  /BaseFont /Times-Roman
+>>
+endobj
+5 0 obj <<
+  /Type /Font
+  /Subtype /Type0
+  /BaseFont /Test
+  /DescendantFonts [7 0 R]
+  /Encoding /Identity-H
+  /ToUnicode 10 0 R
+>>
+endobj
+6 0 obj <<
+  /Length 109
+>>
+stream
+BT
+20 50 Td
+/F1 12 Tf
+(Hello,) Tj
+ET
+BT
+50 50 Td
+/F2 12 Tf
+<0001> Tj
+ET
+BT
+50 50 Td
+/F1 12 Tf
+( world!) Tj
+ET
+endstream
+endobj
+7 0 obj <<
+  /Type /Font
+  /Subtype /CIDFontType2
+  /BaseFont /Test
+  /CIDSystemInfo <<
+    /Registry (Adobe)
+    /Ordering (Identity)
+    /Supplement 0
+  >>
+  /CIDToGIDMap /Identity
+  /DW 0
+  /FontDescriptor 8 0 R
+  /W [0 [500]]
+>>
+endobj
+8 0 obj <<
+  /Type /FontDescriptor
+  /Ascent 923.82813
+  /CapHeight 660.64453
+  /Descent -812.5
+  /Flags 4
+  /FontBBox [-1461.91406 -812.5 1722.6563 1134.76563]
+  /FontFile2 9 0 R
+  /FontName /Test
+  /ItalicAngle 0
+  /StemV 45.898438
+>>
+endobj
+9 0 obj <<
+  /Filter [/ASCII85Decode /FlateDecode]
+  /Length1 1428
+  /Length 896
+>>
+stream
+GhUtQcYF1[(k&a&M2a+<eDeFsPH*8-'/p4##t71]V+AF#WCSYQ,hl$I^IYf]i5K2g*fA#7%sS^?64m!c
+.ACH@&J7FbMg4enNGj!LYsk@12gh%frI4@_lp:^9_gUai?+YP/2?1`9"N3.![gQ3:Jc>-XlKa[k_Hg4e
+VR6GALOR.G>)c:4R0]okmr9iEL"CMqh?/'GoueZ9.`S+;)^9`(acpHE4kIHRQ9kICWTl,/Y)=@dO/X5'
+e-d$I(kF.C*3NI<%8<O`IbGo[<n72`XF0jq3=Ie1/[r'H2#C@=+)3Hn9+Q*G>Q*SHd&V)c6=8W@GSR;%
+&7ajW[\igdKE!XGZfM(0D8WE]pG"dgdEU(O/7m#l7d/T9'd:.0BJ6<fpoF1KUsN(-.+56+YPRV&Pp5BE
++a)JKLqLc=IggNjAhaH(6cp2B+Xn99@`PGS:H+Z7f_VZqccH"PI+bVO_LEIPG25aV@Ar5$J%WCP616c!
+9n>)9kBR+i%KYg-/:&oh4WP2umEJ@BmH6f0]BN+($Tl!i=Z*!bZ"RrHI/5_%AUhBmhBR9n*UZLjM?kOI
+5qTkjX"O][a'!cuY^qTi*oIV+74uAag5G6<%<[H3?C&G0"3:^LA)F*_laVi&!#ld5$2Z]8;aL[J9`$@f
+;+C_*1f9![&mX:`&JQqA2$K2,_&2\NCdps=/&C4/*+6)/BK++0ad"*);401<R5$^3QY!mAe``T;Pfk$_
+($69oUoELBh25J`S>4?F,(15RA'T65.i,r8q5?E`2AoqM4;)0K\Sq;)WkLX<LcE-PnLeTNeSFSP^$40)
+PqZcMG.SD8c$2:P-m-D!#&R)AkZ>DBCR^8RGcOEFh/&AB2//N$KP?k[<=<-4c8.5o?f)^hQLJ21IKP8U
+Z8_~>
+endstream
+endobj
+10 0 obj <<
+  /Length 343
+>>
+stream
+/CIDInit
+/ProcSet findresource begin
+12 dict begin
+begincmap
+/CIDSystemInfo <<
+  /Registry (Adobe)
+  /Ordering (UCS)
+  /Supplement 0
+>> def
+/CMapName /Adobe-Identity-UCS def
+/CMapType 2 def
+1 begincodespacerange
+<0000> <FFFF>
+endcodespacerange
+1 beginbfchar
+<0001> <200B>
+endbfchar
+endcmap
+CMapName currentdict /CMap defineresource pop
+end
+end
+endstream
+endobj
+xref
+0 11
+0000000000 65535 f 
+0000000015 00000 n 
+0000000068 00000 n 
+0000000157 00000 n 
+0000000299 00000 n 
+0000000377 00000 n 
+0000000519 00000 n 
+0000000681 00000 n 
+0000000921 00000 n 
+0000001165 00000 n 
+0000002170 00000 n 
+trailer <<
+  /Root 1 0 R
+  /Size 11
+>>
+startxref
+2567
+%%EOF

@@ -29,6 +29,9 @@ namespace {
 constexpr char kHelloGoodbyeText[] = "Hello, world!\r\nGoodbye, world!";
 constexpr int kHelloGoodbyeTextSize = std::size(kHelloGoodbyeText);
 
+constexpr char kHelloWorldText[] = "Hello, world!";
+constexpr int kHelloWorldTextSize = std::size(kHelloWorldText);
+
 // For use with rotated_text.pdf.
 int GetRotatedTextFirstCharIndexForQuadrant(int quadrant) {
   // Unlike hello_world.pdf, rotated_text.pdf has an extra space before
@@ -2474,10 +2477,23 @@ TEST_F(FPDFTextEmbedderTest, Bug491161396) {
   ASSERT_TRUE(textpage);
 
   unsigned short buffer[128] = {};
-  static constexpr char kExpected[] = "Hello, world!";
-  static constexpr int kExpectedSize = std::size(kExpected);
-  ASSERT_EQ(kExpectedSize,
+  ASSERT_EQ(kHelloWorldTextSize,
             FPDFText_GetText(textpage.get(), 0, std::size(buffer), buffer));
-  EXPECT_THAT(pdfium::span(buffer).first<kExpectedSize>(),
-              ElementsAreArray(kExpected));
+  EXPECT_THAT(pdfium::span(buffer).first<kHelloWorldTextSize>(),
+              ElementsAreArray(kHelloWorldText));
+}
+
+TEST_F(FPDFTextEmbedderTest, Bug491516663) {
+  ASSERT_TRUE(OpenDocument("bug_491516663.pdf"));
+  ScopedPage page = LoadScopedPage(0);
+  ASSERT_TRUE(page);
+
+  ScopedFPDFTextPage textpage(FPDFText_LoadPage(page.get()));
+  ASSERT_TRUE(textpage);
+
+  unsigned short buffer[128] = {};
+  ASSERT_EQ(kHelloWorldTextSize,
+            FPDFText_GetText(textpage.get(), 0, std::size(buffer), buffer));
+  EXPECT_THAT(pdfium::span(buffer).first<kHelloWorldTextSize>(),
+              ElementsAreArray(kHelloWorldText));
 }
