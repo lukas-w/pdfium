@@ -116,7 +116,7 @@ CFX_FontMgr::CFX_FontMgr(FontBackend backend)
       font_backend_(backend),
       skia_fontmgr_(CreateSkiaFontManager(font_backend_)),
 #endif
-      builtin_mapper_(std::make_unique<CFX_FontMapper>(this)),
+      builtin_mapper_(std::make_unique<CFX_FontMapper>()),
       ft_library_supports_hinting_(
           FreeTypeSetLcdFilterMode(ft_library_.get()) ||
           FreeTypeVersionSupportsHinting(ft_library_.get())) {

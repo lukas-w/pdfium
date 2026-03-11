@@ -567,8 +567,8 @@ bool CFGAS_FontDescriptor::VerifyUnicode(wchar_t unicode) {
     if (!file_read) {
       return false;
     }
-    RetainPtr<CFX_Face> ft_face = CFX_Face::NewFromSpanStream(
-        CFX_GEModule::Get()->GetFontMgr(), file_read, face_index_);
+    RetainPtr<CFX_Face> ft_face =
+        CFX_Face::NewFromSpanStream(file_read, face_index_);
     if (!ft_face) {
       return false;
     }
@@ -729,8 +729,7 @@ void CFGAS_FontMgr::RegisterFaces(
   int index = 0;
   int num_faces = 0;
   do {
-    RetainPtr<CFX_Face> face = CFX_Face::NewFromSpanStream(
-        CFX_GEModule::Get()->GetFontMgr(), font_stream, index);
+    RetainPtr<CFX_Face> face = CFX_Face::NewFromSpanStream(font_stream, index);
     if (!face) {
       ++index;
       continue;

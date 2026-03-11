@@ -339,10 +339,10 @@ class ScopedFaceTransform {
 }  // namespace
 
 // static
-RetainPtr<CFX_Face> CFX_Face::New(CFX_FontMgr* font_mgr,
-                                  RetainPtr<Retainable> desc,
+RetainPtr<CFX_Face> CFX_Face::New(RetainPtr<Retainable> desc,
                                   pdfium::span<const uint8_t> data,
                                   uint32_t face_index) {
+  CFX_FontMgr* font_mgr = CFX_GEModule::Get()->GetFontMgr();
   FT_FaceRec* face_rec = nullptr;
   if (FT_New_Memory_Face(font_mgr->GetFTLibrary(), data.data(),
                          pdfium::checked_cast<FT_Long>(data.size()),
@@ -361,14 +361,12 @@ RetainPtr<CFX_Face> CFX_Face::New(CFX_FontMgr* font_mgr,
 
 #if defined(PDF_ENABLE_XFA) || BUILDFLAG(IS_ANDROID)
 RetainPtr<CFX_Face> CFX_Face::NewFromSpanStream(
-    CFX_FontMgr* font_mgr,
     const RetainPtr<CFX_ReadOnlySpanStream>& font_stream,
     uint32_t face_index) {
   if (!font_stream) {
     return nullptr;
   }
-  RetainPtr<CFX_Face> face =
-      New(font_mgr, nullptr, font_stream->span(), face_index);
+  RetainPtr<CFX_Face> face = New(nullptr, font_stream->span(), face_index);
   if (!face) {
     return nullptr;
   }
@@ -571,8 +569,8 @@ std::unique_ptr<CFX_GlyphBitmap> CFX_Face::RenderGlyph(
             36655;
     FT_Outline_Embolden(&glyph->outline, level.ValueOrDefault(0));
   }
-  FT_Library_SetLcdFilter(CFX_GEModule::Get()->GetFontMgr()->GetFTLibrary(),
-                          FT_LCD_FILTER_DEFAULT);
+  CFX_FontMgr* font_mgr = CFX_GEModule::Get()->GetFontMgr();
+  FT_Library_SetLcdFilter(font_mgr->GetFTLibrary(), FT_LCD_FILTER_DEFAULT);
   error =
       FT_Render_Glyph(glyph, FtRenderModeFromFontAntiAliasingMode(anti_alias));
   if (error) {

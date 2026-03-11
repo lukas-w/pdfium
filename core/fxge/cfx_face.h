@@ -31,7 +31,6 @@ enum class FontEncoding : uint32_t;
 }
 
 class CFX_Font;
-class CFX_FontMgr;
 class CFX_GlyphBitmap;
 class CFX_Path;
 class CFX_SubstFont;
@@ -59,14 +58,12 @@ class CFX_Face final : public Retainable, public Observable {
   static constexpr CharMapId kWindowsSymbolCmapId{3, 0};
   static constexpr CharMapId kWindowsUnicodeCmapId{3, 1};
 
-  static RetainPtr<CFX_Face> New(CFX_FontMgr* font_mgr,
-                                 RetainPtr<Retainable> desc,
+  static RetainPtr<CFX_Face> New(RetainPtr<Retainable> desc,
                                  pdfium::span<const uint8_t> data,
                                  uint32_t face_index);
 
 #if defined(PDF_ENABLE_XFA) || BUILDFLAG(IS_ANDROID)
   static RetainPtr<CFX_Face> NewFromSpanStream(
-      CFX_FontMgr* font_mgr,
       const RetainPtr<CFX_ReadOnlySpanStream>& font_stream,
       uint32_t face_index);
 #endif  // defined(PDF_ENABLE_XFA) || BUILDFLAG(IS_ANDROID)

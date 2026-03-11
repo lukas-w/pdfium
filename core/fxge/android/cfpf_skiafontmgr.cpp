@@ -218,8 +218,7 @@ uint32_t SkiaGetFaceCharset(uint32_t code_range) {
 
 }  // namespace
 
-CFPF_SkiaFontMgr::CFPF_SkiaFontMgr(CFX_FontMgr* font_mgr)
-    : font_mgr_(font_mgr) {}
+CFPF_SkiaFontMgr::CFPF_SkiaFontMgr() = default;
 
 CFPF_SkiaFontMgr::~CFPF_SkiaFontMgr() = default;
 
@@ -338,7 +337,6 @@ RetainPtr<CFX_Face> CFPF_SkiaFontMgr::GetFontFace(const ByteString& path,
     return nullptr;
   }
   return CFX_Face::NewFromSpanStream(
-      font_mgr_,
       pdfium::MakeRetain<CFX_ReadOnlyMappedDataBytesStream>(
           std::move(mapped_bytes)),
       face_index);

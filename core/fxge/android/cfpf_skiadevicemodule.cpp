@@ -26,8 +26,7 @@ CFPF_SkiaDeviceModule* CFPF_SkiaDeviceModule::GetOrCreate() {
 }
 
 CFPF_SkiaDeviceModule::CFPF_SkiaDeviceModule()
-    : font_mgr_(std::make_unique<CFPF_SkiaFontMgr>(
-          CFX_GEModule::Get()->GetFontMgr())) {}
+    : font_mgr_(std::make_unique<CFPF_SkiaFontMgr>()) {}
 
 CFPF_SkiaDeviceModule::~CFPF_SkiaDeviceModule() = default;
 
