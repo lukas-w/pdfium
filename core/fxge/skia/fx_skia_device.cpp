@@ -818,7 +818,8 @@ bool CFX_SkiaDeviceDriver::DrawDeviceText(
                   options)) {
     return true;
   }
-  sk_sp<SkTypeface> typeface(SkSafeRef(pFont->GetSkTypeface()));
+  sk_sp<SkTypeface> typeface(
+      SkSafeRef(pFont->GetFace()->GetOrCreateSkTypeface()));
   SkPaint paint;
   paint.setAntiAlias(true);
   paint.setColor(color);
@@ -945,7 +946,7 @@ bool CFX_SkiaDeviceDriver::TryDrawText(pdfium::span<const TextCharPos> char_pos,
 
   SkFont font = SkFontFromCFXFont(pFont, font_size, options);
   if (pFont->HasFaceRec()) {  // exclude placeholder test fonts
-    font.setTypeface(sk_ref_sp(pFont->GetSkTypeface()));
+    font.setTypeface(sk_ref_sp(pFont->GetFace()->GetOrCreateSkTypeface()));
   }
 
   SkAutoCanvasRestore scoped_save_restore(canvas_, /*doSave=*/true);

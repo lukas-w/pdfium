@@ -14,6 +14,7 @@
 #include "core/fxcrt/bytestring.h"
 #include "core/fxcrt/observed_ptr.h"
 #include "core/fxcrt/retain_ptr.h"
+#include "core/fxcrt/span.h"
 #include "core/fxge/cfx_face.h"
 #include "core/fxge/fx_font.h"
 
@@ -52,7 +53,8 @@ class CFX_GlyphCache final : public Retainable, public Observable {
 
 #if defined(PDF_USE_SKIA)
   enum class FontBackend { kFreeType, kFontations };
-  SkTypeface* GetSkTypeface(const CFX_Font* font);
+  static sk_sp<SkTypeface> MakeSkTypeface(
+      pdfium::span<const uint8_t> font_span);
   static void InitializeGlobals(FontBackend backend);
   static void DestroyGlobals();
 #endif
@@ -85,9 +87,6 @@ class CFX_GlyphCache final : public Retainable, public Observable {
   std::map<ByteString, SizeGlyphCache> size_map_;
   std::map<PathMapKey, std::unique_ptr<CFX_Path>> path_map_;
   std::map<WidthMapKey, int> width_map_;
-#if defined(PDF_USE_SKIA)
-  sk_sp<SkTypeface> typeface_;
-#endif
 };
 
 #endif  //  CORE_FXGE_CFX_GLYPHCACHE_H_

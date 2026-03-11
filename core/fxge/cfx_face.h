@@ -22,6 +22,10 @@
 #include "core/fxge/freetype/fx_freetype.h"
 #include "core/fxge/fx_font.h"
 
+#if defined(PDF_USE_SKIA)
+#include "third_party/skia/include/core/SkRefCnt.h"  // nogncheck
+#endif
+
 namespace fxge {
 enum class FontEncoding : uint32_t;
 }
@@ -31,6 +35,10 @@ class CFX_FontMgr;
 class CFX_GlyphBitmap;
 class CFX_Path;
 class CFX_SubstFont;
+
+#if defined(PDF_USE_SKIA)
+class SkTypeface;
+#endif
 
 class CFX_Face final : public Retainable, public Observable {
  public:
@@ -144,6 +152,10 @@ class CFX_Face final : public Retainable, public Observable {
 
   bool HasFaceRec() const { return !!GetRec(); }
 
+#if defined(PDF_USE_SKIA)
+  SkTypeface* GetOrCreateSkTypeface();
+#endif
+
  private:
   CFX_Face(FT_FaceRec* pRec, RetainPtr<Retainable> pDesc);
   ~CFX_Face() override;
@@ -160,9 +172,12 @@ class CFX_Face final : public Retainable, public Observable {
   std::optional<std::array<uint8_t, 2>> GetOs2Panose();
 #endif
 
-  // `owned_font_stream_` must outlive `rec_`.
+  // `owned_font_stream_` must outlive `rec_` and `skia_typeface_`
   RetainPtr<CFX_ReadOnlySpanStream> owned_font_stream_;
   ScopedFXFTFaceRec const rec_;
+#if defined(PDF_USE_SKIA)
+  sk_sp<SkTypeface> skia_typeface_;
+#endif  // defined(PDF_USE_SKIA)
   RetainPtr<Retainable> const desc_;
 };
 

@@ -23,12 +23,17 @@
 #include "core/fxge/cfx_fontmgr.h"
 #include "core/fxge/cfx_gemodule.h"
 #include "core/fxge/cfx_glyphbitmap.h"
+#include "core/fxge/cfx_glyphcache.h"
 #include "core/fxge/cfx_path.h"
 #include "core/fxge/cfx_substfont.h"
 #include "core/fxge/dib/cfx_dibitmap.h"
 #include "core/fxge/dib/fx_dib.h"
 #include "core/fxge/fx_font.h"
 #include "core/fxge/fx_fontencoding.h"
+
+#if defined(PDF_USE_SKIA)
+#include "third_party/skia/include/core/SkTypeface.h"  // nogncheck
+#endif
 
 #define EM_ADJUST(em, a) (em == 0 ? (a) : (a) * 1000 / em)
 
@@ -931,6 +936,15 @@ bool CFX_Face::CanEmbed() {
   FT_UShort fstype = FT_Get_FSType_Flags(GetRec());
   return (fstype & (FT_FSTYPE_RESTRICTED_LICENSE_EMBEDDING |
                     FT_FSTYPE_BITMAP_EMBEDDING_ONLY)) == 0;
+}
+#endif
+
+#if defined(PDF_USE_SKIA)
+SkTypeface* CFX_Face::GetOrCreateSkTypeface() {
+  if (!skia_typeface_) {
+    skia_typeface_ = CFX_GlyphCache::MakeSkTypeface(GetData());
+  }
+  return skia_typeface_.get();
 }
 #endif
 
