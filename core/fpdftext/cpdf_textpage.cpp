@@ -336,17 +336,6 @@ CFX_FloatRect GetLooseBounds(const CPDF_TextPage::CharInfo& charinfo) {
   return charinfo.char_box();
 }
 
-bool IsZeroWidthSpace(const CPDF_TextObject* text_object) {
-  if (text_object->CountItems() == 1) {
-    CPDF_TextObject::Item item = text_object->GetItemInfo(0);
-    if (item.char_code_ == 32 &&
-        fabs(text_object->GetRect().Width()) < kSizeEpsilon) {
-      return true;
-    }
-  }
-  return false;
-}
-
 }  // namespace
 
 CPDF_TextPage::TransformedTextObject::TransformedTextObject() = default;
@@ -863,15 +852,6 @@ void CPDF_TextPage::CloseTempLine() {
     }
     bPrevSpace = true;
   }
-
-  if (!str.IsEmpty()) {
-    const size_t last_idx = str.GetLength() - 1;
-    if (str[last_idx] == ' ') {
-      temp_text_buf_.Delete(last_idx, 1);
-      temp_char_list_.pop_back();
-      str.Delete(last_idx);
-    }
-  }
   CFX_BidiString bidi(str);
   if (rtl_) {
     bidi.SetOverallDirectionRight();
@@ -903,7 +883,7 @@ void CPDF_TextPage::ProcessTextObject(
     const CFX_Matrix& form_matrix,
     const CPDF_PageObjectHolder* pObjList,
     CPDF_PageObjectHolder::const_iterator ObjPos) {
-  if (IsZeroWidthSpace(pTextObj)) {
+  if (fabs(pTextObj->GetRect().Width()) < kSizeEpsilon) {
     return;
   }
 
@@ -1101,7 +1081,7 @@ void CPDF_TextPage::SwapTempTextBuf(size_t iCharListStartAppend,
 
 void CPDF_TextPage::ProcessTextObject(const TransformedTextObject& obj) {
   CPDF_TextObject* const pTextObj = obj.text_obj_;
-  if (IsZeroWidthSpace(pTextObj)) {
+  if (fabs(pTextObj->GetRect().Width()) < kSizeEpsilon) {
     return;
   }
 
