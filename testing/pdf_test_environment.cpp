@@ -12,7 +12,8 @@ PDFTestEnvironment::~PDFTestEnvironment() = default;
 
 // testing::Environment:
 void PDFTestEnvironment::SetUp() {
-  CFX_GEModule::Create(test_fonts_.font_paths());
+  CFX_GEModule::Create(test_fonts_.font_paths(),
+                       CFX_FontMgr::FontBackend::kFreeType);
 }
 
 void PDFTestEnvironment::TearDown() {

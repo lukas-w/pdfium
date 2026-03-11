@@ -23,8 +23,17 @@
 #include "core/fxge/cfx_face.h"
 #include "core/fxge/freetype/fx_freetype.h"
 
+#if defined(PDF_USE_SKIA)
+#include "third_party/skia/include/core/SkRefCnt.h"  // nogncheck
+#endif
+
 class CFX_FontMapper;
 class CFX_GlyphCache;
+
+#if defined(PDF_USE_SKIA)
+class SkFontMgr;
+class SkTypeface;
+#endif
 
 class CFX_FontMgr {
  public:
@@ -49,7 +58,9 @@ class CFX_FontMgr {
   static pdfium::span<const uint8_t> GetGenericSansFont();
   static pdfium::span<const uint8_t> GetGenericSerifFont();
 
-  CFX_FontMgr();
+  enum class FontBackend { kFreeType, kFontations };  // Currently skia-only.
+
+  explicit CFX_FontMgr(FontBackend backend);
   ~CFX_FontMgr();
 
   RetainPtr<FontCacheEntry> GetFontCacheEntry(const ByteString& face_name,
@@ -76,17 +87,30 @@ class CFX_FontMgr {
   FXFT_LibraryRec* GetFTLibrary() const { return ft_library_.get(); }
   bool FTLibrarySupportsHinting() const { return ft_library_supports_hinting_; }
 
+#if defined(PDF_USE_SKIA)
+  sk_sp<SkTypeface> MakeSkTypeface(pdfium::span<const uint8_t> font_span);
+#endif
+
  private:
   using NameWeightItalic = std::tuple<ByteString, int, bool>;
   using SizeChecksum = std::tuple<size_t, uint32_t>;
 
   // Must come before |builtin_mapper_| and |face_map_|.
   ScopedFXFTLibraryRec const ft_library_;
+#if defined(PDF_USE_SKIA)
+  const FontBackend font_backend_;
+  sk_sp<SkFontMgr> skia_fontmgr_;
+  sk_sp<SkFontMgr> skia_fontmgr_fallback_;
+#endif
   std::unique_ptr<CFX_FontMapper> builtin_mapper_;
   std::map<NameWeightItalic, ObservedPtr<FontCacheEntry>> face_map_;
   std::map<SizeChecksum, ObservedPtr<FontCacheEntry>> ttc_face_map_;
   std::map<CFX_Face*, ObservedPtr<CFX_GlyphCache>> glyph_cache_map_;
   const bool ft_library_supports_hinting_;
 };
+
+#if defined(PDF_USE_SKIA) && defined(PDF_USE_SKIA_CUSTOM_FONT_MANAGER)
+extern sk_sp<SkFontMgr> pdfium_skia_custom_font_manager();
+#endif  // defined(PDF_USE_SKIA) && defined(PDF_USE_SKIA_CUSTOM_FONT_MANAGER)
 
 #endif  // CORE_FXGE_CFX_FONTMGR_H_

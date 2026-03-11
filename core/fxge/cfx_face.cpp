@@ -942,7 +942,8 @@ bool CFX_Face::CanEmbed() {
 #if defined(PDF_USE_SKIA)
 SkTypeface* CFX_Face::GetOrCreateSkTypeface() {
   if (!skia_typeface_) {
-    skia_typeface_ = CFX_GlyphCache::MakeSkTypeface(GetData());
+    skia_typeface_ =
+        CFX_GEModule::Get()->GetFontMgr()->MakeSkTypeface(GetData());
   }
   return skia_typeface_.get();
 }

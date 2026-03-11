@@ -21,24 +21,6 @@
 #include "core/fxge/cfx_substfont.h"
 #include "core/fxge/fx_font.h"
 
-#if defined(PDF_USE_SKIA)
-#include "third_party/skia/include/core/SkFontMgr.h"         // nogncheck
-#include "third_party/skia/include/core/SkStream.h"          // nogncheck
-#include "third_party/skia/include/core/SkTypeface.h"        // nogncheck
-#include "third_party/skia/include/ports/SkFontMgr_empty.h"  // nogncheck
-
-#if defined(PDF_ENABLE_FONTATIONS)
-#include "third_party/skia/include/ports/SkFontMgr_Fontations.h"  // nogncheck
-#endif  // defined(PDF_ENABLE_FONTATIONS)
-
-#if BUILDFLAG(IS_WIN)
-#include "third_party/skia/include/ports/SkTypeface_win.h"  // nogncheck
-#elif BUILDFLAG(IS_APPLE)
-#include "third_party/skia/include/ports/SkFontMgr_mac_ct.h"  // nogncheck
-#endif  // BUILDFLAG(IS_WIN)
-
-#endif  // PDF_USE_SKIA
-
 #if BUILDFLAG(IS_APPLE)
 #include "core/fxge/cfx_textrenderoptions.h"
 #endif
@@ -193,7 +175,7 @@ const CFX_GlyphBitmap* CFX_GlyphCache::LoadGlyphBitmap(
 
   auto it = size_map_.find(FaceGlyphsKey);
   if (it != size_map_.end()) {
-    SizeGlyphCache& size_glyph_cache = it->second;
+    SizeToGlyphMap& size_glyph_cache = it->second;
     auto size_glyph_it = size_glyph_cache.find(glyph_index);
     if (size_glyph_it != size_glyph_cache.end()) {
       return size_glyph_it->second.get();
@@ -222,79 +204,6 @@ int CFX_GlyphCache::GetGlyphWidth(const CFX_Font* font,
   return width_map_[key];
 }
 
-#if defined(PDF_USE_SKIA)
-
-#if defined(PDF_USE_SKIA_CUSTOM_FONT_MANAGER)
-extern sk_sp<SkFontMgr> pdfium_skia_custom_font_manager();
-#endif  // defined(PDF_USE_SKIA_CUSTOM_FONT_MANAGER)
-
-namespace {
-
-// A singleton SkFontMgr which can be used to decode raw font data or
-// otherwise get access to system fonts.
-
-SkFontMgr* g_fontmgr = nullptr;
-
-CFX_GlyphCache::FontBackend g_font_backend =
-    CFX_GlyphCache::FontBackend::kFreeType;
-
-sk_sp<SkFontMgr> CreateSkiaFontManager() {
-#if defined(PDF_USE_SKIA_CUSTOM_FONT_MANAGER)
-  return pdfium_skia_custom_font_manager();
-#else  // defined(PDF_USE_SKIA_CUSTOM_FONT_MANAGER)
-#if defined(PDF_ENABLE_FONTATIONS)
-  if (g_font_backend == CFX_GlyphCache::FontBackend::kFontations) {
-    // This is a SkFontMgr which will use Fontations to decode font data.
-    return SkFontMgr_New_Fontations_Empty();
-  }
-#endif  // defined(PDF_ENABLE_FONTATIONS)
-  // This is a SkFontMgr which will use FreeType to decode font data.
-  return SkFontMgr_New_Custom_Empty();
-#endif  // defined(PDF_USE_SKIA_CUSTOM_FONT_MANAGER)
-}
-
-}  // namespace
-
-// static
-void CFX_GlyphCache::InitializeGlobals(FontBackend backend) {
-  CHECK(!g_fontmgr);
-  g_font_backend = backend;
-#if BUILDFLAG(IS_WIN)
-  g_fontmgr = SkFontMgr_New_DirectWrite().release();
-#elif BUILDFLAG(IS_APPLE)
-  g_fontmgr = SkFontMgr_New_CoreText(nullptr).release();
-#else
-  // This is a SkFontMgr which will use FreeType to decode font data.
-  g_fontmgr = CreateSkiaFontManager().release();
-#endif
-}
-
-// static
-void CFX_GlyphCache::DestroyGlobals() {
-  CHECK(g_fontmgr);
-  delete g_fontmgr;
-  g_fontmgr = nullptr;
-}
-
-sk_sp<SkTypeface> CFX_GlyphCache::MakeSkTypeface(
-    pdfium::span<const uint8_t> font_span) {
-  sk_sp<SkTypeface> result;
-  if (g_fontmgr) {
-    result = g_fontmgr->makeFromStream(
-        std::make_unique<SkMemoryStream>(font_span.data(), font_span.size()));
-  }
-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_APPLE)
-  // If DirectWrite or CoreText didn't work, try a fallback font manager.
-  if (!result) {
-    sk_sp<SkFontMgr> freetype_mgr = CreateSkiaFontManager();
-    result = freetype_mgr->makeFromStream(
-        std::make_unique<SkMemoryStream>(font_span.data(), font_span.size()));
-  }
-#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_APPLE)
-  return result;
-}
-#endif  // defined(PDF_USE_SKIA)
-
 CFX_GlyphBitmap* CFX_GlyphCache::LookUpGlyphBitmap(
     const CFX_Font* font,
     const CFX_Matrix& matrix,
@@ -303,10 +212,10 @@ CFX_GlyphBitmap* CFX_GlyphCache::LookUpGlyphBitmap(
     bool bFontStyle,
     int dest_width,
     FontAntiAliasingMode anti_alias) {
-  SizeGlyphCache* pSizeCache;
+  SizeToGlyphMap* pSizeCache;
   auto it = size_map_.find(FaceGlyphsKey);
   if (it == size_map_.end()) {
-    size_map_[FaceGlyphsKey] = SizeGlyphCache();
+    size_map_[FaceGlyphsKey] = SizeToGlyphMap();
     pSizeCache = &(size_map_[FaceGlyphsKey]);
   } else {
     pSizeCache = &(it->second);

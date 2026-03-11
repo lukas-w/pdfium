@@ -29,9 +29,6 @@ class CFDETextOutTest : public testing::Test {
   ~CFDETextOutTest() override = default;
 
   void SetUp() override {
-#if defined(PDF_USE_SKIA)
-    CFX_GlyphCache::InitializeGlobals(CFX_GlyphCache::FontBackend::kFreeType);
-#endif
     CFX_Size bitmap_size = GetBitmapSize();
     bitmap_ = MakeRetain<CFX_DIBitmap>();
     ASSERT_TRUE(bitmap_->Create(bitmap_size.width, bitmap_size.height,
@@ -56,9 +53,6 @@ class CFDETextOutTest : public testing::Test {
     font_.Reset();
     device_.reset();
     bitmap_.Reset();
-#if defined(PDF_USE_SKIA)
-    CFX_GlyphCache::DestroyGlobals();
-#endif
   }
 
   virtual RetainPtr<CFGAS_GEFont> LoadFont() {

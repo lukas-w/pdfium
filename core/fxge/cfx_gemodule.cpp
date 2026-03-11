@@ -8,7 +8,6 @@
 
 #include "core/fxcrt/check.h"
 #include "core/fxge/cfx_folderfontinfo.h"
-#include "core/fxge/cfx_fontmgr.h"
 
 namespace {
 
@@ -16,17 +15,11 @@ CFX_GEModule* g_GEModule = nullptr;
 
 }  // namespace
 
-CFX_GEModule::CFX_GEModule(const char** pUserFontPaths)
-    : platform_(PlatformIface::Create()),
-      font_mgr_(std::make_unique<CFX_FontMgr>()),
-      user_font_paths_(pUserFontPaths) {}
-
-CFX_GEModule::~CFX_GEModule() = default;
-
 // static
-void CFX_GEModule::Create(const char** pUserFontPaths) {
+void CFX_GEModule::Create(const char** pUserFontPaths,
+                          CFX_FontMgr::FontBackend backend) {
   DCHECK(!g_GEModule);
-  g_GEModule = new CFX_GEModule(pUserFontPaths);
+  g_GEModule = new CFX_GEModule(pUserFontPaths, backend);
   g_GEModule->platform_->Init();
   g_GEModule->font_mgr_->GetBuiltinMapper()->SetSystemFontInfo(
       g_GEModule->platform_->CreateDefaultSystemFontInfo());
@@ -45,3 +38,11 @@ CFX_GEModule* CFX_GEModule::Get() {
   DCHECK(g_GEModule);
   return g_GEModule;
 }
+
+CFX_GEModule::CFX_GEModule(const char** pUserFontPaths,
+                           CFX_FontMgr::FontBackend backend)
+    : platform_(PlatformIface::Create()),
+      font_mgr_(std::make_unique<CFX_FontMgr>(backend)),
+      user_font_paths_(pUserFontPaths) {}
+
+CFX_GEModule::~CFX_GEModule() = default;

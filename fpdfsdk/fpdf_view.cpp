@@ -225,22 +225,20 @@ FPDF_InitLibraryWithConfig(const FPDF_LIBRARY_CONFIG* config) {
   if (g_bLibraryInitialized) {
     return;
   }
-
   FX_InitializeMemoryAllocators();
   CFX_Timer::InitializeGlobals();
-  CFX_GEModule::Create(config ? config->m_pUserFontPaths : nullptr);
-  pdfium::InitializePageModule();
 
+  CFX_FontMgr::FontBackend backend = CFX_FontMgr::FontBackend::kFreeType;
 #if defined(PDF_USE_SKIA)
-  CFX_GlyphCache::FontBackend backend = CFX_GlyphCache::FontBackend::kFreeType;
   if (config && config->version >= 5 &&
       config->m_FontLibraryType != FPDF_FONTBACKENDTYPE_FREETYPE) {
     CHECK_EQ(config->m_FontLibraryType, FPDF_FONTBACKENDTYPE_FONTATIONS);
     CHECK_EQ(config->m_RendererType, FPDF_RENDERERTYPE_SKIA);
-    backend = CFX_GlyphCache::FontBackend::kFontations;
+    backend = CFX_FontMgr::FontBackend::kFontations;
   }
-  CFX_GlyphCache::InitializeGlobals(backend);
 #endif
+  CFX_GEModule::Create(config ? config->m_pUserFontPaths : nullptr, backend);
+  pdfium::InitializePageModule();
 
 #ifdef PDF_ENABLE_XFA
   CPDFXFA_ModuleInit();
@@ -251,11 +249,9 @@ FPDF_InitLibraryWithConfig(const FPDF_LIBRARY_CONFIG* config) {
     IJS_Runtime::Initialize(config->m_v8EmbedderSlot, config->m_pIsolate,
                             platform);
   }
-
   if (config && config->version >= 4) {
     SetRendererType(config->m_RendererType);
   }
-
   g_bLibraryInitialized = true;
 }
 
@@ -272,10 +268,6 @@ FPDF_EXPORT void FPDF_CALLCONV FPDF_DestroyLibrary() {
 #ifdef PDF_ENABLE_XFA
   CPDFXFA_ModuleDestroy();
 #endif  // PDF_ENABLE_XFA
-
-#if defined(PDF_USE_SKIA)
-  CFX_GlyphCache::DestroyGlobals();
-#endif
 
   pdfium::DestroyPageModule();
   CFX_GEModule::Destroy();

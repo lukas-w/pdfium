@@ -13,12 +13,12 @@
 
 #include "build/build_config.h"
 #include "core/fxcrt/unowned_ptr_exclusion.h"
+#include "core/fxge/cfx_fontmgr.h"
 
 #if BUILDFLAG(IS_APPLE)
 #include "core/fxcrt/span.h"
 #endif
 
-class CFX_FontMgr;
 class SystemFontInfoIface;
 
 class CFX_GEModule {
@@ -38,7 +38,8 @@ class CFX_GEModule {
 #endif
   };
 
-  static void Create(const char** pUserFontPaths);
+  static void Create(const char** pUserFontPaths,
+                     CFX_FontMgr::FontBackend backend);
   static void Destroy();
   static CFX_GEModule* Get();
 
@@ -47,7 +48,7 @@ class CFX_GEModule {
   const char** GetUserFontPaths() const { return user_font_paths_; }
 
  private:
-  explicit CFX_GEModule(const char** pUserFontPaths);
+  CFX_GEModule(const char** pUserFontPaths, CFX_FontMgr::FontBackend backend);
   ~CFX_GEModule();
 
   std::unique_ptr<PlatformIface> const platform_;  // Must outlive `font_mgr_`.
