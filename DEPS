@@ -212,7 +212,7 @@ vars = {
   # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling partition_allocator
   # and whatever else without interference from each other.
-  'partition_allocator_revision': 'baaa6670c23c19485d0a5a538bc43d3332def328',
+  'partition_allocator_revision': '2157c84d9a0d075c1ca31cc120590a9743550647',
   # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling pdfium_tests
   # and whatever else without interference from each other.
