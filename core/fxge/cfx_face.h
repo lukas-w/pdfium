@@ -58,8 +58,7 @@ class CFX_Face final : public Retainable, public Observable {
   static constexpr CharMapId kWindowsSymbolCmapId{3, 0};
   static constexpr CharMapId kWindowsUnicodeCmapId{3, 1};
 
-  static RetainPtr<CFX_Face> New(RetainPtr<Retainable> desc,
-                                 RetainPtr<CFX_ReadOnlySpanStream> font_stream,
+  static RetainPtr<CFX_Face> New(RetainPtr<CFX_ReadOnlySpanStream> font_stream,
                                  uint32_t face_index);
 
   bool HasGlyphNames() const;
@@ -146,9 +145,7 @@ class CFX_Face final : public Retainable, public Observable {
 #endif
 
  private:
-  CFX_Face(RetainPtr<Retainable> desc,
-           RetainPtr<CFX_ReadOnlySpanStream> font_stream,
-           FT_FaceRec* rec);
+  CFX_Face(RetainPtr<CFX_ReadOnlySpanStream> font_stream, FT_FaceRec* rec);
   ~CFX_Face() override;
 
   FT_FaceRec* GetRec() { return rec_.get(); }
@@ -163,12 +160,8 @@ class CFX_Face final : public Retainable, public Observable {
   std::optional<std::array<uint8_t, 2>> GetOs2Panose();
 #endif
 
-  // `desc` must outlive `owned_font_stream_`
-  RetainPtr<Retainable> const desc_;
-
   // `owned_font_stream_` must outlive `rec_` and `skia_typeface_`
   RetainPtr<CFX_ReadOnlySpanStream> owned_font_stream_;
-
   ScopedFXFTFaceRec const rec_;
 #if defined(PDF_USE_SKIA)
   sk_sp<SkTypeface> skia_typeface_;

@@ -527,8 +527,7 @@ RetainPtr<CFX_Face> CFX_FontMapper::UseInternalSubst(
     if (!standard_faces_[base_font]) {
       CFX_FontMgr* font_mgr = CFX_GEModule::Get()->GetFontMgr();
       standard_faces_[base_font] =
-          CFX_Face::New(nullptr,
-                        pdfium::MakeRetain<CFX_ReadOnlySpanStream>(
+          CFX_Face::New(pdfium::MakeRetain<CFX_ReadOnlySpanStream>(
                             font_mgr->GetStandardFont(base_font)),
                         0);
     }
@@ -545,8 +544,7 @@ RetainPtr<CFX_Face> CFX_FontMapper::UseInternalSubst(
     if (!generic_serif_face_) {
       CFX_FontMgr* font_mgr = CFX_GEModule::Get()->GetFontMgr();
       generic_serif_face_ =
-          CFX_Face::New(nullptr,
-                        pdfium::MakeRetain<CFX_ReadOnlySpanStream>(
+          CFX_Face::New(pdfium::MakeRetain<CFX_ReadOnlySpanStream>(
                             font_mgr->GetGenericSerifFont()),
                         0);
     }
@@ -556,8 +554,7 @@ RetainPtr<CFX_Face> CFX_FontMapper::UseInternalSubst(
   if (!generic_sans_face_) {
     CFX_FontMgr* font_mgr = CFX_GEModule::Get()->GetFontMgr();
     generic_sans_face_ =
-        CFX_Face::New(nullptr,
-                      pdfium::MakeRetain<CFX_ReadOnlySpanStream>(
+        CFX_Face::New(pdfium::MakeRetain<CFX_ReadOnlySpanStream>(
                           font_mgr->GetGenericSansFont()),
                       0);
   }
@@ -920,10 +917,7 @@ RetainPtr<CFX_Face> CFX_FontMapper::GetCachedTTCFace(void* font_handle,
     return face;
   }
 
-  face = CFX_Face::New(cache_entry,
-                       pdfium::MakeRetain<CFX_ReadOnlySpanStream>(
-                           cache_entry->FontStream()->span()),
-                       face_index);
+  face = CFX_Face::New(cache_entry->FontStream(), face_index);
   if (!face) {
     return nullptr;
   }
@@ -955,10 +949,7 @@ RetainPtr<CFX_Face> CFX_FontMapper::GetCachedFace(void* font_handle,
     return face;
   }
 
-  face = CFX_Face::New(cache_entry,
-                       pdfium::MakeRetain<CFX_ReadOnlySpanStream>(
-                           cache_entry->FontStream()->span().first(data_size)),
-                       0);
+  face = CFX_Face::New(cache_entry->FontStream(), 0);
   if (!face) {
     return nullptr;
   }

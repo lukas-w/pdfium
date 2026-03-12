@@ -339,8 +339,7 @@ class ScopedFaceTransform {
 }  // namespace
 
 // static
-RetainPtr<CFX_Face> CFX_Face::New(RetainPtr<Retainable> desc,
-                                  RetainPtr<CFX_ReadOnlySpanStream> font_stream,
+RetainPtr<CFX_Face> CFX_Face::New(RetainPtr<CFX_ReadOnlySpanStream> font_stream,
                                   uint32_t face_index) {
   CFX_FontMgr* font_mgr = CFX_GEModule::Get()->GetFontMgr();
   pdfium::span<const uint8_t> data = font_stream->span();
@@ -355,8 +354,7 @@ RetainPtr<CFX_Face> CFX_Face::New(RetainPtr<Retainable> desc,
     return nullptr;
   }
   // Private ctor.
-  return pdfium::WrapRetain(
-      new CFX_Face(std::move(desc), std::move(font_stream), face_rec));
+  return pdfium::WrapRetain(new CFX_Face(std::move(font_stream), face_rec));
 }
 
 bool CFX_Face::HasGlyphNames() const {
@@ -921,12 +919,9 @@ bool CFX_Face::CanEmbed() {
 }
 #endif
 
-CFX_Face::CFX_Face(RetainPtr<Retainable> desc,
-                   RetainPtr<CFX_ReadOnlySpanStream> font_stream,
+CFX_Face::CFX_Face(RetainPtr<CFX_ReadOnlySpanStream> font_stream,
                    FT_FaceRec* rec)
-    : desc_(std::move(desc)),
-      owned_font_stream_(std::move(font_stream)),
-      rec_(rec) {
+    : owned_font_stream_(std::move(font_stream)), rec_(rec) {
   DCHECK(rec_);
 }
 
