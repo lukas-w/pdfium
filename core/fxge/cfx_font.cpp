@@ -159,7 +159,7 @@ bool CFX_Font::LoadFromSpanStream(
     const RetainPtr<CFX_ReadOnlySpanStream>& stream,
     int face_index) {
   object_tag_ = 0;
-  face_ = CFX_Face::NewFromSpanStream(stream, face_index);
+  face_ = CFX_Face::New(nullptr, stream, face_index);
   return !!face_;
 }
 
@@ -191,7 +191,9 @@ bool CFX_Font::LoadFaceFromSpan(pdfium::span<const uint8_t> src_span,
   vertical_ = force_vertical;
   object_tag_ = object_tag;
   font_data_allocation_ = DataVector<uint8_t>(src_span.begin(), src_span.end());
-  face_ = CFX_Face::New(nullptr, font_data_allocation_, 0);
+  face_ = CFX_Face::New(
+      nullptr,
+      pdfium::MakeRetain<CFX_ReadOnlySpanStream>(font_data_allocation_), 0);
   font_data_ = font_data_allocation_;
   return !!face_;
 }

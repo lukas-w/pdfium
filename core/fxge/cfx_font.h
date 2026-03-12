@@ -142,10 +142,11 @@ class CFX_Font {
 #endif
   ByteString GetFamilyNameOrUntitled() const;
 
+  // `font_data_allocation_` must outlive `face_`.
+  DataVector<uint8_t> font_data_allocation_;
   mutable RetainPtr<CFX_Face> face_;
   mutable RetainPtr<CFX_GlyphCache> glyph_cache_;
   std::unique_ptr<CFX_SubstFont> subst_font_;
-  DataVector<uint8_t> font_data_allocation_;
   pdfium::raw_span<uint8_t> font_data_;
   FontType font_type_ = FontType::kUnknown;
   uint64_t object_tag_ = 0;

@@ -59,14 +59,8 @@ class CFX_Face final : public Retainable, public Observable {
   static constexpr CharMapId kWindowsUnicodeCmapId{3, 1};
 
   static RetainPtr<CFX_Face> New(RetainPtr<Retainable> desc,
-                                 pdfium::span<const uint8_t> data,
+                                 RetainPtr<CFX_ReadOnlySpanStream> font_stream,
                                  uint32_t face_index);
-
-#if defined(PDF_ENABLE_XFA) || BUILDFLAG(IS_ANDROID)
-  static RetainPtr<CFX_Face> NewFromSpanStream(
-      const RetainPtr<CFX_ReadOnlySpanStream>& font_stream,
-      uint32_t face_index);
-#endif  // defined(PDF_ENABLE_XFA) || BUILDFLAG(IS_ANDROID)
 
   bool HasGlyphNames() const;
   bool IsTtOt() const;
@@ -152,7 +146,9 @@ class CFX_Face final : public Retainable, public Observable {
 #endif
 
  private:
-  CFX_Face(FT_FaceRec* pRec, RetainPtr<Retainable> pDesc);
+  CFX_Face(RetainPtr<Retainable> desc,
+           RetainPtr<CFX_ReadOnlySpanStream> font_stream,
+           FT_FaceRec* rec);
   ~CFX_Face() override;
 
   FT_FaceRec* GetRec() { return rec_.get(); }
@@ -167,13 +163,16 @@ class CFX_Face final : public Retainable, public Observable {
   std::optional<std::array<uint8_t, 2>> GetOs2Panose();
 #endif
 
+  // `desc` must outlive `owned_font_stream_`
+  RetainPtr<Retainable> const desc_;
+
   // `owned_font_stream_` must outlive `rec_` and `skia_typeface_`
   RetainPtr<CFX_ReadOnlySpanStream> owned_font_stream_;
+
   ScopedFXFTFaceRec const rec_;
 #if defined(PDF_USE_SKIA)
   sk_sp<SkTypeface> skia_typeface_;
 #endif  // defined(PDF_USE_SKIA)
-  RetainPtr<Retainable> const desc_;
 };
 
 #endif  // CORE_FXGE_CFX_FACE_H_

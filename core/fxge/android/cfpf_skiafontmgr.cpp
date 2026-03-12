@@ -336,10 +336,10 @@ RetainPtr<CFX_Face> CFPF_SkiaFontMgr::GetFontFace(const ByteString& path,
   if (!mapped_bytes) {
     return nullptr;
   }
-  return CFX_Face::NewFromSpanStream(
-      pdfium::MakeRetain<CFX_ReadOnlyMappedDataBytesStream>(
-          std::move(mapped_bytes)),
-      face_index);
+  return CFX_Face::New(nullptr,
+                       pdfium::MakeRetain<CFX_ReadOnlyMappedDataBytesStream>(
+                           std::move(mapped_bytes)),
+                       face_index);
 }
 
 void CFPF_SkiaFontMgr::ScanPath(const ByteString& path) {

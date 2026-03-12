@@ -340,9 +340,10 @@ class ScopedFaceTransform {
 
 // static
 RetainPtr<CFX_Face> CFX_Face::New(RetainPtr<Retainable> desc,
-                                  pdfium::span<const uint8_t> data,
+                                  RetainPtr<CFX_ReadOnlySpanStream> font_stream,
                                   uint32_t face_index) {
   CFX_FontMgr* font_mgr = CFX_GEModule::Get()->GetFontMgr();
+  pdfium::span<const uint8_t> data = font_stream->span();
   FT_FaceRec* face_rec = nullptr;
   if (FT_New_Memory_Face(font_mgr->GetFTLibrary(), data.data(),
                          pdfium::checked_cast<FT_Long>(data.size()),
@@ -354,24 +355,9 @@ RetainPtr<CFX_Face> CFX_Face::New(RetainPtr<Retainable> desc,
     return nullptr;
   }
   // Private ctor.
-  return pdfium::WrapRetain(new CFX_Face(face_rec, std::move(desc)));
+  return pdfium::WrapRetain(
+      new CFX_Face(std::move(desc), std::move(font_stream), face_rec));
 }
-
-#if defined(PDF_ENABLE_XFA) || BUILDFLAG(IS_ANDROID)
-RetainPtr<CFX_Face> CFX_Face::NewFromSpanStream(
-    const RetainPtr<CFX_ReadOnlySpanStream>& font_stream,
-    uint32_t face_index) {
-  if (!font_stream) {
-    return nullptr;
-  }
-  RetainPtr<CFX_Face> face = New(nullptr, font_stream->span(), face_index);
-  if (!face) {
-    return nullptr;
-  }
-  face->owned_font_stream_ = std::move(font_stream);
-  return face;
-}
-#endif  // defined(PDF_ENABLE_XFA) || BUILDFLAG(IS_ANDROID)
 
 bool CFX_Face::HasGlyphNames() const {
   return !!(GetRec()->face_flags & FT_FACE_FLAG_GLYPH_NAMES);
@@ -935,6 +921,15 @@ bool CFX_Face::CanEmbed() {
 }
 #endif
 
+CFX_Face::CFX_Face(RetainPtr<Retainable> desc,
+                   RetainPtr<CFX_ReadOnlySpanStream> font_stream,
+                   FT_FaceRec* rec)
+    : desc_(std::move(desc)),
+      owned_font_stream_(std::move(font_stream)),
+      rec_(rec) {
+  DCHECK(rec_);
+}
+
 #if defined(PDF_USE_SKIA)
 SkTypeface* CFX_Face::GetOrCreateSkTypeface() {
   if (!skia_typeface_) {
@@ -944,11 +939,6 @@ SkTypeface* CFX_Face::GetOrCreateSkTypeface() {
   return skia_typeface_.get();
 }
 #endif
-
-CFX_Face::CFX_Face(FT_FaceRec* rec, RetainPtr<Retainable> pDesc)
-    : rec_(rec), desc_(std::move(pDesc)) {
-  DCHECK(rec_);
-}
 
 CFX_Face::~CFX_Face() = default;
 
