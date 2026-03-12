@@ -16,6 +16,7 @@
 #include <tuple>
 
 #include "core/fxcrt/bytestring.h"
+#include "core/fxcrt/cfx_read_only_container_stream.h"
 #include "core/fxcrt/fixed_size_data_vector.h"
 #include "core/fxcrt/observed_ptr.h"
 #include "core/fxcrt/retain_ptr.h"
@@ -41,15 +42,17 @@ class CFX_FontMgr {
    public:
     CONSTRUCT_VIA_MAKE_RETAIN;
 
-    pdfium::span<const uint8_t> FontData() const { return font_data_; }
+    RetainPtr<CFX_ReadOnlyFixedSizeDataVectorStream> FontStream() {
+      return font_stream_;
+    }
     void SetFace(uint32_t face_index, CFX_Face* face);
     CFX_Face* GetFace(uint32_t face_index) const;
 
    private:
-    explicit FontCacheEntry(FixedSizeDataVector<uint8_t> data);
+    explicit FontCacheEntry(FixedSizeDataVector<uint8_t>&& data);
     ~FontCacheEntry() override;
 
-    const FixedSizeDataVector<uint8_t> font_data_;
+    const RetainPtr<CFX_ReadOnlyFixedSizeDataVectorStream> font_stream_;
     std::array<ObservedPtr<CFX_Face>, 16> ttc_faces_;
   };
 

@@ -911,9 +911,10 @@ RetainPtr<CFX_Face> CFX_FontMapper::GetCachedTTCFace(void* font_handle,
     cache_entry = font_mgr->AddTTCFontCacheEntry(ttc_size, checksum,
                                                  std::move(font_data));
   }
+  CHECK_EQ(ttc_size, cache_entry->FontStream()->span().size());
   size_t font_offset = ttc_size - data_size;
   uint32_t face_index =
-      GetTTCIndex(cache_entry->FontData().first(ttc_size), font_offset);
+      GetTTCIndex(cache_entry->FontStream()->span(), font_offset);
   RetainPtr<CFX_Face> face(cache_entry->GetFace(face_index));
   if (face) {
     return face;
@@ -921,7 +922,7 @@ RetainPtr<CFX_Face> CFX_FontMapper::GetCachedTTCFace(void* font_handle,
 
   face = CFX_Face::New(cache_entry,
                        pdfium::MakeRetain<CFX_ReadOnlySpanStream>(
-                           cache_entry->FontData().first(ttc_size)),
+                           cache_entry->FontStream()->span()),
                        face_index);
   if (!face) {
     return nullptr;
@@ -956,7 +957,7 @@ RetainPtr<CFX_Face> CFX_FontMapper::GetCachedFace(void* font_handle,
 
   face = CFX_Face::New(cache_entry,
                        pdfium::MakeRetain<CFX_ReadOnlySpanStream>(
-                           cache_entry->FontData().first(data_size)),
+                           cache_entry->FontStream()->span().first(data_size)),
                        0);
   if (!face) {
     return nullptr;

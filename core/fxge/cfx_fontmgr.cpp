@@ -95,8 +95,9 @@ sk_sp<SkFontMgr> CreateSkiaFontManager(CFX_FontMgr::FontBackend backend) {
 #endif  // defined(PDF_USE_SKIA)
 }  // namespace
 
-CFX_FontMgr::FontCacheEntry::FontCacheEntry(FixedSizeDataVector<uint8_t> data)
-    : font_data_(std::move(data)) {}
+CFX_FontMgr::FontCacheEntry::FontCacheEntry(FixedSizeDataVector<uint8_t>&& data)
+    : font_stream_(pdfium::MakeRetain<CFX_ReadOnlyFixedSizeDataVectorStream>(
+          std::move(data))) {}
 
 CFX_FontMgr::FontCacheEntry::~FontCacheEntry() = default;
 
