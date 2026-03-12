@@ -653,7 +653,7 @@ RetainPtr<CFGAS_GEFont> CFGAS_FontMgr::LoadFontInternal(
     return nullptr;
   }
   auto internal_font = std::make_unique<CFX_Font>();
-  if (!internal_font->LoadFromSpanStream(font_stream, face_index)) {
+  if (!internal_font->LoadFaceFromSpanStream(font_stream, face_index, 0)) {
     return nullptr;
   }
   return CFGAS_GEFont::LoadFont(std::move(internal_font));

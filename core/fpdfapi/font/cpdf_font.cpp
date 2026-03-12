@@ -214,7 +214,8 @@ void CPDF_Font::LoadFontDescriptor(const CPDF_Dictionary* font_desc) {
     return;
   }
 
-  if (!font_.LoadFaceFromSpan(font_file_->GetSpan(), IsVertWriting(), key)) {
+  if (!font_.LoadFaceZeroFromSpan(font_file_->GetSpan(), IsVertWriting(),
+                                  key)) {
     document_->MaybePurgeFontFileStreamAcc(std::move(font_file_));
   }
 }

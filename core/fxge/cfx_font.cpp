@@ -154,16 +154,7 @@ std::vector<CharCodeAndIndex> CFX_Font::GetCharCodesAndIndices(
   return face_->GetCharCodesAndIndices(max_char);
 }
 
-#ifdef PDF_ENABLE_XFA
-bool CFX_Font::LoadFromSpanStream(
-    const RetainPtr<CFX_ReadOnlySpanStream>& stream,
-    int face_index) {
-  object_tag_ = 0;
-  face_ = CFX_Face::New(stream, face_index);
-  return !!face_;
-}
-
-#if !BUILDFLAG(IS_WIN)
+#if defined(PDF_ENABLE_XFA) && !BUILDFLAG(IS_WIN)
 void CFX_Font::SetFaceFromFont(const CFX_Font& that) {
   ClearGlyphCache();
   object_tag_ = 0;
@@ -173,8 +164,7 @@ void CFX_Font::SetFaceFromFont(const CFX_Font& that) {
 void CFX_Font::SetSubstFont(std::unique_ptr<CFX_SubstFont> subst) {
   subst_font_ = std::move(subst);
 }
-#endif  // !BUILDFLAG(IS_WIN)
-#endif  // PDF_ENABLE_XFA
+#endif  // defined(PDF_ENABLE_XFA) & !BUILDFLAG(IS_WIN)
 
 CFX_Font::~CFX_Font() {
   font_data_ = {};  // font_data_ can't outive face_.
@@ -185,15 +175,23 @@ CFX_Font::~CFX_Font() {
 #endif
 }
 
-bool CFX_Font::LoadFaceFromSpan(pdfium::span<const uint8_t> src_span,
-                                bool force_vertical,
-                                uint64_t object_tag) {
+bool CFX_Font::LoadFaceZeroFromSpan(pdfium::span<const uint8_t> src_span,
+                                    bool force_vertical,
+                                    uint64_t object_tag) {
   vertical_ = force_vertical;
-  object_tag_ = object_tag;
   font_data_allocation_ = DataVector<uint8_t>(src_span.begin(), src_span.end());
-  face_ = CFX_Face::New(
-      pdfium::MakeRetain<CFX_ReadOnlySpanStream>(font_data_allocation_), 0);
   font_data_ = font_data_allocation_;
+  return LoadFaceFromSpanStream(
+      pdfium::MakeRetain<CFX_ReadOnlySpanStream>(font_data_allocation_), 0,
+      object_tag);
+}
+
+bool CFX_Font::LoadFaceFromSpanStream(
+    const RetainPtr<CFX_ReadOnlySpanStream>& stream,
+    int face_index,
+    uint64_t object_tag) {
+  object_tag_ = object_tag;
+  face_ = CFX_Face::New(stream, face_index);
   return !!face_;
 }
 

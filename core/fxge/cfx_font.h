@@ -58,9 +58,14 @@ class CFX_Font {
   CFX_Font();
   ~CFX_Font();
 
-  bool LoadFaceFromSpan(pdfium::span<const uint8_t> src_span,
-                        bool force_vertical,
-                        uint64_t object_tag);
+  // Copies span data into font.
+  bool LoadFaceZeroFromSpan(pdfium::span<const uint8_t> src_span,
+                            bool force_vertical,
+                            uint64_t object_tag);
+
+  bool LoadFaceFromSpanStream(const RetainPtr<CFX_ReadOnlySpanStream>& stream,
+                              int face_index,
+                              uint64_t object_tag);
 
   void LoadSubstFace(const ByteString& face_name,
                      bool bTrueType,
@@ -76,16 +81,11 @@ class CFX_Font {
   int GetSubstFontItalicAngle() const;
   std::vector<CharCodeAndIndex> GetCharCodesAndIndices(char32_t max_char);
 
-#if defined(PDF_ENABLE_XFA)
-  bool LoadFromSpanStream(const RetainPtr<CFX_ReadOnlySpanStream>& stream,
-                          int face_index);
-
-#if !BUILDFLAG(IS_WIN)
+#if defined(PDF_ENABLE_XFA) && !BUILDFLAG(IS_WIN)
   void SetFaceFromFont(const CFX_Font& that);
   void SetFontSpan(pdfium::span<uint8_t> pSpan) { font_data_ = pSpan; }
   void SetSubstFont(std::unique_ptr<CFX_SubstFont> subst);
-#endif  // !BUILDFLAG(IS_WIN)
-#endif  // defined(PDF_ENABLE_XFA)
+#endif  // defined(PDF_ENABLE_XFA) && !BUILDFLAG(IS_WIN)
 
   const CFX_GlyphBitmap* LoadGlyphBitmap(
       uint32_t glyph_index,
