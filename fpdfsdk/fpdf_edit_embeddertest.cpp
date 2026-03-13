@@ -5101,3 +5101,35 @@ TEST_F(FPDFEditEmbedderTest, FormModifyObject) {
 
   VerifySavedDocument("form_object_with_image_removed_image");
 }
+
+TEST_F(FPDFEditEmbedderTest, Bug461845674) {
+  ASSERT_TRUE(OpenDocument("bug_461845674.pdf"));
+  ScopedPage page = LoadScopedPage(0);
+  ASSERT_TRUE(page);
+
+  {
+    ScopedFPDFBitmap bitmap = RenderPage(page.get());
+    CompareBitmap(bitmap.get(), kBlankPage200x200Png);
+  }
+
+  ScopedFPDFPageObject text_object(
+      FPDFPageObj_NewTextObj(document(), "Arial", 50.0f));
+  ASSERT_TRUE(text_object);
+  ScopedFPDFWideString text = GetFPDFWideString(L"test");
+  ASSERT_TRUE(FPDFText_SetText(text_object.get(), text.get()));
+  static constexpr FS_MATRIX kMatrix{1, 0, 0, 1, 10, 10};
+  ASSERT_TRUE(FPDFPageObj_SetMatrix(text_object.get(), &kMatrix));
+  FPDFPage_InsertObject(page.get(), text_object.release());
+  EXPECT_TRUE(FPDFPage_GenerateContent(page.get()));
+
+  static constexpr char kExpected[] = "bug_461845674";
+  {
+    ScopedFPDFBitmap bitmap = RenderPage(page.get());
+    CompareBitmapWithExpectationSuffix(bitmap.get(), kExpected);
+  }
+
+  EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
+  // TODO(crbug.com/461845674): The saved doc should not render blank. The
+  // rendering should match `kExpected`.
+  VerifySavedDocument(kBlankPage200x200Png);
+}
