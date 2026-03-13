@@ -5063,14 +5063,14 @@ TEST_F(FPDFEditEmbedderTest, Bug377948405) {
 
 TEST_F(FPDFEditEmbedderTest, FormModifyObject) {
   ASSERT_TRUE(OpenDocument("form_object_with_image.pdf"));
-  FPDF_PAGE page = LoadPage(0);
+  ScopedPage page = LoadScopedPage(0);
   ASSERT_TRUE(page);
 
   // Since we know the document structure, assert the exact object count
   constexpr int kExpectedPageObjectCount = 1;
-  ASSERT_EQ(kExpectedPageObjectCount, FPDFPage_CountObjects(page));
+  ASSERT_EQ(kExpectedPageObjectCount, FPDFPage_CountObjects(page.get()));
 
-  FPDF_PAGEOBJECT form_obj = FPDFPage_GetObject(page, 0);
+  FPDF_PAGEOBJECT form_obj = FPDFPage_GetObject(page.get(), 0);
   ASSERT_TRUE(form_obj);
   ASSERT_EQ(FPDF_PAGEOBJ_FORM, FPDFPageObj_GetType(form_obj));
 
@@ -5094,14 +5094,10 @@ TEST_F(FPDFEditEmbedderTest, FormModifyObject) {
   // After removing the image, the form should have no objects left
   ASSERT_EQ(0, FPDFFormObj_CountObjects(form_obj));
 
-  ASSERT_TRUE(FPDFPage_GenerateContent(page));
+  ASSERT_TRUE(FPDFPage_GenerateContent(page.get()));
 
   // Save the document to the internal buffer
   EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
-
-  // Unload the original page and close the document
-  UnloadPage(page);
-  CloseDocument();
 
   VerifySavedDocument("form_object_with_image_removed_image");
 }
