@@ -5102,6 +5102,31 @@ TEST_F(FPDFEditEmbedderTest, FormModifyObject) {
   VerifySavedDocument("form_object_with_image_removed_image");
 }
 
+TEST_F(FPDFEditEmbedderTest, Bug410996566) {
+  ASSERT_TRUE(OpenDocument("bug_410996566.pdf"));
+  ScopedPage page = LoadScopedPage(0);
+  ASSERT_TRUE(page);
+
+  {
+    ScopedFPDFPageObject obj(FPDFPage_GetObject(page.get(), 1));
+    ASSERT_TRUE(FPDFPage_RemoveObject(page.get(), obj.get()));
+  }
+  ASSERT_TRUE(FPDFPage_GenerateContent(page.get()));
+
+  static constexpr char kExpected[] = "bug_410996566";
+  {
+    ScopedFPDFBitmap bitmap = RenderPage(page.get());
+    CompareBitmapWithExpectationSuffix(bitmap.get(), kExpected);
+  }
+
+  // TODO(crbug.com/461845674): The saved doc should have the same text spacing
+  // in the remaining text object, just like the original PDF. The rendering
+  // should match `kExpected`.
+  static constexpr char kWrongSpacing[] = "bug_410996566_wrong_spacing";
+  ASSERT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
+  VerifySavedDocumentWithExpectationSuffix(kWrongSpacing);
+}
+
 TEST_F(FPDFEditEmbedderTest, Bug461845674) {
   ASSERT_TRUE(OpenDocument("bug_461845674.pdf"));
   ScopedPage page = LoadScopedPage(0);
