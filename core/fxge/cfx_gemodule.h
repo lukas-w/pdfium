@@ -38,7 +38,20 @@ class CFX_GEModule {
 #endif
   };
 
+  // This internal definition of renderer types must stay updated with respect
+  // to the public definition of `FPDF_RENDERER_TYPE` in `fpdfview.h`.
+  enum class RendererType {
+    kAgg = 0,
+    kSkia = 1,
+#if defined(PDF_USE_SKIA)
+    kDefault = kSkia,
+#else
+    kDefault = kAgg,
+#endif
+  };
+
   static void Create(const char** pUserFontPaths,
+                     RendererType renderer_type,
                      CFX_FontMgr::FontBackend backend);
   static void Destroy();
   static CFX_GEModule* Get();
@@ -47,9 +60,18 @@ class CFX_GEModule {
   PlatformIface* GetPlatform() const { return platform_.get(); }
   const char** GetUserFontPaths() const { return user_font_paths_; }
 
+#if defined(PDF_USE_SKIA)
+  // Runtime check to see if Skia is the renderer variant in use.
+  bool UseSkiaRenderer() const { return renderer_type_ == RendererType::kSkia; }
+#endif
+
  private:
-  CFX_GEModule(const char** pUserFontPaths, CFX_FontMgr::FontBackend backend);
+  CFX_GEModule(const char** pUserFontPaths,
+               RendererType renderer_type,
+               CFX_FontMgr::FontBackend backend);
   ~CFX_GEModule();
+
+  const RendererType renderer_type_;
 
   std::unique_ptr<PlatformIface> const platform_;  // Must outlive `font_mgr_`.
   std::unique_ptr<CFX_FontMgr> const font_mgr_;

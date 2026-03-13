@@ -25,7 +25,7 @@
 #include "core/fxcrt/span.h"
 #include "core/fxcrt/span_util.h"
 #include "core/fxge/calculate_pitch.h"
-#include "core/fxge/cfx_defaultrenderdevice.h"
+#include "core/fxge/cfx_gemodule.h"
 #include "core/fxge/dib/cfx_scanlinecompositor.h"
 
 namespace {
@@ -170,11 +170,13 @@ void CFX_DIBitmap::Clear(uint32_t color) {
       break;
     }
     case FXDIB_Format::kBgrx:
-      if (CFX_DefaultRenderDevice::UseSkiaRenderer()) {
+#if defined(PDF_USE_SKIA)
+      if (CFX_GEModule::Get()->UseSkiaRenderer()) {
         // TODO(crbug.com/42271025): This is not reliable because alpha may
         // be modified outside of this operation.
         color |= 0xFF000000;
       }
+#endif
       [[fallthrough]];
     case FXDIB_Format::kBgra:
       for (int row = 0; row < GetHeight(); row++) {
@@ -183,7 +185,7 @@ void CFX_DIBitmap::Clear(uint32_t color) {
       break;
 #if defined(PDF_USE_SKIA)
     case FXDIB_Format::kBgraPremul: {
-      CHECK(CFX_DefaultRenderDevice::UseSkiaRenderer());
+      CHECK(CFX_GEModule::Get()->UseSkiaRenderer());
       const FX_BGRA_STRUCT<uint8_t> bgra =
           PreMultiplyColor(ArgbToBGRAStruct(color));
       for (int row = 0; row < GetHeight(); row++) {
@@ -1016,7 +1018,7 @@ CFX_DIBitmap::ScopedPremultiplier::~ScopedPremultiplier() {
 }
 
 bool CFX_DIBitmap::ScopedPremultiplier::NeedToPremultiplyBitmap() const {
-  return CFX_DefaultRenderDevice::UseSkiaRenderer() &&
+  return CFX_GEModule::Get()->UseSkiaRenderer() &&
          bitmap_->GetFormat() == FXDIB_Format::kBgra;
 }
 

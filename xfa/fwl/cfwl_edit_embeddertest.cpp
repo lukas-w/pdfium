@@ -6,7 +6,7 @@
 
 #include <memory>
 
-#include "core/fxge/cfx_defaultrenderdevice.h"
+#include "core/fxge/cfx_gemodule.h"
 #include "public/fpdf_ext.h"
 #include "public/fpdf_formfill.h"
 #include "public/fpdf_fwlevent.h"
@@ -80,10 +80,12 @@ TEST_F(CFWLEditEmbedderTest, LeftClickMouseSelection) {
 }
 
 TEST_F(CFWLEditEmbedderTest, DragMouseSelection) {
+#if defined(PDF_USE_SKIA)
   // TODO(crbug.com/40096188): Fix this test and enable for Skia variants.
-  if (CFX_DefaultRenderDevice::UseSkiaRenderer()) {
+  if (CFX_GEModule::Get()->UseSkiaRenderer()) {
     return;
   }
+#endif
 
   CreateAndInitializeFormPDF("xfa/email_recommended.pdf");
   ScopedPage page = LoadScopedPage(0);
@@ -114,10 +116,12 @@ TEST_F(CFWLEditEmbedderTest, DragMouseSelection) {
 }
 
 TEST_F(CFWLEditEmbedderTest, SimpleFill) {
+#if defined(PDF_USE_SKIA)
   // TODO(crbug.com/40096188): Fix this test and enable for Skia variants.
-  if (CFX_DefaultRenderDevice::UseSkiaRenderer()) {
+  if (CFX_GEModule::Get()->UseSkiaRenderer()) {
     return;
   }
+#endif
 
   CreateAndInitializeFormPDF("xfa/email_recommended.pdf");
   ScopedPage page = LoadScopedPage(0);
@@ -141,10 +145,12 @@ TEST_F(CFWLEditEmbedderTest, SimpleFill) {
 }
 
 TEST_F(CFWLEditEmbedderTest, FillWithNewLineWithoutMultiline) {
+#if defined(PDF_USE_SKIA)
   // TODO(crbug.com/40096188): Fix this test and enable for Skia variants.
-  if (CFX_DefaultRenderDevice::UseSkiaRenderer()) {
+  if (CFX_GEModule::Get()->UseSkiaRenderer()) {
     return;
   }
+#endif
 
   CreateAndInitializeFormPDF("xfa/email_recommended.pdf");
   ScopedPage page = LoadScopedPage(0);
@@ -216,10 +222,12 @@ TEST_F(CFWLEditEmbedderTest, FillWithNewLineWithMultiline) {
 }
 
 TEST_F(CFWLEditEmbedderTest, DateTimePickerTest) {
+#if defined(PDF_USE_SKIA)
   // TODO(crbug.com/40096188): Fix this test and enable for Skia variants.
-  if (CFX_DefaultRenderDevice::UseSkiaRenderer()) {
+  if (CFX_GEModule::Get()->UseSkiaRenderer()) {
     return;
   }
+#endif
 
   CreateAndInitializeFormPDF("xfa/xfa_date_time_edit.pdf");
   ScopedPage page = LoadScopedPage(0);

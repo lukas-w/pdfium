@@ -42,6 +42,7 @@
 #include "core/fxge/cfx_defaultrenderdevice.h"
 #include "core/fxge/cfx_fillrenderoptions.h"
 #include "core/fxge/cfx_font.h"
+#include "core/fxge/cfx_gemodule.h"
 #include "core/fxge/cfx_graphstatedata.h"
 #include "core/fxge/cfx_path.h"
 #include "core/fxge/cfx_renderdevice.h"
@@ -1464,7 +1465,7 @@ RenderDeviceDriverIface::StartResult CFX_SkiaDeviceDriver::StartDIBits(
 }
 
 void CFX_DIBitmap::PreMultiply() {
-  CHECK(CFX_DefaultRenderDevice::UseSkiaRenderer());
+  CHECK(CFX_GEModule::Get()->UseSkiaRenderer());
   if (GetFormat() != FXDIB_Format::kBgra) {
     return;
   }
@@ -1488,7 +1489,7 @@ void CFX_DIBitmap::PreMultiply() {
 }
 
 void CFX_DIBitmap::UnPreMultiply() {
-  CHECK(CFX_DefaultRenderDevice::UseSkiaRenderer());
+  CHECK(CFX_GEModule::Get()->UseSkiaRenderer());
   if (GetFormat() != FXDIB_Format::kBgraPremul) {
     return;
   }

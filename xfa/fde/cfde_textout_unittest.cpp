@@ -13,6 +13,7 @@
 #include "core/fxcrt/fx_coordinates.h"
 #include "core/fxcrt/retain_ptr.h"
 #include "core/fxge/cfx_defaultrenderdevice.h"
+#include "core/fxge/cfx_gemodule.h"
 #include "core/fxge/cfx_glyphcache.h"
 #include "core/fxge/dib/cfx_dibitmap.h"
 #include "testing/gtest/include/gtest/gtest.h"
@@ -92,8 +93,8 @@ class CFDETextOutTest : public testing::Test {
 TEST_F(CFDETextOutTest, DrawLogicTextBasic) {
   text_out().DrawLogicText(device(), L"foo", CFX_RectF(0, 0, 2100, 100));
   const char* checksum = []() {
-#if BUILDFLAG(IS_WIN)
-    if (CFX_DefaultRenderDevice::UseSkiaRenderer()) {
+#if defined(PDF_USE_SKIA) && BUILDFLAG(IS_WIN)
+    if (CFX_GEModule::Get()->UseSkiaRenderer()) {
       return "bc1f736237b08d13db06c09f6becc9f7";
     }
 #endif
@@ -130,9 +131,11 @@ class CFDETextOutLargeBitmapTest : public CFDETextOutTest {
   }
 
   const char* GetLargeTextBlobChecksum() {
-    if (CFX_DefaultRenderDevice::UseSkiaRenderer()) {
+#if defined(PDF_USE_SKIA)
+    if (CFX_GEModule::Get()->UseSkiaRenderer()) {
       return "e9aaffff1ea680bd5dc40a7b8904788d";
     }
+#endif
     return "add7cf2819b3e1397d8a60a9ec436a86";
   }
 };

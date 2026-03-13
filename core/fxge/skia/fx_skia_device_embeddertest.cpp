@@ -14,6 +14,7 @@
 #include "core/fxge/cfx_defaultrenderdevice.h"
 #include "core/fxge/cfx_fillrenderoptions.h"
 #include "core/fxge/cfx_font.h"
+#include "core/fxge/cfx_gemodule.h"
 #include "core/fxge/cfx_graphstatedata.h"
 #include "core/fxge/cfx_path.h"
 #include "core/fxge/cfx_renderdevice.h"
@@ -212,14 +213,14 @@ using FxgeSkiaEmbedderTest = EmbedderTest;
 }  // namespace
 
 TEST(fxge, SkiaStateEmpty) {
-  if (!CFX_DefaultRenderDevice::UseSkiaRenderer()) {
+  if (!CFX_GEModule::Get()->UseSkiaRenderer()) {
     return;
   }
   Harness(&EmptyTest, {});
 }
 
 TEST(fxge, SkiaStatePath) {
-  if (!CFX_DefaultRenderDevice::UseSkiaRenderer()) {
+  if (!CFX_GEModule::Get()->UseSkiaRenderer()) {
     return;
   }
   Harness(&CommonTest, {State::Change::kNo, State::Save::kYes,
@@ -236,7 +237,7 @@ TEST(fxge, SkiaStatePath) {
 }
 
 TEST(fxge, SkiaStateText) {
-  if (!CFX_DefaultRenderDevice::UseSkiaRenderer()) {
+  if (!CFX_GEModule::Get()->UseSkiaRenderer()) {
     return;
   }
 
@@ -248,7 +249,7 @@ TEST(fxge, SkiaStateText) {
 }
 
 TEST(fxge, SkiaStateOOSClip) {
-  if (!CFX_DefaultRenderDevice::UseSkiaRenderer()) {
+  if (!CFX_GEModule::Get()->UseSkiaRenderer()) {
     return;
   }
   Harness(&OutOfSequenceClipTest, {});
@@ -264,7 +265,7 @@ TEST_F(FxgeSkiaEmbedderTest, RenderBigImageTwice) {
   static constexpr int kPageWidth = kImageWidth / kPageToImageFactor;
   static constexpr int kPageHeight = kImageHeight / kPageToImageFactor;
 
-  if (!CFX_DefaultRenderDevice::UseSkiaRenderer()) {
+  if (!CFX_GEModule::Get()->UseSkiaRenderer()) {
     GTEST_SKIP() << "Skia is not the default renderer";
   }
 

@@ -14,7 +14,7 @@
 
 #include "build/build_config.h"
 #include "core/fpdfapi/parser/cpdf_document.h"
-#include "core/fxge/cfx_defaultrenderdevice.h"
+#include "core/fxge/cfx_gemodule.h"
 #include "fpdfsdk/cpdfsdk_helpers.h"
 #include "fpdfsdk/fpdf_view_c_api_test.h"
 #include "public/cpp/fpdf_scopers.h"
@@ -1601,7 +1601,7 @@ TEST_F(FPDFViewEmbedderTest, RenderManyRectanglesWithAndWithoutExternalMemory) {
                                                     pdfium::kManyRectanglesPng);
 
 #if defined(PDF_USE_SKIA)
-  if (CFX_DefaultRenderDevice::UseSkiaRenderer()) {
+  if (CFX_GEModule::Get()->UseSkiaRenderer()) {
     TestRenderPageBitmapWithInternalMemory(page.get(), FPDFBitmap_BGRA_Premul,
                                            pdfium::kManyRectanglesPng);
     TestRenderPageBitmapWithInternalMemoryAndStride(
@@ -1977,7 +1977,7 @@ TEST_F(FPDFViewEmbedderTest, RenderXfaPage) {
 
 #if defined(PDF_USE_SKIA)
 TEST_F(FPDFViewEmbedderTest, RenderPageToSkp) {
-  if (!CFX_DefaultRenderDevice::UseSkiaRenderer()) {
+  if (!CFX_GEModule::Get()->UseSkiaRenderer()) {
     GTEST_SKIP() << "FPDF_RenderPageSkp() only makes sense with Skia";
   }
 
@@ -1990,7 +1990,7 @@ TEST_F(FPDFViewEmbedderTest, RenderPageToSkp) {
 }
 
 TEST_F(FPDFViewEmbedderTest, RenderXfaPageToSkp) {
-  if (!CFX_DefaultRenderDevice::UseSkiaRenderer()) {
+  if (!CFX_GEModule::Get()->UseSkiaRenderer()) {
     GTEST_SKIP() << "FPDF_RenderPageSkp() only makes sense with Skia";
   }
 
@@ -2143,12 +2143,14 @@ TEST_F(FPDFViewEmbedderTest, BitmapBGRAPremulFormat) {
   static constexpr int kHeight = 200;
   ScopedFPDFBitmap bitmap(
       FPDFBitmap_CreateEx(kWidth, kHeight, FPDFBitmap_BGRA_Premul, nullptr, 0));
-  if (CFX_DefaultRenderDevice::UseSkiaRenderer()) {
+#if defined(PDF_USE_SKIA)
+  if (CFX_GEModule::Get()->UseSkiaRenderer()) {
     ASSERT_TRUE(bitmap);
     EXPECT_EQ(FPDFBitmap_BGRA_Premul, FPDFBitmap_GetFormat(bitmap.get()));
-  } else {
-    ASSERT_FALSE(bitmap);
+    return;
   }
+#endif
+  ASSERT_FALSE(bitmap);
 }
 
 TEST_F(FPDFViewEmbedderTest, DocumentVersionInCatalog) {

@@ -739,7 +739,7 @@ bool CFX_RenderDevice::DrawPath(const CFX_Path& path,
   if (fill && fill_alpha && stroke_alpha < 0xff && fill_options.stroke) {
 #if defined(PDF_USE_SKIA)
     if (render_caps_ & FXRC_FILLSTROKE_PATH) {
-      const bool using_skia = CFX_DefaultRenderDevice::UseSkiaRenderer();
+      const bool using_skia = CFX_GEModule::Get()->UseSkiaRenderer();
       if (using_skia) {
         device_driver_->SetGroupKnockout(true);
       }
@@ -1102,13 +1102,15 @@ bool CFX_RenderDevice::DrawNormalText(pdfium::span<const TextCharPos> pCharPos,
         // one expires 10/7/19.  This makes LCD anti-aliasing very ugly, so we
         // instead fall back on NORMAL anti-aliasing.
         anti_alias = FontAntiAliasingMode::kNormal;
-        if (CFX_DefaultRenderDevice::UseSkiaRenderer()) {
+#if defined(PDF_USE_SKIA)
+        if (CFX_GEModule::Get()->UseSkiaRenderer()) {
           // Since |anti_alias| doesn't affect Skia rendering, and Skia only
           // follows strictly to the options provided by |text_options|, we need
           // to update |text_options| so that Skia falls back on normal
           // anti-aliasing as well.
           text_options.aliasing_type = CFX_TextRenderOptions::kAntiAliasing;
         }
+#endif
       } else if ((render_caps_ & FXRC_ALPHA_OUTPUT)) {
         // Whether Skia uses LCD optimization should strictly follow the
         // rendering options provided by |text_options|. No change needs to be

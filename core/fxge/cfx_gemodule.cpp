@@ -17,9 +17,10 @@ CFX_GEModule* g_GEModule = nullptr;
 
 // static
 void CFX_GEModule::Create(const char** pUserFontPaths,
+                          RendererType renderer_type,
                           CFX_FontMgr::FontBackend backend) {
   DCHECK(!g_GEModule);
-  g_GEModule = new CFX_GEModule(pUserFontPaths, backend);
+  g_GEModule = new CFX_GEModule(pUserFontPaths, renderer_type, backend);
   g_GEModule->platform_->Init();
   g_GEModule->font_mgr_->GetBuiltinMapper()->SetSystemFontInfo(
       g_GEModule->platform_->CreateDefaultSystemFontInfo());
@@ -40,8 +41,10 @@ CFX_GEModule* CFX_GEModule::Get() {
 }
 
 CFX_GEModule::CFX_GEModule(const char** pUserFontPaths,
+                           RendererType renderer_type,
                            CFX_FontMgr::FontBackend backend)
-    : platform_(PlatformIface::Create()),
+    : renderer_type_(renderer_type),
+      platform_(PlatformIface::Create()),
       font_mgr_(std::make_unique<CFX_FontMgr>(backend)),
       user_font_paths_(pUserFontPaths) {}
 
