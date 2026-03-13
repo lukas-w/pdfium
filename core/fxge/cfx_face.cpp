@@ -33,6 +33,10 @@
 
 #if defined(PDF_USE_SKIA)
 #include "third_party/skia/include/core/SkTypeface.h"  // nogncheck
+
+// Define the following to enable additional runtime checks during
+// the development process.
+// #define PDF_ENABLE_SKIA_TYPEFACE_CHECKS 1
 #endif
 
 #define EM_ADJUST(em, a) (em == 0 ? (a) : (a) * 1000 / em)
@@ -354,7 +358,12 @@ RetainPtr<CFX_Face> CFX_Face::New(RetainPtr<CFX_ReadOnlySpanStream> font_stream,
     return nullptr;
   }
   // Private ctor.
-  return pdfium::WrapRetain(new CFX_Face(std::move(font_stream), face_rec));
+  auto result =
+      pdfium::WrapRetain(new CFX_Face(std::move(font_stream), face_rec));
+#if defined(PDF_ENABLE_SKIA_TYPEFACE_CHECKS)
+  result->skia_typeface_ = font_mgr->MakeSkTypeface(result->GetData());
+#endif
+  return result;
 }
 
 bool CFX_Face::HasGlyphNames() const {
