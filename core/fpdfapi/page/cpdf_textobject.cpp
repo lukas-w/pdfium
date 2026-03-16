@@ -47,7 +47,7 @@ CPDF_TextObject::Item CPDF_TextObject::GetItemInfo(size_t index) const {
 
   Item info;
   info.char_code_ = char_codes_[index];
-  info.origin_ = CFX_PointF(index > 0 ? char_pos_[index - 1] : 0, 0);
+  info.origin_ = CFX_PointF(index > 0 ? char_positions_[index - 1] : 0, 0);
   if (info.char_code_ == CPDF_Font::kInvalidCharCode) {
     return info;
   }
@@ -165,7 +165,7 @@ std::unique_ptr<CPDF_TextObject> CPDF_TextObject::Clone() const {
   auto obj = std::make_unique<CPDF_TextObject>();
   obj->CopyData(this);
   obj->char_codes_ = char_codes_;
-  obj->char_pos_ = char_pos_;
+  obj->char_positions_ = char_positions_;
   obj->pos_ = pos_;
   return obj;
 }
@@ -212,7 +212,7 @@ void CPDF_TextObject::SetSegments(pdfium::span<const ByteString> strings,
   size_t nSegs = strings.size();
   CHECK(nSegs);
   char_codes_.clear();
-  char_pos_.clear();
+  char_positions_.clear();
   RetainPtr<CPDF_Font> font = GetFont();
   size_t nChars = nSegs - 1;
   for (const auto& str : strings) {
@@ -220,7 +220,7 @@ void CPDF_TextObject::SetSegments(pdfium::span<const ByteString> strings,
   }
   CHECK(nChars);
   char_codes_.resize(nChars);
-  char_pos_.resize(nChars - 1);
+  char_positions_.resize(nChars - 1);
   size_t index = 0;
   for (size_t i = 0; i < nSegs; ++i) {
     ByteStringView segment = strings[i].AsStringView();
@@ -230,7 +230,7 @@ void CPDF_TextObject::SetSegments(pdfium::span<const ByteString> strings,
       char_codes_[index++] = font->GetNextChar(segment, &offset);
     }
     if (i != nSegs - 1) {
-      char_pos_[index - 1] = kernings[i];
+      char_positions_[index - 1] = kernings[i];
       char_codes_[index++] = CPDF_Font::kInvalidCharCode;
     }
   }
@@ -295,10 +295,10 @@ float CPDF_TextObject::CalcPositionDataInternal(
     const uint32_t charcode = char_codes_[i];
     if (i > 0) {
       if (charcode == CPDF_Font::kInvalidCharCode) {
-        curpos -= (char_pos_[i - 1] * fontsize) / 1000;
+        curpos -= (char_positions_[i - 1] * fontsize) / 1000;
         continue;
       }
-      char_pos_[i - 1] = curpos;
+      char_positions_[i - 1] = curpos;
     }
 
     FX_RECT char_rect = font->GetCharBBox(charcode);
