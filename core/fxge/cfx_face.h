@@ -30,7 +30,6 @@ namespace fxge {
 enum class FontEncoding : uint32_t;
 }
 
-class CFX_Font;
 class CFX_GlyphBitmap;
 class CFX_Path;
 class CFX_SubstFont;
@@ -85,12 +84,13 @@ class CFX_Face final : public Retainable, public Observable {
   // TODO(crbug.com/42271048): Can this method be private?
   FX_RECT GetGlyphBBox() const;
   std::optional<FX_RECT> GetFontGlyphBBox(uint32_t glyph_index);
-  std::unique_ptr<CFX_GlyphBitmap> RenderGlyph(const CFX_Font* font,
-                                               uint32_t glyph_index,
-                                               bool bFontStyle,
+  std::unique_ptr<CFX_GlyphBitmap> RenderGlyph(uint32_t glyph_index,
+                                               bool font_style,
+                                               bool is_vertical,
                                                const CFX_Matrix& matrix,
                                                int dest_width,
-                                               FontAntiAliasingMode anti_alias);
+                                               FontAntiAliasingMode anti_alias,
+                                               const CFX_SubstFont* subst_font);
   std::unique_ptr<CFX_Path> LoadGlyphPath(uint32_t glyph_index,
                                           int dest_width,
                                           bool is_vertical,

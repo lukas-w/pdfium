@@ -19,7 +19,6 @@
 #include "core/fxcrt/numerics/safe_conversions.h"
 #include "core/fxcrt/numerics/safe_math.h"
 #include "core/fxcrt/unowned_ptr.h"
-#include "core/fxge/cfx_font.h"
 #include "core/fxge/cfx_fontmgr.h"
 #include "core/fxge/cfx_gemodule.h"
 #include "core/fxge/cfx_glyphbitmap.h"
@@ -483,38 +482,37 @@ int CFX_Face::GetGlyphCount() const {
 }
 
 std::unique_ptr<CFX_GlyphBitmap> CFX_Face::RenderGlyph(
-    const CFX_Font* font,
     uint32_t glyph_index,
-    bool bFontStyle,
+    bool font_style,
+    bool is_vertical,
     const CFX_Matrix& matrix,
     int dest_width,
-    FontAntiAliasingMode anti_alias) {
+    FontAntiAliasingMode anti_alias,
+    const CFX_SubstFont* subst_font) {
   FT_Matrix ft_matrix;
   ft_matrix.xx = matrix.a / 64 * 65536;
   ft_matrix.xy = matrix.c / 64 * 65536;
   ft_matrix.yx = matrix.b / 64 * 65536;
   ft_matrix.yy = matrix.d / 64 * 65536;
   bool bUseCJKSubFont = false;
-  const CFX_SubstFont* pSubstFont = font->GetSubstFont();
-  if (pSubstFont) {
-    bUseCJKSubFont = pSubstFont->subst_cjk_ && bFontStyle;
+  if (subst_font) {
+    bUseCJKSubFont = subst_font->subst_cjk_ && font_style;
     int angle;
     if (bUseCJKSubFont) {
-      angle = pSubstFont->italic_cjk_ ? -15 : 0;
+      angle = subst_font->italic_cjk_ ? -15 : 0;
     } else {
-      angle = pSubstFont->italic_angle_;
+      angle = subst_font->italic_angle_;
     }
     if (angle) {
       int skew = GetSkewFromAngle(angle);
-      if (font->IsVertical()) {
+      if (is_vertical) {
         ft_matrix.yx += ft_matrix.yy * skew / 100;
       } else {
         ft_matrix.xy -= ft_matrix.xx * skew / 100;
       }
     }
-    if (pSubstFont->IsBuiltInGenericFont()) {
-      font->GetFace()->AdjustVariationParams(glyph_index, dest_width,
-                                             font->GetSubstFont()->weight_);
+    if (subst_font->IsBuiltInGenericFont()) {
+      AdjustVariationParams(glyph_index, dest_width, subst_font->weight_);
     }
   }
 
@@ -542,14 +540,14 @@ std::unique_ptr<CFX_GlyphBitmap> CFX_Face::RenderGlyph(
   auto* glyph = rec->glyph;
   int weight;
   if (bUseCJKSubFont) {
-    weight = pSubstFont->weight_cjk_;
+    weight = subst_font->weight_cjk_;
   } else {
-    weight = pSubstFont ? pSubstFont->weight_ : 0;
+    weight = subst_font ? subst_font->weight_ : 0;
   }
-  if (pSubstFont && !pSubstFont->IsBuiltInGenericFont() && weight > 400) {
+  if (subst_font && !subst_font->IsBuiltInGenericFont() && weight > 400) {
     uint32_t index = (weight - 400) / 10;
     pdfium::CheckedNumeric<signed long> level =
-        GetWeightLevel(pSubstFont->charset_, index);
+        GetWeightLevel(subst_font->charset_, index);
     if (level.ValueOrDefault(-1) < 0) {
       return nullptr;
     }

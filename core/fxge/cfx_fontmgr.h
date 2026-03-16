@@ -28,6 +28,7 @@
 #include "third_party/skia/include/core/SkRefCnt.h"  // nogncheck
 #endif
 
+class CFX_Font;
 class CFX_FontMapper;
 class CFX_GlyphCache;
 
