@@ -938,7 +938,7 @@ ByteString CPDF_PageContentGenerator::GetOrCreateDefaultGraphics() const {
 // Tm sets the text matrix (allows positioning and transforming text).
 // Tf sets the font name (from Font in Resources) and font size.
 // Tr sets the text rendering mode.
-// Tj sets the actual text, <####...> is used when specifying charcodes.
+// TJ sets the actual text, <####...> is used when specifying charcodes.
 void CPDF_PageContentGenerator::ProcessText(fxcrt::ostringstream* buf,
                                             CPDF_TextObject* pTextObj) {
   ProcessGraphics(buf, pTextObj);
@@ -996,12 +996,29 @@ void CPDF_PageContentGenerator::ProcessText(fxcrt::ostringstream* buf,
   *buf << "/" << PDF_NameEncode(dict_name) << " ";
   WriteFloat(*buf, pTextObj->GetFontSize()) << " Tf ";
   *buf << static_cast<int>(pTextObj->GetTextRenderMode()) << " Tr ";
+
+  *buf << "[";
+  const std::vector<uint32_t>& char_codes = pTextObj->GetCharCodes();
+  const std::vector<float>& char_pos = pTextObj->GetCharPositions();
   ByteString text;
-  for (uint32_t charcode : pTextObj->GetCharCodes()) {
+  for (size_t i = 0; i < char_codes.size(); ++i) {
+    uint32_t charcode = char_codes[i];
     if (charcode != CPDF_Font::kInvalidCharCode) {
       font->AppendChar(&text, charcode);
+      continue;
+    }
+
+    if (!text.IsEmpty()) {
+      *buf << PDF_HexEncodeString(text.AsStringView()) << " ";
+      text.clear();
+    }
+    if (i > 0) {
+      WriteFloat(*buf, char_pos[i - 1]) << " ";
     }
   }
-  *buf << PDF_HexEncodeString(text.AsStringView()) << " Tj ET";
+  if (!text.IsEmpty()) {
+    *buf << PDF_HexEncodeString(text.AsStringView());
+  }
+  *buf << "] TJ ET";
   EndProcessGraphics(*buf);
 }

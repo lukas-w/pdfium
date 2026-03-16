@@ -5119,12 +5119,8 @@ TEST_F(FPDFEditEmbedderTest, Bug410996566) {
     CompareBitmapWithExpectationSuffix(bitmap.get(), kExpected);
   }
 
-  // TODO(crbug.com/461845674): The saved doc should have the same text spacing
-  // in the remaining text object, just like the original PDF. The rendering
-  // should match `kExpected`.
-  static constexpr char kWrongSpacing[] = "bug_410996566_wrong_spacing";
   ASSERT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
-  VerifySavedDocumentWithExpectationSuffix(kWrongSpacing);
+  VerifySavedDocumentWithExpectationSuffix(kExpected);
 }
 
 TEST_F(FPDFEditEmbedderTest, Bug461845674) {
