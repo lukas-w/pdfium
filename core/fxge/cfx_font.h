@@ -83,7 +83,7 @@ class CFX_Font {
 
 #if defined(PDF_ENABLE_XFA) && !BUILDFLAG(IS_WIN)
   void SetFaceFromFont(const CFX_Font& that);
-  void SetFontSpan(pdfium::span<uint8_t> pSpan) { font_data_ = pSpan; }
+  void SetFontSpan(pdfium::span<const uint8_t> pSpan) { font_data_ = pSpan; }
   void SetSubstFont(std::unique_ptr<CFX_SubstFont> subst);
 #endif  // defined(PDF_ENABLE_XFA) && !BUILDFLAG(IS_WIN)
 
@@ -120,7 +120,7 @@ class CFX_Font {
   FontType GetFontType() const { return font_type_; }
   void SetFontType(FontType type) { font_type_ = type; }
   uint64_t GetObjectTag() const { return object_tag_; }
-  pdfium::raw_span<uint8_t> GetFontSpan() const { return font_data_; }
+  pdfium::raw_span<const uint8_t> GetFontSpan() const { return font_data_; }
   std::unique_ptr<CFX_Path> LoadGlyphPathImpl(uint32_t glyph_index,
                                               int dest_width) const;
   int GetGlyphWidthImpl(uint32_t glyph_index, int dest_width, int weight) const;
@@ -147,7 +147,7 @@ class CFX_Font {
   mutable RetainPtr<CFX_Face> face_;
   mutable RetainPtr<CFX_GlyphCache> glyph_cache_;
   std::unique_ptr<CFX_SubstFont> subst_font_;
-  pdfium::raw_span<uint8_t> font_data_;
+  pdfium::raw_span<const uint8_t> font_data_;
   FontType font_type_ = FontType::kUnknown;
   uint64_t object_tag_ = 0;
   bool vertical_ = false;

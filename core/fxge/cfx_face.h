@@ -75,7 +75,7 @@ class CFX_Face final : public Retainable, public Observable {
   int16_t GetAscender() const;
   int16_t GetDescender() const;
 
-  pdfium::span<uint8_t> GetData() const;
+  pdfium::span<const uint8_t> GetData() const;
 
   // Returns the size of the data, or 0 on failure. Only write into `buffer` if
   // it is large enough to hold the data.
