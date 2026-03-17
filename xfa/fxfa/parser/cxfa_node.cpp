@@ -4131,8 +4131,9 @@ bool CXFA_Node::LoadCaption(CXFA_FFDoc* doc) {
 }
 
 CXFA_TextLayout* CXFA_Node::GetCaptionTextLayout() {
-  return layout_data_ ? layout_data_->AsFieldLayoutData()->cap_text_layout_
-                      : nullptr;
+  return layout_data_ && layout_data_->AsFieldLayoutData()
+             ? layout_data_->AsFieldLayoutData()->cap_text_layout_
+             : nullptr;
 }
 
 CXFA_TextLayout* CXFA_Node::GetTextLayout() {
