@@ -191,7 +191,7 @@ bool CFX_Font::LoadFaceFromSpanStream(
     int face_index,
     uint64_t object_tag) {
   object_tag_ = object_tag;
-  face_ = CFX_Face::New(stream, face_index);
+  face_ = CFX_Face::New(nullptr, stream, face_index);
   return !!face_;
 }
 

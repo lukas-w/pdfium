@@ -336,7 +336,8 @@ RetainPtr<CFX_Face> CFPF_SkiaFontMgr::GetFontFace(const ByteString& path,
   if (!mapped_bytes) {
     return nullptr;
   }
-  return CFX_Face::New(pdfium::MakeRetain<CFX_ReadOnlyMappedDataBytesStream>(
+  return CFX_Face::New(nullptr,
+                       pdfium::MakeRetain<CFX_ReadOnlyMappedDataBytesStream>(
                            std::move(mapped_bytes)),
                        face_index);
 }

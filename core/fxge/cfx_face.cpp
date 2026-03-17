@@ -342,7 +342,8 @@ class ScopedFaceTransform {
 }  // namespace
 
 // static
-RetainPtr<CFX_Face> CFX_Face::New(RetainPtr<CFX_ReadOnlySpanStream> font_stream,
+RetainPtr<CFX_Face> CFX_Face::New(RetainPtr<Retainable> cache_entry,
+                                  RetainPtr<CFX_ReadOnlySpanStream> font_stream,
                                   uint32_t face_index) {
   CFX_FontMgr* font_mgr = CFX_GEModule::Get()->GetFontMgr();
   pdfium::span<const uint8_t> data = font_stream->span();
@@ -357,8 +358,8 @@ RetainPtr<CFX_Face> CFX_Face::New(RetainPtr<CFX_ReadOnlySpanStream> font_stream,
     return nullptr;
   }
   // Private ctor.
-  auto result =
-      pdfium::WrapRetain(new CFX_Face(std::move(font_stream), face_rec));
+  auto result = pdfium::WrapRetain(
+      new CFX_Face(std::move(cache_entry), std::move(font_stream), face_rec));
 #if defined(PDF_ENABLE_SKIA_TYPEFACE_CHECKS)
   result->skia_typeface_ = font_mgr->MakeSkTypeface(result->GetData());
 #endif
@@ -926,9 +927,12 @@ bool CFX_Face::CanEmbed() {
 }
 #endif
 
-CFX_Face::CFX_Face(RetainPtr<CFX_ReadOnlySpanStream> font_stream,
+CFX_Face::CFX_Face(RetainPtr<Retainable> cache_entry,
+                   RetainPtr<CFX_ReadOnlySpanStream> font_stream,
                    FT_FaceRec* rec)
-    : owned_font_stream_(std::move(font_stream)), rec_(rec) {
+    : cache_entry_(std::move(cache_entry)),
+      font_stream_(std::move(font_stream)),
+      rec_(rec) {
   DCHECK(rec_);
 }
 
