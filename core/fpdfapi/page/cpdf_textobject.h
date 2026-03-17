@@ -49,9 +49,9 @@ class CPDF_TextObject final : public CPDF_PageObject {
   size_t CountChars() const;
   uint32_t GetCharCode(size_t index) const;
   Item GetCharInfo(size_t index) const;
-  float GetCharWidth(uint32_t charcode) const;
+  float GetCharWidth(uint32_t char_code) const;
   int CountWords() const;
-  WideString GetWordString(int nWordIndex) const;
+  WideString GetWordString(int word_index) const;
 
   CFX_PointF GetPos() const { return pos_; }
   CFX_Matrix GetTextMatrix() const;
