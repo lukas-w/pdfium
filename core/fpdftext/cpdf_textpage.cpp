@@ -1129,13 +1129,13 @@ void CPDF_TextPage::ProcessTextObject(const TransformedTextObject& obj) {
 
 CPDF_TextPage::TextOrientation CPDF_TextPage::GetTextObjectWritingMode(
     const CPDF_TextObject* pTextObj) const {
-  size_t nChars = pTextObj->CountChars();
-  if (nChars <= 1) {
+  size_t char_count = pTextObj->CharCount();
+  if (char_count <= 1) {
     return textline_dir_;
   }
 
   CPDF_TextObject::Item first = pTextObj->GetCharInfo(0);
-  CPDF_TextObject::Item last = pTextObj->GetCharInfo(nChars - 1);
+  CPDF_TextObject::Item last = pTextObj->GetCharInfo(char_count - 1);
   CFX_Matrix text_matrix = pTextObj->GetTextMatrix();
   first.origin_ = text_matrix.Transform(first.origin_);
   last.origin_ = text_matrix.Transform(last.origin_);
@@ -1286,7 +1286,7 @@ CPDF_TextPage::GenerateCharacter CPDF_TextPage::ProcessInsertObject(
                              : GenerateCharacter::kLineBreak;
   }
 
-  if (pObj->CountChars() == 1 && IsHyphenCode(curChar) && IsHyphen(curChar)) {
+  if (pObj->CharCount() == 1 && IsHyphenCode(curChar) && IsHyphen(curChar)) {
     return GenerateCharacter::kHyphen;
   }
 
@@ -1339,7 +1339,7 @@ bool CPDF_TextPage::ProcessGenerateCharacter(GenerateCharacter type,
       }
       return true;
     case GenerateCharacter::kHyphen:
-      if (text_object->CountChars() == 1) {
+      if (text_object->CharCount() == 1) {
         CPDF_TextObject::Item item = text_object->GetCharInfo(0);
         WideString unicode =
             text_object->GetFont()->UnicodeFromCharCode(item.char_code_);

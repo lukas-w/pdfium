@@ -46,7 +46,7 @@ class CPDF_TextObject final : public CPDF_PageObject {
   size_t CountItems() const;
   Item GetItemInfo(size_t index) const;
 
-  size_t CountChars() const;
+  size_t CharCount() const { return char_codes_.size(); }
   uint32_t GetCharCode(size_t index) const;
   Item GetCharInfo(size_t index) const;
   float GetCharWidth(uint32_t char_code) const;

@@ -65,10 +65,6 @@ CPDF_TextObject::Item CPDF_TextObject::GetItemInfo(size_t index) const {
   return info;
 }
 
-size_t CPDF_TextObject::CountChars() const {
-  return char_codes_.size();
-}
-
 uint32_t CPDF_TextObject::GetCharCode(size_t index) const {
   return index < char_codes_.size() ? char_codes_[index]
                                     : CPDF_Font::kInvalidCharCode;
@@ -82,10 +78,7 @@ int CPDF_TextObject::CountWords() const {
   RetainPtr<CPDF_Font> font = GetFont();
   bool is_in_latin_word = false;
   int word_count = 0;
-  const size_t char_count = CountChars();
-  for (size_t i = 0; i < char_count; ++i) {
-    uint32_t char_code = GetCharCode(i);
-
+  for (uint32_t char_code : char_codes_) {
     WideString unicode_str = font->UnicodeFromCharCode(char_code);
     uint16_t unicode = 0;
     if (unicode_str.GetLength() > 0) {
@@ -111,10 +104,7 @@ WideString CPDF_TextObject::GetWordString(int word_index) const {
   WideString result_str;
   int word_count = 0;
   bool is_in_latin_word = false;
-  const size_t char_count = CountChars();
-  for (size_t i = 0; i < char_count; ++i) {
-    uint32_t char_code = GetCharCode(i);
-
+  for (uint32_t char_code : char_codes_) {
     WideString unicode_str = font->UnicodeFromCharCode(char_code);
     uint16_t unicode = 0;
     if (unicode_str.GetLength() > 0) {
