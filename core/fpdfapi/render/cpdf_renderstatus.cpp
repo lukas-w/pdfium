@@ -962,7 +962,7 @@ bool CPDF_RenderStatus::ProcessType3Text(CPDF_TextObject* textobj,
     }
 
     CFX_Matrix matrix = char_matrix;
-    matrix.e += iChar > 0 ? textobj->GetCharPositions()[iChar - 1] : 0;
+    matrix.e += textobj->GetCharPositions()[iChar];
     matrix.Concat(text_matrix);
     matrix.Concat(mtObj2Device);
     if (!pType3Char->LoadBitmapFromSoleImageOfForm()) {

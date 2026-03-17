@@ -63,23 +63,22 @@ float CalculateBaseSpace(const CPDF_TextObject* pTextObj,
                          const CFX_Matrix& matrix) {
   const size_t nItems = pTextObj->CountItems();
   const float char_space = pTextObj->text_state().GetCharSpace();
-  if (char_space == 0.0f || nItems < 3) {
+  if (char_space == 0.0f || nItems < 2) {
     return 0.0f;
   }
 
-  bool bAllChar = true;
+  bool has_kerning = false;
   const float spacing = matrix.TransformDistance(char_space);
   const float fontsize_h = pTextObj->text_state().GetFontSizeH();
   float base_space = spacing;
-  for (size_t i = 0; i < nItems; ++i) {
-    CPDF_TextObject::Item item = pTextObj->GetItemInfo(i);
-    if (item.char_code_ == CPDF_Font::kInvalidCharCode) {
-      float kerning = -fontsize_h * item.origin_.x / 1000;
+  for (float kerning_val : pTextObj->GetCharKernings()) {
+    if (kerning_val != 0) {
+      float kerning = -fontsize_h * kerning_val / 1000;
       base_space = std::min(base_space, kerning + spacing);
-      bAllChar = false;
+      has_kerning = true;
     }
   }
-  if (base_space < 0.0 || (nItems == 3 && !bAllChar)) {
+  if (base_space < 0.0 || (nItems == 2 && has_kerning)) {
     return 0.0f;
   }
 
@@ -169,9 +168,6 @@ bool IsRightToLeft(const CPDF_TextObject& text_obj) {
   str.Reserve(nItems);
   for (size_t i = 0; i < nItems; ++i) {
     CPDF_TextObject::Item item = text_obj.GetItemInfo(i);
-    if (item.char_code_ == CPDF_Font::kInvalidCharCode) {
-      continue;
-    }
     WideString unicode = font->UnicodeFromCharCode(item.char_code_);
     wchar_t wChar = !unicode.IsEmpty() ? unicode[0] : 0;
     if (wChar == 0) {
@@ -1379,18 +1375,18 @@ void CPDF_TextPage::ProcessTextObjectItems(CPDF_TextObject* text_object,
 
   float spacing = 0;
   const size_t nItems = text_object->CountItems();
+  const std::vector<float>& kernings = text_object->GetCharKernings();
   for (size_t i = 0; i < nItems; ++i) {
     CPDF_TextObject::Item item = text_object->GetItemInfo(i);
-    if (item.char_code_ == CPDF_Font::kInvalidCharCode) {
+    if (i > 0 && kernings[i - 1] != 0) {
       WideStringView str = temp_text_buf_.AsStringView();
       if (str.IsEmpty()) {
         str = text_buf_.AsStringView();
       }
       if (!str.IsEmpty() && str.Back() != L' ') {
         float fontsize_h = text_object->text_state().GetFontSizeH();
-        spacing = -fontsize_h * item.origin_.x / 1000;
+        spacing = -fontsize_h * kernings[i - 1] / 1000;
       }
-      continue;
     }
 
     spacing -= base_space;
@@ -1405,9 +1401,6 @@ void CPDF_TextPage::ProcessTextObjectItems(CPDF_TextObject* text_object,
             CharType::kGenerated, CPDF_Font::kInvalidCharCode, L' ', origin,
             CFX_FloatRect(origin.x, origin.y, origin.x, origin.y), form_matrix,
             text_object));
-      }
-      if (item.char_code_ == CPDF_Font::kInvalidCharCode) {
-        continue;
       }
     }
 

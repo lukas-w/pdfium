@@ -46,6 +46,7 @@
 #include "core/fxcrt/notreached.h"
 #include "core/fxcrt/numerics/safe_conversions.h"
 #include "core/fxcrt/span.h"
+#include "core/fxcrt/zip.h"
 
 namespace {
 
@@ -998,22 +999,14 @@ void CPDF_PageContentGenerator::ProcessText(fxcrt::ostringstream* buf,
   *buf << static_cast<int>(pTextObj->GetTextRenderMode()) << " Tr ";
 
   *buf << "[";
-  const std::vector<uint32_t>& char_codes = pTextObj->GetCharCodes();
-  const std::vector<float>& char_pos = pTextObj->GetCharPositions();
   ByteString text;
-  for (size_t i = 0; i < char_codes.size(); ++i) {
-    uint32_t charcode = char_codes[i];
-    if (charcode != CPDF_Font::kInvalidCharCode) {
-      font->AppendChar(&text, charcode);
-      continue;
-    }
-
-    if (!text.IsEmpty()) {
+  for (auto [char_code, char_kerning] :
+       fxcrt::Zip(pTextObj->GetCharCodes(), pTextObj->GetCharKernings())) {
+    font->AppendChar(&text, char_code);
+    if (char_kerning != 0) {
       *buf << PDF_HexEncodeString(text.AsStringView()) << " ";
       text.clear();
-    }
-    if (i > 0) {
-      WriteFloat(*buf, char_pos[i - 1]) << " ";
+      WriteFloat(*buf, char_kerning) << " ";
     }
   }
   if (!text.IsEmpty()) {

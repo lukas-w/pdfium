@@ -466,7 +466,7 @@ std::vector<TextCharPos> CPDF_Font::GetCharPosList(
       text_char_pos.font_char_width_ = 0;
     }
 
-    text_char_pos.origin_ = CFX_PointF(i > 0 ? char_pos[i - 1] : 0, 0);
+    text_char_pos.origin_ = CFX_PointF(char_pos[i], 0);
     text_char_pos.glyph_adjust_ = false;
 
     float scaling_factor = 1.0f;

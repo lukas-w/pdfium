@@ -120,13 +120,11 @@ void CPDF_TextRenderer::DrawTextString(CFX_RenderDevice* pDevice,
   std::vector<uint32_t> codes;
   std::vector<float> positions;
   codes.resize(nChars);
-  positions.resize(nChars - 1);
+  positions.resize(nChars);
   float cur_pos = 0;
   for (size_t i = 0; i < nChars; i++) {
     codes[i] = pFont->GetNextChar(str.AsStringView(), &offset);
-    if (i) {
-      positions[i - 1] = cur_pos;
-    }
+    positions[i] = cur_pos;
     cur_pos += pFont->GetCharWidth(codes[i]) * font_size / 1000;
   }
   CFX_Matrix new_matrix = matrix;
