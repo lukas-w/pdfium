@@ -487,7 +487,7 @@ TEST_F(FPDFViewEmbedderTest, MultipleInitDestroy) {
 }
 
 TEST_F(FPDFViewEmbedderTest, RepeatedInitDestroy) {
-  for (int i = 0; i < 3; ++i) {
+  for (int i = 0; i < 4400; ++i) {
     if (!OpenDocument("about_blank.pdf")) {
       ADD_FAILURE();
     }
