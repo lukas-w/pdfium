@@ -32,6 +32,9 @@ class TestLoader;
 // loaded. So, if a test suite has a lot of tests that need a font manager they
 // can end up executing very, very slowly.
 
+// Helper macro for common equality assertions with a fixed tolerance of 0.001.
+#define EXPECT_NEAR_THREE_PLACES(a, b) EXPECT_NEAR((a), (b), 0.001)
+
 // This class is used to load a PDF document, and then run programatic
 // API tests against it.
 class EmbedderTest : public ::testing::Test,
