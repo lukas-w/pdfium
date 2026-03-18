@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 #include "build/build_config.h"
+#include "core/fxcrt/fx_memory.h"
 #include "testing/embedder_test_environment.h"
 #include "testing/gmock/include/gmock/gmock.h"
 #include "testing/gtest/include/gtest/gtest.h"
@@ -26,6 +27,8 @@ int main(int argc, char** argv) {
 #if defined(PDF_USE_PARTITION_ALLOC)
   pdfium::ConfigurePartitionAllocShimPartitionForTest();
 #endif
+
+  FX_InitializeMemoryAllocators();
 
 #ifdef PDF_ENABLE_V8
   // The env will be deleted by gtest.

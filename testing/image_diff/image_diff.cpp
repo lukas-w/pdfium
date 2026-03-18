@@ -17,6 +17,7 @@
 #include <string>
 #include <vector>
 
+#include "core/fxcrt/fx_memory.h"
 #include "core/fxcrt/numerics/safe_conversions.h"
 #include "testing/image_diff/image_diff_png.h"
 #include "testing/utils/path_service.h"
@@ -399,6 +400,8 @@ int DiffImages(const std::string& binary_name,
 }
 
 int main(int argc, const char* argv[]) {
+  FX_InitializeMemoryAllocators();
+
   bool histograms = false;
   bool produce_diff_image = false;
   bool produce_image_subtraction = false;
