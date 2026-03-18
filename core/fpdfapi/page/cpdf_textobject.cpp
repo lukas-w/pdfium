@@ -23,6 +23,15 @@ bool IsVertWritingCIDFont(const CPDF_CIDFont* font) {
   return font && font->IsVertWriting();
 }
 
+float GetWordSpaceIfNeeded(const CPDF_CIDFont* cid_font,
+                           uint32_t char_code,
+                           float word_space) {
+  if (char_code == ' ' && (!cid_font || cid_font->GetCharSize(' ') == 1)) {
+    return word_space;
+  }
+  return 0;
+}
+
 }  // namespace
 
 CPDF_TextObject::Item::Item() = default;
@@ -256,6 +265,8 @@ float CPDF_TextObject::CalcPositionDataInternal(
   const CPDF_CIDFont* cid_font = font->AsCIDFont();
   const bool is_vertical_writing = IsVertWritingCIDFont(cid_font);
   const float font_size = GetFontSize();
+  const float char_space = text_state().GetCharSpace();
+  const float word_space = text_state().GetWordSpace();
 
   for (size_t i = 0; i < char_codes_.size(); ++i) {
     const uint32_t char_code = char_codes_[i];
@@ -292,11 +303,8 @@ float CPDF_TextObject::CalcPositionDataInternal(
       char_width = font->GetCharWidth(char_code) * font_size / 1000;
     }
     current_position += char_width;
-    if (char_code == ' ' && (!cid_font || cid_font->GetCharSize(' ') == 1)) {
-      current_position += text_state().GetWordSpace();
-    }
-
-    current_position += text_state().GetCharSpace();
+    current_position += GetWordSpaceIfNeeded(cid_font, char_code, word_space);
+    current_position += char_space;
     current_position -= (char_kernings_[i] * font_size) / 1000;
   }
 
