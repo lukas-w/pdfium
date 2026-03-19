@@ -197,7 +197,6 @@ FPDF_InitLibraryWithConfig(const FPDF_LIBRARY_CONFIG* config) {
   if (g_bLibraryInitialized) {
     return;
   }
-  FX_InitializeMemoryAllocators();
   CFX_Timer::InitializeGlobals();
 
   CFX_GEModule::RendererType renderer_type =
@@ -261,7 +260,6 @@ FPDF_EXPORT void FPDF_CALLCONV FPDF_DestroyLibrary() {
   pdfium::DestroyPageModule();
   CFX_GEModule::Destroy();
   CFX_Timer::DestroyGlobals();
-  FX_DestroyMemoryAllocators();
 
   g_bLibraryInitialized = false;
 }

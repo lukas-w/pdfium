@@ -19,19 +19,16 @@ namespace {
 
 constexpr partition_alloc::PartitionOptions kOptions = {};
 
-struct Allocators {
-  partition_alloc::PartitionAllocator general_allocator{kOptions};
-  partition_alloc::PartitionAllocator string_allocator{kOptions};
-};
-
-Allocators* g_allocators = nullptr;
-
 partition_alloc::PartitionAllocator& GetGeneralPartitionAllocator() {
-  return g_allocators->general_allocator;
+  static auto* general_allocator =
+      new partition_alloc::PartitionAllocator{kOptions};
+  return *general_allocator;
 }
 
 partition_alloc::PartitionAllocator& GetStringPartitionAllocator() {
-  return g_allocators->string_allocator;
+  static auto* string_allocator =
+      new partition_alloc::PartitionAllocator{kOptions};
+  return *string_allocator;
 }
 
 }  // namespace
@@ -110,14 +107,3 @@ void StringDealloc(void* ptr) {
 }
 
 }  // namespace pdfium::internal
-
-void FX_InitializeMemoryAllocators() {
-  if (!g_allocators) {
-    g_allocators = new Allocators();
-  }
-}
-
-void FX_DestroyMemoryAllocators() {
-  delete g_allocators;
-  g_allocators = nullptr;
-}
