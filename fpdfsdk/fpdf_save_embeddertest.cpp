@@ -117,10 +117,11 @@ TEST_F(FPDFSaveEmbedderTest, Bug42271133) {
   ASSERT_TRUE(page);
 
   // Arbitrarily remove the first page object.
-  auto text_object = FPDFPage_GetObject(page.get(), 0);
-  ASSERT_TRUE(text_object);
-  ASSERT_TRUE(FPDFPage_RemoveObject(page.get(), text_object));
-  FPDFPageObj_Destroy(text_object);
+  {
+    ScopedFPDFPageObject text_object(FPDFPage_GetObject(page.get(), 0));
+    ASSERT_TRUE(text_object);
+    ASSERT_TRUE(FPDFPage_RemoveObject(page.get(), text_object.get()));
+  }
 
   // Regenerate dirty stream and save the document.
   ASSERT_TRUE(FPDFPage_GenerateContent(page.get()));
