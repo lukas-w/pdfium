@@ -1,0 +1,69 @@
+{{header}}
+{{object 1 0}} <<
+  /Type /Catalog
+  /Pages 4 0 R
+  /OCProperties <<
+    /OCGs [2 0 R 3 0 R]
+    /D <<
+      /ON [2 0 R]
+      /OFF [3 0 R]
+      /Order [2 0 R 3 0 R]
+    >>
+  >>
+>>
+endobj
+{{object 2 0}} <<
+  /Type /OCG
+  /Name (default on)
+>>
+endobj
+{{object 3 0}} <<
+  /Type /OCG
+  /Name (default off)
+>>
+endobj
+{{object 4 0}} <<
+  /Type /Pages
+  /Count 1
+  /Kids [5 0 R]
+>>
+endobj
+{{object 5 0}} <<
+  /Type /Page
+  /Parent 4 0 R
+  /Resources <<
+    /Properties <<
+      /MC0 2 0 R
+      /MC1 3 0 R
+    >>
+  >>
+  /MediaBox [0 0 200 200]
+  /Contents 6 0 R
+>>
+endobj
+{{object 6 0}} <<
+  {{streamlen}}
+>>
+stream
+% Not optional.
+0 0 1 rg
+50 25 100 50 re
+f
+% Default on.
+/OC /MC0 BDC
+0 1 0 rg
+50 75 100 50 re
+f
+EMC
+% Default off.
+/OC /MC1 BDC
+1 0 0 rg
+50 125 100 50 re
+f
+EMC
+endstream
+endobj
+{{xref}}
+{{trailer}}
+{{startxref}}
+%%EOF

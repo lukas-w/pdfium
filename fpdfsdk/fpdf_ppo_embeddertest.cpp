@@ -570,6 +570,28 @@ TEST_F(FPDFPPOEmbedderTest, Bug750568) {
   }
 }
 
+TEST_F(FPDFPPOEmbedderTest, Bug40162073) {
+  ASSERT_TRUE(OpenDocument("bug_40162073.pdf"));
+  ScopedPage page = LoadScopedPage(0);
+  ASSERT_TRUE(page);
+  ScopedFPDFBitmap bitmap = RenderPage(page.get());
+  CompareBitmap(bitmap.get(), "bug_40162073");
+
+  ScopedFPDFDocument new_doc(FPDF_CreateNewDocument());
+  ASSERT_TRUE(new_doc);
+
+  static constexpr int kIndices[] = {0};
+  EXPECT_TRUE(FPDF_ImportPagesByIndex(new_doc.get(), document(), kIndices,
+                                      std::size(kIndices), 0));
+
+  EXPECT_EQ(1, FPDF_GetPageCount(new_doc.get()));
+  ScopedFPDFPage new_page(FPDF_LoadPage(new_doc.get(), 0));
+  ASSERT_TRUE(new_page);
+  ScopedFPDFBitmap new_bitmap = RenderPage(new_page.get());
+  // TODO(crbug.com/40162073): Should render with "bug_40162073" expectation.
+  CompareBitmap(new_bitmap.get(), "bug_40162073_wrong");
+}
+
 TEST_F(FPDFPPOEmbedderTest, ImportWithZeroLengthStream) {
   ASSERT_TRUE(OpenDocument("zero_length_stream.pdf"));
   ScopedPage page = LoadScopedPage(0);
