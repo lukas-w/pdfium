@@ -24,6 +24,9 @@ class CGdiDeviceDriver : public RenderDeviceDriverIface {
   // RenderDeviceDriverIface:
   DeviceType GetDeviceType() const override;
   int GetDeviceCaps(int caps_id) const override;
+  int GetPixelWidth() const override;
+  int GetPixelHeight() const override;
+  int GetBitsPerPixel() const override;
   void SaveState() override;
   void RestoreState(bool bKeepSaved) override;
   void SetBaseClip(const FX_RECT& rect) override;

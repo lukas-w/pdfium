@@ -99,22 +99,28 @@ DeviceType CPSPrinterDriver::GetDeviceType() const {
 }
 
 int CPSPrinterDriver::GetDeviceCaps(int caps_id) const {
-  switch (caps_id) {
-    case FXDC_PIXEL_WIDTH:
-      return width_;
-    case FXDC_PIXEL_HEIGHT:
-      return height_;
-    case FXDC_BITS_PIXEL:
-      return bits_per_pixel_;
-    case FXDC_RENDER_CAPS:
-      return 0;
-    case FXDC_HORZ_SIZE:
-      return horz_size_;
-    case FXDC_VERT_SIZE:
-      return vert_size_;
-    default:
-      NOTREACHED();
-  }
+  CHECK_EQ(caps_id, FXDC_RENDER_CAPS);
+  return 0;
+}
+
+int CPSPrinterDriver::GetPixelWidth() const {
+  return width_;
+}
+
+int CPSPrinterDriver::GetPixelHeight() const {
+  return height_;
+}
+
+int CPSPrinterDriver::GetBitsPerPixel() const {
+  return bits_per_pixel_;
+}
+
+int CPSPrinterDriver::GetHorzSize() const {
+  return horz_size_;
+}
+
+int CPSPrinterDriver::GetVertSize() const {
+  return vert_size_;
 }
 
 void CPSPrinterDriver::SaveState() {

@@ -28,13 +28,6 @@ CGdiDisplayDriver::CGdiDisplayDriver(HDC hDC)
 
 CGdiDisplayDriver::~CGdiDisplayDriver() = default;
 
-int CGdiDisplayDriver::GetDeviceCaps(int caps_id) const {
-  if (caps_id == FXDC_HORZ_SIZE || caps_id == FXDC_VERT_SIZE) {
-    return 0;
-  }
-  return CGdiDeviceDriver::GetDeviceCaps(caps_id);
-}
-
 bool CGdiDisplayDriver::GetDIBits(RetainPtr<CFX_DIBitmap> bitmap,
                                   int left,
                                   int top) const {

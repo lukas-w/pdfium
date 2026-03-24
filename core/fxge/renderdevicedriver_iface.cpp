@@ -14,6 +14,13 @@
 
 RenderDeviceDriverIface::~RenderDeviceDriverIface() = default;
 
+int RenderDeviceDriverIface::GetHorzSize() const {
+  return 0;
+}
+int RenderDeviceDriverIface::GetVertSize() const {
+  return 0;
+}
+
 bool RenderDeviceDriverIface::SetClip_PathStroke(
     const CFX_Path& path,
     const CFX_Matrix* pObject2Device,

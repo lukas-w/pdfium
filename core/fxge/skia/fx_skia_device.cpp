@@ -1024,23 +1024,22 @@ DeviceType CFX_SkiaDeviceDriver::GetDeviceType() const {
 }
 
 int CFX_SkiaDeviceDriver::GetDeviceCaps(int caps_id) const {
-  switch (caps_id) {
-    case FXDC_PIXEL_WIDTH:
-      return canvas_->imageInfo().width();
-    case FXDC_PIXEL_HEIGHT:
-      return canvas_->imageInfo().height();
-    case FXDC_BITS_PIXEL:
-      return 32;
-    case FXDC_HORZ_SIZE:
-    case FXDC_VERT_SIZE:
-      return 0;
-    case FXDC_RENDER_CAPS:
-      return FXRC_GET_BITS | FXRC_ALPHA_PATH | FXRC_ALPHA_IMAGE |
-             FXRC_BLEND_MODE | FXRC_SOFT_CLIP | FXRC_ALPHA_OUTPUT |
-             FXRC_FILLSTROKE_PATH | FXRC_SHADING | FXRC_PREMULTIPLIED_ALPHA;
-    default:
-      NOTREACHED();
-  }
+  CHECK_EQ(caps_id, FXDC_RENDER_CAPS);
+  return FXRC_GET_BITS | FXRC_ALPHA_PATH | FXRC_ALPHA_IMAGE | FXRC_BLEND_MODE |
+         FXRC_SOFT_CLIP | FXRC_ALPHA_OUTPUT | FXRC_FILLSTROKE_PATH |
+         FXRC_SHADING | FXRC_PREMULTIPLIED_ALPHA;
+}
+
+int CFX_SkiaDeviceDriver::GetPixelWidth() const {
+  return canvas_->imageInfo().width();
+}
+
+int CFX_SkiaDeviceDriver::GetPixelHeight() const {
+  return canvas_->imageInfo().height();
+}
+
+int CFX_SkiaDeviceDriver::GetBitsPerPixel() const {
+  return 32;
 }
 
 void CFX_SkiaDeviceDriver::SaveState() {
@@ -1067,9 +1066,8 @@ bool CFX_SkiaDeviceDriver::SetClip_PathFill(
     std::optional<CFX_FloatRect> maybe_rectf = path.GetRect(&deviceMatrix);
     if (maybe_rectf.has_value()) {
       CFX_FloatRect& rectf = maybe_rectf.value();
-      rectf.Intersect(CFX_FloatRect(0, 0,
-                                    (float)GetDeviceCaps(FXDC_PIXEL_WIDTH),
-                                    (float)GetDeviceCaps(FXDC_PIXEL_HEIGHT)));
+      rectf.Intersect(
+          CFX_FloatRect(0, 0, (float)GetPixelWidth(), (float)GetPixelHeight()));
       FX_RECT outer = rectf.GetOuterRect();
       // note that PDF's y-axis goes up; Skia's y-axis goes down
       skClipPathBuilder.addRect({(float)outer.left, (float)outer.bottom,
