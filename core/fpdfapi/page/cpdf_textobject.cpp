@@ -166,13 +166,13 @@ const CPDF_TextObject* CPDF_TextObject::AsText() const {
 }
 
 CFX_Matrix CPDF_TextObject::GetTextMatrix() const {
-  pdfium::span<const float> text_matrix = text_state().GetMatrix();
+  pdfium::span<const float, 4> text_matrix = text_state().GetMatrix();
   return CFX_Matrix(text_matrix[0], text_matrix[2], text_matrix[1],
                     text_matrix[3], pos_.x, pos_.y);
 }
 
 void CPDF_TextObject::SetTextMatrix(const CFX_Matrix& matrix) {
-  pdfium::span<float> text_matrix = mutable_text_state().GetMutableMatrix();
+  pdfium::span<float, 4> text_matrix = mutable_text_state().GetMutableMatrix();
   text_matrix[0] = matrix.a;
   text_matrix[1] = matrix.c;
   text_matrix[2] = matrix.b;

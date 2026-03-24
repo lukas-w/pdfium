@@ -1340,7 +1340,7 @@ void CPDF_StreamContentParser::AddTextObject(
     SetGraphicStates(pText.get(), true, true, true);
     if (TextRenderingModeIsStrokeMode(text_mode)) {
       const CFX_Matrix& ctm = cur_states_->current_transformation_matrix();
-      pdfium::span<float> text_ctm =
+      pdfium::span<float, 4> text_ctm =
           pText->mutable_text_state().GetMutableCTM();
       text_ctm[0] = ctm.a;
       text_ctm[1] = ctm.c;
@@ -1460,7 +1460,7 @@ void CPDF_StreamContentParser::OnChangeTextMatrix() {
   text_matrix.Concat(cur_states_->text_matrix());
   text_matrix.Concat(cur_states_->current_transformation_matrix());
   text_matrix.Concat(mt_content_to_user_);
-  pdfium::span<float> pTextMatrix =
+  pdfium::span<float, 4> pTextMatrix =
       cur_states_->mutable_text_state().GetMutableMatrix();
   pTextMatrix[0] = text_matrix.a;
   pTextMatrix[1] = text_matrix.c;
