@@ -653,8 +653,7 @@ RetainPtr<CFX_DIBitmap> MakeDebugBitmap(int width, int height, uint32_t color) {
   return bitmap;
 }
 
-bool HasRSX(pdfium::span<const TextCharPos> char_pos,
-            bool* oneAtATimePtr) {
+bool HasRSX(pdfium::span<const TextCharPos> char_pos, bool* oneAtATimePtr) {
   bool useRSXform = false;
   bool oneAtATime = false;
   float scaleX = 1;
@@ -1172,7 +1171,8 @@ bool CFX_SkiaDeviceDriver::DrawPath(const CFX_Path& cfx_path,
       // Drawing it as a stroke normally already operates in the knockout way
       // but not for the AA pixels in some cases.
       SkPathBuilder stroke_outline_builder;
-      skpathutils::FillPathWithPaint(path, stroke_paint, &stroke_outline_builder);
+      skpathutils::FillPathWithPaint(path, stroke_paint,
+                                     &stroke_outline_builder);
       SkPath stroke_outline = stroke_outline_builder.detach();
       layer_paint.setColor(stroke_color);
       DrawPathImpl(stroke_outline, layer_paint);

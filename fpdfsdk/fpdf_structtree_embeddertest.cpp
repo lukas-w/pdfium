@@ -143,8 +143,7 @@ TEST_F(FPDFStructTreeEmbedderTest, GetExpansion) {
         FPDF_StructElement_GetChildAtIndex(element, 0);
     ASSERT_TRUE(child_element);
     // Span element has /E set to "Expansion".
-    ASSERT_EQ(20U,
-              FPDF_StructElement_GetExpansion(child_element, nullptr, 0));
+    ASSERT_EQ(20U, FPDF_StructElement_GetExpansion(child_element, nullptr, 0));
 
     unsigned short buffer[10] = {};
     // Deliberately pass in a small buffer size to make sure `buffer` remains
