@@ -37,7 +37,7 @@ source_set("edit") {
     "../font",
     "../page",
     "../parser",
-    "//third_party/harfbuzz-ng",
+    "//third_party/harfbuzz",
   ]
   visibility = [ "../../../*" ]
 }

@@ -1088,7 +1088,7 @@ deps = {
   'src/third_party/fxdiv/src':
     Var('chromium_git') + '/external/github.com/Maratyszcza/FXdiv.git' + '@' + '63058eff77e11aa15bf531df5dd34395ec3017c8',
 
-  'src/third_party/harfbuzz-ng/src':
+  'src/third_party/harfbuzz/src':
     Var('chromium_git') + '/external/github.com/harfbuzz/harfbuzz.git' + '@' + Var('harfbuzz_revision'),
 
   'src/third_party/ink/src':
@@ -1891,7 +1891,7 @@ deps = {
     Var('chromium_git') + '/external/github.com/google/googletest.git@' +
         Var('gtest_revision'),
 
-  'third_party/harfbuzz-ng/src':
+  'third_party/harfbuzz/src':
     Var('chromium_git') + '/external/github.com/harfbuzz/harfbuzz.git@' +
         Var('harfbuzz_revision'),
 
@@ -2615,7 +2615,7 @@ class RollAllDepsTest(unittest.TestCase):
         'roll-dep third_party/googletest/src '
         '--roll-to 4fe3307fb2d9f86d19777c7eb0e4809e9694dde7 '
         '--ignore-dirty-tree --no-log',
-        'roll-dep third_party/harfbuzz-ng/src '
+        'roll-dep third_party/harfbuzz/src '
         '--roll-to 31695252eb6ed25096893aec7f848889dad874bc '
         '--ignore-dirty-tree --no-log',
         'roll-dep third_party/icu '

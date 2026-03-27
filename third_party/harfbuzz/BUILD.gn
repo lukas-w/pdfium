@@ -5,14 +5,14 @@
 import("//build/config/buildflags_paint_preview.gni")
 import("//build/config/chrome_build.gni")
 import("//build/config/ui.gni")
-import("//third_party/harfbuzz-ng/harfbuzz.gni")
+import("//third_party/harfbuzz/harfbuzz.gni")
 
 if (use_system_harfbuzz) {
   import("//build/config/linux/pkg_config.gni")
   pkg_config("harfbuzz_from_pkgconfig") {
     visibility = [
       "//third_party/freetype",
-      "//third_party/harfbuzz-ng",
+      "//third_party/harfbuzz",
     ]
     packages = [
       "harfbuzz",
@@ -20,7 +20,7 @@ if (use_system_harfbuzz) {
     ]
   }
 
-  component("harfbuzz-ng") {
+  component("harfbuzz") {
     public_configs = [ ":harfbuzz_from_pkgconfig" ]
   }
 } else {
@@ -42,7 +42,7 @@ if (use_system_harfbuzz) {
     cflags += [ "-Wno-array-bounds" ]
   }
 
-  component("harfbuzz-ng") {
+  component("harfbuzz") {
     public = [
       "src/src/hb-blob.h",
       "src/src/hb-buffer.h",
@@ -477,7 +477,7 @@ if (build_with_chromium) {
     sources = [ "fuzz/hb_shape_fuzzer.cc" ]
     deps = [
       "//base",
-      "//third_party/harfbuzz-ng",
+      "//third_party/harfbuzz",
     ]
     seed_corpus = "fuzz/seed_corpus"
   }
@@ -486,7 +486,7 @@ if (build_with_chromium) {
     sources = [ "fuzz/hb_subset_fuzzer.cc" ]
     deps = [
       "//base",
-      "//third_party/harfbuzz-ng",
+      "//third_party/harfbuzz",
     ]
     seed_corpus = "fuzz/seed_corpus"
   }

@@ -408,7 +408,7 @@ deps = {
     Var('chromium_git') + '/external/github.com/google/googletest.git@' +
         Var('gtest_revision'),
 
-  'third_party/harfbuzz-ng/src':
+  'third_party/harfbuzz/src':
     Var('chromium_git') + '/external/github.com/harfbuzz/harfbuzz.git@' +
         Var('harfbuzz_revision'),
 
