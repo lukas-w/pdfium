@@ -22,7 +22,6 @@
 #include "core/fxge/cfx_windowsrenderdevice.h"
 #include "core/fxge/dib/cfx_dibbase.h"
 #include "core/fxge/dib/cfx_dibitmap.h"
-#include "core/fxge/render_defines.h"
 #include "core/fxge/text_char_pos.h"
 
 CGdiPrinterDriver::CGdiPrinterDriver(HDC hDC)

@@ -64,7 +64,18 @@ class RenderDeviceDriverIface {
   virtual ~RenderDeviceDriverIface();
 
   virtual DeviceType GetDeviceType() const = 0;
-  virtual int GetDeviceCaps(int caps_id) const = 0;
+  virtual bool RenderCapGetBits() const;
+  virtual bool RenderCapAlphaPath() const;
+  virtual bool RenderCapAlphaImage() const;
+  virtual bool RenderCapBlendMode() const;
+  virtual bool RenderCapSoftClip() const;
+  virtual bool RenderCapAlphaOutput() const;
+  virtual bool RenderCapByteMaskOutput() const;
+#if defined(PDF_USE_SKIA)
+  virtual bool RenderCapFillStrokePath() const;
+  virtual bool RenderCapShading() const;
+  virtual bool RenderCapPremultipliedAlpha() const;
+#endif
   virtual int GetPixelWidth() const = 0;
   virtual int GetPixelHeight() const = 0;
   virtual int GetBitsPerPixel() const = 0;

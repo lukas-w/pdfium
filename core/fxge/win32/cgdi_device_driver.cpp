@@ -26,7 +26,6 @@
 #include "core/fxge/cfx_path.h"
 #include "core/fxge/dib/cfx_dibbase.h"
 #include "core/fxge/dib/cfx_dibitmap.h"
-#include "core/fxge/render_defines.h"
 #include "core/fxge/win32/cwin32_platform.h"
 
 #if defined(PDF_USE_AGG)
@@ -375,11 +374,8 @@ CGdiDeviceDriver::CGdiDeviceDriver(HDC hDC, DeviceType device_type)
     width_ = ::GetDeviceCaps(dc_handle_, HORZRES);
     height_ = ::GetDeviceCaps(dc_handle_, VERTRES);
   }
-  if (device_type_ == DeviceType::kDisplay) {
-    render_caps_ = FXRC_GET_BITS;
-  } else {
-    render_caps_ = 0;
-  }
+  render_cap_get_bits_ = device_type_ == DeviceType::kDisplay;
+  render_cap_alpha_path_ = false;
 }
 
 CGdiDeviceDriver::~CGdiDeviceDriver() = default;
@@ -388,9 +384,16 @@ DeviceType CGdiDeviceDriver::GetDeviceType() const {
   return device_type_;
 }
 
-int CGdiDeviceDriver::GetDeviceCaps(int caps_id) const {
-  CHECK_EQ(caps_id, FXDC_RENDER_CAPS);
-  return render_caps_;
+bool CGdiDeviceDriver::RenderCapGetBits() const {
+  return render_cap_get_bits_;
+}
+
+bool CGdiDeviceDriver::RenderCapAlphaPath() const {
+  return render_cap_alpha_path_;
+}
+
+bool CGdiDeviceDriver::RenderCapAlphaImage() const {
+  return render_cap_alpha_image_;
 }
 
 int CGdiDeviceDriver::GetPixelWidth() const {

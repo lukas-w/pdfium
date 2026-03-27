@@ -35,11 +35,6 @@ DeviceType CTextOnlyPrinterDriver::GetDeviceType() const {
   return DeviceType::kPrinter;
 }
 
-int CTextOnlyPrinterDriver::GetDeviceCaps(int caps_id) const {
-  CHECK_EQ(caps_id, FXDC_RENDER_CAPS);
-  return 0;
-}
-
 int CTextOnlyPrinterDriver::GetPixelWidth() const {
   return width_;
 }

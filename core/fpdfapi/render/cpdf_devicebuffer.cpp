@@ -87,7 +87,7 @@ RetainPtr<CFX_DIBitmap> CPDF_DeviceBuffer::Initialize() {
 }
 
 void CPDF_DeviceBuffer::OutputToDevice() {
-  if (device_->GetDeviceCaps(FXDC_RENDER_CAPS) & FXRC_GET_BITS) {
+  if (device_->RenderCapGetBits()) {
     if (matrix_.a == 1.0f && matrix_.d == 1.0f) {
       device_->SetDIBits(bitmap_, rect_.left, rect_.top);
       return;

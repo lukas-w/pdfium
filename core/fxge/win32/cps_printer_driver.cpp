@@ -98,11 +98,6 @@ DeviceType CPSPrinterDriver::GetDeviceType() const {
   return DeviceType::kPrinter;
 }
 
-int CPSPrinterDriver::GetDeviceCaps(int caps_id) const {
-  CHECK_EQ(caps_id, FXDC_RENDER_CAPS);
-  return 0;
-}
-
 int CPSPrinterDriver::GetPixelWidth() const {
   return width_;
 }

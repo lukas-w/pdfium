@@ -1022,11 +1022,40 @@ DeviceType CFX_SkiaDeviceDriver::GetDeviceType() const {
   return DeviceType::kDisplay;
 }
 
-int CFX_SkiaDeviceDriver::GetDeviceCaps(int caps_id) const {
-  CHECK_EQ(caps_id, FXDC_RENDER_CAPS);
-  return FXRC_GET_BITS | FXRC_ALPHA_PATH | FXRC_ALPHA_IMAGE | FXRC_BLEND_MODE |
-         FXRC_SOFT_CLIP | FXRC_ALPHA_OUTPUT | FXRC_FILLSTROKE_PATH |
-         FXRC_SHADING | FXRC_PREMULTIPLIED_ALPHA;
+bool CFX_SkiaDeviceDriver::RenderCapGetBits() const {
+  return true;
+}
+
+bool CFX_SkiaDeviceDriver::RenderCapAlphaPath() const {
+  return true;
+}
+
+bool CFX_SkiaDeviceDriver::RenderCapAlphaImage() const {
+  return true;
+}
+
+bool CFX_SkiaDeviceDriver::RenderCapBlendMode() const {
+  return true;
+}
+
+bool CFX_SkiaDeviceDriver::RenderCapSoftClip() const {
+  return true;
+}
+
+bool CFX_SkiaDeviceDriver::RenderCapAlphaOutput() const {
+  return true;
+}
+
+bool CFX_SkiaDeviceDriver::RenderCapFillStrokePath() const {
+  return true;
+}
+
+bool CFX_SkiaDeviceDriver::RenderCapShading() const {
+  return true;
+}
+
+bool CFX_SkiaDeviceDriver::RenderCapPremultipliedAlpha() const {
+  return true;
 }
 
 int CFX_SkiaDeviceDriver::GetPixelWidth() const {

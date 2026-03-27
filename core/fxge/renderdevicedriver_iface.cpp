@@ -14,6 +14,48 @@
 
 RenderDeviceDriverIface::~RenderDeviceDriverIface() = default;
 
+bool RenderDeviceDriverIface::RenderCapGetBits() const {
+  return false;
+}
+
+bool RenderDeviceDriverIface::RenderCapAlphaPath() const {
+  return false;
+}
+
+bool RenderDeviceDriverIface::RenderCapAlphaImage() const {
+  return false;
+}
+
+bool RenderDeviceDriverIface::RenderCapBlendMode() const {
+  return false;
+}
+
+bool RenderDeviceDriverIface::RenderCapSoftClip() const {
+  return false;
+}
+
+bool RenderDeviceDriverIface::RenderCapAlphaOutput() const {
+  return false;
+}
+
+bool RenderDeviceDriverIface::RenderCapByteMaskOutput() const {
+  return false;
+}
+
+#if defined(PDF_USE_SKIA)
+bool RenderDeviceDriverIface::RenderCapFillStrokePath() const {
+  return false;
+}
+
+bool RenderDeviceDriverIface::RenderCapShading() const {
+  return false;
+}
+
+bool RenderDeviceDriverIface::RenderCapPremultipliedAlpha() const {
+  return false;
+}
+#endif
+
 int RenderDeviceDriverIface::GetHorzSize() const {
   return 0;
 }
