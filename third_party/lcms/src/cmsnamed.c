@@ -92,7 +92,7 @@ cmsBool GrowMLUpool(cmsMLU* mlu)
 static
 cmsBool GrowMLUtable(cmsMLU* mlu)
 {
-    cmsUInt32Number AllocatedEntries;
+    cmsUInt32Number AllocatedEntries, AllocatedBytes;
     _cmsMLUentry *NewPtr;
 
     // Sanity check
@@ -103,8 +103,13 @@ cmsBool GrowMLUtable(cmsMLU* mlu)
     // Check for overflow
     if (AllocatedEntries / 2 != mlu ->AllocatedEntries) return FALSE;
 
+    AllocatedBytes = AllocatedEntries * sizeof(_cmsMLUentry);
+
+    // Check for overflow
+    if (AllocatedBytes / sizeof(_cmsMLUentry) != AllocatedEntries) return FALSE;
+
     // Reallocate the memory
-    NewPtr = (_cmsMLUentry*)_cmsRealloc(mlu ->ContextID, mlu ->Entries, AllocatedEntries*sizeof(_cmsMLUentry));
+    NewPtr = (_cmsMLUentry*)_cmsRealloc(mlu ->ContextID, mlu ->Entries, AllocatedBytes);
     if (NewPtr == NULL) return FALSE;
 
     mlu ->Entries          = NewPtr;

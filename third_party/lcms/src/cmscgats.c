@@ -2456,6 +2456,9 @@ cmsHANDLE  CMSEXPORT cmsIT8LoadFromMem(cmsContext ContextID, const void *Ptr, cm
     _cmsAssert(Ptr != NULL);
     _cmsAssert(len != 0);
 
+    // Check for later overflow
+    if (len + 1 == 0) return NULL;
+
     type = IsMyBlock((const cmsUInt8Number*)Ptr, len);
     if (type == 0) return NULL;
 
@@ -2463,6 +2466,7 @@ cmsHANDLE  CMSEXPORT cmsIT8LoadFromMem(cmsContext ContextID, const void *Ptr, cm
     if (!hIT8) return NULL;
 
     it8 = (cmsIT8*) hIT8;
+
     it8 ->MemoryBlock = (char*) _cmsMalloc(ContextID, len + 1);
     if (it8->MemoryBlock == NULL)
     {

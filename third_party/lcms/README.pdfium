@@ -26,3 +26,4 @@ Local Modifications:
 0034-dead-code.patch: Remove dead code.
 0035-func-ptr-mixup.patch: Prevent mixing up function pointer types.
 0036-cubesize-overflow.patch: Check for overflow in CubeSize().
+0037-theoretical-overflow.patch: Fix additional size overflows.
