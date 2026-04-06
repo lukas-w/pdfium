@@ -47,9 +47,13 @@ void ConvertBuffer_Rgb2ArgbPremul(
         src_bitmap->GetScanlineAs<FX_BGR_STRUCT<uint8_t>>(src_top + row)
             .subspan(static_cast<size_t>(src_left));
     for (auto [input, output] : fxcrt::Zip(src_span, dest_span)) {
-      output.blue = input.blue;
-      output.green = input.green;
-      output.red = input.red;
+      // Avoid interleaved load/stores.
+      const uint8_t blue = input.blue;
+      const uint8_t green = input.green;
+      const uint8_t red = input.red;
+      output.blue = blue;
+      output.green = green;
+      output.red = red;
       output.alpha = 255;
     }
   }
