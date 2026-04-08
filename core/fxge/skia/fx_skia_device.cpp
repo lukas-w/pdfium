@@ -1652,8 +1652,8 @@ bool CFX_SkiaDeviceDriver::StartDIBitsSkia(RetainPtr<const CFX_DIBBase> bitmap,
     if (!use_interpolate_bilinear) {
       float dest_width = ceilf(matrix.GetXUnit());
       float dest_height = ceilf(matrix.GetYUnit());
-      if (pdfium::IsValueInRangeForNumericType<int>(dest_width) &&
-          pdfium::IsValueInRangeForNumericType<int>(dest_height)) {
+      if (CStretchEngine::IsValidDestinationDimension(dest_width) &&
+          CStretchEngine::IsValidDestinationDimension(dest_height)) {
         use_interpolate_bilinear = CStretchEngine::UseInterpolateBilinear(
             options, static_cast<int>(dest_width),
             static_cast<int>(dest_height), width, height);
