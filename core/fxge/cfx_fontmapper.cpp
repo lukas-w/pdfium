@@ -654,7 +654,7 @@ RetainPtr<CFX_Face> CFX_FontMapper::FindSubstFace(const ByteString& name,
     if (pos.has_value()) {
       family = subst_name.First(pos.value());
       GetStandardFontName(&family);
-      style = subst_name.Last(subst_name.GetLength() - (pos.value() + 1));
+      style = subst_name.Substr(pos.value() + 1);
       has_comma = true;
     } else {
       family = subst_name;
@@ -677,7 +677,7 @@ RetainPtr<CFX_Face> CFX_FontMapper::FindSubstFace(const ByteString& name,
     if (!has_comma) {
       std::optional<size_t> pos = family.ReverseFind('-');
       if (pos.has_value()) {
-        style = family.Last(family.GetLength() - (pos.value() + 1));
+        style = family.Substr(pos.value() + 1);
         family = family.First(pos.value());
         has_hyphen = true;
       }

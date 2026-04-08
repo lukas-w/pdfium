@@ -130,7 +130,7 @@ WideString CalcMergedString(const CJS_EventContext* event,
   WideString postfix;
   int end = event->SelEnd();
   if (end >= 0 && static_cast<size_t>(end) < value.GetLength()) {
-    postfix = value.Last(value.GetLength() - static_cast<size_t>(end));
+    postfix = value.Substr(static_cast<size_t>(end));
   }
   return prefix + change + postfix;
 }

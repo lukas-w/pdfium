@@ -549,7 +549,7 @@ bool SplitDateTime(const WideString& wsDateTime,
       return false;
     }
   }
-  wsTime = wsDateTime.Last(wsDateTime.GetLength() - nSplitIndex.value() - 1);
+  wsTime = wsDateTime.Substr(nSplitIndex.value() + 1);
   if (!wsTime.IsEmpty()) {
     if (!std::any_of(wsTime.begin(), wsTime.end(),
                      [](wchar_t c) { return FXSYS_IsDecimalDigit(c); })) {
@@ -685,7 +685,7 @@ WideString FormatNumStr(const WideString& wsValue, LocaleIface* pLocale) {
   }
   if (dot_index < wsSrcNum.GetLength()) {
     wsOutput += pLocale->GetDecimalSymbol();
-    wsOutput += wsSrcNum.Last(wsSrcNum.GetLength() - dot_index - 1);
+    wsOutput += wsSrcNum.Substr(dot_index + 1);
   }
   if (bNeg) {
     return pLocale->GetMinusSymbol() + wsOutput;
@@ -1895,7 +1895,7 @@ CXFA_Node* CXFA_Node::GetInstanceMgrOfSubform() {
         WideString wsInstName =
             pNode->JSObject()->GetCData(XFA_Attribute::Name);
         if (wsInstName.GetLength() > 0 && wsInstName[0] == '_' &&
-            wsInstName.Last(wsInstName.GetLength() - 1) == wsName) {
+            wsInstName.Substr(1) == wsName) {
           pInstanceMgr = pNode;
         }
         break;
@@ -1988,7 +1988,7 @@ CXFA_Node* CXFA_Node::GetItemIfExists(int32_t index) {
       WideString wsName = pNode->JSObject()->GetCData(XFA_Attribute::Name);
       WideString wsInstName = JSObject()->GetCData(XFA_Attribute::Name);
       if (wsInstName.GetLength() < 1 || wsInstName[0] != '_' ||
-          wsInstName.Last(wsInstName.GetLength() - 1) != wsName) {
+          wsInstName.Substr(1) != wsName) {
         return nullptr;
       }
       dwNameHash = pNode->GetNameHash();
@@ -2022,7 +2022,7 @@ int32_t CXFA_Node::GetCount() {
       WideString wsName = pNode->JSObject()->GetCData(XFA_Attribute::Name);
       WideString wsInstName = JSObject()->GetCData(XFA_Attribute::Name);
       if (wsInstName.GetLength() < 1 || wsInstName[0] != '_' ||
-          wsInstName.Last(wsInstName.GetLength() - 1) != wsName) {
+          wsInstName.Substr(1) != wsName) {
         return iCount;
       }
       dwNameHash = pNode->GetNameHash();

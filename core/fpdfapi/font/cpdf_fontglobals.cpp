@@ -25,7 +25,7 @@ CPDF_FontGlobals* g_FontGlobals = nullptr;
 
 RetainPtr<const CPDF_CMap> LoadPredefinedCMap(ByteStringView name) {
   if (!name.IsEmpty() && name[0] == '/') {
-    name = name.Last(name.GetLength() - 1);
+    name = name.Substr(1);
   }
   return pdfium::MakeRetain<CPDF_CMap>(name);
 }

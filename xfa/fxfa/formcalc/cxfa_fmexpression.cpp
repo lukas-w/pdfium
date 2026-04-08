@@ -79,7 +79,7 @@ WideString IdentifierToName(const WideString& ident) {
   if (ident.IsEmpty() || ident[0] != L'!') {
     return ident;
   }
-  return L"pfm__excl__" + ident.Last(ident.GetLength() - 1);
+  return L"pfm__excl__" + ident.Substr(1);
 }
 
 }  // namespace
@@ -211,7 +211,7 @@ bool CXFA_FMIdentifierExpression::ToJavaScript(WideTextBuffer* js,
   } else if (identifier_.EqualsASCII("$template")) {
     *js << "xfa.template";
   } else if (identifier_[0] == L'!') {
-    *js << "pfm__excl__" << identifier_.Last(identifier_.GetLength() - 1);
+    *js << "pfm__excl__" << identifier_.Substr(1);
   } else {
     *js << identifier_;
   }

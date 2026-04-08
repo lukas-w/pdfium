@@ -104,10 +104,9 @@ bool CFXJSE_ResolveProcessor::ResolveAnyChild(v8::Isolate* pIsolate,
   WideStringView wsName = rnd.name_.AsStringView();
   WideString wsCondition = rnd.condition_;
   const bool bClassName = !wsName.IsEmpty() && wsName[0] == '#';
-  CXFA_Node* const pChild =
-      bClassName
-          ? pParent->GetOneChildOfClass(wsName.Last(wsName.GetLength() - 1))
-          : pParent->GetOneChildNamed(wsName);
+  CXFA_Node* const pChild = bClassName
+                                ? pParent->GetOneChildOfClass(wsName.Substr(1))
+                                : pParent->GetOneChildNamed(wsName);
   if (!pChild) {
     return false;
   }

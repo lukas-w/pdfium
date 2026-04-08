@@ -296,8 +296,7 @@ TEST_F(CPDFPageContentGeneratorTest, ProcessStandardText) {
   ByteString mid_string = text_string.Substr(
       first_resource_at.value(),
       second_resource_at.value() - first_resource_at.value());
-  ByteString last_string =
-      text_string.Last(text_string.GetLength() - second_resource_at.value());
+  ByteString last_string = text_string.Substr(second_resource_at.value());
   // q and Q must be outside the BT .. ET operations
   const ByteString kCompareString1 =
       "q .5 .69999999 .34999999 rg 1 .89999998 0 RG /";
@@ -378,8 +377,7 @@ TEST_F(CPDFPageContentGeneratorTest, ProcessText) {
   ASSERT_TRUE(first_resource_at.has_value());
   first_resource_at = first_resource_at.value() + 1;
   ByteString first_string = text_string.First(first_resource_at.value());
-  ByteString last_string =
-      text_string.Last(text_string.GetLength() - first_resource_at.value());
+  ByteString last_string = text_string.Substr(first_resource_at.value());
   // q and Q must be outside the BT .. ET operations
   ByteString compare_string1 = "q 0 0 5 4 re W* n BT /";
   ByteString compare_string2 =

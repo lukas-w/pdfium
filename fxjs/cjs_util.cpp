@@ -120,7 +120,7 @@ CJS_Result CJS_Util::printf(CJS_Runtime* pRuntime,
           unsafe_fmt_string.Find(L"%", offset + 1);
       if (!offset_end.has_value()) {
         unsafe_conversion_specifiers.push_back(
-            unsafe_fmt_string.Last(unsafe_fmt_string.GetLength() - offset));
+            unsafe_fmt_string.Substr(offset));
         break;
       }
 
@@ -161,8 +161,7 @@ CJS_Result CJS_Util::printf(CJS_Runtime* pRuntime,
   // Remove the 'S' sentinel introduced earlier.
   DCHECK_EQ(L'S', result[0]);
   auto result_view = result.AsStringView();
-  return CJS_Result::Success(
-      pRuntime->NewString(result_view.Last(result_view.GetLength() - 1)));
+  return CJS_Result::Success(pRuntime->NewString(result_view.Substr(1)));
 }
 
 CJS_Result CJS_Util::printd(CJS_Runtime* pRuntime,

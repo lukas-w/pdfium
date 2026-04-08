@@ -23,7 +23,7 @@ ByteStringView CMap_GetString(ByteStringView word) {
   if (word.GetLength() <= 2) {
     return ByteStringView();
   }
-  return word.Last(word.GetLength() - 2);
+  return word.Substr(2);
 }
 
 }  // namespace

@@ -61,13 +61,13 @@ bool CFXJSE_NodeHelper::CreateNode(const WideString& wsName,
   bool bIsClassName = false;
   bool bResult = false;
   if (!wsNameView.IsEmpty() && wsNameView[0] == '!') {
-    wsNameView = wsNameView.Last(wsNameView.GetLength() - 1);
+    wsNameView = wsNameView.Substr(1);
     create_parent_ = ToNode(
         pScriptContext->GetDocument()->GetXFAObject(XFA_HASHCODE_Datasets));
   }
   if (!wsNameView.IsEmpty() && wsNameView[0] == '#') {
     bIsClassName = true;
-    wsNameView = wsNameView.Last(wsNameView.GetLength() - 1);
+    wsNameView = wsNameView.Substr(1);
   }
   if (wsNameView.IsEmpty()) {
     return false;

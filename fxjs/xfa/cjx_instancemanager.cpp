@@ -62,10 +62,9 @@ int32_t CJX_InstanceManager::SetInstances(v8::Isolate* pIsolate,
 
   if (iDesired < iCount) {
     WideString wsInstManagerName = GetCData(XFA_Attribute::Name);
-    WideString wsInstanceName = WideString(
-        wsInstManagerName.IsEmpty()
-            ? wsInstManagerName
-            : wsInstManagerName.Last(wsInstManagerName.GetLength() - 1));
+    WideString wsInstanceName =
+        WideString(wsInstManagerName.IsEmpty() ? wsInstManagerName
+                                               : wsInstManagerName.Substr(1));
     uint32_t dInstanceNameHash =
         FX_HashCode_GetW(wsInstanceName.AsStringView());
     CXFA_Node* pPrevSibling = iDesired == 0

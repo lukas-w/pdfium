@@ -1725,7 +1725,7 @@ CFGAS_StringFormatter::DateTimeType CFGAS_StringFormatter::GetDateTimeFormat(
              pattern_span_[ccf] != '.' && pattern_span_[ccf] != '(') {
         if (pattern_span_[ccf] == 'T') {
           *wsDatePattern = pattern_.First(ccf);
-          *wsTimePattern = pattern_.Last(pattern_.GetLength() - ccf);
+          *wsTimePattern = pattern_.Substr(ccf);
           wsTimePattern->SetAt(0, ' ');
           if (!*pLocale) {
             *pLocale = pLocaleMgr->GetDefLocale();

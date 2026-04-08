@@ -1797,7 +1797,7 @@ void CFXJSE_FormCalcContext::IsoTime2Num(
     info.GetReturnValue().Set(0);
     return;
   }
-  bsArg = bsArg.Last(bsArg.GetLength() - (pos.value() + 1));
+  bsArg = bsArg.Substr(pos.value() + 1);
 
   CXFA_LocaleValue timeValue(CXFA_LocaleValue::ValueType::kTime,
                              WideString::FromUTF8(bsArg.AsStringView()), pMgr);
@@ -3584,8 +3584,7 @@ void CFXJSE_FormCalcContext::Format(
         wsDatePattern += wsPattern.First(iTChar.value()) + L"} ";
 
         auto wsTimePattern = WideString::FromASCII("time{");
-        wsTimePattern +=
-            wsPattern.Last(wsPattern.GetLength() - (iTChar.value() + 1)) + L"}";
+        wsTimePattern += wsPattern.Substr(iTChar.value() + 1) + L"}";
         wsPattern = wsDatePattern + wsTimePattern;
       } break;
       case CXFA_LocaleValue::ValueType::kDate: {
@@ -3770,9 +3769,8 @@ void CFXJSE_FormCalcContext::Parse(
       }
       WideString wsDatePattern(L"date{" + wsPattern.First(iTChar.value()) +
                                L"} ");
-      WideString wsTimePattern(
-          L"time{" +
-          wsPattern.Last(wsPattern.GetLength() - (iTChar.value() + 1)) + L"}");
+      WideString wsTimePattern(L"time{" + wsPattern.Substr(iTChar.value() + 1) +
+                               L"}");
       wsPattern = wsDatePattern + wsTimePattern;
       CXFA_LocaleValue localeValue(dwPatternType, wsValue, wsPattern, pLocale,
                                    pMgr);

@@ -497,7 +497,7 @@ void CFXJSE_Engine::NormalPropertySetter(v8::Isolate* pIsolate,
 
   if (pObject->IsNode()) {
     if (wsPropNameView[0] == '#') {
-      wsPropNameView = wsPropNameView.Last(wsPropNameView.GetLength() - 1);
+      wsPropNameView = wsPropNameView.Substr(1);
     }
 
     CXFA_Node* pNode = ToNode(pObject);
