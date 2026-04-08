@@ -1266,7 +1266,7 @@ RetainPtr<CPDF_ColorSpace> CPDF_StreamContentParser::FindColorSpace(
 
   if (name == "DeviceGray" || name == "DeviceCMYK" || name == "DeviceRGB") {
     ByteString defname = "Default";
-    defname += name.Substr(7);
+    defname += name.Substr(6);  // Remove "Device" from e.g. "DeviceCMYK".
     RetainPtr<const CPDF_Object> pDefObj =
         FindResourceObj("ColorSpace", defname);
     if (!pDefObj) {
