@@ -141,7 +141,7 @@ bool CXFA_TextProvider::IsCheckButtonAndAutoWidth() const {
 }
 
 std::optional<WideString> CXFA_TextProvider::GetEmbeddedObj(
-    const WideString& wsAttr) const {
+    WideStringView embed_attr) const {
   if (type_ != Type::kText) {
     return std::nullopt;
   }
@@ -150,13 +150,12 @@ std::optional<WideString> CXFA_TextProvider::GetEmbeddedObj(
   CXFA_Document* document = node_->GetDocument();
   CXFA_Node* pIDNode = nullptr;
   if (pParent) {
-    pIDNode = document->GetNodeByID(pParent, wsAttr.AsStringView());
+    pIDNode = document->GetNodeByID(pParent, embed_attr);
   }
 
   if (!pIDNode) {
-    pIDNode =
-        document->GetNodeByID(ToNode(document->GetXFAObject(XFA_HASHCODE_Form)),
-                              wsAttr.AsStringView());
+    pIDNode = document->GetNodeByID(
+        ToNode(document->GetXFAObject(XFA_HASHCODE_Form)), embed_attr);
   }
   if (!pIDNode || !pIDNode->IsWidgetReady()) {
     return std::nullopt;
