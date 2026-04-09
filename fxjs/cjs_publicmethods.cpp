@@ -1519,7 +1519,7 @@ CJS_Result CJS_PublicMethods::AFExtractNums(
   }
 
   WideString str = pRuntime->ToWideString(params[0]);
-  if (str.GetLength() > 0 && IsDigitSeparatorOrDecimalMark(str[0])) {
+  if (IsDigitSeparatorOrDecimalMark(str.Front())) {  // Front() safe when emtpy.
     str.InsertAtFront(L'0');
   }
 

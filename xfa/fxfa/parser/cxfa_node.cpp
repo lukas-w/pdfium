@@ -664,7 +664,7 @@ WideString FormatNumStr(const WideString& wsValue, LocaleIface* pLocale) {
   WideString wsSrcNum = wsValue;
   WideString wsGroupSymbol = pLocale->GetGroupingSymbol();
   bool bNeg = false;
-  if (wsSrcNum[0] == '-') {
+  if (wsSrcNum.Front() == '-') {
     bNeg = true;
     wsSrcNum.Delete(0, 1);
   }
@@ -1894,7 +1894,7 @@ CXFA_Node* CXFA_Node::GetInstanceMgrOfSubform() {
         WideString wsName = JSObject()->GetCData(XFA_Attribute::Name);
         WideString wsInstName =
             pNode->JSObject()->GetCData(XFA_Attribute::Name);
-        if (wsInstName.GetLength() > 0 && wsInstName[0] == '_' &&
+        if (wsInstName.GetLength() > 0 && wsInstName.Front() == '_' &&
             wsInstName.Substr(1) == wsName) {
           pInstanceMgr = pNode;
         }
@@ -1987,7 +1987,7 @@ CXFA_Node* CXFA_Node::GetItemIfExists(int32_t index) {
     if (iCount == 0) {
       WideString wsName = pNode->JSObject()->GetCData(XFA_Attribute::Name);
       WideString wsInstName = JSObject()->GetCData(XFA_Attribute::Name);
-      if (wsInstName.GetLength() < 1 || wsInstName[0] != '_' ||
+      if (wsInstName.GetLength() < 1 || wsInstName.Front() != '_' ||
           wsInstName.Substr(1) != wsName) {
         return nullptr;
       }
@@ -2021,7 +2021,7 @@ int32_t CXFA_Node::GetCount() {
     if (iCount == 0) {
       WideString wsName = pNode->JSObject()->GetCData(XFA_Attribute::Name);
       WideString wsInstName = JSObject()->GetCData(XFA_Attribute::Name);
-      if (wsInstName.GetLength() < 1 || wsInstName[0] != '_' ||
+      if (wsInstName.GetLength() < 1 || wsInstName.Front() != '_' ||
           wsInstName.Substr(1) != wsName) {
         return iCount;
       }
@@ -5288,7 +5288,7 @@ WideString CXFA_Node::NormalizeNumStr(const WideString& wsValue) {
     wsOutput.TrimBack(L"0");
     wsOutput.TrimBack(L".");
   }
-  if (wsOutput.IsEmpty() || wsOutput[0] == '.') {
+  if (wsOutput.IsEmpty() || wsOutput.Front() == '.') {
     wsOutput.InsertAtFront('0');
   }
 

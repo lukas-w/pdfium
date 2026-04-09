@@ -169,7 +169,7 @@ bool IsRightToLeft(const CPDF_TextObject& text_obj) {
   for (size_t i = 0; i < nItems; ++i) {
     CPDF_TextObject::Item item = text_obj.GetItemInfo(i);
     WideString unicode = font->UnicodeFromCharCode(item.char_code_);
-    wchar_t wChar = !unicode.IsEmpty() ? unicode[0] : 0;
+    wchar_t wChar = unicode.Front();  // Front() safe when empty.
     if (wChar == 0) {
       wChar = item.char_code_;
     }
@@ -1218,7 +1218,7 @@ CPDF_TextPage::GenerateCharacter CPDF_TextPage::ProcessInsertObject(
     unicode += static_cast<wchar_t>(item.char_code_);
   }
 
-  wchar_t curChar = unicode[0];
+  wchar_t curChar = unicode.Front();
   if (WritingMode == TextOrientation::kHorizontal) {
     if (EndHorizontalLine(this_rect, prev_rect)) {
       return IsHyphen(curChar) ? GenerateCharacter::kHyphen
@@ -1346,7 +1346,7 @@ bool CPDF_TextPage::ProcessGenerateCharacter(GenerateCharacter type,
         if (unicode.IsEmpty()) {
           unicode += static_cast<wchar_t>(item.char_code_);
         }
-        wchar_t curChar = unicode[0];
+        wchar_t curChar = unicode.Front();
         if (IsHyphenCode(curChar)) {
           return false;
         }

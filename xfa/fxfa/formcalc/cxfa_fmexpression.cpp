@@ -76,7 +76,7 @@ const XFA_FMSOMMethod kFMSomMethods[] = {
 };
 
 WideString IdentifierToName(const WideString& ident) {
-  if (ident.IsEmpty() || ident[0] != L'!') {
+  if (ident.IsEmpty() || ident.Front() != L'!') {
     return ident;
   }
   return L"pfm__excl__" + ident.Substr(1);
@@ -210,7 +210,7 @@ bool CXFA_FMIdentifierExpression::ToJavaScript(WideTextBuffer* js,
     *js << "xfa.layout";
   } else if (identifier_.EqualsASCII("$template")) {
     *js << "xfa.template";
-  } else if (identifier_[0] == L'!') {
+  } else if (identifier_.Front() == L'!') {
     *js << "pfm__excl__" << identifier_.Substr(1);
   } else {
     *js << identifier_;

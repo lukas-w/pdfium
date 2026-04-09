@@ -125,7 +125,7 @@ void CJX_Subform::instanceManager(v8::Isolate* pIsolate,
     if (pNode->GetElementType() == XFA_Element::InstanceManager) {
       WideString wsInstMgrName =
           pNode->JSObject()->GetCData(XFA_Attribute::Name);
-      if (wsInstMgrName.GetLength() >= 1 && wsInstMgrName[0] == '_' &&
+      if (wsInstMgrName.GetLength() >= 1 && wsInstMgrName.Front() == '_' &&
           wsInstMgrName.Substr(1) == wsName) {
         pInstanceMgr = pNode;
       }

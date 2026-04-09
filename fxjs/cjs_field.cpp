@@ -532,7 +532,7 @@ void SetFieldValue(CPDFSDK_FormFillEnvironment* pFormFillEnv,
 wchar_t GetSelectorFromCaptionForFieldType(const WideString& caption,
                                            CPDF_FormField::Type type) {
   if (!caption.IsEmpty()) {
-    return caption[0];
+    return caption.Front();
   }
 
   switch (type) {

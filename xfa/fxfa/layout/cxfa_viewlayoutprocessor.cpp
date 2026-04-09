@@ -198,7 +198,7 @@ CXFA_Node* ResolveBreakTarget(CXFA_Node* pPageSetRoot,
     }
 
     bTargetAllFind = false;
-    if (wsExpr[0] == '#') {
+    if (wsExpr.Front() == '#') {
       CXFA_Node* pNode = document->GetNodeByID(
           ToNode(document->GetXFAObject(XFA_HASHCODE_Template)),
           wsExpr.Substr(1).AsStringView());

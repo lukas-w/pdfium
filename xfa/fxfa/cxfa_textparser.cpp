@@ -550,8 +550,7 @@ std::optional<WideString> CXFA_TextParser::GetEmbeddedObj(
   if (wsAttr.IsEmpty()) {
     return std::nullopt;
   }
-
-  if (wsAttr[0] == L'#') {
+  if (wsAttr.Front() == L'#') {
     wsAttr.Delete(0);
   }
 

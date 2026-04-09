@@ -326,8 +326,8 @@ void CPDF_FontSubsetter::AddUsedText(const CPDF_TextObject* text,
 
     WideString unicode = font->UnicodeFromCharCode(char_code);
     if (!unicode.IsEmpty()) {
-      candidate.char_code_to_unicode.emplace(char_code,
-                                             static_cast<uint32_t>(unicode[0]));
+      candidate.char_code_to_unicode.emplace(
+          char_code, static_cast<uint32_t>(unicode.Front()));
     }
   }
 }
