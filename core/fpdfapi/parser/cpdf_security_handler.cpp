@@ -530,7 +530,7 @@ ByteString CPDF_SecurityHandler::GetUserPassword(
   std::array<uint8_t, kRequiredOkeyLength> okeybuf = {};
   size_t copy_len = std::min(key_len_, sizeof(digest));
   fxcrt::Copy(pdfium::span(digest).first(copy_len), enckey);
-  fxcrt::Copy(okey.unsigned_span(), okeybuf);
+  fxcrt::Copy(okey.unsigned_span().first(kRequiredOkeyLength), okeybuf);
   pdfium::span<uint8_t> okey_span = pdfium::span(okeybuf);
   if (revision_ == 2) {
     CRYPT_ArcFourCryptBlock(okey_span, pdfium::span(enckey).first(key_len_));
