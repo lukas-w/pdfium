@@ -504,14 +504,13 @@ void CPDFXFA_DocEnvironment::ExportData(CXFA_FFDoc* hDoc,
   int fileType = bXDP ? FXFA_SAVEAS_XDP : FXFA_SAVEAS_XML;
   ByteString bs = wsFilePath.ToUTF16LE();
   if (wsFilePath.IsEmpty()) {
-    if (!pFormFillEnv->GetFormFillInfo() ||
-        !pFormFillEnv->GetFormFillInfo()->m_pJsPlatform) {
+    if (!pFormFillEnv->IsJSPlatformPresent()) {
       return;
     }
-
     WideString filepath = pFormFillEnv->JS_fieldBrowse();
     bs = filepath.ToUTF16LE();
   }
+
   FPDF_FILEHANDLER* pFileHandler = pFormFillEnv->OpenFile(
       bXDP ? FXFA_SAVEAS_XDP : FXFA_SAVEAS_XML, AsFPDFWideString(&bs), "wb");
   if (!pFileHandler) {
@@ -664,20 +663,22 @@ void CPDFXFA_DocEnvironment::Print(CXFA_FFDoc* hDoc,
   }
 
   CPDFSDK_FormFillEnvironment* pFormFillEnv = context_->GetFormFillEnv();
-  if (!pFormFillEnv || !pFormFillEnv->GetFormFillInfo() ||
-      !pFormFillEnv->GetFormFillInfo()->m_pJsPlatform ||
-      !pFormFillEnv->GetFormFillInfo()->m_pJsPlatform->Doc_print) {
+  if (!pFormFillEnv) {
     return;
   }
 
-  pFormFillEnv->GetFormFillInfo()->m_pJsPlatform->Doc_print(
-      pFormFillEnv->GetFormFillInfo()->m_pJsPlatform,
-      !!(dwOptions & XFA_PrintOpt::kShowDialog), nStartPage, nEndPage,
-      !!(dwOptions & XFA_PrintOpt::kCanCancel),
-      !!(dwOptions & XFA_PrintOpt::kShrinkPage),
-      !!(dwOptions & XFA_PrintOpt::kAsImage),
-      !!(dwOptions & XFA_PrintOpt::kReverseOrder),
-      !!(dwOptions & XFA_PrintOpt::kPrintAnnot));
+  IPDF_JSPLATFORM* js_platform = pFormFillEnv->GetJSPlatform();
+  if (!js_platform || !js_platform->Doc_print) {
+    return;
+  }
+
+  js_platform->Doc_print(js_platform, !!(dwOptions & XFA_PrintOpt::kShowDialog),
+                         nStartPage, nEndPage,
+                         !!(dwOptions & XFA_PrintOpt::kCanCancel),
+                         !!(dwOptions & XFA_PrintOpt::kShrinkPage),
+                         !!(dwOptions & XFA_PrintOpt::kAsImage),
+                         !!(dwOptions & XFA_PrintOpt::kReverseOrder),
+                         !!(dwOptions & XFA_PrintOpt::kPrintAnnot));
 }
 
 FX_ARGB CPDFXFA_DocEnvironment::GetHighlightColor(
