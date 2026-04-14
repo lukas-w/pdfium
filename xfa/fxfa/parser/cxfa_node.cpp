@@ -2612,18 +2612,7 @@ XFA_EventError CXFA_Node::ProcessEventInternal(CXFA_FFDocView* pDocView,
     case XFA_Element::SignData:
       break;
     case XFA_Element::Submit: {
-// TODO(crbug.com/867485): Submit is disabled for now. Fix it and reenable this
-// code.
-#ifdef PDF_XFA_ELEMENT_SUBMIT_ENABLED
-      CXFA_Submit* submit = event->GetSubmitIfExists();
-      if (!submit) {
-        return XFA_EventError::kNotExist;
-      }
-      return pDocView->GetDoc()->GetDocEnvironment()->Submit(pDocView->GetDoc(),
-                                                             submit);
-#else
       return XFA_EventError::kDisabled;
-#endif  // PDF_XFA_ELEMENT_SUBMIT_ENABLED
     }
     default:
       break;
