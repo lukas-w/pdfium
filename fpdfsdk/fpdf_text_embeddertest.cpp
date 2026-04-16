@@ -2144,6 +2144,58 @@ TEST_F(FPDFTextEmbedderTest, Bug488948351) {
   EXPECT_NEAR_THREE_PLACES(kExpectedLooseCharTop, rect.top);
 }
 
+TEST_F(FPDFTextEmbedderTest, Bug502757960) {
+  static constexpr double kExpectedChar0Width = 5.172;
+  static constexpr double kExpectedChar0Height = 8.256;
+  static constexpr double kExpectedChar0Top = 38.256;
+  static constexpr float kExpectedLooseChar0Width = 6.672f;
+  // TODO(crbug.com/502757960): Fix the extremely large values.
+  static constexpr float kExpectedLooseChar0Height = 720002.688f;
+  static constexpr float kExpectedLooseChar0Top = 720030.0f;
+
+  static constexpr double kExpectedChar1Width = 8.184;
+  static constexpr double kExpectedChar1Height = 7.860;
+  static constexpr double kExpectedChar1Top = 37.860;
+  static constexpr float kExpectedLooseChar1Width = 8.664f;
+  static constexpr float kExpectedLooseChar1Height = 600010.688f;
+  static constexpr float kExpectedLooseChar1Top = 40.692f;
+
+  ASSERT_TRUE(OpenDocument("text_large_ascent_descent.pdf"));
+  ScopedPage page = LoadScopedPage(0);
+  ASSERT_TRUE(page);
+
+  ScopedFPDFTextPage text_page(FPDFText_LoadPage(page.get()));
+  ASSERT_TRUE(text_page);
+  ASSERT_EQ(2, FPDFText_CountChars(text_page.get()));
+
+  double left;
+  double right;
+  double bottom;
+  double top;
+  ASSERT_TRUE(
+      FPDFText_GetCharBox(text_page.get(), 0, &left, &right, &bottom, &top));
+  EXPECT_NEAR_THREE_PLACES(kExpectedChar0Width, right - left);
+  EXPECT_NEAR_THREE_PLACES(kExpectedChar0Height, top - bottom);
+  EXPECT_NEAR_THREE_PLACES(kExpectedChar0Top, top);
+
+  FS_RECTF rect;
+  ASSERT_TRUE(FPDFText_GetLooseCharBox(text_page.get(), 0, &rect));
+  EXPECT_NEAR_THREE_PLACES(kExpectedLooseChar0Width, rect.right - rect.left);
+  EXPECT_NEAR_THREE_PLACES(kExpectedLooseChar0Height, rect.top - rect.bottom);
+  EXPECT_NEAR_THREE_PLACES(kExpectedLooseChar0Top, rect.top);
+
+  ASSERT_TRUE(
+      FPDFText_GetCharBox(text_page.get(), 1, &left, &right, &bottom, &top));
+  EXPECT_NEAR_THREE_PLACES(kExpectedChar1Width, right - left);
+  EXPECT_NEAR_THREE_PLACES(kExpectedChar1Height, top - bottom);
+  EXPECT_NEAR_THREE_PLACES(kExpectedChar1Top, top);
+
+  ASSERT_TRUE(FPDFText_GetLooseCharBox(text_page.get(), 1, &rect));
+  EXPECT_NEAR_THREE_PLACES(kExpectedLooseChar1Width, rect.right - rect.left);
+  EXPECT_NEAR_THREE_PLACES(kExpectedLooseChar1Height, rect.top - rect.bottom);
+  EXPECT_NEAR_THREE_PLACES(kExpectedLooseChar1Top, rect.top);
+}
+
 TEST_F(FPDFTextEmbedderTest, SmallType3Glyph) {
   ASSERT_TRUE(OpenDocument("bug_1591.pdf"));
   ScopedPage page = LoadScopedPage(0);
