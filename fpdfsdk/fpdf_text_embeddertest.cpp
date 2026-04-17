@@ -2149,15 +2149,14 @@ TEST_F(FPDFTextEmbedderTest, Bug502757960) {
   static constexpr double kExpectedChar0Height = 8.256;
   static constexpr double kExpectedChar0Top = 38.256;
   static constexpr float kExpectedLooseChar0Width = 6.672f;
-  // TODO(crbug.com/502757960): Fix the extremely large values.
-  static constexpr float kExpectedLooseChar0Height = 720002.688f;
-  static constexpr float kExpectedLooseChar0Top = 720030.0f;
+  static constexpr float kExpectedLooseChar0Height = 14.676f;
+  static constexpr float kExpectedLooseChar0Top = 42.0f;
 
   static constexpr double kExpectedChar1Width = 8.184;
   static constexpr double kExpectedChar1Height = 7.860;
   static constexpr double kExpectedChar1Top = 37.860;
   static constexpr float kExpectedLooseChar1Width = 8.664f;
-  static constexpr float kExpectedLooseChar1Height = 600010.688f;
+  static constexpr float kExpectedLooseChar1Height = 14.376f;
   static constexpr float kExpectedLooseChar1Top = 40.692f;
 
   ASSERT_TRUE(OpenDocument("text_large_ascent_descent.pdf"));

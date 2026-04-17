@@ -309,8 +309,13 @@ CFX_FloatRect GetLooseBounds(const CPDF_TextPage::CharInfo& charinfo) {
       return char_box;
     }
 
-    const int ascent = font->GetTypeAscent();
-    const int descent = font->GetTypeDescent();
+    int ascent = font->GetTypeAscent();
+    int descent = font->GetTypeDescent();
+    const FX_RECT& font_bbox = font->GetFontBBox();
+    if (font_bbox.top > font_bbox.bottom) {
+      ascent = std::min(ascent, font_bbox.top);
+      descent = std::max(descent, font_bbox.bottom);
+    }
     if (ascent != descent) {
       // Compute `left` and `right` based on the individual character's `width`.
       float width = text_object->GetCharWidth(charinfo.char_code());
