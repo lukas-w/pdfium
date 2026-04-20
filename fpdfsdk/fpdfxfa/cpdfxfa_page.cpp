@@ -327,6 +327,7 @@ void CPDFXFA_Page::DrawFocusAnnot(CFX_RenderDevice* pDevice,
       xfaView, Mask<XFA_WidgetStatus>{XFA_WidgetStatus::kVisible,
                                       XFA_WidgetStatus::kViewable});
 
+  ObservedPtr<CPDFSDK_Annot> pObservedAnnot(pAnnot);
   while (true) {
     CXFA_FFWidget* pWidget = pWidgetIterator.MoveToNext();
     if (!pWidget) {
@@ -341,7 +342,7 @@ void CPDFXFA_Page::DrawFocusAnnot(CFX_RenderDevice* pDevice,
     }
   }
 
-  CPDFXFA_Widget* pXFAWidget = ToXFAWidget(pAnnot);
+  CPDFXFA_Widget* pXFAWidget = ToXFAWidget(pObservedAnnot.Get());
   if (!pXFAWidget) {
     return;
   }
