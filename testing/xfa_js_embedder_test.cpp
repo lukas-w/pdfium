@@ -118,3 +118,9 @@ bool XFAJSEmbedderTest::ExecuteHelper(ByteStringView input) {
   value_.Reset(isolate(), exec_result.value->GetValue(isolate()));
   return exec_result.status;
 }
+
+void XFAJSEmbedderTest::ForceCppGarbageCollection() {
+  auto* doc = CPDFDocumentFromFPDFDocument(document());
+  auto* context = static_cast<CPDFXFA_Context*>(doc->GetExtension());
+  FXGC_ForceGarbageCollection(context->GetGCHeap());
+}

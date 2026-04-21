@@ -35,6 +35,7 @@ class XFAJSEmbedderTest : public JSEmbedderTest {
 
   bool Execute(ByteStringView input);
   bool ExecuteSilenceFailure(ByteStringView input);
+  void ForceCppGarbageCollection();
 
  private:
   bool ExecuteHelper(ByteStringView input);
