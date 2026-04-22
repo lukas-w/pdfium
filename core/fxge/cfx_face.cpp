@@ -374,6 +374,10 @@ bool CFX_Face::IsTtOt() const {
   return !!(GetRec()->face_flags & FT_FACE_FLAG_SFNT);
 }
 
+ByteString CFX_Face::GetFontFormat() {
+  return ByteString(FT_Get_Font_Format(GetRec()));
+}
+
 bool CFX_Face::IsTricky() const {
   return !!(GetRec()->face_flags & FT_FACE_FLAG_TRICKY);
 }
