@@ -285,22 +285,23 @@ FPDF_EXPORT int FPDF_CALLCONV FPDFPage_GetRotation(FPDF_PAGE page) {
   return IsPageObject(pPage) ? pPage->GetPageRotation() : -1;
 }
 
-FPDF_EXPORT void FPDF_CALLCONV
+FPDF_EXPORT FPDF_BOOL FPDF_CALLCONV
 FPDFPage_InsertObject(FPDF_PAGE page, FPDF_PAGEOBJECT page_object) {
   CPDF_PageObject* pPageObj = CPDFPageObjectFromFPDFPageObject(page_object);
   if (!pPageObj) {
-    return;
+    return false;
   }
 
   std::unique_ptr<CPDF_PageObject> pPageObjHolder(pPageObj);
   CPDF_Page* pPage = CPDFPageFromFPDFPage(page);
   if (!IsPageObject(pPage)) {
-    return;
+    return false;
   }
 
   pPageObj->SetDirty(true);
   pPage->AppendPageObject(std::move(pPageObjHolder));
   CalcBoundingBox(pPageObj);
+  return true;
 }
 
 FPDF_EXPORT FPDF_BOOL FPDF_CALLCONV
