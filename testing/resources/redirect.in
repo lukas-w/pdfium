@@ -1,40 +1,29 @@
-%PDF-1.7
-% ò¤ô
-1 0 obj <<
+{{header}}
+{{object 1 0}} <<
   /Type /Catalog
   /Pages 2 0 R
   /OpenAction 4 0 R
 >>
 endobj
-2 0 obj <<
+{{object 2 0}} <<
   /Type /Pages
   /MediaBox [0 0 200 200]
   /Count 1
   /Kids [3 0 R]
 >>
 endobj
-3 0 obj <<
+{{object 3 0}} <<
   /Type /Page
   /Parent 2 0 R
 >>
 endobj
-4 0 obj <<
+{{object 4 0}} <<
   /Type /Action
   /S /URI
   /URI (http://evilzone.org)
 >>
 endobj
-xref
-0 5
-0000000000 65535 f 
-0000000015 00000 n 
-0000000088 00000 n 
-0000000177 00000 n 
-0000000228 00000 n 
-trailer <<
-  /Root 1 0 R
-  /Size 5
->>
-startxref
-304
+{{xref}}
+{{trailer}}
+{{startxref}}
 %%EOF
