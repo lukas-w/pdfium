@@ -167,6 +167,8 @@ FPDF_MovePages(FPDF_DOCUMENT document,
 //   1 - Rotated 90 degrees clockwise.
 //   2 - Rotated 180 degrees clockwise.
 //   3 - Rotated 270 degrees clockwise.
+//
+// Or returns -1 on error.
 FPDF_EXPORT int FPDF_CALLCONV FPDFPage_GetRotation(FPDF_PAGE page);
 
 // Set rotation for |page|.
