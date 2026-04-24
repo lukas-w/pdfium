@@ -30,7 +30,7 @@ CFFL_ComboBox::~CFFL_ComboBox() {
 CPWL_Wnd::CreateParams CFFL_ComboBox::GetCreateParam() {
   CPWL_Wnd::CreateParams cp = CFFL_TextObject::GetCreateParam();
   if (widget_->GetFieldFlags() & pdfium::form_flags::kChoiceEdit) {
-    cp.dwFlags |= PCBS_ALLOWCUSTOMTEXT;
+    cp.dwFlags |= CPWL_Wnd::Styles::kComboboxAllowCustomText;
   }
 
   cp.font_map = GetOrCreateFontMap();

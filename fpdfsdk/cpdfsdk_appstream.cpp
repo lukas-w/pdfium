@@ -734,7 +734,7 @@ ByteString GenerateIconAppStream(CPDF_IconFit& fit,
   }
 
   CPWL_Wnd::CreateParams cp(nullptr, nullptr, nullptr);
-  cp.dwFlags = PWS_VISIBLE;
+  cp.dwFlags = CPWL_Wnd::Styles::kWindowVisible;
   auto pWnd = std::make_unique<CPWL_Wnd>(cp, nullptr);
   pWnd->Realize();
   if (!pWnd->Move(rcIcon, false, false)) {
