@@ -13,29 +13,29 @@
 #include "core/fxcrt/stl_util.h"
 
 #define SHA_GET_UINT32(n, b, i)                                         \
-  UNSAFE_BUFFERS({                                                      \
+  {                                                                     \
     (n) = ((uint32_t)(b)[(i)] << 24) | ((uint32_t)(b)[(i) + 1] << 16) | \
           ((uint32_t)(b)[(i) + 2] << 8) | ((uint32_t)(b)[(i) + 3]);     \
-  })
+  }
 
 #define SHA_PUT_UINT32(n, b, i)          \
-  UNSAFE_BUFFERS({                       \
+  {                                      \
     (b)[(i)] = (uint8_t)((n) >> 24);     \
     (b)[(i) + 1] = (uint8_t)((n) >> 16); \
     (b)[(i) + 2] = (uint8_t)((n) >> 8);  \
     (b)[(i) + 3] = (uint8_t)((n));       \
-  })
+  }
 
 #define SHA_GET_UINT64(n, b, i)                                             \
-  UNSAFE_BUFFERS({                                                          \
+  {                                                                         \
     (n) = ((uint64_t)(b)[(i)] << 56) | ((uint64_t)(b)[(i) + 1] << 48) |     \
           ((uint64_t)(b)[(i) + 2] << 40) | ((uint64_t)(b)[(i) + 3] << 32) | \
           ((uint64_t)(b)[(i) + 4] << 24) | ((uint64_t)(b)[(i) + 5] << 16) | \
           ((uint64_t)(b)[(i) + 6] << 8) | ((uint64_t)(b)[(i) + 7]);         \
-  })
+  }
 
 #define SHA_PUT_UINT64(n, b, i)          \
-  UNSAFE_BUFFERS({                       \
+  {                                      \
     (b)[(i)] = (uint8_t)((n) >> 56);     \
     (b)[(i) + 1] = (uint8_t)((n) >> 48); \
     (b)[(i) + 2] = (uint8_t)((n) >> 40); \
@@ -44,7 +44,7 @@
     (b)[(i) + 5] = (uint8_t)((n) >> 16); \
     (b)[(i) + 6] = (uint8_t)((n) >> 8);  \
     (b)[(i) + 7] = (uint8_t)((n));       \
-  })
+  }
 
 #define SHA384_F0(x, y, z) ((x & y) | (z & (x | y)))
 #define SHA384_F1(x, y, z) (z ^ (x & (y ^ z)))
@@ -76,8 +76,7 @@
 #define S3(x) (ROTR(x, 6) ^ ROTR(x, 11) ^ ROTR(x, 25))
 #define F0(x, y, z) ((x & y) | (z & (x | y)))
 #define F1(x, y, z) (z ^ (x & (y ^ z)))
-#define R(t) \
-  UNSAFE_BUFFERS((W[t] = S1(W[t - 2]) + W[t - 7] + S0(W[t - 15]) + W[t - 16]))
+#define R(t) (W[t] = S1(W[t - 2]) + W[t - 7] + S0(W[t - 15]) + W[t - 16])
 #define PS(a, b, c, d, e, f, g, h, x, K)              \
   {                                                   \
     uint32_t temp1 = h + S3(e) + F1(e, f, g) + K + x; \
