@@ -309,32 +309,16 @@ TEST_F(FPDFTextEmbedderTest, TextVertical) {
   double top;
   EXPECT_TRUE(
       FPDFText_GetCharBox(textpage.get(), 1, &left, &right, &bottom, &top));
-#if BUILDFLAG(IS_MAC)
-  EXPECT_NEAR_THREE_PLACES(7.168, left);
-#else
-  EXPECT_NEAR_THREE_PLACES(7.276, left);
-#endif
-  EXPECT_NEAR_THREE_PLACES(12.808, right);
-#if BUILDFLAG(IS_MAC)
+  EXPECT_NEAR_THREE_PLACES(7.324, left);
+  EXPECT_NEAR_THREE_PLACES(12.82, right);
   EXPECT_NEAR_THREE_PLACES(171.4, bottom);
-  EXPECT_NEAR_THREE_PLACES(178.06, top);
-#else
-  EXPECT_NEAR_THREE_PLACES(171.364, bottom);
-  EXPECT_NEAR_THREE_PLACES(178.288, top);
-#endif
+  EXPECT_NEAR_THREE_PLACES(178.156, top);
   EXPECT_TRUE(
       FPDFText_GetCharBox(textpage.get(), 2, &left, &right, &bottom, &top));
-#if BUILDFLAG(IS_MAC)
-  EXPECT_NEAR_THREE_PLACES(9.472, left);
-  EXPECT_NEAR_THREE_PLACES(10.528, right);
+  EXPECT_NEAR_THREE_PLACES(9.688, left);
+  EXPECT_NEAR_THREE_PLACES(10.744, right);
   EXPECT_NEAR_THREE_PLACES(160.492, bottom);
-  EXPECT_NEAR_THREE_PLACES(169.324, top);
-#else
-  EXPECT_NEAR_THREE_PLACES(9.772, left);
-  EXPECT_NEAR_THREE_PLACES(11.56, right);
-  EXPECT_NEAR_THREE_PLACES(160.348, bottom);
-  EXPECT_NEAR_THREE_PLACES(170.188, top);
-#endif
+  EXPECT_NEAR_THREE_PLACES(169.744, top);
 
   FS_RECTF rect;
   EXPECT_TRUE(FPDFText_GetLooseCharBox(textpage.get(), 1, &rect));
