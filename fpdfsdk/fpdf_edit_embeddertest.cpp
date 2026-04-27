@@ -780,6 +780,26 @@ TEST_F(FPDFEditEmbedderTest, SetText) {
   }
 }
 
+TEST_F(FPDFEditEmbedderTest, SetTextBadParams) {
+  ASSERT_TRUE(OpenDocument("hello_world.pdf"));
+  ScopedPage page = LoadScopedPage(0);
+  ASSERT_TRUE(page);
+
+  // Get the "Hello, world!" text object and try to change it. It should fail
+  // and not crash.
+  ASSERT_EQ(2, FPDFPage_CountObjects(page.get()));
+  FPDF_PAGEOBJECT page_object = FPDFPage_GetObject(page.get(), 0);
+  ASSERT_TRUE(page_object);
+  ScopedFPDFWideString empty_text = GetFPDFWideString(L"");
+  EXPECT_FALSE(FPDFText_SetText(page_object, empty_text.get()));
+
+  // Other invalid combinations also fail.
+  EXPECT_FALSE(FPDFText_SetText(nullptr, nullptr));
+  EXPECT_FALSE(FPDFText_SetText(page_object, nullptr));
+  ScopedFPDFWideString hi_text = GetFPDFWideString(L"hi");
+  EXPECT_FALSE(FPDFText_SetText(nullptr, hi_text.get()));
+}
+
 TEST_F(FPDFEditEmbedderTest, SetCharcodesBadParams) {
   ASSERT_TRUE(OpenDocument("hello_world.pdf"));
   ScopedPage page = LoadScopedPage(0);
@@ -789,12 +809,14 @@ TEST_F(FPDFEditEmbedderTest, SetCharcodesBadParams) {
   FPDF_PAGEOBJECT page_object = FPDFPage_GetObject(page.get(), 0);
   ASSERT_TRUE(page_object);
 
-  const uint32_t kDummyValue = 42;
+  const uint32_t kPlaceholderValue = 42;
   EXPECT_FALSE(FPDFText_SetCharcodes(nullptr, nullptr, 0));
   EXPECT_FALSE(FPDFText_SetCharcodes(nullptr, nullptr, 1));
-  EXPECT_FALSE(FPDFText_SetCharcodes(nullptr, &kDummyValue, 0));
-  EXPECT_FALSE(FPDFText_SetCharcodes(nullptr, &kDummyValue, 1));
+  EXPECT_FALSE(FPDFText_SetCharcodes(nullptr, &kPlaceholderValue, 0));
+  EXPECT_FALSE(FPDFText_SetCharcodes(nullptr, &kPlaceholderValue, 1));
+  EXPECT_FALSE(FPDFText_SetCharcodes(page_object, nullptr, 0));
   EXPECT_FALSE(FPDFText_SetCharcodes(page_object, nullptr, 1));
+  EXPECT_FALSE(FPDFText_SetCharcodes(page_object, &kPlaceholderValue, 0));
 }
 
 TEST_F(FPDFEditEmbedderTest, SetTextKeepClippingPath) {

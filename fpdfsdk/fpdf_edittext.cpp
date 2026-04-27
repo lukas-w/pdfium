@@ -368,18 +368,22 @@ FPDFPageObj_NewTextObj(FPDF_DOCUMENT document,
 
 FPDF_EXPORT FPDF_BOOL FPDF_CALLCONV
 FPDFText_SetText(FPDF_PAGEOBJECT text_object, FPDF_WIDESTRING text) {
-  CPDF_TextObject* pTextObj = CPDFTextObjectFromFPDFPageObject(text_object);
-  if (!pTextObj) {
+  CPDF_TextObject* text_obj = CPDFTextObjectFromFPDFPageObject(text_object);
+  if (!text_obj) {
     return false;
   }
   // SAFETY: required from caller.
-  WideString encodedText = UNSAFE_BUFFERS(WideStringFromFPDFWideString(text));
-  ByteString byteText;
-  for (wchar_t wc : encodedText) {
-    pTextObj->GetFont()->AppendChar(
-        &byteText, pTextObj->GetFont()->CharCodeFromUnicode(wc));
+  WideString encoded_text = UNSAFE_BUFFERS(WideStringFromFPDFWideString(text));
+  ByteString byte_text;
+  for (wchar_t wc : encoded_text) {
+    text_obj->GetFont()->AppendChar(
+        &byte_text, text_obj->GetFont()->CharCodeFromUnicode(wc));
   }
-  pTextObj->SetText(byteText);
+  if (byte_text.IsEmpty()) {
+    return false;
+  }
+
+  text_obj->SetText(byte_text);
   return true;
 }
 
@@ -387,8 +391,8 @@ FPDF_EXPORT FPDF_BOOL FPDF_CALLCONV
 FPDFText_SetCharcodes(FPDF_PAGEOBJECT text_object,
                       const uint32_t* charcodes,
                       size_t count) {
-  CPDF_TextObject* pTextObj = CPDFTextObjectFromFPDFPageObject(text_object);
-  if (!pTextObj) {
+  CPDF_TextObject* text_obj = CPDFTextObjectFromFPDFPageObject(text_object);
+  if (!text_obj) {
     return false;
   }
 
@@ -400,9 +404,13 @@ FPDFText_SetCharcodes(FPDF_PAGEOBJECT text_object,
   // SAFETY: required from caller.
   auto charcodes_span = UNSAFE_BUFFERS(pdfium::span(charcodes, count));
   for (uint32_t c : charcodes_span) {
-    pTextObj->GetFont()->AppendChar(&byte_text, c);
+    text_obj->GetFont()->AppendChar(&byte_text, c);
   }
-  pTextObj->SetText(byte_text);
+  if (byte_text.IsEmpty()) {
+    return false;
+  }
+
+  text_obj->SetText(byte_text);
   return true;
 }
 
