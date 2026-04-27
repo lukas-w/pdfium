@@ -348,6 +348,23 @@ TEST_F(FPDFTextEmbedderTest, TextVertical) {
   EXPECT_NEAR_THREE_PLACES(16, rect.right);
   EXPECT_NEAR_THREE_PLACES(159.292, rect.bottom);
   EXPECT_NEAR_THREE_PLACES(170.308, rect.top);
+
+  EXPECT_EQ(static_cast<uint32_t>('e'),
+            FPDFText_GetUnicode(textpage.get(), 15));
+  EXPECT_EQ(static_cast<uint32_t>('l'),
+            FPDFText_GetUnicode(textpage.get(), 16));
+
+  EXPECT_TRUE(FPDFText_GetLooseCharBox(textpage.get(), 15, &rect));
+  EXPECT_NEAR_THREE_PLACES(104, rect.left);
+  EXPECT_NEAR_THREE_PLACES(116, rect.right);
+  EXPECT_NEAR_THREE_PLACES(169.108, rect.bottom);
+  EXPECT_NEAR_THREE_PLACES(177.784, rect.top);
+
+  EXPECT_TRUE(FPDFText_GetLooseCharBox(textpage.get(), 16, &rect));
+  EXPECT_NEAR_THREE_PLACES(104, rect.left);
+  EXPECT_NEAR_THREE_PLACES(116, rect.right);
+  EXPECT_NEAR_THREE_PLACES(159.292, rect.bottom);
+  EXPECT_NEAR_THREE_PLACES(170.308, rect.top);
 }
 
 TEST_F(FPDFTextEmbedderTest, TextHebrewMirrored) {

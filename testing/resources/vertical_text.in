@@ -6,9 +6,9 @@
 endobj
 {{object 2 0}} <<
   /Type /Pages
-  /MediaBox [ 0 0 200 200 ]
+  /MediaBox [0 0 200 200]
   /Count 1
-  /Kids [ 3 0 R ]
+  /Kids [3 0 R]
 >>
 endobj
 {{object 3 0}} <<
@@ -34,7 +34,11 @@ endobj
   /Type /Font
   /Subtype /CIDFontType2
   /BaseFont /Helvetica
-  /CIDSystemInfo <</Registry (Adobe) /Ordering (GB1) /Supplement 4>>
+  /CIDSystemInfo <<
+    /Registry (Adobe)
+    /Ordering (GB1)
+    /Supplement 4
+  >>
   /FontDescriptor 6 0 R
   /DW 1000
   /W [
@@ -83,6 +87,11 @@ BT
 10 190 Td
 (\000H\000e\000l\000l\000o\000 ) Tj
 (\000W\000o\000r\000l\000d\000!) Tj
+ET
+BT
+/F1 12 Tf
+110 190 Td
+[(\000H) 100 (\000e) -100 (\000l\000l) 200 (\000o)] TJ
 ET
 endstream
 endobj
