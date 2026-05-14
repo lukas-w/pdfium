@@ -14,6 +14,8 @@
 #include "core/fxcrt/compiler_specific.h"
 #include "core/fxcrt/span.h"
 
+namespace fxge {
+
 // Encoding:
 // - Bits-per-pixel: value & 0xFF
 // - Is mask: value & 0x100
@@ -269,5 +271,41 @@ T UnPreMultiplyColor(const T& input) {
   return output;
 }
 #endif  // defined(PDF_USE_SKIA)
+
+}  // namespace fxge
+
+using fxge::AlphaAndColorRefToArgb;
+using fxge::AlphaMerge;
+using fxge::ArgbEncode;
+using fxge::ArgbToAlphaAndColorRef;
+using fxge::ArgbToBGRAStruct;
+using fxge::ArgbToBGRStruct;
+using fxge::ArgbToColorRef;
+using fxge::BlendMode;
+using fxge::CmykEncode;
+using fxge::FX_ABGR_STRUCT;
+using fxge::FX_ARGB;
+using fxge::FX_BGR_STRUCT;
+using fxge::FX_BGRA_STRUCT;
+using fxge::FX_CMYK_STRUCT;
+using fxge::FX_COLORREF;
+using fxge::FX_LAB_STRUCT;
+using fxge::FX_RGB_STRUCT;
+using fxge::FX_RGBA_STRUCT;
+using fxge::FXARGB_GetDIB;
+using fxge::FXARGB_SetDIB;
+using fxge::FXDIB_Format;
+using fxge::FXDIB_ResampleOptions;
+using fxge::FXSYS_BGR;
+using fxge::FXSYS_GetBValue;
+using fxge::FXSYS_GetGValue;
+using fxge::FXSYS_GetRValue;
+using fxge::FXSYS_GetUnsignedAlpha;
+using fxge::ReverseCopy3Bytes;
+
+#if defined(PDF_USE_SKIA)
+using fxge::PreMultiplyColor;
+using fxge::UnPreMultiplyColor;
+#endif
 
 #endif  // CORE_FXGE_DIB_FX_DIB_H_
