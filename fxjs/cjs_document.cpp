@@ -170,8 +170,8 @@ CJS_Result CJS_Document::set_dirty(CJS_Runtime* pRuntime,
     return CJS_Result::Failure(JSMessage::kBadObjectError);
   }
 
-  pRuntime->ToBoolean(vp) ? form_fill_env_->SetChangeMark()
-                          : form_fill_env_->ClearChangeMark();
+  pRuntime->ToBooleanReentrant(vp) ? form_fill_env_->SetChangeMark()
+                                   : form_fill_env_->ClearChangeMark();
   return CJS_Result::Success();
 }
 
@@ -204,7 +204,7 @@ CJS_Result CJS_Document::set_page_num(CJS_Runtime* pRuntime,
   }
 
   int iPageCount = form_fill_env_->GetPageCount();
-  int iPageNum = pRuntime->ToInt32(vp);
+  int iPageNum = pRuntime->ToInt32Reentrant(vp);
   if (iPageNum >= 0 && iPageNum < iPageCount) {
     form_fill_env_->JS_docgotoPage(iPageNum);
   } else if (iPageNum >= iPageCount) {
@@ -259,7 +259,7 @@ CJS_Result CJS_Document::getField(CJS_Runtime* pRuntime,
     return CJS_Result::Failure(JSMessage::kBadObjectError);
   }
 
-  WideString wideName = pRuntime->ToWideString(params[0]);
+  WideString wideName = pRuntime->ToWideStringReentrant(params[0]);
   CPDF_InteractiveForm* pPDFForm = GetCoreInteractiveForm();
   if (pPDFForm->CountFields(wideName) <= 0) {
     return CJS_Result::Success(pRuntime->NewUndefined());
@@ -292,7 +292,7 @@ CJS_Result CJS_Document::getNthFieldName(
     return CJS_Result::Failure(JSMessage::kBadObjectError);
   }
 
-  int nIndex = pRuntime->ToInt32(params[0]);
+  int nIndex = pRuntime->ToInt32Reentrant(params[0]);
   if (nIndex < 0) {
     return CJS_Result::Failure(JSMessage::kValueError);
   }
@@ -338,32 +338,32 @@ CJS_Result CJS_Document::mailDoc(CJS_Runtime* pRuntime,
 
   bool bUI = true;
   if (IsExpandedParamKnown(newParams[0])) {
-    bUI = pRuntime->ToBoolean(newParams[0]);
+    bUI = pRuntime->ToBooleanReentrant(newParams[0]);
   }
 
   WideString cTo;
   if (IsExpandedParamKnown(newParams[1])) {
-    cTo = pRuntime->ToWideString(newParams[1]);
+    cTo = pRuntime->ToWideStringReentrant(newParams[1]);
   }
 
   WideString cCc;
   if (IsExpandedParamKnown(newParams[2])) {
-    cCc = pRuntime->ToWideString(newParams[2]);
+    cCc = pRuntime->ToWideStringReentrant(newParams[2]);
   }
 
   WideString cBcc;
   if (IsExpandedParamKnown(newParams[3])) {
-    cBcc = pRuntime->ToWideString(newParams[3]);
+    cBcc = pRuntime->ToWideStringReentrant(newParams[3]);
   }
 
   WideString cSubject;
   if (IsExpandedParamKnown(newParams[4])) {
-    cSubject = pRuntime->ToWideString(newParams[4]);
+    cSubject = pRuntime->ToWideStringReentrant(newParams[4]);
   }
 
   WideString cMsg;
   if (IsExpandedParamKnown(newParams[5])) {
-    cMsg = pRuntime->ToWideString(newParams[5]);
+    cMsg = pRuntime->ToWideStringReentrant(newParams[5]);
   }
 
   pRuntime->BeginBlock();
@@ -398,32 +398,32 @@ CJS_Result CJS_Document::mailForm(CJS_Runtime* pRuntime,
 
   bool bUI = true;
   if (IsExpandedParamKnown(newParams[0])) {
-    bUI = pRuntime->ToBoolean(newParams[0]);
+    bUI = pRuntime->ToBooleanReentrant(newParams[0]);
   }
 
   WideString cTo;
   if (IsExpandedParamKnown(newParams[1])) {
-    cTo = pRuntime->ToWideString(newParams[1]);
+    cTo = pRuntime->ToWideStringReentrant(newParams[1]);
   }
 
   WideString cCc;
   if (IsExpandedParamKnown(newParams[2])) {
-    cCc = pRuntime->ToWideString(newParams[2]);
+    cCc = pRuntime->ToWideStringReentrant(newParams[2]);
   }
 
   WideString cBcc;
   if (IsExpandedParamKnown(newParams[3])) {
-    cBcc = pRuntime->ToWideString(newParams[3]);
+    cBcc = pRuntime->ToWideStringReentrant(newParams[3]);
   }
 
   WideString cSubject;
   if (IsExpandedParamKnown(newParams[4])) {
-    cSubject = pRuntime->ToWideString(newParams[4]);
+    cSubject = pRuntime->ToWideStringReentrant(newParams[4]);
   }
 
   WideString cMsg;
   if (IsExpandedParamKnown(newParams[5])) {
-    cMsg = pRuntime->ToWideString(newParams[5]);
+    cMsg = pRuntime->ToWideStringReentrant(newParams[5]);
   }
 
   pRuntime->BeginBlock();
@@ -441,42 +441,42 @@ CJS_Result CJS_Document::print(CJS_Runtime* pRuntime,
 
   bool bUI = true;
   if (IsExpandedParamKnown(newParams[0])) {
-    bUI = pRuntime->ToBoolean(newParams[0]);
+    bUI = pRuntime->ToBooleanReentrant(newParams[0]);
   }
 
   int nStart = 0;
   if (IsExpandedParamKnown(newParams[1])) {
-    nStart = pRuntime->ToInt32(newParams[1]);
+    nStart = pRuntime->ToInt32Reentrant(newParams[1]);
   }
 
   int nEnd = 0;
   if (IsExpandedParamKnown(newParams[2])) {
-    nEnd = pRuntime->ToInt32(newParams[2]);
+    nEnd = pRuntime->ToInt32Reentrant(newParams[2]);
   }
 
   bool bSilent = false;
   if (IsExpandedParamKnown(newParams[3])) {
-    bSilent = pRuntime->ToBoolean(newParams[3]);
+    bSilent = pRuntime->ToBooleanReentrant(newParams[3]);
   }
 
   bool bShrinkToFit = false;
   if (IsExpandedParamKnown(newParams[4])) {
-    bShrinkToFit = pRuntime->ToBoolean(newParams[4]);
+    bShrinkToFit = pRuntime->ToBooleanReentrant(newParams[4]);
   }
 
   bool bPrintAsImage = false;
   if (IsExpandedParamKnown(newParams[5])) {
-    bPrintAsImage = pRuntime->ToBoolean(newParams[5]);
+    bPrintAsImage = pRuntime->ToBooleanReentrant(newParams[5]);
   }
 
   bool bReverse = false;
   if (IsExpandedParamKnown(newParams[6])) {
-    bReverse = pRuntime->ToBoolean(newParams[6]);
+    bReverse = pRuntime->ToBooleanReentrant(newParams[6]);
   }
 
   bool bAnnotations = false;
   if (IsExpandedParamKnown(newParams[7])) {
-    bAnnotations = pRuntime->ToBoolean(newParams[7]);
+    bAnnotations = pRuntime->ToBooleanReentrant(newParams[7]);
   }
 
   if (!form_fill_env_) {
@@ -512,7 +512,7 @@ CJS_Result CJS_Document::removeField(
     return CJS_Result::Failure(JSMessage::kPermissionError);
   }
 
-  WideString sFieldName = pRuntime->ToWideString(params[0]);
+  WideString sFieldName = pRuntime->ToWideStringReentrant(params[0]);
   CPDFSDK_InteractiveForm* pInteractiveForm = GetSDKInteractiveForm();
   std::vector<ObservedPtr<CPDFSDK_Widget>> widgets;
   pInteractiveForm->GetWidgets(sFieldName, &widgets);
@@ -573,15 +573,15 @@ CJS_Result CJS_Document::resetForm(CJS_Runtime* pRuntime,
   v8::Local<v8::Array> array;
   if (params[0]->IsString()) {
     array = pRuntime->NewArray();
-    pRuntime->PutArrayElement(array, 0, params[0]);
+    pRuntime->PutArrayElementReentrant(array, 0, params[0]);
   } else {
-    array = pRuntime->ToArray(params[0]);
+    array = pRuntime->ToArrayReentrant(params[0]);
   }
 
   std::vector<CPDF_FormField*> aFields;
   for (size_t i = 0; i < pRuntime->GetArrayLength(array); ++i) {
-    WideString swVal =
-        pRuntime->ToWideString(pRuntime->GetArrayElement(array, i));
+    WideString swVal = pRuntime->ToWideStringReentrant(
+        pRuntime->GetArrayElementReentrant(array, i));
     const size_t jsz = pPDFForm->CountFields(swVal);
     for (size_t j = 0; j < jsz; ++j) {
       aFields.push_back(pPDFForm->GetField(j, swVal));
@@ -628,26 +628,30 @@ CJS_Result CJS_Document::submitForm(CJS_Runtime* pRuntime,
   bool bFDF = true;
   bool bEmpty = false;
   if (params[0]->IsString()) {
-    strURL = pRuntime->ToWideString(params[0]);
+    strURL = pRuntime->ToWideStringReentrant(params[0]);
     if (nSize > 1) {
-      bFDF = pRuntime->ToBoolean(params[1]);
+      bFDF = pRuntime->ToBooleanReentrant(params[1]);
     }
     if (nSize > 2) {
-      bEmpty = pRuntime->ToBoolean(params[2]);
+      bEmpty = pRuntime->ToBooleanReentrant(params[2]);
     }
     if (nSize > 3) {
-      aFields = pRuntime->ToArray(params[3]);
+      aFields = pRuntime->ToArrayReentrant(params[3]);
     }
   } else if (params[0]->IsObject()) {
-    v8::Local<v8::Object> pObj = pRuntime->ToObject(params[0]);
-    v8::Local<v8::Value> pValue = pRuntime->GetObjectProperty(pObj, "cURL");
+    v8::Local<v8::Object> pObj = pRuntime->ToObjectReentrant(params[0]);
+    v8::Local<v8::Value> pValue =
+        pRuntime->GetObjectPropertyReentrant(pObj, "cURL");
     if (!pValue.IsEmpty()) {
-      strURL = pRuntime->ToWideString(pValue);
+      strURL = pRuntime->ToWideStringReentrant(pValue);
     }
 
-    bFDF = pRuntime->ToBoolean(pRuntime->GetObjectProperty(pObj, "bFDF"));
-    bEmpty = pRuntime->ToBoolean(pRuntime->GetObjectProperty(pObj, "bEmpty"));
-    aFields = pRuntime->ToArray(pRuntime->GetObjectProperty(pObj, "aFields"));
+    bFDF = pRuntime->ToBooleanReentrant(
+        pRuntime->GetObjectPropertyReentrant(pObj, "bFDF"));
+    bEmpty = pRuntime->ToBooleanReentrant(
+        pRuntime->GetObjectPropertyReentrant(pObj, "bEmpty"));
+    aFields = pRuntime->ToArrayReentrant(
+        pRuntime->GetObjectPropertyReentrant(pObj, "aFields"));
   }
 
   CPDF_InteractiveForm* pPDFForm = GetCoreInteractiveForm();
@@ -662,8 +666,8 @@ CJS_Result CJS_Document::submitForm(CJS_Runtime* pRuntime,
 
   std::vector<CPDF_FormField*> fieldObjects;
   for (size_t i = 0; i < pRuntime->GetArrayLength(aFields); ++i) {
-    WideString sName =
-        pRuntime->ToWideString(pRuntime->GetArrayElement(aFields, i));
+    WideString sName = pRuntime->ToWideStringReentrant(
+        pRuntime->GetArrayElementReentrant(aFields, i));
     const size_t jsz = pPDFForm->CountFields(sName);
     for (size_t j = 0; j < jsz; ++j) {
       CPDF_FormField* pField = pPDFForm->GetField(j, sName);
@@ -728,24 +732,24 @@ CJS_Result CJS_Document::get_info(CJS_Runtime* pRuntime) {
   WideString cwTrapped = dict->GetUnicodeTextFor("Trapped");
 
   v8::Local<v8::Object> pObj = pRuntime->NewObject();
-  pRuntime->PutObjectProperty(pObj, "Author",
-                              pRuntime->NewString(cwAuthor.AsStringView()));
-  pRuntime->PutObjectProperty(pObj, "Title",
-                              pRuntime->NewString(cwTitle.AsStringView()));
-  pRuntime->PutObjectProperty(pObj, "Subject",
-                              pRuntime->NewString(cwSubject.AsStringView()));
-  pRuntime->PutObjectProperty(pObj, "Keywords",
-                              pRuntime->NewString(cwKeywords.AsStringView()));
-  pRuntime->PutObjectProperty(pObj, "Creator",
-                              pRuntime->NewString(cwCreator.AsStringView()));
-  pRuntime->PutObjectProperty(pObj, "Producer",
-                              pRuntime->NewString(cwProducer.AsStringView()));
-  pRuntime->PutObjectProperty(
+  pRuntime->PutObjectPropertyReentrant(
+      pObj, "Author", pRuntime->NewString(cwAuthor.AsStringView()));
+  pRuntime->PutObjectPropertyReentrant(
+      pObj, "Title", pRuntime->NewString(cwTitle.AsStringView()));
+  pRuntime->PutObjectPropertyReentrant(
+      pObj, "Subject", pRuntime->NewString(cwSubject.AsStringView()));
+  pRuntime->PutObjectPropertyReentrant(
+      pObj, "Keywords", pRuntime->NewString(cwKeywords.AsStringView()));
+  pRuntime->PutObjectPropertyReentrant(
+      pObj, "Creator", pRuntime->NewString(cwCreator.AsStringView()));
+  pRuntime->PutObjectPropertyReentrant(
+      pObj, "Producer", pRuntime->NewString(cwProducer.AsStringView()));
+  pRuntime->PutObjectPropertyReentrant(
       pObj, "CreationDate", pRuntime->NewString(cwCreationDate.AsStringView()));
-  pRuntime->PutObjectProperty(pObj, "ModDate",
-                              pRuntime->NewString(cwModDate.AsStringView()));
-  pRuntime->PutObjectProperty(pObj, "Trapped",
-                              pRuntime->NewString(cwTrapped.AsStringView()));
+  pRuntime->PutObjectPropertyReentrant(
+      pObj, "ModDate", pRuntime->NewString(cwModDate.AsStringView()));
+  pRuntime->PutObjectPropertyReentrant(
+      pObj, "Trapped", pRuntime->NewString(cwTrapped.AsStringView()));
 
   // PutObjectProperty() calls below may re-enter JS and change info dict.
   CPDF_DictionaryLocker locker(ToDictionary(dict->Clone()));
@@ -753,14 +757,15 @@ CJS_Result CJS_Document::get_info(CJS_Runtime* pRuntime) {
     const ByteString& bsKey = it.first;
     const RetainPtr<CPDF_Object>& pValueObj = it.second;
     if (pValueObj->IsString() || pValueObj->IsName()) {
-      pRuntime->PutObjectProperty(
+      pRuntime->PutObjectPropertyReentrant(
           pObj, bsKey.AsStringView(),
           pRuntime->NewString(pValueObj->GetUnicodeText().AsStringView()));
     } else if (pValueObj->IsNumber()) {
-      pRuntime->PutObjectProperty(pObj, bsKey.AsStringView(),
-                                  pRuntime->NewNumber(pValueObj->GetNumber()));
+      pRuntime->PutObjectPropertyReentrant(
+          pObj, bsKey.AsStringView(),
+          pRuntime->NewNumber(pValueObj->GetNumber()));
     } else if (pValueObj->IsBoolean()) {
-      pRuntime->PutObjectProperty(
+      pRuntime->PutObjectPropertyReentrant(
           pObj, bsKey.AsStringView(),
           pRuntime->NewBoolean(!!pValueObj->GetInteger()));
     }
@@ -826,7 +831,7 @@ CJS_Result CJS_Document::set_delay(CJS_Runtime* pRuntime,
     return CJS_Result::Failure(JSMessage::kPermissionError);
   }
 
-  delay_ = pRuntime->ToBoolean(vp);
+  delay_ = pRuntime->ToBooleanReentrant(vp);
   if (delay_) {
     delay_data_.clear();
     return CJS_Result::Success();
@@ -963,7 +968,7 @@ CJS_Result CJS_Document::get_base_URL(CJS_Runtime* pRuntime) {
 
 CJS_Result CJS_Document::set_base_URL(CJS_Runtime* pRuntime,
                                       v8::Local<v8::Value> vp) {
-  base_url_ = pRuntime->ToWideString(vp);
+  base_url_ = pRuntime->ToWideStringReentrant(vp);
   return CJS_Result::Success();
 }
 
@@ -984,7 +989,7 @@ CJS_Result CJS_Document::set_calculate(CJS_Runtime* pRuntime,
   }
 
   CPDFSDK_InteractiveForm* pInteractiveForm = GetSDKInteractiveForm();
-  pInteractiveForm->EnableCalculate(pRuntime->ToBoolean(vp));
+  pInteractiveForm->EnableCalculate(pRuntime->ToBooleanReentrant(vp));
   return CJS_Result::Success();
 }
 
@@ -1068,8 +1073,8 @@ CJS_Result CJS_Document::getAnnot(CJS_Runtime* pRuntime,
     return CJS_Result::Failure(JSMessage::kBadObjectError);
   }
 
-  int nPageNo = pRuntime->ToInt32(params[0]);
-  WideString swAnnotName = pRuntime->ToWideString(params[1]);
+  int nPageNo = pRuntime->ToInt32Reentrant(params[0]);
+  WideString swAnnotName = pRuntime->ToWideStringReentrant(params[1]);
   CPDFSDK_PageView* pPageView = form_fill_env_->GetPageViewAtIndex(nPageNo);
   if (!pPageView) {
     return CJS_Result::Failure(JSMessage::kBadObjectError);
@@ -1141,7 +1146,7 @@ CJS_Result CJS_Document::getAnnots(CJS_Runtime* pRuntime,
       auto* pJS_Annot = static_cast<CJS_Annot*>(
           CFXJS_Engine::GetBinding(pRuntime->GetIsolate(), pObj));
       pJS_Annot->SetSDKAnnot(pSDKAnnotCur->AsBAAnnot());
-      pRuntime->PutArrayElement(
+      pRuntime->PutArrayElementReentrant(
           annots, annots->Length(),
           pJS_Annot ? v8::Local<v8::Value>(pJS_Annot->ToV8Object())
                     : v8::Local<v8::Value>());
@@ -1181,12 +1186,12 @@ CJS_Result CJS_Document::addIcon(CJS_Runtime* pRuntime,
     return CJS_Result::Failure(JSMessage::kTypeError);
   }
 
-  v8::Local<v8::Object> pObj = pRuntime->ToObject(params[1]);
+  v8::Local<v8::Object> pObj = pRuntime->ToObjectReentrant(params[1]);
   if (!JSGetObject<CJS_Icon>(pRuntime->GetIsolate(), pObj)) {
     return CJS_Result::Failure(JSMessage::kTypeError);
   }
 
-  WideString swIconName = pRuntime->ToWideString(params[0]);
+  WideString swIconName = pRuntime->ToWideStringReentrant(params[0]);
   icon_names_.push_back(swIconName);
   return CJS_Result::Success();
 }
@@ -1210,10 +1215,10 @@ CJS_Result CJS_Document::get_icons(CJS_Runtime* pRuntime) {
     auto* pJS_Icon = static_cast<CJS_Icon*>(
         CFXJS_Engine::GetBinding(pRuntime->GetIsolate(), pObj));
     pJS_Icon->SetIconName(name);
-    pRuntime->PutArrayElement(Icons, i++,
-                              pJS_Icon
-                                  ? v8::Local<v8::Value>(pJS_Icon->ToV8Object())
-                                  : v8::Local<v8::Value>());
+    pRuntime->PutArrayElementReentrant(
+        Icons, i++,
+        pJS_Icon ? v8::Local<v8::Value>(pJS_Icon->ToV8Object())
+                 : v8::Local<v8::Value>());
   }
   return CJS_Result::Success(Icons);
 }
@@ -1229,7 +1234,7 @@ CJS_Result CJS_Document::getIcon(CJS_Runtime* pRuntime,
     return CJS_Result::Failure(JSMessage::kParamError);
   }
 
-  WideString swIconName = pRuntime->ToWideString(params[0]);
+  WideString swIconName = pRuntime->ToWideStringReentrant(params[0]);
   auto it = std::ranges::find(icon_names_, swIconName);
   if (it == icon_names_.end()) {
     return CJS_Result::Failure(JSMessage::kBadObjectError);
@@ -1314,9 +1319,10 @@ CJS_Result CJS_Document::getPageNthWord(
 
   // TODO(tsepez): check maximum allowable params.
 
-  int nPageNo = params.size() > 0 ? pRuntime->ToInt32(params[0]) : 0;
-  int nWordNo = params.size() > 1 ? pRuntime->ToInt32(params[1]) : 0;
-  bool bStrip = params.size() > 2 ? pRuntime->ToBoolean(params[2]) : true;
+  int nPageNo = params.size() > 0 ? pRuntime->ToInt32Reentrant(params[0]) : 0;
+  int nWordNo = params.size() > 1 ? pRuntime->ToInt32Reentrant(params[1]) : 0;
+  bool bStrip =
+      params.size() > 2 ? pRuntime->ToBooleanReentrant(params[2]) : true;
 
   CPDF_Document* document = form_fill_env_->GetPDFDocument();
   if (nPageNo < 0 || nPageNo >= document->GetPageCount()) {
@@ -1380,7 +1386,7 @@ CJS_Result CJS_Document::getPageNumWords(
     return CJS_Result::Failure(JSMessage::kPermissionError);
   }
 
-  int nPageNo = params.size() > 0 ? pRuntime->ToInt32(params[0]) : 0;
+  int nPageNo = params.size() > 0 ? pRuntime->ToInt32Reentrant(params[0]) : 0;
   CPDF_Document* document = form_fill_env_->GetPDFDocument();
   if (nPageNo < 0 || nPageNo >= document->GetPageCount()) {
     return CJS_Result::Failure(JSMessage::kValueError);
@@ -1476,7 +1482,7 @@ CJS_Result CJS_Document::gotoNamedDest(
 
   CPDF_Document* document = form_fill_env_->GetPDFDocument();
   RetainPtr<const CPDF_Array> dest_array = CPDF_NameTree::LookupNamedDest(
-      document, pRuntime->ToByteString(params[0]));
+      document, pRuntime->ToByteStringReentrant(params[0]));
   if (!dest_array) {
     return CJS_Result::Failure(JSMessage::kBadObjectError);
   }

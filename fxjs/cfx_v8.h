@@ -34,29 +34,31 @@ class CFX_V8 {
   v8::Local<v8::String> NewString(WideStringView str);
   v8::Local<v8::Date> NewDate(double d);
 
-  int ToInt32(v8::Local<v8::Value> pValue);
-  bool ToBoolean(v8::Local<v8::Value> pValue);
-  double ToDouble(v8::Local<v8::Value> pValue);
-  WideString ToWideString(v8::Local<v8::Value> pValue);
-  ByteString ToByteString(v8::Local<v8::Value> pValue);
-  v8::Local<v8::Object> ToObject(v8::Local<v8::Value> pValue);
-  v8::Local<v8::Array> ToArray(v8::Local<v8::Value> pValue);
+  int ToInt32Reentrant(v8::Local<v8::Value> pValue);
+  bool ToBooleanReentrant(v8::Local<v8::Value> pValue);
+  double ToDoubleReentrant(v8::Local<v8::Value> pValue);
+  WideString ToWideStringReentrant(v8::Local<v8::Value> pValue);
+  ByteString ToByteStringReentrant(v8::Local<v8::Value> pValue);
+  v8::Local<v8::Object> ToObjectReentrant(v8::Local<v8::Value> pValue);
+  v8::Local<v8::Array> ToArrayReentrant(v8::Local<v8::Value> pValue);
 
   // Arrays.
   size_t GetArrayLength(v8::Local<v8::Array> pArray);
-  v8::Local<v8::Value> GetArrayElement(v8::Local<v8::Array> pArray,
-                                       size_t index);
-  void PutArrayElement(v8::Local<v8::Array> pArray,
-                       size_t index,
-                       v8::Local<v8::Value> pValue);
+  v8::Local<v8::Value> GetArrayElementReentrant(v8::Local<v8::Array> pArray,
+                                                size_t index);
+  void PutArrayElementReentrant(v8::Local<v8::Array> pArray,
+                                size_t index,
+                                v8::Local<v8::Value> pValue);
 
   // Objects.
-  std::vector<WideString> GetObjectPropertyNames(v8::Local<v8::Object> pObj);
-  v8::Local<v8::Value> GetObjectProperty(v8::Local<v8::Object> pObj,
-                                         ByteStringView bsUTF8PropertyName);
-  void PutObjectProperty(v8::Local<v8::Object> pObj,
-                         ByteStringView bsUTF8PropertyName,
-                         v8::Local<v8::Value> pValue);
+  std::vector<WideString> GetObjectPropertyNamesReentrant(
+      v8::Local<v8::Object> pObj);
+  v8::Local<v8::Value> GetObjectPropertyReentrant(
+      v8::Local<v8::Object> pObj,
+      ByteStringView bsUTF8PropertyName);
+  void PutObjectPropertyReentrant(v8::Local<v8::Object> pObj,
+                                  ByteStringView bsUTF8PropertyName,
+                                  v8::Local<v8::Value> pValue);
 
  protected:
   void SetIsolate(v8::Isolate* isolate) { isolate_ = isolate; }

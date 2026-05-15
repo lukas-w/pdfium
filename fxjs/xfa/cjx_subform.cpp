@@ -40,8 +40,9 @@ CJS_Result CJX_Subform::execEvent(CFXJSE_Engine* runtime,
     return CJS_Result::Failure(JSMessage::kParamError);
   }
 
-  execSingleEventByName(runtime->ToWideString(params[0]).AsStringView(),
-                        XFA_Element::Subform);
+  execSingleEventByName(
+      runtime->ToWideStringReentrant(params[0]).AsStringView(),
+      XFA_Element::Subform);
   return CJS_Result::Success();
 }
 

@@ -39,7 +39,7 @@ CJS_Result CJX_TreeList::namedItem(CFXJSE_Engine* runtime,
   }
 
   CXFA_Node* pNode = GetXFATreeList()->NamedItem(
-      runtime->ToWideString(params[0]).AsStringView());
+      runtime->ToWideStringReentrant(params[0]).AsStringView());
   if (!pNode) {
     return CJS_Result::Success();
   }
