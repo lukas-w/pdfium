@@ -60,8 +60,6 @@ class CJBig2_Image {
   // Returns an empty span if `y` is out of bounds, or if there is no data.
   pdfium::span<const uint8_t> GetLine(int32_t y) const;
   pdfium::span<uint8_t> GetLine(int32_t y);
-  pdfium::span<const uint32_t> GetLine32(int32_t y) const;
-  pdfium::span<uint32_t> GetLine32(int32_t y);
 
   void CopyLine(pdfium::span<uint8_t> dest, pdfium::span<const uint8_t> src);
   void Fill(bool v);
@@ -80,14 +78,18 @@ class CJBig2_Image {
   void Expand(int32_t h, bool v);
 
   bool ComposeTo(CJBig2_Image* pDst, int64_t x, int64_t y, JBig2ComposeOp op);
+
+ private:
+  std::optional<size_t> GetLineOffset(int32_t y) const;
+
+  pdfium::span<const uint32_t> GetLine32(int32_t y) const;
+  pdfium::span<uint32_t> GetLine32(int32_t y);
+
   bool ComposeToWithRect(CJBig2_Image* pDst,
                          int64_t x,
                          int64_t y,
                          const FX_RECT& rtSrc,
                          JBig2ComposeOp op);
-
- private:
-  std::optional<size_t> GetLineOffset(int32_t y) const;
 
   // SubImage() already checked `x` and `y` are valid.
   void SubImageFast(uint32_t x,
