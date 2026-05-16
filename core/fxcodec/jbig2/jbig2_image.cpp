@@ -304,10 +304,9 @@ void CJBig2_Image::SubImageSlow(uint32_t x,
                                 CJBig2_Image* image) const {
   uint32_t m = BitIndexToAlignedUint32(x);
   // SubImage() made sure `x` is [0, width_).
-  CHECK_GT(static_cast<size_t>(stride_ / sizeof(uint32_t)), m);
+  CHECK_GT(stride32(), m);
   int32_t n = x & 31;
-  size_t elems_to_copy = std::min<size_t>(image->stride_ / sizeof(uint32_t),
-                                          stride_ / sizeof(uint32_t) - m);
+  size_t elems_to_copy = std::min(image->stride32(), stride32() - m);
   // SubImage() made sure both images have data. The strides are always a
   // multiple of 4.
   CHECK_GT(elems_to_copy, 0);
@@ -414,8 +413,8 @@ bool CJBig2_Image::ComposeToInternal(CJBig2_Image* pDst,
   const uint32_t src_offset =
       BitIndexToAlignedUint32(pdfium::checked_cast<uint32_t>(xs0 + rtSrc.left));
   const uint32_t dest_offset = BitIndexToAlignedUint32(xd0);
-  const uint32_t line_size = pdfium::checked_cast<uint32_t>(
-      stride_ / sizeof(uint32_t) - BitIndexToAlignedUint32(xs0));
+  const uint32_t line_size =
+      pdfium::checked_cast<uint32_t>(stride32() - BitIndexToAlignedUint32(xs0));
 
   enum class ComposeToOp {
     kDestAlignedSrcAlignedSrcGreaterThanDest,
