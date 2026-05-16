@@ -82,8 +82,10 @@ class CJBig2_Image {
  private:
   std::optional<size_t> GetLineOffset(int32_t y) const;
 
-  pdfium::span<const uint32_t> GetLine32(int32_t y) const;
-  pdfium::span<uint32_t> GetLine32(int32_t y);
+  // Returns an empty span if `y`, `count`, or `y + count` is out of bounds, or
+  // if there is no data.
+  pdfium::span<const uint32_t> GetLines32(int32_t y, int32_t count) const;
+  pdfium::span<uint32_t> GetLines32(int32_t y, int32_t count);
 
   // Returns stride in terms of number of uint32_t.
   // No rounding issues since `stride_` is a multiple of 4.
