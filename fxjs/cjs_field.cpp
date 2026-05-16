@@ -777,12 +777,16 @@ CJS_Result CJS_Field::get_border_style(CJS_Runtime* pRuntime) {
 
 CJS_Result CJS_Field::set_border_style(CJS_Runtime* pRuntime,
                                        v8::Local<v8::Value> vp) {
-  DCHECK(form_fill_env_);
   if (!can_set_) {
     return CJS_Result::Failure(JSMessage::kReadOnlyError);
   }
-
   ByteString byte_str = pRuntime->ToByteStringReentrant(vp);
+
+  // Check if still exists following JS re-entrancy.
+  if (!form_fill_env_) {
+    return CJS_Result::Failure(JSMessage::kBadObjectError);
+  }
+
   if (delay_) {
     AddDelay_String(FP_BORDERSTYLE, byte_str);
   } else {
@@ -1130,6 +1134,11 @@ CJS_Result CJS_Field::set_current_value_indices(CJS_Runtime* pRuntime,
     }
   }
 
+  // Check if still exists following JS re-entrancy.
+  if (!form_fill_env_) {
+    return CJS_Result::Failure(JSMessage::kBadObjectError);
+  }
+
   if (delay_) {
     AddDelay_WordArray(FP_CURRENTVALUEINDICES, array);
   } else {
@@ -1272,9 +1281,12 @@ CJS_Result CJS_Field::set_display(CJS_Runtime* pRuntime,
     return CJS_Result::Failure(JSMessage::kReadOnlyError);
   }
   int value = pRuntime->ToInt32Reentrant(vp);
+
+  // Check if still exists following JS re-entrancy.
   if (!form_fill_env_) {
     return CJS_Result::Failure(JSMessage::kBadObjectError);
   }
+
   if (delay_) {
     AddDelay_Int(FP_DISPLAY, value);
   } else {
@@ -1461,12 +1473,17 @@ CJS_Result CJS_Field::set_hidden(CJS_Runtime* pRuntime,
   if (!can_set_) {
     return CJS_Result::Failure(JSMessage::kReadOnlyError);
   }
+  const bool value = pRuntime->ToBooleanReentrant(vp);
+
+  // Check if still exists following JS re-entrancy.
+  if (!form_fill_env_) {
+    return CJS_Result::Failure(JSMessage::kBadObjectError);
+  }
 
   if (delay_) {
-    AddDelay_Bool(FP_HIDDEN, pRuntime->ToBooleanReentrant(vp));
+    AddDelay_Bool(FP_HIDDEN, value);
   } else {
-    SetHidden(form_fill_env_.Get(), field_name_, form_control_index_,
-              pRuntime->ToBooleanReentrant(vp));
+    SetHidden(form_fill_env_.Get(), field_name_, form_control_index_, value);
   }
   return CJS_Result::Success();
 }
@@ -1542,12 +1559,17 @@ CJS_Result CJS_Field::set_line_width(CJS_Runtime* pRuntime,
   if (!can_set_) {
     return CJS_Result::Failure(JSMessage::kReadOnlyError);
   }
+  const int value = pRuntime->ToInt32Reentrant(vp);
+
+  // Check if still exists following JS re-entrancy.
+  if (!form_fill_env_) {
+    return CJS_Result::Failure(JSMessage::kBadObjectError);
+  }
 
   if (delay_) {
-    AddDelay_Int(FP_LINEWIDTH, pRuntime->ToInt32Reentrant(vp));
+    AddDelay_Int(FP_LINEWIDTH, value);
   } else {
-    SetLineWidth(form_fill_env_.Get(), field_name_, form_control_index_,
-                 pRuntime->ToInt32Reentrant(vp));
+    SetLineWidth(form_fill_env_.Get(), field_name_, form_control_index_, value);
   }
   return CJS_Result::Success();
 }
@@ -1712,9 +1734,14 @@ CJS_Result CJS_Field::set_print(CJS_Runtime* pRuntime,
   if (FieldArray.empty()) {
     return CJS_Result::Failure(JSMessage::kBadObjectError);
   }
-
   if (!can_set_) {
     return CJS_Result::Failure(JSMessage::kReadOnlyError);
+  }
+  const bool value = pRuntime->ToBooleanReentrant(vp);
+
+  // Check if still exists following JS re-entrancy.
+  if (!form_fill_env_) {
+    return CJS_Result::Failure(JSMessage::kBadObjectError);
   }
 
   for (CPDF_FormField* pFormField : FieldArray) {
@@ -1724,23 +1751,20 @@ CJS_Result CJS_Field::set_print(CJS_Runtime* pRuntime,
         if (CPDFSDK_Widget* pWidget =
                 pForm->GetWidget(pFormField->GetControl(i))) {
           uint32_t dwFlags = pWidget->GetFlags();
-          if (pRuntime->ToBooleanReentrant(vp)) {
+          if (value) {
             dwFlags |= pdfium::annotation_flags::kPrint;
           } else {
             dwFlags &= ~pdfium::annotation_flags::kPrint;
           }
-
           if (dwFlags != pWidget->GetFlags()) {
             pWidget->SetFlags(dwFlags);
             bSet = true;
           }
         }
       }
-
       if (bSet) {
         UpdateFormField(form_fill_env_.Get(), pFormField, false);
       }
-
       continue;
     }
 
@@ -1752,12 +1776,11 @@ CJS_Result CJS_Field::set_print(CJS_Runtime* pRuntime,
             pFormField->GetControl(form_control_index_)) {
       if (CPDFSDK_Widget* pWidget = pForm->GetWidget(pFormControl)) {
         uint32_t dwFlags = pWidget->GetFlags();
-        if (pRuntime->ToBooleanReentrant(vp)) {
+        if (value) {
           dwFlags |= pdfium::annotation_flags::kPrint;
         } else {
           dwFlags &= ~pdfium::annotation_flags::kPrint;
         }
-
         if (dwFlags != pWidget->GetFlags()) {
           pWidget->SetFlags(dwFlags);
           UpdateFormControl(form_fill_env_.Get(),
@@ -1876,6 +1899,11 @@ CJS_Result CJS_Field::set_rect(CJS_Runtime* pRuntime, v8::Local<v8::Value> vp) {
       pRuntime->GetArrayElementReentrant(rcArray, 2)));
   float f3 = static_cast<float>(pRuntime->ToInt32Reentrant(
       pRuntime->GetArrayElementReentrant(rcArray, 3)));
+
+  // Check if still exists following JS re-entrancy.
+  if (!form_fill_env_) {
+    return CJS_Result::Failure(JSMessage::kBadObjectError);
+  }
 
   CFX_FloatRect crRect(f0, f1, f2, f3);
   if (delay_) {
@@ -2321,6 +2349,11 @@ CJS_Result CJS_Field::set_value(CJS_Runtime* pRuntime,
     strArray.push_back(pRuntime->ToWideStringReentrant(vp));
   }
 
+  // Check if still exists following JS re-entrancy.
+  if (!form_fill_env_) {
+    return CJS_Result::Failure(JSMessage::kBadObjectError);
+  }
+
   if (delay_) {
     AddDelay_WideStringArray(FP_VALUE, strArray);
   } else {
@@ -2497,6 +2530,11 @@ CJS_Result CJS_Field::checkThisBox(CJS_Runtime* pRuntime,
   bool bCheckit = true;
   if (nSize >= 2) {
     bCheckit = pRuntime->ToBooleanReentrant(params[1]);
+  }
+
+  // Check if still exists following JS re-entrancy.
+  if (!form_fill_env_) {
+    return CJS_Result::Failure(JSMessage::kBadObjectError);
   }
 
   CPDF_FormField* pFormField = GetFirstFormField();
