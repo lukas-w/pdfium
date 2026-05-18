@@ -249,7 +249,7 @@ vars = {
   # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling tools_memory
   # and whatever else without interference from each other.
-  'tools_memory_revision': 'b635f27e932356a2e29450e5cfa544cdcc9ea6bb',
+  'tools_memory_revision': '66b0df34a721e0f7fe09d1606a92b5e4d909c4a9',
   # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling tools_rust
   # and whatever else without interference from each other.
