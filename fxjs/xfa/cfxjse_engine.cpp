@@ -947,15 +947,20 @@ CXFA_Object* CFXJSE_Engine::ToXFAObject(v8::Local<v8::Value> obj) {
   if (!fxv8::IsObject(obj)) {
     return nullptr;
   }
-
-  CFXJSE_HostObject* pHostObj =
+  CFXJSE_HostObject* host_obj =
       FXJSE_RetrieveObjectBinding(obj.As<v8::Object>());
-  if (!pHostObj) {
+  if (!host_obj) {
     return nullptr;
   }
-
-  CJX_Object* pJSObject = pHostObj->AsCJXObject();
-  return pJSObject ? pJSObject->GetXFAObject() : nullptr;
+  CJX_Object* jx_obj = host_obj->AsCJXObject();
+  if (!jx_obj) {
+    return nullptr;
+  }
+  CXFA_Object* xfa_obj = jx_obj->GetXFAObject();
+  if (!xfa_obj || xfa_obj->GetDocument() != document_) {
+    return nullptr;
+  }
+  return xfa_obj;
 }
 
 v8::Local<v8::Object> CFXJSE_Engine::NewNormalXFAObject(CXFA_Object* obj) {
