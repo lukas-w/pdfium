@@ -38,6 +38,12 @@
 // #define PDF_ENABLE_SKIA_TYPEFACE_CHECKS 1
 #endif
 
+#if defined(PDF_ENABLE_SKIA_TYPEFACE_CHECKS)
+#include "third_party/skia/include/core/SkFont.h"         // nogncheck
+#include "third_party/skia/include/core/SkFontMetrics.h"  // nogncheck
+#include "third_party/skia/include/core/SkRect.h"         // nogncheck
+#endif
+
 #define EM_ADJUST(em, a) (em == 0 ? (a) : (a) * 1000 / em)
 
 namespace {
@@ -383,7 +389,13 @@ bool CFX_Face::IsTricky() const {
 }
 
 bool CFX_Face::IsFixedWidth() const {
-  return !!(GetRec()->face_flags & FT_FACE_FLAG_FIXED_WIDTH);
+  const bool ft_result = !!(GetRec()->face_flags & FT_FACE_FLAG_FIXED_WIDTH);
+#if defined(PDF_ENABLE_SKIA_TYPEFACE_CHECKS)
+  if (skia_typeface_) {
+    CHECK_EQ(ft_result, skia_typeface_->isFixedPitch());
+  }
+#endif
+  return ft_result;
 }
 
 #if defined(PDF_ENABLE_XFA)
@@ -393,15 +405,35 @@ bool CFX_Face::IsScalable() const {
 #endif
 
 bool CFX_Face::IsItalic() const {
-  return !!(GetRec()->style_flags & FT_STYLE_FLAG_ITALIC);
+  const bool ft_result = !!(GetRec()->style_flags & FT_STYLE_FLAG_ITALIC);
+#if defined(PDF_ENABLE_SKIA_TYPEFACE_CHECKS)
+  if (skia_typeface_) {
+    CHECK_EQ(ft_result, skia_typeface_->isItalic());
+  }
+#endif
+  return ft_result;
 }
 
 bool CFX_Face::IsBold() const {
-  return !!(GetRec()->style_flags & FT_STYLE_FLAG_BOLD);
+  const bool ft_result = !!(GetRec()->style_flags & FT_STYLE_FLAG_BOLD);
+#if defined(PDF_ENABLE_SKIA_TYPEFACE_CHECKS)
+  if (skia_typeface_) {
+    CHECK_EQ(ft_result, skia_typeface_->isBold());
+  }
+#endif
+  return ft_result;
 }
 
 ByteString CFX_Face::GetFamilyName() const {
-  return ByteString(GetRec()->family_name);
+  const ByteString ft_result(GetRec()->family_name);
+#if defined(PDF_ENABLE_SKIA_TYPEFACE_CHECKS)
+  if (skia_typeface_) {
+    SkString name;
+    skia_typeface_->getFamilyName(&name);
+    CHECK_EQ(ft_result, ByteString(name.c_str()));
+  }
+#endif
+  return ft_result;
 }
 
 ByteString CFX_Face::GetStyleName() const {
@@ -409,22 +441,64 @@ ByteString CFX_Face::GetStyleName() const {
 }
 
 FX_RECT CFX_Face::GetBBox() const {
-  return FX_RECT(pdfium::checked_cast<int32_t>(GetRec()->bbox.xMin),
-                 pdfium::checked_cast<int32_t>(GetRec()->bbox.yMin),
-                 pdfium::checked_cast<int32_t>(GetRec()->bbox.xMax),
-                 pdfium::checked_cast<int32_t>(GetRec()->bbox.yMax));
+  const FX_RECT ft_result =
+      FX_RECT(pdfium::checked_cast<int32_t>(GetRec()->bbox.xMin),
+              pdfium::checked_cast<int32_t>(GetRec()->bbox.yMin),
+              pdfium::checked_cast<int32_t>(GetRec()->bbox.xMax),
+              pdfium::checked_cast<int32_t>(GetRec()->bbox.yMax));
+#if defined(PDF_ENABLE_SKIA_TYPEFACE_CHECKS)
+  if (skia_typeface_) {
+    SkRect bounds = skia_typeface_->getBounds();
+    // Skia bounds have different origins, and are 1-pt based, so scale by
+    // units per em.
+    float upem = GetUnitsPerEm();
+    CHECK_EQ(ft_result.left, static_cast<int32_t>(bounds.fLeft * upem));
+    CHECK_EQ(ft_result.bottom, -static_cast<int32_t>(bounds.fTop * upem));
+    CHECK_EQ(ft_result.right, static_cast<int32_t>(bounds.fRight * upem));
+    CHECK_EQ(ft_result.top, -static_cast<int32_t>(bounds.fBottom * upem));
+  }
+#endif
+  return ft_result;
 }
 
 uint16_t CFX_Face::GetUnitsPerEm() const {
-  return pdfium::checked_cast<uint16_t>(GetRec()->units_per_EM);
+  const uint16_t ft_result =
+      pdfium::checked_cast<uint16_t>(GetRec()->units_per_EM);
+#if defined(PDF_ENABLE_SKIA_TYPEFACE_CHECKS)
+  if (skia_typeface_) {
+    CHECK_EQ(ft_result,
+             pdfium::checked_cast<uint16_t>(skia_typeface_->getUnitsPerEm()));
+  }
+#endif
+  return ft_result;
 }
 
 int16_t CFX_Face::GetAscender() const {
-  return pdfium::checked_cast<int16_t>(GetRec()->ascender);
+  const int16_t ft_result = pdfium::checked_cast<int16_t>(GetRec()->ascender);
+#if defined(PDF_ENABLE_SKIA_TYPEFACE_CHECKS)
+  if (skia_typeface_) {
+    SkFont font(skia_typeface_, GetUnitsPerEm());
+    SkFontMetrics metrics;
+    font.getMetrics(&metrics);
+    // Freetype ascender is often exactly -metrics.fAscent.
+    CHECK_EQ(ft_result, static_cast<int16_t>(-metrics.fAscent));
+  }
+#endif
+  return ft_result;
 }
 
 int16_t CFX_Face::GetDescender() const {
-  return pdfium::checked_cast<int16_t>(GetRec()->descender);
+  const int16_t ft_result = pdfium::checked_cast<int16_t>(GetRec()->descender);
+#if defined(PDF_ENABLE_SKIA_TYPEFACE_CHECKS)
+  if (skia_typeface_) {
+    SkFont font(skia_typeface_, GetUnitsPerEm());
+    SkFontMetrics metrics;
+    font.getMetrics(&metrics);
+    // Freetype descender is often exactly -metrics.fDescent.
+    CHECK_EQ(ft_result, static_cast<int16_t>(-metrics.fDescent));
+  }
+#endif
+  return ft_result;
 }
 
 pdfium::span<const uint8_t> CFX_Face::GetData() const {
@@ -432,20 +506,36 @@ pdfium::span<const uint8_t> CFX_Face::GetData() const {
 }
 
 size_t CFX_Face::GetSfntTable(uint32_t table, pdfium::span<uint8_t> buffer) {
+  size_t ft_result = 0;
   unsigned long length = pdfium::checked_cast<unsigned long>(buffer.size());
   if (length) {
     int error = FT_Load_Sfnt_Table(GetRec(), table, 0, buffer.data(), &length);
-    if (error || length != buffer.size()) {
-      return 0;
+    if (!error && length == buffer.size()) {
+      ft_result = buffer.size();
     }
-    return buffer.size();
+  } else {
+    int error = FT_Load_Sfnt_Table(GetRec(), table, 0, nullptr, &length);
+    if (!error && length) {
+      ft_result = pdfium::checked_cast<size_t>(length);
+    }
   }
 
-  int error = FT_Load_Sfnt_Table(GetRec(), table, 0, nullptr, &length);
-  if (error || !length) {
-    return 0;
+#if defined(PDF_ENABLE_SKIA_TYPEFACE_CHECKS)
+  if (skia_typeface_) {
+    if (buffer.empty()) {
+      CHECK_EQ(ft_result, skia_typeface_->getTableSize(table));
+    } else {
+      std::vector<uint8_t> skia_buffer(buffer.size());
+      size_t skia_result = skia_typeface_->getTableData(
+          table, 0, skia_buffer.size(), skia_buffer.data());
+      CHECK_EQ(ft_result, skia_result);
+      if (ft_result > 0) {
+        CHECK(std::equal(buffer.begin(), buffer.end(), skia_buffer.begin()));
+      }
+    }
   }
-  return pdfium::checked_cast<size_t>(length);
+#endif
+  return ft_result;
 }
 
 #if defined(PDF_ENABLE_XFA)
@@ -481,7 +571,13 @@ std::optional<std::array<uint8_t, 2>> CFX_Face::GetOs2Panose() {
 #endif  // defined(PDF_ENABLE_XFA) || BUILDFLAG(IS_ANDROID)
 
 int CFX_Face::GetGlyphCount() const {
-  return pdfium::checked_cast<int>(GetRec()->num_glyphs);
+  const int ft_result = pdfium::checked_cast<int>(GetRec()->num_glyphs);
+#if defined(PDF_ENABLE_SKIA_TYPEFACE_CHECKS)
+  if (skia_typeface_) {
+    CHECK_EQ(ft_result, skia_typeface_->countGlyphs());
+  }
+#endif
+  return ft_result;
 }
 
 std::unique_ptr<CFX_GlyphBitmap> CFX_Face::RenderGlyph(
@@ -682,7 +778,19 @@ std::unique_ptr<CFX_Path> CFX_Face::LoadGlyphPath(
 
 int CFX_Face::GetGlyphTTWidth() const {
   const auto* fontglyph = GetRec()->glyph;
-  return NormalizeFontMetric(fontglyph->metrics.horiAdvance, GetUnitsPerEm());
+  const int ft_result =
+      NormalizeFontMetric(fontglyph->metrics.horiAdvance, GetUnitsPerEm());
+#if defined(PDF_ENABLE_SKIA_TYPEFACE_CHECKS)
+  if (skia_typeface_) {
+    SkFont font(skia_typeface_, GetUnitsPerEm());
+    uint16_t skia_glyph_index = static_cast<uint16_t>(fontglyph->glyph_index);
+    SkScalar width;
+    font.getWidths(pdfium::span_from_ref(skia_glyph_index),
+                   pdfium::span_from_ref(width));
+    CHECK_EQ(ft_result, static_cast<int>(width + 0.5));
+  }
+#endif
+  return ft_result;
 }
 
 int CFX_Face::GetGlyphWidth(uint32_t glyph_index,
@@ -706,7 +814,19 @@ int CFX_Face::GetGlyphWidth(uint32_t glyph_index,
     return 0;
   }
 
-  return static_cast<int>(EM_ADJUST(GetUnitsPerEm(), horizontal_advance));
+  const int ft_result =
+      static_cast<int>(EM_ADJUST(GetUnitsPerEm(), horizontal_advance));
+#if defined(PDF_ENABLE_SKIA_TYPEFACE_CHECKS)
+  if (skia_typeface_) {
+    SkFont font(skia_typeface_, GetUnitsPerEm());
+    uint16_t skia_glyph_index = static_cast<uint16_t>(glyph_index);
+    SkScalar width;
+    font.getWidths(pdfium::span_from_ref(skia_glyph_index),
+                   pdfium::span_from_ref(width));
+    CHECK_EQ(ft_result, static_cast<int>(width + 0.5));
+  }
+#endif
+  return ft_result;
 }
 
 ByteString CFX_Face::GetGlyphName(uint32_t glyph_index) {
@@ -717,7 +837,14 @@ ByteString CFX_Face::GetGlyphName(uint32_t glyph_index) {
 }
 
 int CFX_Face::GetCharIndex(uint32_t code) {
-  return FT_Get_Char_Index(GetRec(), code);
+  const int ft_result = FT_Get_Char_Index(GetRec(), code);
+#if defined(PDF_ENABLE_SKIA_TYPEFACE_CHECKS)
+  if (skia_typeface_) {
+    CHECK_EQ(static_cast<uint16_t>(ft_result),
+             skia_typeface_->unicharToGlyph(code));
+  }
+#endif
+  return ft_result;
 }
 
 int CFX_Face::GetNameIndex(const char* name) {
@@ -733,7 +860,18 @@ int CFX_Face::LoadGlyph(uint32_t glyph_index, bool scale) {
 }
 
 ByteString CFX_Face::GetPostscriptName() {
-  return FT_Get_Postscript_Name(GetRec());
+  const char* ft_result = FT_Get_Postscript_Name(GetRec());
+#if defined(PDF_ENABLE_SKIA_TYPEFACE_CHECKS)
+  if (skia_typeface_) {
+    SkString name;
+    if (skia_typeface_->getPostScriptName(&name)) {
+      CHECK_EQ(ByteString(ft_result), ByteString(name.c_str()));
+    } else {
+      CHECK(!ft_result);
+    }
+  }
+#endif
+  return ByteString(ft_result);
 }
 
 CFX_Size CFX_Face::GetPixelSize() const {
