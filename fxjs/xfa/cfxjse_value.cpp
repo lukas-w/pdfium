@@ -20,52 +20,6 @@
 #include "v8/include/v8-primitive.h"
 #include "v8/include/v8-script.h"
 
-namespace {
-
-double ftod(float fNumber) {
-  static_assert(sizeof(float) == 4, "float of incorrect size");
-
-  uint32_t nFloatBits = (uint32_t&)fNumber;
-  uint8_t nExponent = (uint8_t)(nFloatBits >> 23);
-  if (nExponent == 0 || nExponent == 255) {
-    return fNumber;
-  }
-
-  int8_t nErrExp = nExponent - 150;
-  if (nErrExp >= 0) {
-    return fNumber;
-  }
-
-  double dwError = pow(2.0, nErrExp);
-  double dwErrorHalf = dwError / 2;
-  double dNumber = fNumber;
-  double dNumberAbs = fabs(fNumber);
-  double dNumberAbsMin = dNumberAbs - dwErrorHalf;
-  double dNumberAbsMax = dNumberAbs + dwErrorHalf;
-  int32_t iErrPos = 0;
-  if (floor(dNumberAbsMin) == floor(dNumberAbsMax)) {
-    dNumberAbsMin = fmod(dNumberAbsMin, 1.0);
-    dNumberAbsMax = fmod(dNumberAbsMax, 1.0);
-    int32_t iErrPosMin = 1;
-    int32_t iErrPosMax = 38;
-    do {
-      int32_t iMid = (iErrPosMin + iErrPosMax) / 2;
-      double dPow = pow(10.0, iMid);
-      if (floor(dNumberAbsMin * dPow) == floor(dNumberAbsMax * dPow)) {
-        iErrPosMin = iMid + 1;
-      } else {
-        iErrPosMax = iMid;
-      }
-    } while (iErrPosMin < iErrPosMax);
-    iErrPos = iErrPosMax;
-  }
-  double dPow = pow(10.0, iErrPos);
-  return fNumber < 0 ? ceil(dNumber * dPow - 0.5) / dPow
-                     : floor(dNumber * dPow + 0.5) / dPow;
-}
-
-}  // namespace
-
 void FXJSE_ThrowMessage(v8::Isolate* pIsolate, ByteStringView utf8Message) {
   DCHECK(pIsolate);
   CFXJSE_ScopeUtil_IsolateHandleRootContext scope(pIsolate);
@@ -87,14 +41,6 @@ CFXJSE_HostObject* CFXJSE_Value::ToHostObject(v8::Isolate* pIsolate) const {
   return CFXJSE_HostObject::FromV8(v8::Local<v8::Value>::New(pIsolate, value_));
 }
 
-void CFXJSE_Value::SetHostObject(v8::Isolate* pIsolate,
-                                 CFXJSE_HostObject* pObject,
-                                 CFXJSE_Class* pClass) {
-  CFXJSE_ScopeUtil_IsolateHandleRootContext scope(pIsolate);
-  value_.Reset(pIsolate, pObject->NewBoundV8Object(
-                             pIsolate, pClass->GetTemplate(pIsolate)));
-}
-
 void CFXJSE_Value::SetArray(
     v8::Isolate* pIsolate,
     const std::vector<std::unique_ptr<CFXJSE_Value>>& values) {
@@ -111,84 +57,6 @@ void CFXJSE_Value::SetArray(
   v8::Local<v8::Array> hArrayObject =
       v8::Array::New(pIsolate, local_values.data(), local_values.size());
   value_.Reset(pIsolate, hArrayObject);
-}
-
-void CFXJSE_Value::SetFloat(v8::Isolate* pIsolate, float fFloat) {
-  CFXJSE_ScopeUtil_IsolateHandle scope(pIsolate);
-  value_.Reset(pIsolate, fxv8::NewNumberHelper(pIsolate, ftod(fFloat)));
-}
-
-bool CFXJSE_Value::SetObjectProperty(v8::Isolate* pIsolate,
-                                     ByteStringView szPropName,
-                                     CFXJSE_Value* pPropValue) {
-  if (pPropValue->IsEmpty()) {
-    return false;
-  }
-
-  CFXJSE_ScopeUtil_IsolateHandleRootContext scope(pIsolate);
-  v8::Local<v8::Value> hObject = GetValue(pIsolate);
-  if (!hObject->IsObject()) {
-    return false;
-  }
-
-  return fxv8::ReentrantPutObjectPropertyHelper(
-      pIsolate, hObject.As<v8::Object>(), szPropName,
-      pPropValue->GetValue(pIsolate));
-}
-
-bool CFXJSE_Value::GetObjectProperty(v8::Isolate* pIsolate,
-                                     ByteStringView szPropName,
-                                     CFXJSE_Value* pPropValue) {
-  CFXJSE_ScopeUtil_IsolateHandleRootContext scope(pIsolate);
-  v8::Local<v8::Value> hObject = GetValue(pIsolate);
-  if (!hObject->IsObject()) {
-    return false;
-  }
-
-  pPropValue->ForceSetValue(
-      pIsolate, fxv8::ReentrantGetObjectPropertyHelper(
-                    pIsolate, hObject.As<v8::Object>(), szPropName));
-  return true;
-}
-
-bool CFXJSE_Value::GetObjectPropertyByIdx(v8::Isolate* pIsolate,
-                                          uint32_t uPropIdx,
-                                          CFXJSE_Value* pPropValue) {
-  CFXJSE_ScopeUtil_IsolateHandleRootContext scope(pIsolate);
-  v8::Local<v8::Value> hObject = GetValue(pIsolate);
-  if (!hObject->IsArray()) {
-    return false;
-  }
-
-  pPropValue->ForceSetValue(pIsolate,
-                            fxv8::ReentrantGetArrayElementHelper(
-                                pIsolate, hObject.As<v8::Array>(), uPropIdx));
-  return true;
-}
-
-void CFXJSE_Value::DeleteObjectProperty(v8::Isolate* pIsolate,
-                                        ByteStringView szPropName) {
-  CFXJSE_ScopeUtil_IsolateHandleRootContext scope(pIsolate);
-  v8::Local<v8::Value> hObject = v8::Local<v8::Value>::New(pIsolate, value_);
-  if (hObject->IsObject()) {
-    fxv8::ReentrantDeleteObjectPropertyHelper(
-        pIsolate, hObject.As<v8::Object>(), szPropName);
-  }
-}
-
-bool CFXJSE_Value::SetObjectOwnProperty(v8::Isolate* pIsolate,
-                                        ByteStringView szPropName,
-                                        CFXJSE_Value* pPropValue) {
-  CFXJSE_ScopeUtil_IsolateHandleRootContext scope(pIsolate);
-  v8::Local<v8::Value> hObject = v8::Local<v8::Value>::New(pIsolate, value_);
-  if (!hObject->IsObject()) {
-    return false;
-  }
-
-  v8::Local<v8::Value> pValue =
-      v8::Local<v8::Value>::New(pIsolate, pPropValue->value_);
-  return fxv8::ReentrantSetObjectOwnPropertyHelper(
-      pIsolate, hObject.As<v8::Object>(), szPropName, pValue);
 }
 
 v8::Local<v8::Function> CFXJSE_Value::NewBoundFunction(
@@ -279,16 +147,6 @@ bool CFXJSE_Value::IsNumber(v8::Isolate* pIsolate) const {
   return hValue->IsNumber();
 }
 
-bool CFXJSE_Value::IsInteger(v8::Isolate* pIsolate) const {
-  if (IsEmpty()) {
-    return false;
-  }
-
-  CFXJSE_ScopeUtil_IsolateHandle scope(pIsolate);
-  v8::Local<v8::Value> hValue = v8::Local<v8::Value>::New(pIsolate, value_);
-  return hValue->IsInt32();
-}
-
 bool CFXJSE_Value::IsObject(v8::Isolate* pIsolate) const {
   if (IsEmpty()) {
     return false;
@@ -326,24 +184,6 @@ bool CFXJSE_Value::ToBoolean(v8::Isolate* pIsolate) const {
       pIsolate, v8::Local<v8::Value>::New(pIsolate, value_));
 }
 
-float CFXJSE_Value::ToFloat(v8::Isolate* pIsolate) const {
-  return static_cast<float>(ToDouble(pIsolate));
-}
-
-double CFXJSE_Value::ToDouble(v8::Isolate* pIsolate) const {
-  DCHECK(!IsEmpty());
-  CFXJSE_ScopeUtil_IsolateHandleRootContext scope(pIsolate);
-  return fxv8::ReentrantToDoubleHelper(
-      pIsolate, v8::Local<v8::Value>::New(pIsolate, value_));
-}
-
-int32_t CFXJSE_Value::ToInteger(v8::Isolate* pIsolate) const {
-  DCHECK(!IsEmpty());
-  CFXJSE_ScopeUtil_IsolateHandleRootContext scope(pIsolate);
-  return fxv8::ReentrantToInt32Helper(
-      pIsolate, v8::Local<v8::Value>::New(pIsolate, value_));
-}
-
 ByteString CFXJSE_Value::ToString(v8::Isolate* pIsolate) const {
   DCHECK(!IsEmpty());
   CFXJSE_ScopeUtil_IsolateHandleRootContext scope(pIsolate);
@@ -354,29 +194,4 @@ ByteString CFXJSE_Value::ToString(v8::Isolate* pIsolate) const {
 void CFXJSE_Value::SetUndefined(v8::Isolate* pIsolate) {
   CFXJSE_ScopeUtil_IsolateHandle scope(pIsolate);
   value_.Reset(pIsolate, fxv8::NewUndefinedHelper(pIsolate));
-}
-
-void CFXJSE_Value::SetNull(v8::Isolate* pIsolate) {
-  CFXJSE_ScopeUtil_IsolateHandle scope(pIsolate);
-  value_.Reset(pIsolate, fxv8::NewNullHelper(pIsolate));
-}
-
-void CFXJSE_Value::SetBoolean(v8::Isolate* pIsolate, bool bBoolean) {
-  CFXJSE_ScopeUtil_IsolateHandle scope(pIsolate);
-  value_.Reset(pIsolate, fxv8::NewBooleanHelper(pIsolate, bBoolean));
-}
-
-void CFXJSE_Value::SetInteger(v8::Isolate* pIsolate, int32_t nInteger) {
-  CFXJSE_ScopeUtil_IsolateHandle scope(pIsolate);
-  value_.Reset(pIsolate, fxv8::NewNumberHelper(pIsolate, nInteger));
-}
-
-void CFXJSE_Value::SetDouble(v8::Isolate* pIsolate, double dDouble) {
-  CFXJSE_ScopeUtil_IsolateHandle scope(pIsolate);
-  value_.Reset(pIsolate, fxv8::NewNumberHelper(pIsolate, dDouble));
-}
-
-void CFXJSE_Value::SetString(v8::Isolate* pIsolate, ByteStringView szString) {
-  CFXJSE_ScopeUtil_IsolateHandle scope(pIsolate);
-  value_.Reset(pIsolate, fxv8::NewStringHelper(pIsolate, szString));
 }
