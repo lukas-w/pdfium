@@ -1378,8 +1378,12 @@ CJS_Result CJS_PublicMethods::AFSimple_Calculate(
   v8::Local<v8::Array> FieldNameArray =
       AF_MakeArrayFromList(pRuntime, params[1]);
 
-  CPDFSDK_InteractiveForm* pReaderForm =
-      pRuntime->GetFormFillEnv()->GetInteractiveForm();
+  CPDFSDK_FormFillEnvironment* form_fill_env = pRuntime->GetFormFillEnv();
+  if (!form_fill_env) {
+    return CJS_Result::Failure(JSMessage::kBadObjectError);
+  }
+
+  CPDFSDK_InteractiveForm* pReaderForm = form_fill_env->GetInteractiveForm();
   CPDF_InteractiveForm* pForm = pReaderForm->GetInteractiveForm();
 
   double dValue = sFunction.EqualsASCII("PRD") ? 1.0 : 0.0;

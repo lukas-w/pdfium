@@ -2179,8 +2179,6 @@ CJS_Result CJS_Field::get_text_font(CJS_Runtime* pRuntime) {
 
 CJS_Result CJS_Field::set_text_font(CJS_Runtime* pRuntime,
                                     v8::Local<v8::Value> vp) {
-  DCHECK(form_fill_env_);
-
   if (!can_set_) {
     return CJS_Result::Failure(JSMessage::kReadOnlyError);
   }
