@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2023 Marti Maria Saguer
+//  Copyright (c) 1998-2026 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the "Software"),
@@ -460,7 +460,8 @@ void EvaluateCLUTfloatIn16(const cmsFloat32Number In[], cmsFloat32Number Out[], 
 static
 cmsUInt32Number CubeSize(const cmsUInt32Number Dims[], cmsUInt32Number b)
 {
-    cmsUInt32Number rv, dim;
+    cmsUInt32Number dim;
+    cmsUInt64Number rv;
 
     _cmsAssert(Dims != NULL);
 
@@ -475,7 +476,10 @@ cmsUInt32Number CubeSize(const cmsUInt32Number Dims[], cmsUInt32Number b)
         rv *= dim;
     }
 
-    return rv;
+    // Again, prevent overflow
+    if (rv > UINT_MAX / 15) return 0;
+
+    return (cmsUInt32Number) rv;
 }
 
 static
@@ -820,7 +824,13 @@ cmsBool CMSEXPORT cmsStageSampleCLutFloat(cmsStage* mpe, cmsSAMPLERFLOAT Sampler
     cmsUInt32Number nInputs, nOutputs;
     cmsUInt32Number* nSamples;
     cmsFloat32Number In[MAX_INPUT_DIMENSIONS+1], Out[MAX_STAGE_CHANNELS];
-    _cmsStageCLutData* clut = (_cmsStageCLutData*) mpe->Data;
+    _cmsStageCLutData* clut;
+
+    if (mpe == NULL) return FALSE;
+
+    clut = (_cmsStageCLutData*)mpe->Data;
+
+    if (clut == NULL) return FALSE;
 
     nSamples = clut->Params ->nSamples;
     nInputs  = clut->Params ->nInputs;
@@ -1077,7 +1087,7 @@ cmsStage* _cmsStageNormalizeFromLabFloat(cmsContext ContextID)
     return mpe;
 }
 
-// Fom XYZ to floating point PCS
+// From XYZ to floating point PCS
 cmsStage* _cmsStageNormalizeFromXyzFloat(cmsContext ContextID)
 {
 #define n (32768.0/65535.0)
