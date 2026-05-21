@@ -1196,7 +1196,7 @@ CJS_Result CJS_Document::addIcon(CJS_Runtime* pRuntime,
   }
 
   v8::Local<v8::Object> pObj = pRuntime->ToObjectReentrant(params[1]);
-  if (!JSGetObject<CJS_Icon>(pRuntime->GetIsolate(), pObj)) {
+  if (!JSGetObject<CJS_Icon>(pObj)) {
     return CJS_Result::Failure(JSMessage::kTypeError);
   }
 

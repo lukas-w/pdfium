@@ -158,7 +158,7 @@ void CJS_Runtime::SetFormFillEnvToDocument() {
     return;
   }
 
-  auto pJSDocument = JSGetObject<CJS_Document>(GetIsolate(), pThis);
+  auto pJSDocument = JSGetObject<CJS_Document>(pThis);
   if (!pJSDocument) {
     return;
   }
