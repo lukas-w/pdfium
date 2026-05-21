@@ -32,10 +32,6 @@
 
 #if defined(PDF_USE_SKIA)
 #include "third_party/skia/include/core/SkTypeface.h"  // nogncheck
-
-// Define the following to enable additional runtime checks during
-// the development process.
-// #define PDF_ENABLE_SKIA_TYPEFACE_CHECKS 1
 #endif
 
 #if defined(PDF_ENABLE_SKIA_TYPEFACE_CHECKS)
