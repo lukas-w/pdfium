@@ -11,7 +11,6 @@
 #include "fpdfsdk/cpdfsdk_helpers.h"
 #include "fpdfsdk/fpdfxfa/cpdfxfa_context.h"
 #include "fxjs/xfa/cfxjse_engine.h"
-#include "fxjs/xfa/cfxjse_value.h"
 #include "public/fpdf_formfill.h"
 #include "testing/fuzzers/pdfium_fuzzer_helper.h"
 #include "xfa/fxfa/cxfa_eventparam.h"

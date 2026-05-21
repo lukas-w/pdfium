@@ -14,9 +14,10 @@
 #include "core/fxcrt/check_op.h"
 #include "core/fxcrt/containers/contains.h"
 #include "core/fxcrt/fx_extension.h"
+#include "fxjs/fxv8.h"
 #include "fxjs/xfa/cfxjse_engine.h"
+#include "fxjs/xfa/cfxjse_isolatetracker.h"
 #include "fxjs/xfa/cfxjse_nodehelper.h"
-#include "fxjs/xfa/cfxjse_value.h"
 #include "fxjs/xfa/cjx_object.h"
 #include "xfa/fxfa/parser/cxfa_document.h"
 #include "xfa/fxfa/parser/cxfa_localemgr.h"
@@ -766,10 +767,17 @@ void CFXJSE_ResolveProcessor::DoPredicateFilter(v8::Isolate* pIsolate,
 
   WideString wsExpression = wsCondition.Substr(2, wsCondition.GetLength() - 3);
   for (size_t i = iFoundCount; i > 0; --i) {
+    bool bool_val = false;
     CFXJSE_Context::ExecutionResult exec_result =
         engine_->RunScript(eLangType, wsExpression.AsStringView(),
                            pRnd->result_.objects[i - 1].Get());
-    if (!exec_result.status || !exec_result.value->ToBoolean(pIsolate)) {
+    if (exec_result.status && exec_result.value &&
+        !exec_result.value->IsEmpty()) {
+      CFXJSE_ScopeUtil_IsolateHandleRootContext scope(pIsolate);
+      auto local_val = v8::Local<v8::Value>::New(pIsolate, *exec_result.value);
+      bool_val = fxv8::ReentrantToBooleanHelper(pIsolate, local_val);
+    }
+    if (!bool_val) {
       pRnd->result_.objects.erase(pRnd->result_.objects.begin() + i - 1);
     }
   }

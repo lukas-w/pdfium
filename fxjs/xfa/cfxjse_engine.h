@@ -29,7 +29,6 @@ class CFXJSE_FormCalcContext;
 class CFXJSE_HostObject;
 class CFXJSE_NodeHelper;
 class CFXJSE_ResolveProcessor;
-class CFXJSE_Value;
 class CJS_Runtime;
 
 enum class XFA_ResolveFlag : uint16_t {
@@ -82,7 +81,6 @@ class CFXJSE_Engine final : public CFX_V8 {
   static CXFA_Object* ToObject(const v8::FunctionCallbackInfo<v8::Value>& info);
   static CXFA_Object* ToObject(v8::Isolate* pIsolate,
                                v8::Local<v8::Value> value);
-  static CXFA_Object* ToObject(v8::Isolate* pIsolate, CFXJSE_Value* pValue);
   static CXFA_Object* ToObject(CFXJSE_HostObject* pHostObj);
   static v8::Local<v8::Value> GlobalPropertyGetter(
       v8::Isolate* pIsolate,

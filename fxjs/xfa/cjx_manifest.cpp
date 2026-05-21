@@ -9,7 +9,6 @@
 #include "core/fxcrt/span.h"
 #include "fxjs/cfx_v8.h"
 #include "fxjs/js_resources.h"
-#include "fxjs/xfa/cfxjse_value.h"
 #include "v8/include/v8-primitive.h"
 #include "xfa/fxfa/parser/cxfa_manifest.h"
 
