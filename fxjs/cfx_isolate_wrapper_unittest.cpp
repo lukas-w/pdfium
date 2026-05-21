@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "fxjs/cfx_v8.h"
+#include "fxjs/cfx_isolate_wrapper.h"
 
 #include <math.h>
 
@@ -20,24 +20,24 @@ bool getter_sentinel = false;
 bool setter_sentinel = false;
 }  // namespace
 
-class CFXV8UnitTest : public FXV8UnitTest {
+class CFXIsolateWrapperUnitTest : public FXV8UnitTest {
  public:
-  CFXV8UnitTest() = default;
-  ~CFXV8UnitTest() override = default;
+  CFXIsolateWrapperUnitTest() = default;
+  ~CFXIsolateWrapperUnitTest() override = default;
 
   // FXV8UnitTest:
   void SetUp() override {
     FXV8UnitTest::SetUp();
-    cfx_v8_ = std::make_unique<CFX_V8>(isolate());
+    cfx_v8_ = std::make_unique<CFX_IsolateWrapper>(isolate());
   }
 
-  CFX_V8* cfx_v8() const { return cfx_v8_.get(); }
+  CFX_IsolateWrapper* cfx_v8() const { return cfx_v8_.get(); }
 
  protected:
-  std::unique_ptr<CFX_V8> cfx_v8_;
+  std::unique_ptr<CFX_IsolateWrapper> cfx_v8_;
 };
 
-TEST_F(CFXV8UnitTest, EmptyLocal) {
+TEST_F(CFXIsolateWrapperUnitTest, EmptyLocal) {
   v8::Isolate::Scope isolate_scope(isolate());
   v8::HandleScope handle_scope(isolate());
   v8::Context::Scope context_scope(v8::Context::New(isolate()));
@@ -66,7 +66,7 @@ TEST_F(CFXV8UnitTest, EmptyLocal) {
   EXPECT_EQ(0u, cfx_v8()->GetArrayLength(empty_array));
 }
 
-TEST_F(CFXV8UnitTest, NewNull) {
+TEST_F(CFXIsolateWrapperUnitTest, NewNull) {
   v8::Isolate::Scope isolate_scope(isolate());
   v8::HandleScope handle_scope(isolate());
   v8::Context::Scope context_scope(v8::Context::New(isolate()));
@@ -81,7 +81,7 @@ TEST_F(CFXV8UnitTest, NewNull) {
   EXPECT_TRUE(cfx_v8()->ToArrayReentrant(nullz).IsEmpty());
 }
 
-TEST_F(CFXV8UnitTest, NewUndefined) {
+TEST_F(CFXIsolateWrapperUnitTest, NewUndefined) {
   v8::Isolate::Scope isolate_scope(isolate());
   v8::HandleScope handle_scope(isolate());
   v8::Context::Scope context_scope(v8::Context::New(isolate()));
@@ -96,7 +96,7 @@ TEST_F(CFXV8UnitTest, NewUndefined) {
   EXPECT_TRUE(cfx_v8()->ToArrayReentrant(undef).IsEmpty());
 }
 
-TEST_F(CFXV8UnitTest, NewBoolean) {
+TEST_F(CFXIsolateWrapperUnitTest, NewBoolean) {
   v8::Isolate::Scope isolate_scope(isolate());
   v8::HandleScope handle_scope(isolate());
   v8::Context::Scope context_scope(v8::Context::New(isolate()));
@@ -120,7 +120,7 @@ TEST_F(CFXV8UnitTest, NewBoolean) {
   EXPECT_TRUE(cfx_v8()->ToArrayReentrant(boolz).IsEmpty());
 }
 
-TEST_F(CFXV8UnitTest, NewNumber) {
+TEST_F(CFXIsolateWrapperUnitTest, NewNumber) {
   v8::Isolate::Scope isolate_scope(isolate());
   v8::HandleScope handle_scope(isolate());
   v8::Context::Scope context_scope(v8::Context::New(isolate()));
@@ -135,7 +135,7 @@ TEST_F(CFXV8UnitTest, NewNumber) {
   EXPECT_TRUE(cfx_v8()->ToArrayReentrant(num).IsEmpty());
 }
 
-TEST_F(CFXV8UnitTest, NewString) {
+TEST_F(CFXIsolateWrapperUnitTest, NewString) {
   v8::Isolate::Scope isolate_scope(isolate());
   v8::HandleScope handle_scope(isolate());
   v8::Context::Scope context_scope(v8::Context::New(isolate()));
@@ -159,7 +159,7 @@ TEST_F(CFXV8UnitTest, NewString) {
   EXPECT_TRUE(cfx_v8()->ToArrayReentrant(str2).IsEmpty());
 }
 
-TEST_F(CFXV8UnitTest, NewDate) {
+TEST_F(CFXIsolateWrapperUnitTest, NewDate) {
   v8::Isolate::Scope isolate_scope(isolate());
   v8::HandleScope handle_scope(isolate());
   v8::Context::Scope context_scope(v8::Context::New(isolate()));
@@ -175,7 +175,7 @@ TEST_F(CFXV8UnitTest, NewDate) {
   EXPECT_TRUE(cfx_v8()->ToArrayReentrant(date).IsEmpty());
 }
 
-TEST_F(CFXV8UnitTest, NewArray) {
+TEST_F(CFXIsolateWrapperUnitTest, NewArray) {
   v8::Isolate::Scope isolate_scope(isolate());
   v8::HandleScope handle_scope(isolate());
   v8::Context::Scope context_scope(v8::Context::New(isolate()));
@@ -202,7 +202,7 @@ TEST_F(CFXV8UnitTest, NewArray) {
   EXPECT_TRUE(cfx_v8()->ToArrayReentrant(array)->IsArray());
 }
 
-TEST_F(CFXV8UnitTest, NewObject) {
+TEST_F(CFXIsolateWrapperUnitTest, NewObject) {
   v8::Isolate::Scope isolate_scope(isolate());
   v8::HandleScope handle_scope(isolate());
   v8::Context::Scope context_scope(v8::Context::New(isolate()));
@@ -232,7 +232,7 @@ TEST_F(CFXV8UnitTest, NewObject) {
   EXPECT_TRUE(cfx_v8()->ToArrayReentrant(object).IsEmpty());
 }
 
-TEST_F(CFXV8UnitTest, ThrowFromGetter) {
+TEST_F(CFXIsolateWrapperUnitTest, ThrowFromGetter) {
   v8::Isolate::Scope isolate_scope(isolate());
   v8::HandleScope handle_scope(isolate());
   v8::Local<v8::Context> context = v8::Context::New(isolate());
@@ -254,7 +254,7 @@ TEST_F(CFXV8UnitTest, ThrowFromGetter) {
   EXPECT_TRUE(getter_sentinel);
 }
 
-TEST_F(CFXV8UnitTest, ThrowFromSetter) {
+TEST_F(CFXIsolateWrapperUnitTest, ThrowFromSetter) {
   v8::Isolate::Scope isolate_scope(isolate());
   v8::HandleScope handle_scope(isolate());
   v8::Local<v8::Context> context = v8::Context::New(isolate());

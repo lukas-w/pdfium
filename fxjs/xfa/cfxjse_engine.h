@@ -14,7 +14,7 @@
 
 #include "core/fxcrt/mask.h"
 #include "core/fxcrt/unowned_ptr.h"
-#include "fxjs/cfx_v8.h"
+#include "fxjs/cfx_isolate_wrapper.h"
 #include "fxjs/xfa/cfxjse_context.h"
 #include "v8/include/cppgc/persistent.h"
 #include "v8/include/v8-forward.h"
@@ -45,7 +45,7 @@ enum class XFA_ResolveFlag : uint16_t {
   kBindNew = 1 << 12,
 };
 
-class CFXJSE_Engine final : public CFX_V8 {
+class CFXJSE_Engine final : public CFX_IsolateWrapper {
  public:
   class ResolveResult {
     CPPGC_STACK_ALLOCATED();  // Allow raw/unowned pointers.

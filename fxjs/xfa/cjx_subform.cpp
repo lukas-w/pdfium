@@ -7,7 +7,7 @@
 #include "fxjs/xfa/cjx_subform.h"
 
 #include "core/fxcrt/span.h"
-#include "fxjs/cfx_v8.h"
+#include "fxjs/cfx_isolate_wrapper.h"
 #include "fxjs/fxv8.h"
 #include "fxjs/js_resources.h"
 #include "fxjs/xfa/cfxjse_engine.h"

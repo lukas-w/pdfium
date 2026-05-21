@@ -24,10 +24,10 @@ source_set("fxjs") {
     sources += [
       "cfx_globaldata.cpp",
       "cfx_globaldata.h",
+      "cfx_isolate_wrapper.cpp",
+      "cfx_isolate_wrapper.h",
       "cfx_keyvalue.cpp",
       "cfx_keyvalue.h",
-      "cfx_v8.cpp",
-      "cfx_v8.h",
       "cfx_v8_array_buffer_allocator.cpp",
       "cfx_v8_array_buffer_allocator.h",
       "cfxjs_engine.cpp",
@@ -242,7 +242,7 @@ if (pdf_enable_v8) {
   pdfium_unittest_source_set("unittests") {
     sources = [
       "cfx_globaldata_unittest.cpp",
-      "cfx_v8_unittest.cpp",
+      "cfx_isolate_wrapper_unittest.cpp",
       "cfxjs_engine_unittest.cpp",
       "cjs_publicmethods_unittest.cpp",
       "cjs_util_unittest.cpp",

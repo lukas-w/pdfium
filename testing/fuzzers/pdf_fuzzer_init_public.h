@@ -11,7 +11,7 @@
 #include "public/fpdfview.h"
 
 #ifdef PDF_ENABLE_V8
-#include "fxjs/cfx_v8.h"
+#include "fxjs/cfx_isolate_wrapper.h"
 #include "v8/include/v8-array-buffer.h"
 #include "v8/include/v8-snapshot.h"
 #endif  // PDF_ENABLE_V8

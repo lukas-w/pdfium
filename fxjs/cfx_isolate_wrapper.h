@@ -4,8 +4,8 @@
 
 // Original code copyright 2014 Foxit Software Inc. http://www.foxitsoftware.com
 
-#ifndef FXJS_CFX_V8_H_
-#define FXJS_CFX_V8_H_
+#ifndef FXJS_CFX_ISOLATE_WRAPPER_H_
+#define FXJS_CFX_ISOLATE_WRAPPER_H_
 
 #include <stddef.h>
 
@@ -15,10 +15,10 @@
 #include "core/fxcrt/unowned_ptr.h"
 #include "v8/include/v8-forward.h"
 
-class CFX_V8 {
+class CFX_IsolateWrapper {
  public:
-  explicit CFX_V8(v8::Isolate* pIsolate);
-  virtual ~CFX_V8();
+  explicit CFX_IsolateWrapper(v8::Isolate* pIsolate);
+  virtual ~CFX_IsolateWrapper();
 
   v8::Isolate* GetIsolate() const { return isolate_; }
 
@@ -73,4 +73,4 @@ struct CFX_V8IsolateDeleter {
   void operator()(v8::Isolate* ptr);
 };
 
-#endif  // FXJS_CFX_V8_H_
+#endif  // FXJS_CFX_ISOLATE_WRAPPER_H_
