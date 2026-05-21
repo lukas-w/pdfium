@@ -26,6 +26,10 @@
 #include "third_party/skia/include/core/SkRefCnt.h"  // nogncheck
 #endif
 
+#if defined(PDF_ENABLE_FONTATIONS)
+struct SkrifaFontHolder;
+#endif
+
 namespace fxge {
 enum class FontEncoding : uint32_t;
 }
@@ -147,7 +151,12 @@ class CFX_Face final : public Retainable, public Observable {
  private:
   CFX_Face(RetainPtr<Retainable> cache_entry,
            RetainPtr<CFX_ReadOnlySpanStream> font_stream,
-           FT_FaceRec* rec);
+           FT_FaceRec* rec
+#if defined(PDF_ENABLE_FONTATIONS)
+           ,
+           std::unique_ptr<SkrifaFontHolder> skrifa_font
+#endif
+  );
 
   ~CFX_Face() override;
 
@@ -181,6 +190,9 @@ class CFX_Face final : public Retainable, public Observable {
 #if defined(PDF_USE_SKIA)
   sk_sp<SkTypeface> skia_typeface_;
 #endif  // defined(PDF_USE_SKIA)
+#if defined(PDF_ENABLE_FONTATIONS)
+  std::unique_ptr<SkrifaFontHolder> skrifa_font_;
+#endif
 };
 
 #endif  // CORE_FXGE_CFX_FACE_H_

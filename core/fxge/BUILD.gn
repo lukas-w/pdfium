@@ -10,6 +10,15 @@ if (pdf_enable_fontations) {
   import("//build/rust/rust_static_library.gni")
 }
 
+if (pdf_enable_fontations) {
+  config("skrifa_cxx_config") {
+    include_dirs = [
+      "//core/fxge/skrifa/src",
+      "$root_gen_dir/core/fxge/skrifa/src",
+    ]
+  }
+}
+
 source_set("fxge") {
   sources = [
     "calculate_pitch.cpp",
@@ -106,9 +115,7 @@ source_set("fxge") {
     "../../:pdfium_strict_config",
     "../../:pdfium_noshorten_config",
   ]
-
   deps = [ "../fxcrt" ]
-
   public_deps = []
   defines = []
 
@@ -143,6 +150,15 @@ source_set("fxge") {
       defines += [ "PDF_USE_SKIA_CUSTOM_FONT_MANAGER" ]
       deps += [ pdf_skia_font_manager_target ]
     }
+  }
+
+  if (pdf_enable_fontations) {
+    configs += [ ":skrifa_cxx_config" ]
+    deps += [
+      ":skrifa_cxx",
+      ":skrifa_cxx_cpp",
+      "//build/rust:cxx_cppdeps",
+    ]
   }
 
   if (is_android) {
@@ -208,13 +224,6 @@ source_set("fxge") {
 }
 
 if (pdf_enable_fontations) {
-  config("skrifa_cxx_config") {
-    include_dirs = [
-      "skrifa/src",
-      "$root_gen_dir/core/fxge/skrifa/src",
-    ]
-  }
-
   rust_static_library("skrifa_cxx") {
     crate_name = "skrifa_cxx"
     allow_unsafe = true
