@@ -138,7 +138,7 @@ void DynPropGetterAdapter_MethodCallback(
   }
 }
 
-v8::Global<v8::Value> DynPropGetterAdapter(
+v8::Local<v8::Value> DynPropGetterAdapter(
     v8::Isolate* pIsolate,
     const FXJSE_CLASS_DESCRIPTOR* pClassDescriptor,
     v8::Local<v8::Object> pObject,
@@ -150,13 +150,11 @@ v8::Global<v8::Value> DynPropGetterAdapter(
           : FXJSE_ClassPropType::kProperty;
   if (nPropType == FXJSE_ClassPropType::kProperty) {
     if (pClassDescriptor->dynPropGetter) {
-      return v8::Global<v8::Value>(
-          pIsolate,
-          pClassDescriptor->dynPropGetter(pIsolate, pObject, szPropName));
+      return pClassDescriptor->dynPropGetter(pIsolate, pObject, szPropName);
     }
   } else if (nPropType == FXJSE_ClassPropType::kMethod) {
     if (pClassDescriptor->dynMethodCall) {
-      v8::HandleScope hscope(pIsolate);
+      v8::EscapableHandleScope hscope(pIsolate);
       v8::Local<v8::ObjectTemplate> hCallBackInfoTemplate =
           v8::ObjectTemplate::New(pIsolate);
       hCallBackInfoTemplate->SetInternalFieldCount(2);
@@ -168,15 +166,14 @@ v8::Global<v8::Value> DynPropGetterAdapter(
           kDefaultPDFiumTag);
       hCallBackInfo->SetInternalField(
           1, fxv8::NewStringHelper(pIsolate, szPropName));
-      return v8::Global<v8::Value>(
-          pIsolate,
+      return hscope.Escape(
           v8::Function::New(pIsolate->GetCurrentContext(),
                             DynPropGetterAdapter_MethodCallback, hCallBackInfo,
                             0, v8::ConstructorBehavior::kThrow)
               .ToLocalChecked());
     }
   }
-  return v8::Global<v8::Value>();
+  return v8::Local<v8::Value>();
 }
 
 void DynPropSetterAdapter(v8::Isolate* pIsolate,
@@ -246,10 +243,9 @@ v8::Intercepted NamedPropertyGetterCallback(
   // SAFETY: required from V8.
   auto szFxPropName =
       UNSAFE_BUFFERS(ByteStringView(*szPropName, szPropName.length()));
-  v8::Global<v8::Value> new_value = DynPropGetterAdapter(
+  v8::Local<v8::Value> new_value = DynPropGetterAdapter(
       info.GetIsolate(), pClass, info.HolderV2(), szFxPropName);
-  info.GetReturnValue().Set(
-      v8::Local<v8::Value>::New(info.GetIsolate(), new_value));
+  info.GetReturnValue().Set(new_value);
   return v8::Intercepted::kYes;
 }
 
