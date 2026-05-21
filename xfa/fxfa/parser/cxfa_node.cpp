@@ -2963,7 +2963,7 @@ CXFA_Node::BoolScriptResult CXFA_Node::ExecuteBoolScript(
   v8::Isolate* isolate = context->GetIsolate();
   CFXJSE_ScopeUtil_IsolateHandleRootContext scope(isolate);
   v8::Local<v8::Value> value =
-      v8::Local<v8::Value>::New(isolate, *exec_result.value);
+      v8::Local<v8::Value>::New(isolate, exec_result.value);
 
   if (exec_result.status) {
     iRet = XFA_EventError::kSuccess;

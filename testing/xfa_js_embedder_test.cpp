@@ -115,7 +115,7 @@ bool XFAJSEmbedderTest::ExecuteHelper(ByteStringView input) {
       CXFA_Script::Type::Formcalc, WideString::FromUTF8(input).AsStringView(),
       GetXFADocument()->GetRoot());
   value_.Reset(isolate(),
-               v8::Local<v8::Value>::New(isolate(), *exec_result.value));
+               v8::Local<v8::Value>::New(isolate(), exec_result.value));
   return exec_result.status;
 }
 

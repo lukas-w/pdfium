@@ -25,13 +25,13 @@ class CFXJSE_Context {
  public:
   struct ExecutionResult {
     ExecutionResult();
-    ExecutionResult(bool sts, std::unique_ptr<v8::Global<v8::Value>> val);
+    ExecutionResult(bool sts, v8::Global<v8::Value> val);
     ExecutionResult(ExecutionResult&& that) noexcept;
     ExecutionResult& operator=(ExecutionResult&& that) noexcept;
     ~ExecutionResult();
 
     bool status = false;
-    std::unique_ptr<v8::Global<v8::Value>> value;
+    v8::Global<v8::Value> value;
   };
 
   static std::unique_ptr<CFXJSE_Context> Create(

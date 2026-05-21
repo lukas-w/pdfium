@@ -138,7 +138,7 @@ void DynPropGetterAdapter_MethodCallback(
   }
 }
 
-std::unique_ptr<v8::Global<v8::Value>> DynPropGetterAdapter(
+v8::Global<v8::Value> DynPropGetterAdapter(
     v8::Isolate* pIsolate,
     const FXJSE_CLASS_DESCRIPTOR* pClassDescriptor,
     v8::Local<v8::Object> pObject,
@@ -150,7 +150,7 @@ std::unique_ptr<v8::Global<v8::Value>> DynPropGetterAdapter(
           : FXJSE_ClassPropType::kProperty;
   if (nPropType == FXJSE_ClassPropType::kProperty) {
     if (pClassDescriptor->dynPropGetter) {
-      return std::make_unique<v8::Global<v8::Value>>(
+      return v8::Global<v8::Value>(
           pIsolate,
           pClassDescriptor->dynPropGetter(pIsolate, pObject, szPropName));
     }
@@ -168,7 +168,7 @@ std::unique_ptr<v8::Global<v8::Value>> DynPropGetterAdapter(
           kDefaultPDFiumTag);
       hCallBackInfo->SetInternalField(
           1, fxv8::NewStringHelper(pIsolate, szPropName));
-      return std::make_unique<v8::Global<v8::Value>>(
+      return v8::Global<v8::Value>(
           pIsolate,
           v8::Function::New(pIsolate->GetCurrentContext(),
                             DynPropGetterAdapter_MethodCallback, hCallBackInfo,
@@ -176,7 +176,7 @@ std::unique_ptr<v8::Global<v8::Value>> DynPropGetterAdapter(
               .ToLocalChecked());
     }
   }
-  return std::make_unique<v8::Global<v8::Value>>();
+  return v8::Global<v8::Value>();
 }
 
 void DynPropSetterAdapter(v8::Isolate* pIsolate,
@@ -246,10 +246,10 @@ v8::Intercepted NamedPropertyGetterCallback(
   // SAFETY: required from V8.
   auto szFxPropName =
       UNSAFE_BUFFERS(ByteStringView(*szPropName, szPropName.length()));
-  std::unique_ptr<v8::Global<v8::Value>> pNewValue = DynPropGetterAdapter(
+  v8::Global<v8::Value> new_value = DynPropGetterAdapter(
       info.GetIsolate(), pClass, info.HolderV2(), szFxPropName);
   info.GetReturnValue().Set(
-      v8::Local<v8::Value>::New(info.GetIsolate(), *pNewValue));
+      v8::Local<v8::Value>::New(info.GetIsolate(), new_value));
   return v8::Intercepted::kYes;
 }
 

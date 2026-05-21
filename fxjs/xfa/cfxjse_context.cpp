@@ -242,12 +242,12 @@ CFXJSE_Context::ExecutionResult CFXJSE_Context::ExecuteScript(
       v8::Local<v8::Value> hValue;
       if (hScript->Run(hContext).ToLocal(&hValue)) {
         CHECK(!trycatch.HasCaught());
-        return ExecutionResult(true, std::make_unique<v8::Global<v8::Value>>(
-                                         GetIsolate(), hValue));
+        return ExecutionResult(true,
+                               v8::Global<v8::Value>(GetIsolate(), hValue));
       }
     }
     return ExecutionResult(
-        false, std::make_unique<v8::Global<v8::Value>>(
+        false, v8::Global<v8::Value>(
                    GetIsolate(), CreateReturnValue(GetIsolate(), &trycatch)));
   }
 
@@ -264,8 +264,7 @@ CFXJSE_Context::ExecutionResult CFXJSE_Context::ExecuteScript(
     v8::Local<v8::Value> hValue;
     if (hWrapperFn->Call(hContext, hNewThis, 1, rgArgs).ToLocal(&hValue)) {
       DCHECK(!trycatch.HasCaught());
-      return ExecutionResult(
-          true, std::make_unique<v8::Global<v8::Value>>(GetIsolate(), hValue));
+      return ExecutionResult(true, v8::Global<v8::Value>(GetIsolate(), hValue));
     }
   }
 
@@ -284,15 +283,14 @@ CFXJSE_Context::ExecutionResult CFXJSE_Context::ExecuteScript(
 #endif  // NDEBUG
 
   return ExecutionResult(
-      false, std::make_unique<v8::Global<v8::Value>>(
-                 GetIsolate(), CreateReturnValue(GetIsolate(), &trycatch)));
+      false, v8::Global<v8::Value>(GetIsolate(),
+                                   CreateReturnValue(GetIsolate(), &trycatch)));
 }
 
 CFXJSE_Context::ExecutionResult::ExecutionResult() = default;
 
-CFXJSE_Context::ExecutionResult::ExecutionResult(
-    bool sts,
-    std::unique_ptr<v8::Global<v8::Value>> val)
+CFXJSE_Context::ExecutionResult::ExecutionResult(bool sts,
+                                                 v8::Global<v8::Value> val)
     : status(sts), value(std::move(val)) {}
 
 CFXJSE_Context::ExecutionResult::ExecutionResult(

@@ -205,9 +205,8 @@ CFXJSE_Context::ExecutionResult CFXJSE_Engine::RunScript(
     std::optional<WideTextBuffer> wsJavaScript =
         CFXJSE_FormCalcContext::Translate(document_->GetHeap(), wsScript);
     if (!wsJavaScript.has_value()) {
-      std::unique_ptr<v8::Global<v8::Value>> undefined_value =
-          std::make_unique<v8::Global<v8::Value>>(
-              GetIsolate(), fxv8::NewUndefinedHelper(GetIsolate()));
+      v8::Global<v8::Value> undefined_value(
+          GetIsolate(), fxv8::NewUndefinedHelper(GetIsolate()));
       return CFXJSE_Context::ExecutionResult(false, std::move(undefined_value));
     }
     btScript = FX_UTF8Encode(wsJavaScript.value().AsStringView());

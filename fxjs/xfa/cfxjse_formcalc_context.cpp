@@ -3069,7 +3069,7 @@ void CFXJSE_FormCalcContext::Eval(
   ByteString bsScript = FX_UTF8Encode(wsJavaScriptBuf.value().AsStringView());
   CFXJSE_Context::ExecutionResult result = pNewContext->ExecuteScript(
       bsScript.AsStringView(), v8::Local<v8::Object>());
-  info.GetReturnValue().Set(v8::Local<v8::Value>::New(pIsolate, *result.value));
+  info.GetReturnValue().Set(v8::Local<v8::Value>::New(pIsolate, result.value));
 }
 
 // static
