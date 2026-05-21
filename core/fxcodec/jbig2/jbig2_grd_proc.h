@@ -104,14 +104,14 @@ class CJBig2_GRDProc {
   void AdvanceLine(const CJBig2_Image* image);
   void CopyPrevLine(CJBig2_Image* image);
 
+  template <int OPT>
   std::unique_ptr<CJBig2_Image> DecodeArithOpt3(
       CJBig2_ArithDecoder* pArithDecoder,
-      pdfium::span<JBig2ArithCtx> gbContexts,
-      int OPT);
+      pdfium::span<JBig2ArithCtx> gbContexts);
+  template <int UNOPT>
   std::unique_ptr<CJBig2_Image> DecodeArithTemplateUnopt(
       CJBig2_ArithDecoder* pArithDecoder,
-      pdfium::span<JBig2ArithCtx> gbContexts,
-      int UNOPT);
+      pdfium::span<JBig2ArithCtx> gbContexts);
   std::unique_ptr<CJBig2_Image> DecodeArithTemplate3Opt3(
       CJBig2_ArithDecoder* pArithDecoder,
       pdfium::span<JBig2ArithCtx> gbContexts);

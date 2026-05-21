@@ -97,16 +97,16 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRDProc::DecodeArith(
   switch (GBTEMPLATE) {
     case 0:
       return UseTemplate0Opt3()
-                 ? DecodeArithOpt3(pArithDecoder, gbContexts, 0)
-                 : DecodeArithTemplateUnopt(pArithDecoder, gbContexts, 0);
+                 ? DecodeArithOpt3<0>(pArithDecoder, gbContexts)
+                 : DecodeArithTemplateUnopt<0>(pArithDecoder, gbContexts);
     case 1:
       return UseTemplate1Opt3()
-                 ? DecodeArithOpt3(pArithDecoder, gbContexts, 1)
-                 : DecodeArithTemplateUnopt(pArithDecoder, gbContexts, 1);
+                 ? DecodeArithOpt3<1>(pArithDecoder, gbContexts)
+                 : DecodeArithTemplateUnopt<1>(pArithDecoder, gbContexts);
     case 2:
       return UseTemplate23Opt3()
-                 ? DecodeArithOpt3(pArithDecoder, gbContexts, 2)
-                 : DecodeArithTemplateUnopt(pArithDecoder, gbContexts, 2);
+                 ? DecodeArithOpt3<2>(pArithDecoder, gbContexts)
+                 : DecodeArithTemplateUnopt<2>(pArithDecoder, gbContexts);
     default:
       return UseTemplate23Opt3()
                  ? DecodeArithTemplate3Opt3(pArithDecoder, gbContexts)
@@ -114,10 +114,10 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRDProc::DecodeArith(
   }
 }
 
+template <int OPT>
 std::unique_ptr<CJBig2_Image> CJBig2_GRDProc::DecodeArithOpt3(
     CJBig2_ArithDecoder* pArithDecoder,
-    pdfium::span<JBig2ArithCtx> gbContexts,
-    int OPT) {
+    pdfium::span<JBig2ArithCtx> gbContexts) {
   auto GBREG = std::make_unique<CJBig2_Image>(GBW, GBH);
   if (!GBREG->has_data()) {
     return nullptr;
@@ -235,10 +235,10 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRDProc::DecodeArithOpt3(
   return GBREG;
 }
 
+template <int UNOPT>
 std::unique_ptr<CJBig2_Image> CJBig2_GRDProc::DecodeArithTemplateUnopt(
     CJBig2_ArithDecoder* pArithDecoder,
-    pdfium::span<JBig2ArithCtx> gbContexts,
-    int UNOPT) {
+    pdfium::span<JBig2ArithCtx> gbContexts) {
   auto GBREG = std::make_unique<CJBig2_Image>(GBW, GBH);
   if (!GBREG->has_data()) {
     return nullptr;
