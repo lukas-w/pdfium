@@ -792,8 +792,84 @@ std::unique_ptr<CFX_Path> CFX_Face::LoadGlyphPath(
 
   Outline_CheckEmptyContour(&params);
   pPath->ClosePath();
+
+#if defined(PDF_ENABLE_SKIA_TYPEFACE_CHECKS)
+  std::unique_ptr<CFX_Path> skrifa_path = CFX_Face::LoadGlyphPathFontations(
+      glyph_index, dest_width, is_vertical, subst_font);
+  // TODO(https://crbug.com/42271123): `skrifa_path` is constructed but its
+  // contents are not strictly verified against `pPath` yet due to scale and
+  // translation differences that might exist.
+#endif
+
   return pPath;
 }
+
+#if defined(PDF_ENABLE_SKIA_TYPEFACE_CHECKS)
+std::unique_ptr<CFX_Path> CFX_Face::LoadGlyphPathFontations(
+    uint32_t glyph_index,
+    int dest_width,
+    bool is_vertical,
+    const CFX_SubstFont* subst_font) {
+  if (!skrifa_font_ || !skrifa_font_->font->is_ok()) {
+    return nullptr;
+  }
+  skrifa::Outline outline;
+  if (!skrifa_font_->font->unscaled_outline(glyph_index, outline)) {
+    return nullptr;
+  }
+  auto skrifa_path = std::make_unique<CFX_Path>();
+  auto point_idx = 0;
+  CFX_PointF current_point(0, 0);
+  for (auto verb : outline.verbs) {
+    switch (verb) {
+      case skrifa::PathVerb::MoveTo: {
+        auto p = outline.points[point_idx++];
+        current_point = CFX_PointF(p.x, p.y);
+        skrifa_path->AppendPoint(current_point, CFX_Path::Point::Type::kMove);
+        break;
+      }
+      case skrifa::PathVerb::LineTo: {
+        auto p = outline.points[point_idx++];
+        current_point = CFX_PointF(p.x, p.y);
+        skrifa_path->AppendPoint(current_point, CFX_Path::Point::Type::kLine);
+        break;
+      }
+      case skrifa::PathVerb::QuadTo: {
+        auto c0 = outline.points[point_idx++];
+        auto p = outline.points[point_idx++];
+        // Convert quadratic to cubic bezier to match FreeType
+        // decomposition.
+        skrifa_path->AppendPoint(
+            CFX_PointF(current_point.x + (c0.x - current_point.x) * 2 / 3,
+                       current_point.y + (c0.y - current_point.y) * 2 / 3),
+            CFX_Path::Point::Type::kBezier);
+        skrifa_path->AppendPoint(
+            CFX_PointF(c0.x + (p.x - c0.x) / 3, c0.y + (p.y - c0.y) / 3),
+            CFX_Path::Point::Type::kBezier);
+        current_point = CFX_PointF(p.x, p.y);
+        skrifa_path->AppendPoint(current_point, CFX_Path::Point::Type::kBezier);
+        break;
+      }
+      case skrifa::PathVerb::CurveTo: {
+        auto c0 = outline.points[point_idx++];
+        auto c1 = outline.points[point_idx++];
+        auto p = outline.points[point_idx++];
+        skrifa_path->AppendPoint(CFX_PointF(c0.x, c0.y),
+                                 CFX_Path::Point::Type::kBezier);
+        skrifa_path->AppendPoint(CFX_PointF(c1.x, c1.y),
+                                 CFX_Path::Point::Type::kBezier);
+        current_point = CFX_PointF(p.x, p.y);
+        skrifa_path->AppendPoint(current_point, CFX_Path::Point::Type::kBezier);
+        break;
+      }
+      case skrifa::PathVerb::Close:
+        skrifa_path->ClosePath();
+        break;
+    }
+  }
+  return skrifa_path;
+}
+#endif
 
 int CFX_Face::GetGlyphTTWidth() const {
   const auto* fontglyph = GetRec()->glyph;

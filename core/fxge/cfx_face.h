@@ -27,12 +27,8 @@
 #endif
 
 #if defined(PDF_ENABLE_FONTATIONS)
-struct SkrifaFontHolder;
+#include "third_party/rust/cxx/v1/cxx.h"
 #endif
-
-namespace fxge {
-enum class FontEncoding : uint32_t;
-}
 
 class CFX_GlyphBitmap;
 class CFX_Path;
@@ -41,6 +37,14 @@ class CFX_SubstFont;
 #if defined(PDF_USE_SKIA)
 class SkTypeface;
 #endif
+
+#if defined(PDF_ENABLE_FONTATIONS)
+struct SkrifaFontHolder;
+#endif
+
+namespace fxge {
+enum class FontEncoding : uint32_t;
+}  // namespace fxge
 
 class CFX_Face final : public Retainable, public Observable {
  public:
@@ -173,6 +177,14 @@ class CFX_Face final : public Retainable, public Observable {
 
 #if BUILDFLAG(IS_ANDROID) || defined(PDF_ENABLE_XFA)
   std::optional<std::array<uint8_t, 2>> GetOs2Panose();
+#endif
+
+#if defined(PDF_ENABLE_SKIA_TYPEFACE_CHECKS)
+  std::unique_ptr<CFX_Path> LoadGlyphPathFontations(
+      uint32_t glyph_index,
+      int dest_width,
+      bool is_vertical,
+      const CFX_SubstFont* subst_font);
 #endif
 
   // `cache_entry_` must outlive `font_stream_`. Faces managed by a cache
