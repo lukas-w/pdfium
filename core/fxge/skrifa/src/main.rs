@@ -48,6 +48,18 @@ mod skrifa_ffi {
         pub y: f32,
     }
 
+    #[derive(Copy, Clone, PartialEq, Eq, Debug)]
+    pub struct CodePageRange {
+        pub range1: u32,
+        pub range2: u32,
+    }
+
+    #[derive(Copy, Clone, PartialEq, Eq, Debug)]
+    pub struct Os2Panose {
+        pub b0: u8,
+        pub b1: u8,
+    }
+
     #[derive(Clone, Debug)]
     pub struct Outline {
         pub verbs: Vec<PathVerb>,
@@ -72,6 +84,8 @@ mod skrifa_ffi {
         fn code_to_gid(&self, code: u8) -> u32;
         fn scaled_outline(&self, gid: u32, ppem: f32, outline: &mut Outline) -> bool;
         fn unscaled_outline(&self, gid: u32, outline: &mut Outline) -> bool;
+        fn get_os2_code_page_range(data: &[u8], range: &mut CodePageRange) -> bool;
+        fn get_os2_panose(data: &[u8], panose: &mut Os2Panose) -> bool;
 
         fn agl_name_to_unicode(name: &str, unicode: &mut u32) -> bool;
         fn agl_unicode_to_name(unicode: u32, name: &mut [u8]) -> bool;
@@ -311,6 +325,31 @@ fn agl_name_to_unicode(name: &str, unicode: &mut u32) -> bool {
 
 fn agl_unicode_to_name(unicode: u32, name: &mut [u8]) -> bool {
     read_fonts::ps::agl::char_to_name(unicode, name).is_some()
+}
+
+pub fn get_os2_code_page_range(data: &[u8], range: &mut skrifa_ffi::CodePageRange) -> bool {
+    if let Ok(font) = read_fonts::FontRef::new(data) {
+        use read_fonts::TableProvider;
+        if let Ok(os2) = font.os2() {
+            range.range1 = os2.ul_code_page_range_1().unwrap_or(0);
+            range.range2 = os2.ul_code_page_range_2().unwrap_or(0);
+            return true;
+        }
+    }
+    false
+}
+
+pub fn get_os2_panose(data: &[u8], panose: &mut skrifa_ffi::Os2Panose) -> bool {
+    if let Ok(font) = read_fonts::FontRef::new(data) {
+        use read_fonts::TableProvider;
+        if let Ok(os2) = font.os2() {
+            let p = os2.panose_10();
+            panose.b0 = p[0];
+            panose.b1 = p[1];
+            return true;
+        }
+    }
+    false
 }
 
 fn main() {

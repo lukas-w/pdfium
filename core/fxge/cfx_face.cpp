@@ -573,19 +573,60 @@ std::optional<std::array<uint32_t, 4>> CFX_Face::GetOs2UnicodeRange() {
 #if defined(PDF_ENABLE_XFA) || BUILDFLAG(IS_ANDROID)
 std::optional<std::array<uint32_t, 2>> CFX_Face::GetOs2CodePageRange() {
   auto* os2 = static_cast<TT_OS2*>(FT_Get_Sfnt_Table(GetRec(), FT_SFNT_OS2));
-  if (!os2) {
-    return std::nullopt;
+  std::optional<std::array<uint32_t, 2>> ft_result;
+  if (os2) {
+    ft_result =
+        std::array<uint32_t, 2>{static_cast<uint32_t>(os2->ulCodePageRange1),
+                                static_cast<uint32_t>(os2->ulCodePageRange2)};
   }
-  return std::array<uint32_t, 2>{static_cast<uint32_t>(os2->ulCodePageRange1),
-                                 static_cast<uint32_t>(os2->ulCodePageRange2)};
+
+#if defined(PDF_ENABLE_SKIA_TYPEFACE_CHECKS)
+#if defined(PDF_ENABLE_FONTATIONS)
+  std::optional<std::array<uint32_t, 2>> skrifa_result;
+  pdfium::span<const uint8_t> data = GetData();
+  skrifa::CodePageRange range;
+  if (skrifa::get_os2_code_page_range(
+          rust::Slice<const uint8_t>(data.data(), data.size()), range)) {
+    skrifa_result = std::array<uint32_t, 2>{range.range1, range.range2};
+  }
+
+  CHECK_EQ(ft_result.has_value(), skrifa_result.has_value());
+  if (ft_result.has_value() && skrifa_result.has_value()) {
+    CHECK_EQ((*ft_result)[0], (*skrifa_result)[0]);
+    CHECK_EQ((*ft_result)[1], (*skrifa_result)[1]);
+  }
+#endif  // defined(PDF_ENABLE_SKIA_TYPEFACE_CHECKS)
+#endif  // defined(PDF_ENABLE_FONTATIONS)
+
+  return ft_result;
 }
 
 std::optional<std::array<uint8_t, 2>> CFX_Face::GetOs2Panose() {
   auto* os2 = static_cast<TT_OS2*>(FT_Get_Sfnt_Table(GetRec(), FT_SFNT_OS2));
-  if (!os2) {
-    return std::nullopt;
+  std::optional<std::array<uint8_t, 2>> ft_result;
+  if (os2) {
+    ft_result = std::array<uint8_t, 2>{os2->panose[0], os2->panose[1]};
   }
-  return std::array<uint8_t, 2>{os2->panose[0], os2->panose[1]};
+
+#if defined(PDF_ENABLE_SKIA_TYPEFACE_CHECKS)
+#if defined(PDF_ENABLE_FONTATIONS)
+  std::optional<std::array<uint8_t, 2>> skrifa_result;
+  pdfium::span<const uint8_t> data = GetData();
+  skrifa::Os2Panose panose;
+  if (skrifa::get_os2_panose(
+          rust::Slice<const uint8_t>(data.data(), data.size()), panose)) {
+    skrifa_result = std::array<uint8_t, 2>{panose.b0, panose.b1};
+  }
+
+  CHECK_EQ(ft_result.has_value(), skrifa_result.has_value());
+  if (ft_result.has_value() && skrifa_result.has_value()) {
+    CHECK_EQ((*ft_result)[0], (*skrifa_result)[0]);
+    CHECK_EQ((*ft_result)[1], (*skrifa_result)[1]);
+  }
+#endif  // defined(PDF_ENABLE_SKIA_TYPEFACE_CHECKS)
+#endif  // defined(PDF_ENABLE_FONTATIONS)
+
+  return ft_result;
 }
 #endif  // defined(PDF_ENABLE_XFA) || BUILDFLAG(IS_ANDROID)
 
