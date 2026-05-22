@@ -468,14 +468,13 @@ FX_RECT CFX_Face::GetBBox() const {
               pdfium::checked_cast<int32_t>(GetRec()->bbox.yMax));
 #if defined(PDF_ENABLE_SKIA_TYPEFACE_CHECKS)
   if (skia_typeface_) {
-    SkRect bounds = skia_typeface_->getBounds();
-    // Skia bounds have different origins, and are 1-pt based, so scale by
-    // units per em.
-    float upem = GetUnitsPerEm();
-    CHECK_EQ(ft_result.left, static_cast<int32_t>(bounds.fLeft * upem));
-    CHECK_EQ(ft_result.bottom, -static_cast<int32_t>(bounds.fTop * upem));
-    CHECK_EQ(ft_result.right, static_cast<int32_t>(bounds.fRight * upem));
-    CHECK_EQ(ft_result.top, -static_cast<int32_t>(bounds.fBottom * upem));
+    SkFont font(skia_typeface_, GetUnitsPerEm());
+    SkFontMetrics metrics;
+    font.getMetrics(&metrics);
+    CHECK_EQ(ft_result.left, static_cast<int32_t>(metrics.fXMin));
+    CHECK_EQ(ft_result.bottom, -static_cast<int32_t>(metrics.fTop));
+    CHECK_EQ(ft_result.right, static_cast<int32_t>(metrics.fXMax));
+    CHECK_EQ(ft_result.top, -static_cast<int32_t>(metrics.fBottom));
   }
 #endif
   return ft_result;
