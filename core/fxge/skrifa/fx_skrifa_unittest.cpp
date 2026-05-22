@@ -47,3 +47,17 @@ TEST(FxSkrifaTest, TestGetOs2Panose) {
   EXPECT_EQ(panose.b0, 2);
   EXPECT_EQ(panose.b1, 0);
 }
+
+TEST(FxSkrifaTest, TestGetOs2FsType) {
+  std::string font_path = PathService::GetTestFilePath("fonts/bug_2094.ttf");
+  std::ifstream input(font_path, std::ios::binary);
+  std::vector<char> bytes((std::istreambuf_iterator<char>(input)),
+                          (std::istreambuf_iterator<char>()));
+  input.close();
+
+  rust::Slice<const uint8_t> slice(
+      reinterpret_cast<const uint8_t*>(bytes.data()), bytes.size());
+  uint16_t fs_type = 0x1234;  // Show that is is updated.
+  EXPECT_TRUE(skrifa::get_os2_fs_type(slice, fs_type));
+  EXPECT_EQ(fs_type, 0u);
+}

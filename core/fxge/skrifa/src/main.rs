@@ -31,6 +31,12 @@ mod skrifa_ffi {
         Custom = 4,
     }
 
+    #[derive(Copy, Clone, PartialEq, Eq, Debug)]
+    pub enum FsType {
+        RestrictedLicenseEmbedding = 0x0002,
+        BitmapEmbeddingOnly = 0x0200,
+    }
+
     // Should match SkPathVerb
     #[derive(Copy, Clone, PartialEq, Eq, Debug)]
     #[repr(u8)]
@@ -86,6 +92,7 @@ mod skrifa_ffi {
         fn unscaled_outline(&self, gid: u32, outline: &mut Outline) -> bool;
         fn get_os2_code_page_range(data: &[u8], range: &mut CodePageRange) -> bool;
         fn get_os2_panose(data: &[u8], panose: &mut Os2Panose) -> bool;
+        fn get_os2_fs_type(data: &[u8], fs_type: &mut u16) -> bool;
 
         fn agl_name_to_unicode(name: &str, unicode: &mut u32) -> bool;
         fn agl_unicode_to_name(unicode: u32, name: &mut [u8]) -> bool;
@@ -346,6 +353,17 @@ pub fn get_os2_panose(data: &[u8], panose: &mut skrifa_ffi::Os2Panose) -> bool {
             let p = os2.panose_10();
             panose.b0 = p[0];
             panose.b1 = p[1];
+            return true;
+        }
+    }
+    false
+}
+
+pub fn get_os2_fs_type(data: &[u8], fs_type: &mut u16) -> bool {
+    if let Ok(font) = read_fonts::FontRef::new(data) {
+        use read_fonts::TableProvider;
+        if let Ok(os2) = font.os2() {
+            *fs_type = os2.fs_type();
             return true;
         }
     }
