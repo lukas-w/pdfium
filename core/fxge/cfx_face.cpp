@@ -1186,10 +1186,30 @@ FX_RECT CFX_Face::GetGlyphBBox() const {
   pdfium::ClampedNumeric<FT_Pos> left = glyph->metrics.horiBearingX;
   pdfium::ClampedNumeric<FT_Pos> top = glyph->metrics.horiBearingY;
   const uint16_t upem = GetUnitsPerEm();
-  return FX_RECT(NormalizeFontMetric(left, upem),
-                 NormalizeFontMetric(top, upem),
-                 NormalizeFontMetric(left + glyph->metrics.width, upem),
-                 NormalizeFontMetric(top - glyph->metrics.height, upem));
+  FX_RECT ft_result(NormalizeFontMetric(left, upem),
+                    NormalizeFontMetric(top, upem),
+                    NormalizeFontMetric(left + glyph->metrics.width, upem),
+                    NormalizeFontMetric(top - glyph->metrics.height, upem));
+
+#if defined(PDF_ENABLE_SKIA_TYPEFACE_CHECKS)
+  if (skia_typeface_) {
+    SkFont font(skia_typeface_, upem);
+    font.setHinting(SkFontHinting::kNone);
+    uint16_t skia_glyph_index = static_cast<uint16_t>(glyph->glyph_index);
+    SkRect bounds = font.getBounds(skia_glyph_index, nullptr);
+
+    CHECK_EQ(ft_result.left,
+             NormalizeFontMetric(static_cast<int32_t>(bounds.fLeft), upem));
+    CHECK_EQ(ft_result.top,
+             NormalizeFontMetric(static_cast<int32_t>(-bounds.fTop), upem));
+    CHECK_EQ(ft_result.right,
+             NormalizeFontMetric(static_cast<int32_t>(bounds.fRight), upem));
+    CHECK_EQ(ft_result.bottom,
+             NormalizeFontMetric(static_cast<int32_t>(-bounds.fBottom), upem));
+  }
+#endif
+
+  return ft_result;
 }
 
 std::vector<CharCodeAndIndex> CFX_Face::GetCharCodesAndIndices(
