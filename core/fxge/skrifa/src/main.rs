@@ -66,6 +66,14 @@ mod skrifa_ffi {
         pub b1: u8,
     }
 
+    #[derive(Copy, Clone, PartialEq, Eq, Debug)]
+    pub struct UnicodeRange {
+        pub range1: u32,
+        pub range2: u32,
+        pub range3: u32,
+        pub range4: u32,
+    }
+
     #[derive(Clone, Debug)]
     pub struct Outline {
         pub verbs: Vec<PathVerb>,
@@ -93,6 +101,10 @@ mod skrifa_ffi {
         fn get_os2_code_page_range(data: &[u8], range: &mut CodePageRange) -> bool;
         fn get_os2_panose(data: &[u8], panose: &mut Os2Panose) -> bool;
         fn get_os2_fs_type(data: &[u8], fs_type: &mut u16) -> bool;
+        fn get_os2_unicode_range(data: &[u8], range: &mut UnicodeRange) -> bool;
+        fn get_style_name(data: &[u8]) -> String;
+        fn get_glyph_name(data: &[u8], gid: u32) -> String;
+        fn get_name_index(data: &[u8], name: &str) -> u32;
 
         fn agl_name_to_unicode(name: &str, unicode: &mut u32) -> bool;
         fn agl_unicode_to_name(unicode: u32, name: &mut [u8]) -> bool;
@@ -368,6 +380,52 @@ pub fn get_os2_fs_type(data: &[u8], fs_type: &mut u16) -> bool {
         }
     }
     false
+}
+
+pub fn get_os2_unicode_range(data: &[u8], range: &mut skrifa_ffi::UnicodeRange) -> bool {
+    if let Ok(font) = read_fonts::FontRef::new(data) {
+        use read_fonts::TableProvider;
+        if let Ok(os2) = font.os2() {
+            range.range1 = os2.ul_unicode_range_1();
+            range.range2 = os2.ul_unicode_range_2();
+            range.range3 = os2.ul_unicode_range_3();
+            range.range4 = os2.ul_unicode_range_4();
+            return true;
+        }
+    }
+    false
+}
+
+pub fn get_style_name(data: &[u8]) -> String {
+    if let Ok(font) = skrifa::FontRef::new(data) {
+        use skrifa::string::StringId;
+        use skrifa::MetadataProvider;
+        if let Some(name) = font.localized_strings(StringId::SUBFAMILY_NAME).english_or_first() {
+            return name.to_string();
+        }
+    }
+    String::new()
+}
+
+pub fn get_glyph_name(data: &[u8], gid: u32) -> String {
+    if let Ok(font) = read_fonts::FontRef::new(data) {
+        let glyph_names = skrifa::GlyphNames::new(&font);
+        if let Some(name) = glyph_names.get(skrifa::GlyphId::new(gid)) {
+            return name.to_string();
+        }
+    }
+    String::new()
+}
+
+pub fn get_name_index(data: &[u8], name: &str) -> u32 {
+    if let Ok(font) = read_fonts::FontRef::new(data) {
+        let glyph_names = skrifa::GlyphNames::new(&font);
+        if let Some(gid) = glyph_names.iter().find(|(_id, n)| n.as_str() == name).map(|(id, _n)| id)
+        {
+            return gid.to_u32();
+        }
+    }
+    0
 }
 
 fn main() {
