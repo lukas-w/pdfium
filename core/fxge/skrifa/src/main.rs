@@ -56,6 +56,14 @@ mod skrifa_ffi {
         pub y: f32,
     }
 
+    #[derive(Copy, Clone, PartialEq, Debug)]
+    pub struct BoundingBox {
+        pub x_min: f32,
+        pub y_min: f32,
+        pub x_max: f32,
+        pub y_max: f32,
+    }
+
     #[derive(Copy, Clone, PartialEq, Eq, Debug)]
     pub struct CodePageRange {
         pub range1: u32,
@@ -118,6 +126,11 @@ mod skrifa_ffi {
         fn agl_unicode_to_name(unicode: u32, name: &mut [u8]) -> bool;
 
         fn get_char_codes_and_indices(data: &[u8], max_char: u32) -> Vec<CharCodeAndIndex>;
+        fn has_glyph_names(data: &[u8]) -> bool;
+        fn is_fixed_pitch(data: &[u8]) -> bool;
+        fn is_scalable(data: &[u8]) -> bool;
+        fn get_font_format(data: &[u8]) -> String;
+        fn get_glyph_bounds(data: &[u8], glyph_index: u32) -> BoundingBox;
     }
 
     unsafe extern "C++" {
@@ -494,6 +507,76 @@ pub fn get_char_codes_and_indices(data: &[u8], max_char: u32) -> Vec<skrifa_ffi:
         }
     }
     results
+}
+
+pub fn has_glyph_names(data: &[u8]) -> bool {
+    if let Ok(font) = read_fonts::FontRef::new(data) {
+        let glyph_names = skrifa::GlyphNames::new(&font);
+        return glyph_names.source() != skrifa::GlyphNameSource::Synthesized;
+    }
+    false
+}
+
+pub fn is_fixed_pitch(data: &[u8]) -> bool {
+    if let Ok(font) = read_fonts::FontRef::new(data) {
+        use read_fonts::TableProvider;
+        if let Ok(post) = font.post() {
+            return post.is_fixed_pitch() != 0;
+        }
+    }
+    false
+}
+
+pub fn is_scalable(data: &[u8]) -> bool {
+    if let Ok(font) = read_fonts::FontRef::new(data) {
+        use read_fonts::TableProvider;
+        return font.glyf().is_ok() || font.cff().is_ok() || font.cff2().is_ok();
+    }
+    if read_fonts::ps::cff::CffFontRef::new(data, 0, None).is_ok() {
+        return true;
+    }
+    if read_fonts::ps::type1::Type1Font::new(data).is_ok() {
+        return true;
+    }
+    false
+}
+
+pub fn get_font_format(data: &[u8]) -> String {
+    if read_fonts::ps::type1::Type1Font::new(data).is_ok() {
+        return "Type 1".to_string();
+    }
+    if let Ok(font) = read_fonts::FontRef::new(data) {
+        use read_fonts::TableProvider;
+        if font.cff().is_ok() || font.cff2().is_ok() {
+            return "CFF".to_string();
+        }
+        if font.glyf().is_ok() {
+            return "TrueType".to_string();
+        }
+    }
+    if read_fonts::ps::cff::CffFontRef::new(data, 0, None).is_ok() {
+        return "CFF".to_string();
+    }
+    String::new()
+}
+
+pub fn get_glyph_bounds(data: &[u8], glyph_index: u32) -> skrifa_ffi::BoundingBox {
+    if let Ok(font) = read_fonts::FontRef::new(data) {
+        let metrics = skrifa::metrics::GlyphMetrics::new(
+            &font,
+            skrifa::instance::Size::unscaled(),
+            skrifa::instance::LocationRef::default(),
+        );
+        if let Some(bbox) = metrics.bounds(skrifa::GlyphId::new(glyph_index)) {
+            return skrifa_ffi::BoundingBox {
+                x_min: bbox.x_min,
+                y_min: bbox.y_min,
+                x_max: bbox.x_max,
+                y_max: bbox.y_max,
+            };
+        }
+    }
+    skrifa_ffi::BoundingBox { x_min: 0.0, y_min: 0.0, x_max: 0.0, y_max: 0.0 }
 }
 
 fn main() {

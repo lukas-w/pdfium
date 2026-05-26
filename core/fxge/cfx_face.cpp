@@ -396,8 +396,10 @@ RetainPtr<CFX_Face> CFX_Face::New(RetainPtr<Retainable> cache_entry,
 bool CFX_Face::HasGlyphNames() const {
   const bool ft_result = !!(GetRec()->face_flags & FT_FACE_FLAG_GLYPH_NAMES);
 #if defined(PDF_ENABLE_SKIA_TYPEFACE_CHECKS)
-  // TODO(https://crbug.com/42271123): Compute equivalent result via Skia or
-  // Skrifa.
+#if defined(PDF_ENABLE_FONTATIONS)
+  pdfium::span<const uint8_t> data = GetData();
+  CHECK_EQ(ft_result, skrifa::has_glyph_names(rust::Slice(data)));
+#endif
 #endif
   return ft_result;
 }
@@ -415,8 +417,11 @@ bool CFX_Face::IsTtOt() const {
 ByteString CFX_Face::GetFontFormat() {
   const ByteString ft_result(FT_Get_Font_Format(GetRec()));
 #if defined(PDF_ENABLE_SKIA_TYPEFACE_CHECKS)
-  // TODO(https://crbug.com/42271123): Compute equivalent result via Skia or
-  // Skrifa.
+#if defined(PDF_ENABLE_FONTATIONS)
+  pdfium::span<const uint8_t> data = GetData();
+  rust::String skrifa_result = skrifa::get_font_format(rust::Slice(data));
+  CHECK_EQ(ft_result, ByteString(skrifa_result.c_str()));
+#endif
 #endif
   return ft_result;
 }
@@ -436,6 +441,10 @@ bool CFX_Face::IsFixedWidth() const {
   if (skia_typeface_) {
     CHECK_EQ(ft_result, skia_typeface_->isFixedPitch());
   }
+#if defined(PDF_ENABLE_FONTATIONS)
+  pdfium::span<const uint8_t> data = GetData();
+  CHECK_EQ(ft_result, skrifa::is_fixed_pitch(rust::Slice(data)));
+#endif
 #endif
   return ft_result;
 }
@@ -444,8 +453,10 @@ bool CFX_Face::IsFixedWidth() const {
 bool CFX_Face::IsScalable() const {
   const bool ft_result = !!(GetRec()->face_flags & FT_FACE_FLAG_SCALABLE);
 #if defined(PDF_ENABLE_SKIA_TYPEFACE_CHECKS)
-  // TODO(https://crbug.com/42271123): Compute equivalent result via Skia or
-  // Skrifa.
+#if defined(PDF_ENABLE_FONTATIONS)
+  pdfium::span<const uint8_t> data = GetData();
+  CHECK_EQ(ft_result, skrifa::is_scalable(rust::Slice(data)));
+#endif
 #endif
   return ft_result;
 }
@@ -1227,8 +1238,17 @@ FX_RECT CFX_Face::GetCharBBox(uint32_t code, int glyph_index) {
     }
   }
 #if defined(PDF_ENABLE_SKIA_TYPEFACE_CHECKS)
-  // TODO(https://crbug.com/42271123): Compute equivalent result via Skia or
-  // Skrifa.
+#if defined(PDF_ENABLE_FONTATIONS)
+  pdfium::span<const uint8_t> data = GetData();
+  skrifa::BoundingBox bbox =
+      skrifa::get_glyph_bounds(rust::Slice(data), glyph_index);
+  const uint16_t upem = GetUnitsPerEm();
+  FX_RECT skrifa_result(NormalizeFontMetric(bbox.x_min, upem),
+                        NormalizeFontMetric(bbox.y_max, upem),
+                        NormalizeFontMetric(bbox.x_max, upem),
+                        NormalizeFontMetric(bbox.y_min, upem));
+  // TODO(tsepez): verify results.
+#endif
 #endif
   return rect;
 }
