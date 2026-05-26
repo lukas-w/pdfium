@@ -553,13 +553,12 @@ FX_RECT CPDF_CIDFont::GetCharBBox(uint32_t charcode) {
   if (charcode < 256 && char_bbox_[charcode].right != -1) {
     return char_bbox_[charcode];
   }
-
-  FX_RECT rect;
   bool bVert = false;
   int glyph_index = GlyphFromCharCode(charcode, &bVert);
-  RetainPtr<CFX_Face> face = font_.GetFace();
-  if (face) {
-    rect = face->GetCharBBox(charcode, glyph_index);
+  FX_RECT rect;
+  std::optional<FX_RECT> maybe_rect = font_.GetCharBBox(charcode, glyph_index);
+  if (maybe_rect.has_value()) {
+    rect = maybe_rect.value();
   }
   if (!font_file_ && charset_ == CIDSet::kJapan1) {
     uint16_t cid = CIDFromCharCode(charcode);
@@ -577,7 +576,6 @@ FX_RECT CPDF_CIDFont::GetCharBBox(uint32_t charcode) {
   if (charcode < 256) {
     char_bbox_[charcode] = rect;
   }
-
   return rect;
 }
 

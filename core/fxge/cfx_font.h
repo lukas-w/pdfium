@@ -104,6 +104,7 @@ class CFX_Font {
   int GetAscent() const;
   int GetDescent() const;
   std::optional<FX_RECT> GetGlyphBBox(uint32_t glyph_index);
+  std::optional<FX_RECT> GetCharBBox(uint32_t code, uint32_t glyph_index);
   bool IsItalic() const;
   bool IsBold() const;
   bool IsFixedWidth() const;

@@ -272,6 +272,14 @@ std::optional<FX_RECT> CFX_Font::GetGlyphBBox(uint32_t glyph_index) {
   return face_->GetFontGlyphBBox(glyph_index);
 }
 
+std::optional<FX_RECT> CFX_Font::GetCharBBox(uint32_t code,
+                                             uint32_t glyph_index) {
+  if (!face_) {
+    return std::nullopt;
+  }
+  return face_->GetCharBBox(code, glyph_index);
+}
+
 bool CFX_Font::IsItalic() const {
   if (!face_) {
     return false;
