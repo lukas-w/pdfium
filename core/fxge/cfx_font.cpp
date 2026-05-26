@@ -243,6 +243,14 @@ bool CFX_Font::IsTTFont() const {
   return face_ && face_->IsTtOt();
 }
 
+int CFX_Font::GetCharIndex(uint32_t code) const {
+  return face_ ? face_->GetCharIndex(code) : 0;
+}
+
+int CFX_Font::GetNameIndex(const char* name) const {
+  return face_ ? face_->GetNameIndex(name) : 0;
+}
+
 int CFX_Font::GetAscent() const {
   if (!face_) {
     return 0;

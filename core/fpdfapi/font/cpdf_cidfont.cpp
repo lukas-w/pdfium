@@ -632,7 +632,7 @@ int CPDF_CIDFont::GetGlyphIndex(uint32_t unicode, bool* pVertGlyph) {
     *pVertGlyph = false;
   }
 
-  int index = font_.GetFace()->GetCharIndex(unicode);
+  int index = font_.GetCharIndex(unicode);
   if (unicode == pdfium::unicode::kBoxDrawingsLightVerical) {
     return index;
   }
@@ -743,17 +743,17 @@ int CPDF_CIDFont::GlyphFromCharCode(uint32_t charcode, bool* pVertGlyph) {
       }
 
       if (base_encoding == FontEncoding::kStandard) {
-        return face->GetCharIndex(name_unicode);
+        return font_.GetCharIndex(name_unicode);
       }
 
       if (base_encoding == FontEncoding::kWinAnsi) {
-        index = face->GetCharIndex(name_unicode);
+        index = font_.GetCharIndex(name_unicode);
       } else {
         DCHECK_EQ(base_encoding, FontEncoding::kMacRoman);
         uint32_t maccode = CharCodeFromUnicodeForEncoding(
             fxge::FontEncoding::kAppleRoman, name_unicode);
         index =
-            maccode ? face->GetCharIndex(maccode) : face->GetNameIndex(name);
+            maccode ? font_.GetCharIndex(maccode) : font_.GetNameIndex(name);
       }
       if (index == 0 || index == 0xffff) {
         return charcode ? static_cast<int>(charcode) : -1;

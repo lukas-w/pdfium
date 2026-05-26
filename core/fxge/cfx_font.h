@@ -97,6 +97,8 @@ class CFX_Font {
   const CFX_Path* LoadGlyphPath(uint32_t glyph_index, int dest_width) const;
 
   bool HasAnyGlyphs() const;
+  int GetCharIndex(uint32_t code) const;
+  int GetNameIndex(const char* name) const;
   int GetGlyphWidth(uint32_t glyph_index) const;
   int GetGlyphWidth(uint32_t glyph_index, int dest_width, int weight) const;
   int GetAscent() const;
