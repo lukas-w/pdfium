@@ -394,19 +394,40 @@ RetainPtr<CFX_Face> CFX_Face::New(RetainPtr<Retainable> cache_entry,
 }
 
 bool CFX_Face::HasGlyphNames() const {
-  return !!(GetRec()->face_flags & FT_FACE_FLAG_GLYPH_NAMES);
+  const bool ft_result = !!(GetRec()->face_flags & FT_FACE_FLAG_GLYPH_NAMES);
+#if defined(PDF_ENABLE_SKIA_TYPEFACE_CHECKS)
+  // TODO(https://crbug.com/42271123): Compute equivalent result via Skia or
+  // Skrifa.
+#endif
+  return ft_result;
 }
 
 bool CFX_Face::IsTtOt() const {
-  return !!(GetRec()->face_flags & FT_FACE_FLAG_SFNT);
+  const bool ft_result = !!(GetRec()->face_flags & FT_FACE_FLAG_SFNT);
+#if defined(PDF_ENABLE_SKIA_TYPEFACE_CHECKS)
+  if (skia_typeface_) {
+    CHECK_EQ(ft_result, skia_typeface_->countTables() > 0);
+  }
+#endif
+  return ft_result;
 }
 
 ByteString CFX_Face::GetFontFormat() {
-  return ByteString(FT_Get_Font_Format(GetRec()));
+  const ByteString ft_result(FT_Get_Font_Format(GetRec()));
+#if defined(PDF_ENABLE_SKIA_TYPEFACE_CHECKS)
+  // TODO(https://crbug.com/42271123): Compute equivalent result via Skia or
+  // Skrifa.
+#endif
+  return ft_result;
 }
 
 bool CFX_Face::IsTricky() const {
-  return !!(GetRec()->face_flags & FT_FACE_FLAG_TRICKY);
+  const bool ft_result = !!(GetRec()->face_flags & FT_FACE_FLAG_TRICKY);
+#if defined(PDF_ENABLE_SKIA_TYPEFACE_CHECKS)
+  // TODO(https://crbug.com/42271123): Compute equivalent result via Skia or
+  // Skrifa.
+#endif
+  return ft_result;
 }
 
 bool CFX_Face::IsFixedWidth() const {
@@ -421,7 +442,12 @@ bool CFX_Face::IsFixedWidth() const {
 
 #if defined(PDF_ENABLE_XFA)
 bool CFX_Face::IsScalable() const {
-  return !!(GetRec()->face_flags & FT_FACE_FLAG_SCALABLE);
+  const bool ft_result = !!(GetRec()->face_flags & FT_FACE_FLAG_SCALABLE);
+#if defined(PDF_ENABLE_SKIA_TYPEFACE_CHECKS)
+  // TODO(https://crbug.com/42271123): Compute equivalent result via Skia or
+  // Skrifa.
+#endif
+  return ft_result;
 }
 #endif
 
@@ -797,6 +823,10 @@ std::unique_ptr<CFX_GlyphBitmap> CFX_Face::RenderGlyph(
       src_span = src_span.subspan(src_pitch);
     }
   }
+#if defined(PDF_ENABLE_SKIA_TYPEFACE_CHECKS)
+  // TODO(https://crbug.com/42271123): Compute equivalent result via Skia or
+  // Skrifa.
+#endif
   return pGlyphBitmap;
 }
 
@@ -1068,7 +1098,12 @@ int CFX_Face::LoadGlyph(uint32_t glyph_index, bool scale) {
   if (!scale) {
     args |= FT_LOAD_NO_SCALE;
   }
-  return FT_Load_Glyph(GetRec(), glyph_index, args);
+  const int ft_result = FT_Load_Glyph(GetRec(), glyph_index, args);
+#if defined(PDF_ENABLE_SKIA_TYPEFACE_CHECKS)
+  // TODO(https://crbug.com/42271123): Compute equivalent result via Skia or
+  // Skrifa.
+#endif
+  return ft_result;
 }
 
 ByteString CFX_Face::GetPostscriptName() {
@@ -1125,11 +1160,29 @@ std::optional<FX_RECT> CFX_Face::GetFontGlyphBBox(uint32_t glyph_index) {
     return std::nullopt;
   }
   int em = GetUnitsPerEm();
-  return ScaledFXRectFromFTPos(
+  const FX_RECT ft_result = ScaledFXRectFromFTPos(
       GetRec()->glyph->metrics.horiBearingX,
       GetRec()->glyph->metrics.horiBearingY - GetRec()->glyph->metrics.height,
       GetRec()->glyph->metrics.horiBearingX + GetRec()->glyph->metrics.width,
       GetRec()->glyph->metrics.horiBearingY, em, em);
+#if defined(PDF_ENABLE_SKIA_TYPEFACE_CHECKS)
+  if (skia_typeface_) {
+    SkFont font(skia_typeface_, em);
+    font.setHinting(SkFontHinting::kNone);
+    uint16_t skia_glyph_index = static_cast<uint16_t>(glyph_index);
+    SkRect bounds = font.getBounds(skia_glyph_index, nullptr);
+
+    CHECK_EQ(ft_result.left,
+             NormalizeFontMetric(static_cast<int32_t>(bounds.fLeft), em));
+    CHECK_EQ(ft_result.top,
+             NormalizeFontMetric(static_cast<int32_t>(-bounds.fTop), em));
+    CHECK_EQ(ft_result.right,
+             NormalizeFontMetric(static_cast<int32_t>(bounds.fRight), em));
+    CHECK_EQ(ft_result.bottom,
+             NormalizeFontMetric(static_cast<int32_t>(-bounds.fBottom), em));
+  }
+#endif
+  return ft_result;
 }
 
 FX_RECT CFX_Face::GetCharBBox(uint32_t code, int glyph_index) {
@@ -1173,6 +1226,10 @@ FX_RECT CFX_Face::GetCharBBox(uint32_t code, int glyph_index) {
       }
     }
   }
+#if defined(PDF_ENABLE_SKIA_TYPEFACE_CHECKS)
+  // TODO(https://crbug.com/42271123): Compute equivalent result via Skia or
+  // Skrifa.
+#endif
   return rect;
 }
 
@@ -1303,7 +1360,12 @@ bool CFX_Face::SelectCharMap(fxge::FontEncoding encoding) {
 
 #if defined(PDF_ENABLE_XFA)
 int CFX_Face::GetNumFaces() const {
-  return pdfium::checked_cast<int>(GetRec()->num_faces);
+  const int ft_result = pdfium::checked_cast<int>(GetRec()->num_faces);
+#if defined(PDF_ENABLE_SKIA_TYPEFACE_CHECKS)
+  // TODO(https://crbug.com/42271123): Compute equivalent result via Skia or
+  // Skrifa.
+#endif
+  return ft_result;
 }
 #endif
 
