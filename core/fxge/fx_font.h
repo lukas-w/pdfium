@@ -53,6 +53,8 @@ enum FontWeight {
 struct CharCodeAndIndex {
   uint32_t char_code;
   uint32_t glyph_index;
+
+  bool operator==(const CharCodeAndIndex&) const = default;
 };
 
 enum class FontAntiAliasingMode : int {

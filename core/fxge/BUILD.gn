@@ -261,6 +261,7 @@ pdfium_unittest_source_set("unittests") {
   sources = [
     "cfx_defaultrenderdevice_unittest.cpp",
     "cfx_folderfontinfo_unittest.cpp",
+    "cfx_font_unittest.cpp",
     "cfx_fontmapper_unittest.cpp",
     "cfx_path_unittest.cpp",
     "dib/blend_unittest.cpp",

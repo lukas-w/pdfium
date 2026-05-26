@@ -8,9 +8,11 @@
 #include <string>
 #include <vector>
 
+#include "core/fxge/cfx_font.h"
 #include "core/fxge/skrifa/src/main.rs.h"
 #include "core/fxge/skrifa/src/outlines.h"
 #include "testing/gtest/include/gtest/gtest.h"
+#include "testing/utils/file_util.h"
 #include "testing/utils/path_service.h"
 
 TEST(FxSkrifaTest, TestFoxitFixedCff) {
@@ -50,14 +52,22 @@ TEST(FxSkrifaTest, TestGetOs2Panose) {
 
 TEST(FxSkrifaTest, TestGetOs2FsType) {
   std::string font_path = PathService::GetTestFilePath("fonts/bug_2094.ttf");
-  std::ifstream input(font_path, std::ios::binary);
-  std::vector<char> bytes((std::istreambuf_iterator<char>(input)),
-                          (std::istreambuf_iterator<char>()));
-  input.close();
+  std::vector<uint8_t> bytes = GetFileContents(font_path.c_str());
 
-  rust::Slice<const uint8_t> slice(
-      reinterpret_cast<const uint8_t*>(bytes.data()), bytes.size());
   uint16_t fs_type = 0x1234;  // Show that is is updated.
-  EXPECT_TRUE(skrifa::get_os2_fs_type(slice, fs_type));
+  EXPECT_TRUE(
+      skrifa::get_os2_fs_type(rust::Slice<const uint8_t>(bytes), fs_type));
   EXPECT_EQ(fs_type, 0u);
+}
+
+TEST(FxSkrifaTest, TestGetCharCodesAndIndices) {
+  std::string font_path = PathService::GetTestFilePath("fonts/ahem/Ahem.ttf");
+  std::vector<uint8_t> bytes = GetFileContents(font_path.c_str());
+
+  auto results = skrifa::get_char_codes_and_indices(
+      rust::Slice<const uint8_t>(bytes), 0xFFFF);
+  ASSERT_EQ(278u, results.size());
+  EXPECT_EQ(skrifa::CharCodeAndIndex(32, 3), results[0]);
+  EXPECT_EQ(skrifa::CharCodeAndIndex(33, 4), results[1]);
+  EXPECT_EQ(skrifa::CharCodeAndIndex(65279, 245), results[277]);
 }

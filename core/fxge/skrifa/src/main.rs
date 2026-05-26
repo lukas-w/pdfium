@@ -18,7 +18,9 @@ use read_fonts::{
         type1::Type1Font,
     },
     types::GlyphId,
+    TableProvider,
 };
+use skrifa::MetadataProvider;
 
 #[cxx::bridge(namespace = "skrifa")]
 mod skrifa_ffi {
@@ -74,6 +76,12 @@ mod skrifa_ffi {
         pub range4: u32,
     }
 
+    #[derive(Copy, Clone, PartialEq, Eq, Debug)]
+    pub struct CharCodeAndIndex {
+        pub char_code: u32,
+        pub glyph_index: u32,
+    }
+
     #[derive(Clone, Debug)]
     pub struct Outline {
         pub verbs: Vec<PathVerb>,
@@ -108,6 +116,8 @@ mod skrifa_ffi {
 
         fn agl_name_to_unicode(name: &str, unicode: &mut u32) -> bool;
         fn agl_unicode_to_name(unicode: u32, name: &mut [u8]) -> bool;
+
+        fn get_char_codes_and_indices(data: &[u8], max_char: u32) -> Vec<CharCodeAndIndex>;
     }
 
     unsafe extern "C++" {
@@ -426,6 +436,64 @@ pub fn get_name_index(data: &[u8], name: &str) -> u32 {
         }
     }
     0
+}
+
+pub fn get_char_codes_and_indices(data: &[u8], max_char: u32) -> Vec<skrifa_ffi::CharCodeAndIndex> {
+    let mut results = Vec::new();
+    if let Ok(font) = read_fonts::FontRef::new(data) {
+        let charmap = font.charmap();
+        if charmap.has_map() {
+            for (char_code, glyph_id) in charmap.mappings() {
+                if char_code > max_char {
+                    break;
+                }
+                results.push(skrifa_ffi::CharCodeAndIndex {
+                    char_code,
+                    glyph_index: glyph_id.to_u32(),
+                });
+            }
+            return results;
+        }
+
+        if let Ok(cmap) = font.cmap() {
+            for record in cmap.encoding_records() {
+                if let Ok(read_fonts::tables::cmap::CmapSubtable::Format0(format0)) =
+                    record.subtable(cmap.offset_data())
+                {
+                    for (code, &gid) in format0.glyph_id_array().iter().enumerate() {
+                        if gid != 0 {
+                            let char_code = code as u32;
+                            if char_code <= max_char {
+                                results.push(skrifa_ffi::CharCodeAndIndex {
+                                    char_code,
+                                    glyph_index: gid as u32,
+                                });
+                            }
+                        }
+                    }
+                    return results;
+                }
+            }
+
+            if let Some((_, _, subtable)) = cmap.best_subtable() {
+                for (char_code, glyph_id) in subtable.iter() {
+                    if char_code > max_char {
+                        continue;
+                    }
+                    results.push(skrifa_ffi::CharCodeAndIndex {
+                        char_code,
+                        glyph_index: glyph_id.to_u32(),
+                    });
+                }
+                results.sort_by_key(|r| r.char_code);
+                if let Some(pos) = results.iter().position(|r| r.char_code > max_char) {
+                    results.truncate(pos);
+                }
+                return results;
+            }
+        }
+    }
+    results
 }
 
 fn main() {

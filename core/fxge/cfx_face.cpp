@@ -1226,10 +1226,26 @@ std::vector<CharCodeAndIndex> CFX_Face::GetCharCodesAndIndices(
         GetRec(), results.back().char_code, &char_code_and_index.glyph_index));
     if (char_code_and_index.char_code > max_char ||
         char_code_and_index.glyph_index == 0) {
-      return results;
+      break;
     }
     results.push_back(char_code_and_index);
   }
+
+#if defined(PDF_ENABLE_SKIA_TYPEFACE_CHECKS)
+#if defined(PDF_ENABLE_FONTATIONS)
+  pdfium::span<const uint8_t> data = GetData();
+  auto skrifa_result = skrifa::get_char_codes_and_indices(
+      rust::Slice<const uint8_t>(data.data(), data.size()), max_char);
+
+  CHECK_EQ(results.size(), skrifa_result.size());
+  for (size_t i = 0; i < results.size(); ++i) {
+    CHECK_EQ(results[i].char_code, skrifa_result[i].char_code);
+    CHECK_EQ(results[i].glyph_index, skrifa_result[i].glyph_index);
+  }
+#endif  // defined(PDF_ENABLE_FONTATIONS)
+#endif  // defined(PDF_ENABLE_SKIA_TYPEFACE_CHECKS)
+
+  return results;
 }
 
 CFX_Face::CharMap CFX_Face::GetCurrentCharMap() const {
