@@ -26,7 +26,6 @@
 #include "core/fpdfapi/parser/cpdf_stream_acc.h"
 #include "core/fxcrt/check.h"
 #include "core/fxcrt/check_op.h"
-#include "core/fxcrt/fixed_size_data_vector.h"
 #include "core/fxcrt/fx_codepage.h"
 #include "core/fxcrt/fx_memory.h"
 #include "core/fxcrt/fx_safe_types.h"
@@ -643,22 +642,10 @@ int CPDF_CIDFont::GetGlyphIndex(uint32_t unicode, bool* pVertGlyph) {
     return GetVerticalGlyph(index, pVertGlyph);
   }
 
-  static constexpr uint32_t kGsubTag =
-      CFX_FontMapper::MakeTag('G', 'S', 'U', 'B');
-  RetainPtr<CFX_Face> face = font_.GetFace();
-  size_t length = face->GetSfntTable(kGsubTag, {});
-  if (!length) {
+  ttg_subtable_ = font_.ParseGSUBTable();
+  if (!ttg_subtable_) {
     return index;
   }
-
-  auto sub_data = FixedSizeDataVector<uint8_t>::Uninit(length);
-  if (!face->GetSfntTable(kGsubTag, sub_data.span())) {
-    return index;
-  }
-
-  // CFX_CTTGSUBTable parses the data and stores all the values in its structs.
-  // It does not store pointers into `sub_data`.
-  ttg_subtable_ = std::make_unique<CFX_CTTGSUBTable>(sub_data.span());
   return GetVerticalGlyph(index, pVertGlyph);
 }
 

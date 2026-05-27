@@ -14,12 +14,15 @@
 #include "core/fxcrt/check.h"
 #include "core/fxcrt/check_op.h"
 #include "core/fxcrt/compiler_specific.h"
+#include "core/fxcrt/fixed_size_data_vector.h"
 #include "core/fxcrt/notreached.h"
 #include "core/fxcrt/numerics/clamped_math.h"
 #include "core/fxcrt/numerics/safe_conversions.h"
 #include "core/fxcrt/numerics/safe_math.h"
 #include "core/fxcrt/to_underlying.h"
 #include "core/fxcrt/unowned_ptr.h"
+#include "core/fxge/cfx_cttgsubtable.h"
+#include "core/fxge/cfx_fontmapper.h"
 #include "core/fxge/cfx_fontmgr.h"
 #include "core/fxge/cfx_gemodule.h"
 #include "core/fxge/cfx_glyphbitmap.h"
@@ -604,6 +607,22 @@ size_t CFX_Face::GetSfntTable(uint32_t table, pdfium::span<uint8_t> buffer) {
   }
 #endif
   return ft_result;
+}
+
+std::unique_ptr<CFX_CTTGSUBTable> CFX_Face::ParseGSUBTable() {
+  static constexpr uint32_t kGsubTag =
+      CFX_FontMapper::MakeTag('G', 'S', 'U', 'B');
+  size_t length = GetSfntTable(kGsubTag, {});
+  if (!length) {
+    return nullptr;
+  }
+  auto sub_data = FixedSizeDataVector<uint8_t>::Uninit(length);
+  if (!GetSfntTable(kGsubTag, sub_data.span())) {
+    return nullptr;
+  }
+  // CFX_CTTGSUBTable parses the data and stores all the values in its structs.
+  // It does not store pointers into `sub_data`.
+  return std::make_unique<CFX_CTTGSUBTable>(sub_data.span());
 }
 
 #if defined(PDF_ENABLE_XFA)

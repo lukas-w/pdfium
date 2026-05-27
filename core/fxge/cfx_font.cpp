@@ -19,6 +19,7 @@
 #include "core/fxcrt/fx_stream.h"
 #include "core/fxcrt/span.h"
 #include "core/fxcrt/unowned_ptr.h"
+#include "core/fxge/cfx_cttgsubtable.h"
 #include "core/fxge/cfx_face.h"
 #include "core/fxge/cfx_fontmapper.h"
 #include "core/fxge/cfx_fontmgr.h"
@@ -173,6 +174,13 @@ CFX_Font::~CFX_Font() {
 #if BUILDFLAG(IS_APPLE)
   ReleasePlatformResource();
 #endif
+}
+
+std::unique_ptr<CFX_CTTGSUBTable> CFX_Font::ParseGSUBTable() const {
+  if (!face_) {
+    return nullptr;
+  }
+  return face_->ParseGSUBTable();
 }
 
 bool CFX_Font::LoadFaceZeroFromSpan(pdfium::span<const uint8_t> src_span,
