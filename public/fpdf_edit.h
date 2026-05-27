@@ -1423,6 +1423,19 @@ FPDFText_LoadCidType2Font(FPDF_DOCUMENT document,
 FPDF_EXPORT FPDF_BOOL FPDF_CALLCONV
 FPDFTextObj_GetFontSize(FPDF_PAGEOBJECT text, float* size);
 
+// Experimental API.
+// Set the font size of a text object.
+//
+//   text - handle to a text page object.
+//   size - the new font size, measured in points (1/72 inch). Must be
+//          non-negative; zero is permitted to mirror
+//          FPDFPageObj_NewTextObj() with size 0.
+//
+// Returns TRUE on success. Returns FALSE when |text| is not a text
+// page object, or when |size| is negative.
+FPDF_EXPORT FPDF_BOOL FPDF_CALLCONV
+FPDFTextObj_SetFontSize(FPDF_PAGEOBJECT text, float size);
+
 // Close a loaded PDF font.
 //
 // font   - Handle to the loaded font.

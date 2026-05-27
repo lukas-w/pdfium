@@ -2919,6 +2919,65 @@ TEST_F(FPDFEditEmbedderTest, AddStandardFontText) {
   // TODO(npm): FPDF_SaveAsCopy not giving the desired result after this.
 }
 
+TEST_F(FPDFEditEmbedderTest, SetFontSize) {
+  ScopedFPDFPage page(FPDFPage_New(CreateNewDocument(), 0, 612, 792));
+  ScopedFPDFPageObject text_object(
+      FPDFPageObj_NewTextObj(document(), "Arial", 12.0f));
+  ASSERT_TRUE(text_object);
+
+  // Round-trip: Get -> Set -> Get returns the new value.
+  {
+    float size = -1;
+    ASSERT_TRUE(FPDFTextObj_GetFontSize(text_object.get(), &size));
+    EXPECT_EQ(12.0f, size);
+
+    EXPECT_TRUE(FPDFTextObj_SetFontSize(text_object.get(), 24.0f));
+    ASSERT_TRUE(FPDFTextObj_GetFontSize(text_object.get(), &size));
+    EXPECT_EQ(24.0f, size);
+
+    // Zero is permitted (mirrors FPDFPageObj_NewTextObj at size 0).
+    EXPECT_TRUE(FPDFTextObj_SetFontSize(text_object.get(), 0.0f));
+    ASSERT_TRUE(FPDFTextObj_GetFontSize(text_object.get(), &size));
+    EXPECT_EQ(0.0f, size);
+  }
+
+  // Rejection: negative and null leave the prior value alone.
+  {
+    EXPECT_TRUE(FPDFTextObj_SetFontSize(text_object.get(), 18.0f));
+    float size = -1;
+    ASSERT_TRUE(FPDFTextObj_GetFontSize(text_object.get(), &size));
+    EXPECT_EQ(18.0f, size);
+
+    EXPECT_FALSE(FPDFTextObj_SetFontSize(text_object.get(), -1.0f));
+    ASSERT_TRUE(FPDFTextObj_GetFontSize(text_object.get(), &size));
+    EXPECT_EQ(18.0f, size);
+
+    EXPECT_FALSE(FPDFTextObj_SetFontSize(nullptr, 32.0f));
+  }
+
+  // Persistence: the new size survives FPDF_SaveAsCopy + reload.
+  {
+    ScopedFPDFWideString text = GetFPDFWideString(L"hello");
+    EXPECT_TRUE(FPDFText_SetText(text_object.get(), text.get()));
+    FPDFPageObj_Transform(text_object.get(), 1, 0, 0, 1, 100, 100);
+    EXPECT_TRUE(FPDFTextObj_SetFontSize(text_object.get(), 36.0f));
+    EXPECT_TRUE(FPDFPage_InsertObject(page.get(), text_object.release()));
+    EXPECT_TRUE(FPDFPage_GenerateContent(page.get()));
+    EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
+
+    ScopedSavedDoc saved_document = OpenScopedSavedDocument();
+    ASSERT_TRUE(saved_document);
+    ScopedSavedPage saved_page = LoadScopedSavedPage(0);
+    ASSERT_TRUE(saved_page);
+    ASSERT_EQ(1, FPDFPage_CountObjects(saved_page.get()));
+    FPDF_PAGEOBJECT saved_object = FPDFPage_GetObject(saved_page.get(), 0);
+    ASSERT_TRUE(saved_object);
+    float saved_size = -1;
+    ASSERT_TRUE(FPDFTextObj_GetFontSize(saved_object, &saved_size));
+    EXPECT_EQ(36.0f, saved_size);
+  }
+}
+
 TEST_F(FPDFEditEmbedderTest, AddStandardFontTextOfSizeZero) {
   // Start with a blank page
   ScopedFPDFPage page(FPDFPage_New(CreateNewDocument(), 0, 612, 792));
