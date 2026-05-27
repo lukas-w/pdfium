@@ -15,7 +15,6 @@
 
 #include "build/build_config.h"
 #include "core/fpdfapi/cmaps/fpdf_cmaps.h"
-#include "core/fpdfapi/font/cfx_cttgsubtable.h"
 #include "core/fpdfapi/font/cpdf_cid2unicodemap.h"
 #include "core/fpdfapi/font/cpdf_cmap.h"
 #include "core/fpdfapi/font/cpdf_cmapparser.h"
@@ -36,6 +35,7 @@
 #include "core/fxcrt/span_util.h"
 #include "core/fxcrt/stl_util.h"
 #include "core/fxcrt/to_underlying.h"
+#include "core/fxge/cfx_cttgsubtable.h"
 #include "core/fxge/fx_font.h"
 
 namespace {

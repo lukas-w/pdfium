@@ -7,8 +7,6 @@ import("../../../testing/test.gni")
 
 source_set("font") {
   sources = [
-    "cfx_cttgsubtable.cpp",
-    "cfx_cttgsubtable.h",
     "cfx_stockfontarray.cpp",
     "cfx_stockfontarray.h",
     "cpdf_cid2unicodemap.cpp",
