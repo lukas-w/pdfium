@@ -12,9 +12,9 @@
 #include "core/fpdfapi/cmaps/GB1/cmaps_gb1.h"
 #include "core/fpdfapi/cmaps/Japan1/cmaps_japan1.h"
 #include "core/fpdfapi/cmaps/Korea1/cmaps_korea1.h"
-#include "core/fpdfapi/font/cfx_stockfontarray.h"
 #include "core/fpdfapi/font/cpdf_cid2unicodemap.h"
 #include "core/fpdfapi/font/cpdf_cmap.h"
+#include "core/fpdfapi/font/cpdf_stockfontarray.h"
 #include "core/fpdfapi/parser/cpdf_document.h"
 #include "core/fxcrt/check.h"
 #include "core/fxcrt/containers/contains.h"
@@ -78,7 +78,7 @@ void CPDF_FontGlobals::Set(CPDF_Document* doc,
                            RetainPtr<CPDF_Font> font) {
   UnownedPtr<CPDF_Document> pKey(doc);
   if (!pdfium::Contains(stock_map_, pKey)) {
-    stock_map_[pKey] = std::make_unique<CFX_StockFontArray>();
+    stock_map_[pKey] = std::make_unique<CPDF_StockFontArray>();
   }
   stock_map_[pKey]->SetFont(index, std::move(font));
 }

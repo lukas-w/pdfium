@@ -20,7 +20,7 @@
 #include "core/fxcrt/to_underlying.h"
 #include "core/fxge/cfx_fontmapper.h"
 
-class CFX_StockFontArray;
+class CPDF_StockFontArray;
 class CPDF_Font;
 
 class CPDF_FontGlobals {
@@ -76,7 +76,7 @@ class CPDF_FontGlobals {
              fxcrt::to_underlying(CIDSet::kNumSets)>
       embedded_to_unicodes_;
   std::map<UnownedPtr<CPDF_Document>,
-           std::unique_ptr<CFX_StockFontArray>,
+           std::unique_ptr<CPDF_StockFontArray>,
            std::less<>>
       stock_map_;
 };

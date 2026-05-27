@@ -4,7 +4,7 @@
 
 // Original code copyright 2014 Foxit Software Inc. http://www.foxitsoftware.com
 
-#include "core/fpdfapi/font/cfx_stockfontarray.h"
+#include "core/fpdfapi/font/cpdf_stockfontarray.h"
 
 #include <iterator>
 #include <utility>
@@ -13,9 +13,9 @@
 #include "core/fpdfapi/parser/cpdf_dictionary.h"
 #include "core/fxcrt/check_op.h"
 
-CFX_StockFontArray::CFX_StockFontArray() = default;
+CPDF_StockFontArray::CPDF_StockFontArray() = default;
 
-CFX_StockFontArray::~CFX_StockFontArray() {
+CPDF_StockFontArray::~CPDF_StockFontArray() {
   for (size_t i = 0; i < std::size(stock_fonts_); ++i) {
     if (stock_fonts_[i]) {
       // Ensure stock_fonts_[i]'s dict is cleared before releasing what
@@ -27,14 +27,14 @@ CFX_StockFontArray::~CFX_StockFontArray() {
   }
 }
 
-RetainPtr<CPDF_Font> CFX_StockFontArray::GetFont(
+RetainPtr<CPDF_Font> CPDF_StockFontArray::GetFont(
     CFX_FontMapper::StandardFont index) const {
   CHECK_LT(index, std::size(stock_fonts_));
   return stock_fonts_[index];
 }
 
-void CFX_StockFontArray::SetFont(CFX_FontMapper::StandardFont index,
-                                 RetainPtr<CPDF_Font> font) {
+void CPDF_StockFontArray::SetFont(CFX_FontMapper::StandardFont index,
+                                  RetainPtr<CPDF_Font> font) {
   if (index < std::size(stock_fonts_)) {
     stock_fonts_[index] = std::move(font);
   }

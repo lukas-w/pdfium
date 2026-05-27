@@ -51,10 +51,10 @@ constexpr Mask<CPDF_Creator::CreateFlags> kConflictingFlags{
     CPDF_Creator::CreateFlags::kIncremental,
     CPDF_Creator::CreateFlags::kNoOriginal};
 
-class CFX_FileBufferArchive final : public IFX_ArchiveStream {
+class FileBufferArchive final : public IFX_ArchiveStream {
  public:
-  explicit CFX_FileBufferArchive(RetainPtr<IFX_RetainableWriteStream> file);
-  ~CFX_FileBufferArchive() override;
+  explicit FileBufferArchive(RetainPtr<IFX_RetainableWriteStream> file);
+  ~FileBufferArchive() override;
 
   bool WriteBlock(pdfium::span<const uint8_t> buffer) override;
   FX_FILESIZE CurrentOffset() const override { return offset_; }
@@ -68,25 +68,24 @@ class CFX_FileBufferArchive final : public IFX_ArchiveStream {
   RetainPtr<IFX_RetainableWriteStream> const backing_file_;
 };
 
-CFX_FileBufferArchive::CFX_FileBufferArchive(
-    RetainPtr<IFX_RetainableWriteStream> file)
+FileBufferArchive::FileBufferArchive(RetainPtr<IFX_RetainableWriteStream> file)
     : buffer_(FixedSizeDataVector<uint8_t>::Uninit(kArchiveBufferSize)),
       available_(buffer_.span()),
       backing_file_(std::move(file)) {
   DCHECK(backing_file_);
 }
 
-CFX_FileBufferArchive::~CFX_FileBufferArchive() {
+FileBufferArchive::~FileBufferArchive() {
   Flush();
 }
 
-bool CFX_FileBufferArchive::Flush() {
+bool FileBufferArchive::Flush() {
   size_t used = buffer_.size() - available_.size();
   available_ = buffer_.span();
   return used == 0 || backing_file_->WriteBlock(available_.first(used));
 }
 
-bool CFX_FileBufferArchive::WriteBlock(pdfium::span<const uint8_t> buffer) {
+bool FileBufferArchive::WriteBlock(pdfium::span<const uint8_t> buffer) {
   if (buffer.empty()) {
     return true;
   }
@@ -136,7 +135,7 @@ CPDF_Creator::CPDF_Creator(CPDF_Document* doc,
       encrypt_dict_(parser_ ? parser_->GetEncryptDict() : nullptr),
       security_handler_(parser_ ? parser_->GetSecurityHandler() : nullptr),
       last_obj_num_(document_->GetLastObjNum()),
-      archive_(std::make_unique<CFX_FileBufferArchive>(std::move(archive))) {}
+      archive_(std::make_unique<FileBufferArchive>(std::move(archive))) {}
 
 CPDF_Creator::~CPDF_Creator() = default;
 

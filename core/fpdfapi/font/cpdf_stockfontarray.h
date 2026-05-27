@@ -4,8 +4,8 @@
 
 // Original code copyright 2014 Foxit Software Inc. http://www.foxitsoftware.com
 
-#ifndef CORE_FPDFAPI_FONT_CFX_STOCKFONTARRAY_H_
-#define CORE_FPDFAPI_FONT_CFX_STOCKFONTARRAY_H_
+#ifndef CORE_FPDFAPI_FONT_CPDF_STOCKFONTARRAY_H_
+#define CORE_FPDFAPI_FONT_CPDF_STOCKFONTARRAY_H_
 
 #include <array>
 
@@ -14,10 +14,10 @@
 
 class CPDF_Font;
 
-class CFX_StockFontArray {
+class CPDF_StockFontArray {
  public:
-  CFX_StockFontArray();
-  ~CFX_StockFontArray();
+  CPDF_StockFontArray();
+  ~CPDF_StockFontArray();
 
   RetainPtr<CPDF_Font> GetFont(CFX_FontMapper::StandardFont index) const;
   void SetFont(CFX_FontMapper::StandardFont index, RetainPtr<CPDF_Font> font);
@@ -26,4 +26,4 @@ class CFX_StockFontArray {
   std::array<RetainPtr<CPDF_Font>, 14> stock_fonts_;
 };
 
-#endif  // CORE_FPDFAPI_FONT_CFX_STOCKFONTARRAY_H_
+#endif  // CORE_FPDFAPI_FONT_CPDF_STOCKFONTARRAY_H_
