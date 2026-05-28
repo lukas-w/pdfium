@@ -184,7 +184,7 @@ void CFX_FolderFontInfo::ScanFile(const ByteString& path) {
     return;
   }
   uint32_t magic = fxcrt::GetUInt32MSBFirst(pdfium::span(buffer).first<4u>());
-  if (magic != kTableTTCF) {
+  if (magic != SystemFontInfoIface::kTableTTCF) {
     ReportFace(path, pFile.get(), filesize, 0);
     return;
   }
@@ -415,9 +415,9 @@ size_t CFX_FolderFontInfo::GetFontData(void* hFont,
   const FontFaceInfo* font = static_cast<FontFaceInfo*>(hFont);
   uint32_t datasize = 0;
   uint32_t offset = 0;
-  if (table == 0) {
+  if (table == SystemFontInfoIface::kTableNone) {
     datasize = font->font_offset_ ? 0 : font->file_size_;
-  } else if (table == kTableTTCF) {
+  } else if (table == SystemFontInfoIface::kTableTTCF) {
     datasize = font->font_offset_ ? font->file_size_ : 0;
   } else {
     size_t nTables = font->font_tables_.GetLength() / 16;

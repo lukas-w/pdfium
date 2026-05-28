@@ -133,7 +133,8 @@ TEST_F(CFXFontMapperSystemFontInfoTest, RawBytesForIndex) {
 
     InSequence s;
     EXPECT_CALL(system_font_info(), MapFont).WillOnce(Return(kFontHandle));
-    EXPECT_CALL(system_font_info(), GetFontData(kFontHandle, 0, _))
+    EXPECT_CALL(system_font_info(),
+                GetFontData(kFontHandle, SystemFontInfoIface::kTableNone, _))
         .WillOnce(Return(2))
         .WillOnce(DoAll(WithArg<2>([](pdfium::span<uint8_t> buffer) {
                           buffer[0] = '0';
@@ -160,7 +161,8 @@ TEST_F(CFXFontMapperSystemFontInfoTest, RawBytesForIndexFailToGetDataSize) {
 
     InSequence s;
     EXPECT_CALL(system_font_info(), MapFont).WillOnce(Return(kFontHandle));
-    EXPECT_CALL(system_font_info(), GetFontData(kFontHandle, 0, _))
+    EXPECT_CALL(system_font_info(),
+                GetFontData(kFontHandle, SystemFontInfoIface::kTableNone, _))
         .WillOnce(Return(0));
     EXPECT_CALL(system_font_info(), DeleteFont(kFontHandle));
   }
@@ -175,7 +177,8 @@ TEST_F(CFXFontMapperSystemFontInfoTest, RawBytesForIndexFailToGetData) {
 
     InSequence s;
     EXPECT_CALL(system_font_info(), MapFont).WillOnce(Return(kFontHandle));
-    EXPECT_CALL(system_font_info(), GetFontData(kFontHandle, 0, _))
+    EXPECT_CALL(system_font_info(),
+                GetFontData(kFontHandle, SystemFontInfoIface::kTableNone, _))
         .WillOnce(Return(2))
         .WillOnce(Return(0));
     EXPECT_CALL(system_font_info(), DeleteFont(kFontHandle));
@@ -194,13 +197,15 @@ TEST_F(CFXFontMapperSystemFontInfoTest, GetCachedTTCFaceFailToGetData) {
 
   {
     InSequence s;
-    EXPECT_CALL(system_font_info(), GetFontData(kFontHandle, kTableTTCF, _))
+    EXPECT_CALL(system_font_info(),
+                GetFontData(kFontHandle, SystemFontInfoIface::kTableTTCF, _))
         .WillOnce(DoAll(WithArg<2>([&](pdfium::span<uint8_t> buffer) {
                           EXPECT_EQ(kTtcSize, buffer.size());
                           std::iota(buffer.begin(), buffer.end(), 0);
                         }),
                         Return(kTtcSize)));
-    EXPECT_CALL(system_font_info(), GetFontData(kFontHandle, kTableTTCF, _))
+    EXPECT_CALL(system_font_info(),
+                GetFontData(kFontHandle, SystemFontInfoIface::kTableTTCF, _))
         .WillOnce(Return(0));
   }
 
@@ -216,7 +221,8 @@ TEST_F(CFXFontMapperSystemFontInfoTest, GetCachedFaceFailToGetData) {
   static constexpr bool kItalic = false;
   static constexpr size_t kDataSize = 2;
 
-  EXPECT_CALL(system_font_info(), GetFontData(kFontHandle, 0, _))
+  EXPECT_CALL(system_font_info(),
+              GetFontData(kFontHandle, SystemFontInfoIface::kTableNone, _))
       .WillOnce(Return(0));
 
   EXPECT_FALSE(font_mapper().GetCachedFace(kFontHandle, kSubstName, kWeight,
@@ -236,9 +242,11 @@ TEST_F(CFXFontMapperSystemFontInfoTest, SetSubstFontNameWhenGetFaceNameFails) {
     InSequence s;
     EXPECT_CALL(system_font_info(), GetFaceName(kFontHandle, _))
         .WillOnce(Return(false));
-    EXPECT_CALL(system_font_info(), GetFontData(kFontHandle, kTableTTCF, _))
+    EXPECT_CALL(system_font_info(),
+                GetFontData(kFontHandle, SystemFontInfoIface::kTableTTCF, _))
         .WillOnce(Return(0));
-    EXPECT_CALL(system_font_info(), GetFontData(kFontHandle, 0, _))
+    EXPECT_CALL(system_font_info(),
+                GetFontData(kFontHandle, SystemFontInfoIface::kTableNone, _))
         .WillOnce(DoAll(WithArg<2>([&](pdfium::span<uint8_t> buffer) {
                           EXPECT_TRUE(buffer.empty());
                         }),
@@ -289,9 +297,11 @@ TEST_F(CFXFontMapperSystemFontInfoTest,
         .WillOnce(Return(kFontHandle));
     EXPECT_CALL(system_font_info(), GetFaceName(kFontHandle, _))
         .WillOnce(Return(false));
-    EXPECT_CALL(system_font_info(), GetFontData(kFontHandle, kTableTTCF, _))
+    EXPECT_CALL(system_font_info(),
+                GetFontData(kFontHandle, SystemFontInfoIface::kTableTTCF, _))
         .WillOnce(Return(0));
-    EXPECT_CALL(system_font_info(), GetFontData(kFontHandle, 0, _))
+    EXPECT_CALL(system_font_info(),
+                GetFontData(kFontHandle, SystemFontInfoIface::kTableNone, _))
         .WillOnce(DoAll(WithArg<2>([&](pdfium::span<uint8_t> buffer) {
                           EXPECT_TRUE(buffer.empty());
                         }),
