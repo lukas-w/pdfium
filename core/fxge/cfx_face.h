@@ -35,6 +35,10 @@ class CFX_GlyphBitmap;
 class CFX_Path;
 class CFX_SubstFont;
 
+#if defined(PDF_ENABLE_XFA)
+class CFX_CTTNameTable;
+#endif  // defined(PDF_ENABLE_XFA)
+
 #if defined(PDF_USE_SKIA)
 class SkTypeface;
 #endif
@@ -144,6 +148,7 @@ class CFX_Face final : public Retainable, public Observable {
 #if defined(PDF_ENABLE_XFA)
   bool IsScalable() const;
   int GetNumFaces() const;
+  std::unique_ptr<CFX_CTTNameTable> ParseNameTable();
   std::optional<std::array<uint32_t, 4>> GetOs2UnicodeRange();
 #endif
 

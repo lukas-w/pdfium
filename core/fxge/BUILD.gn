@@ -222,6 +222,13 @@ source_set("fxge") {
     configs -= [ "//build/config/win:lean_and_mean" ]
   }
 
+  if (pdf_enable_xfa) {
+    sources += [
+      "cfx_cttnametable.cpp",
+      "cfx_cttnametable.h",
+    ]
+  }
+
   visibility = [ "../../*" ]
 }
 

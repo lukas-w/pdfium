@@ -34,6 +34,10 @@
 #include "core/fxge/fx_font.h"
 #include "core/fxge/fx_fontencoding.h"
 
+#if defined(PDF_ENABLE_XFA)
+#include "core/fxge/cfx_cttnametable.h"
+#endif  // defined(PDF_ENABLE_XFA)
+
 #if defined(PDF_USE_SKIA)
 #include "third_party/skia/include/core/SkTypeface.h"  // nogncheck
 #endif
@@ -626,6 +630,20 @@ std::unique_ptr<CFX_CTTGSUBTable> CFX_Face::ParseGSUBTable() {
 }
 
 #if defined(PDF_ENABLE_XFA)
+std::unique_ptr<CFX_CTTNameTable> CFX_Face::ParseNameTable() {
+  static constexpr uint32_t kNameTag =
+      CFX_FontMapper::MakeTag('n', 'a', 'm', 'e');
+  size_t length = GetSfntTable(kNameTag, {});
+  if (!length) {
+    return nullptr;
+  }
+  auto name_data = FixedSizeDataVector<uint8_t>::Uninit(length);
+  if (!GetSfntTable(kNameTag, name_data.span())) {
+    return nullptr;
+  }
+  return std::make_unique<CFX_CTTNameTable>(name_data.span());
+}
+
 std::optional<std::array<uint32_t, 4>> CFX_Face::GetOs2UnicodeRange() {
   auto* os2 = static_cast<TT_OS2*>(FT_Get_Sfnt_Table(GetRec(), FT_SFNT_OS2));
   std::optional<std::array<uint32_t, 4>> ft_result;
