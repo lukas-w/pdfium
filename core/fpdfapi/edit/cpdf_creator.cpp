@@ -110,14 +110,6 @@ bool FileBufferArchive::WriteBlock(pdfium::span<const uint8_t> buffer) {
   return true;
 }
 
-std::array<uint32_t, 4> GenerateFileID(uint32_t dwSeed1, uint32_t dwSeed2) {
-  FX_Random random1(dwSeed1);
-  FX_Random random2(dwSeed2);
-  std::array<uint32_t, 4> buffer = {random1.Generate(), random1.Generate(),
-                                    random2.Generate(), random2.Generate()};
-  return buffer;
-}
-
 bool OutputIndex(IFX_ArchiveStream* archive, FX_FILESIZE offset) {
   return archive->WriteByte(static_cast<uint8_t>(offset >> 24)) &&
          archive->WriteByte(static_cast<uint8_t>(offset >> 16)) &&
@@ -651,8 +643,8 @@ void CPDF_Creator::InitID() {
   if (pID1) {
     id_array_->Append(pID1->Clone());
   } else {
-    std::array<uint32_t, 4> file_id =
-        GenerateFileID((uint32_t)(uintptr_t)this, last_obj_num_);
+    std::array<uint32_t, 4> file_id;
+    FX_Random::Fill(file_id);
     id_array_->AppendNew<CPDF_String>(pdfium::as_byte_span(file_id),
                                       CPDF_String::DataType::kIsHex);
   }
@@ -663,8 +655,8 @@ void CPDF_Creator::InitID() {
       id_array_->Append(pID2->Clone());
       return;
     }
-    std::array<uint32_t, 4> file_id =
-        GenerateFileID((uint32_t)(uintptr_t)this, last_obj_num_);
+    std::array<uint32_t, 4> file_id;
+    FX_Random::Fill(file_id);
     id_array_->AppendNew<CPDF_String>(pdfium::as_byte_span(file_id),
                                       CPDF_String::DataType::kIsHex);
     return;
