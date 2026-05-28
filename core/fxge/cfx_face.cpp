@@ -73,67 +73,6 @@ constexpr int kMaxGlyphDimension = 2048;
 // Boundary value to avoid integer overflow when adding 1/64th of the value.
 constexpr int kMaxRectTop = 2114445437;
 
-constexpr auto kWeightPow = std::to_array<const uint8_t>({
-    0,   6,   12,  14,  16,  18,  22,  24,  28,  30,  32,  34,  36,  38,  40,
-    42,  44,  46,  48,  50,  52,  54,  56,  58,  60,  62,  64,  66,  68,  70,
-    70,  72,  72,  74,  74,  74,  76,  76,  76,  78,  78,  78,  80,  80,  80,
-    82,  82,  82,  84,  84,  84,  84,  86,  86,  86,  88,  88,  88,  88,  90,
-    90,  90,  90,  92,  92,  92,  92,  94,  94,  94,  94,  96,  96,  96,  96,
-    96,  98,  98,  98,  98,  100, 100, 100, 100, 100, 102, 102, 102, 102, 102,
-    104, 104, 104, 104, 104, 106, 106, 106, 106, 106,
-});
-
-constexpr auto kWeightPow11 = std::to_array<const uint8_t>({
-    0,  4,  7,  8,  9,  10, 12, 13, 15, 17, 18, 19, 20, 21, 22, 23, 24,
-    25, 26, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 39, 39, 40, 40, 41,
-    41, 41, 42, 42, 42, 43, 43, 43, 44, 44, 44, 45, 45, 45, 46, 46, 46,
-    46, 43, 47, 47, 48, 48, 48, 48, 45, 50, 50, 50, 46, 51, 51, 51, 52,
-    52, 52, 52, 53, 53, 53, 53, 53, 54, 54, 54, 54, 55, 55, 55, 55, 55,
-    56, 56, 56, 56, 56, 57, 57, 57, 57, 57, 58, 58, 58, 58, 58,
-});
-
-constexpr auto kWeightPowShiftJis = std::to_array<const uint8_t>({
-    0,   0,   2,   4,   6,   8,   10,  14,  16,  20,  22,  26,  28,  32,  34,
-    38,  42,  44,  48,  52,  56,  60,  64,  66,  70,  74,  78,  82,  86,  90,
-    96,  96,  96,  96,  98,  98,  98,  100, 100, 100, 100, 102, 102, 102, 102,
-    104, 104, 104, 104, 104, 106, 106, 106, 106, 106, 108, 108, 108, 108, 108,
-    110, 110, 110, 110, 110, 112, 112, 112, 112, 112, 112, 114, 114, 114, 114,
-    114, 114, 114, 116, 116, 116, 116, 116, 116, 116, 118, 118, 118, 118, 118,
-    118, 118, 120, 120, 120, 120, 120, 120, 120, 120,
-});
-
-constexpr size_t kWeightPowArraySize = 100;
-static_assert(kWeightPowArraySize == std::size(kWeightPow), "Wrong size");
-static_assert(kWeightPowArraySize == std::size(kWeightPow11), "Wrong size");
-static_assert(kWeightPowArraySize == std::size(kWeightPowShiftJis),
-              "Wrong size");
-
-constexpr auto kAngleSkew = std::to_array<const int8_t>({
-    -0,  -2,  -3,  -5,  -7,  -9,  -11, -12, -14, -16, -18, -19, -21, -23, -25,
-    -27, -29, -31, -32, -34, -36, -38, -40, -42, -45, -47, -49, -51, -53, -55,
-});
-
-// Returns negative values on failure.
-int GetWeightLevel(FX_Charset charset, size_t index) {
-  if (index >= kWeightPowArraySize) {
-    return -1;
-  }
-
-  if (charset == FX_Charset::kShiftJIS) {
-    return kWeightPowShiftJis[index];
-  }
-  return kWeightPow11[index];
-}
-
-int GetSkewFromAngle(int angle) {
-  // |angle| is non-positive so |-angle| is used as the index. Need to make sure
-  // |angle| != INT_MIN since -INT_MIN is undefined.
-  if (angle > 0 || angle == std::numeric_limits<int>::min() ||
-      static_cast<size_t>(-angle) >= std::size(kAngleSkew)) {
-    return -58;
-  }
-  return kAngleSkew[-angle];
-}
 
 int FTPosToCBoxInt(FT_Pos pos) {
   // Boundary values to avoid integer overflow when multiplied by 1000.
@@ -761,14 +700,9 @@ std::unique_ptr<CFX_GlyphBitmap> CFX_Face::RenderGlyph(
   bool bUseCJKSubFont = false;
   if (subst_font) {
     bUseCJKSubFont = subst_font->subst_cjk_ && font_style;
-    int angle;
-    if (bUseCJKSubFont) {
-      angle = subst_font->italic_cjk_ ? -15 : 0;
-    } else {
-      angle = subst_font->italic_angle_;
-    }
-    if (angle) {
-      int skew = GetSkewFromAngle(angle);
+    int skew =
+        bUseCJKSubFont ? subst_font->GetSkewCJK() : subst_font->GetSkew();
+    if (skew) {
       if (is_vertical) {
         ft_matrix.yx += ft_matrix.yy * skew / 100;
       } else {
@@ -811,7 +745,7 @@ std::unique_ptr<CFX_GlyphBitmap> CFX_Face::RenderGlyph(
   if (subst_font && !subst_font->IsBuiltInGenericFont() && weight > 400) {
     uint32_t index = (weight - 400) / 10;
     pdfium::CheckedNumeric<signed long> level =
-        GetWeightLevel(subst_font->charset_, index);
+        subst_font->GetWeightLevel(index);
     if (level.ValueOrDefault(-1) < 0) {
       return nullptr;
     }
@@ -887,8 +821,8 @@ std::unique_ptr<CFX_Path> CFX_Face::LoadGlyphPath(
   FT_Set_Pixel_Sizes(rec, 0, 64);
   FT_Matrix ft_matrix = {65536, 0, 0, 65536};
   if (subst_font) {
-    if (subst_font->italic_angle_) {
-      int skew = GetSkewFromAngle(subst_font->italic_angle_);
+    int skew = subst_font->GetSkew();
+    if (skew) {
       if (is_vertical) {
         ft_matrix.yx += ft_matrix.yy * skew / 100;
       } else {
@@ -909,14 +843,8 @@ std::unique_ptr<CFX_Path> CFX_Face::LoadGlyphPath(
   }
   if (subst_font && !subst_font->IsBuiltInGenericFont() &&
       subst_font->weight_ > 400) {
-    uint32_t index = std::min<uint32_t>((subst_font->weight_ - 400) / 10,
-                                        kWeightPowArraySize - 1);
-    int level;
-    if (subst_font->charset_ == FX_Charset::kShiftJIS) {
-      level = kWeightPowShiftJis[index] * 65536 / 36655;
-    } else {
-      level = kWeightPow[index];
-    }
+    uint32_t index = (subst_font->weight_ - 400) / 10;
+    int level = subst_font->GetWeightLevelForLoad(index);
     FT_Outline_Embolden(&rec->glyph->outline, level);
   }
 
