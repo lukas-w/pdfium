@@ -165,8 +165,6 @@ source_set("fxge") {
 
   if (is_android) {
     sources += [
-      "android/cfpf_skiadevicemodule.cpp",
-      "android/cfpf_skiadevicemodule.h",
       "android/cfpf_skiafont.cpp",
       "android/cfpf_skiafont.h",
       "android/cfpf_skiafontmgr.cpp",
