@@ -4,8 +4,8 @@
 
 // Original code copyright 2014 Foxit Software Inc. http://www.foxitsoftware.com
 
-#ifndef CORE_FXGE_APPLE_FX_QUARTZ_DEVICE_H_
-#define CORE_FXGE_APPLE_FX_QUARTZ_DEVICE_H_
+#ifndef CORE_FXGE_APPLE_CQUARTZ_2D_H_
+#define CORE_FXGE_APPLE_CQUARTZ_2D_H_
 
 #include <CoreGraphics/CoreGraphics.h>
 #include <stdint.h>
@@ -33,4 +33,4 @@ class CQuartz2D {
                           FX_ARGB argb);
 };
 
-#endif  // CORE_FXGE_APPLE_FX_QUARTZ_DEVICE_H_
+#endif  // CORE_FXGE_APPLE_CQUARTZ_2D_H_

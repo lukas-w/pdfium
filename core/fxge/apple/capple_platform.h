@@ -4,12 +4,12 @@
 
 // Original code copyright 2014 Foxit Software Inc. http://www.foxitsoftware.com
 
-#ifndef CORE_FXGE_APPLE_FX_APPLE_PLATFORM_H_
-#define CORE_FXGE_APPLE_FX_APPLE_PLATFORM_H_
+#ifndef CORE_FXGE_APPLE_CAPPLE_PLATFORM_H_
+#define CORE_FXGE_APPLE_CAPPLE_PLATFORM_H_
 
 #include <memory>
 
-#include "core/fxge/apple/fx_quartz_device.h"
+#include "core/fxge/apple/cquartz_2d.h"
 #include "core/fxge/cfx_gemodule.h"
 
 class CApplePlatform final : public CFX_GEModule::PlatformIface {
@@ -26,4 +26,4 @@ class CApplePlatform final : public CFX_GEModule::PlatformIface {
   CQuartz2D quartz_2d_;
 };
 
-#endif  // CORE_FXGE_APPLE_FX_APPLE_PLATFORM_H_
+#endif  // CORE_FXGE_APPLE_CAPPLE_PLATFORM_H_
