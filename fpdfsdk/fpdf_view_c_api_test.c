@@ -209,6 +209,7 @@ int CheckPDFiumCApi() {
     CHK(FPDFPageObjMark_SetFloatParam);
     CHK(FPDFPageObjMark_SetIntParam);
     CHK(FPDFPageObjMark_SetStringParam);
+    CHK(FPDFPageObj_AddExistingMark);
     CHK(FPDFPageObj_AddMark);
     CHK(FPDFPageObj_CountMarks);
     CHK(FPDFPageObj_CreateNewPath);

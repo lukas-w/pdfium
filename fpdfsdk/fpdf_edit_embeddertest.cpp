@@ -4134,6 +4134,81 @@ TEST_F(FPDFEditEmbedderTest, AddMarkCompressedStream) {
   CheckMarkCounts(saved_page.get(), 0, 2, 0, 0, 0, 1);
 }
 
+TEST_F(FPDFEditEmbedderTest, AddExistingMarkBadInputs) {
+  EXPECT_FALSE(FPDFPageObj_AddExistingMark(nullptr, nullptr));
+
+  ASSERT_TRUE(OpenDocument("hello_world.pdf"));
+  ScopedPage page = LoadScopedPage(0);
+  ASSERT_TRUE(page);
+  FPDF_PAGEOBJECT page_object1 = FPDFPage_GetObject(page.get(), 0);
+
+  // Null mark should error
+  EXPECT_FALSE(FPDFPageObj_AddExistingMark(page_object1, nullptr));
+
+  FPDF_PAGEOBJECTMARK mark = FPDFPageObj_AddMark(page_object1, "Prime");
+  EXPECT_TRUE(mark);
+  EXPECT_TRUE(FPDFPageObjMark_SetStringParam(document(), page_object1, mark,
+                                             "Test", "Hello"));
+
+  // Null object valid mark should error
+  EXPECT_FALSE(FPDFPageObj_AddExistingMark(nullptr, mark));
+}
+
+TEST_F(FPDFEditEmbedderTest, AddExistingMarkCompressedStream) {
+  // Load document with some text in a compressed stream.
+  ASSERT_TRUE(OpenDocument("hello_world_compressed_stream.pdf"));
+  ScopedPage page = LoadScopedPage(0);
+  ASSERT_TRUE(page);
+
+  // Render and check there are no marks.
+  {
+    ScopedFPDFBitmap page_bitmap = RenderPage(page.get());
+    CompareBitmapWithExpectationSuffix(page_bitmap.get(), kHelloWorldPng);
+  }
+  CheckMarkCounts(page.get(), 0, 2, 0, 0, 0, 0);
+
+  // Add a mark to the first page object
+  FPDF_PAGEOBJECT page_object1 = FPDFPage_GetObject(page.get(), 0);
+  FPDF_PAGEOBJECTMARK mark = FPDFPageObj_AddMark(page_object1, "Prime");
+  EXPECT_TRUE(mark);
+  EXPECT_TRUE(FPDFPageObjMark_SetStringParam(document(), page_object1, mark,
+                                             "Test", "Hello"));
+
+  // Render and check there is 1 mark.
+  {
+    ScopedFPDFBitmap page_bitmap = RenderPage(page.get());
+    CompareBitmapWithExpectationSuffix(page_bitmap.get(), kHelloWorldPng);
+  }
+  CheckMarkCounts(page.get(), 0, 2, 1, 0, 0, 0);
+
+  // Add the same bounds mark to the second object.
+  FPDF_PAGEOBJECT page_object2 = FPDFPage_GetObject(page.get(), 1);
+  EXPECT_TRUE(FPDFPageObj_AddExistingMark(page_object2, mark));
+
+  // Render and check there are 2 marks.
+  {
+    ScopedFPDFBitmap page_bitmap = RenderPage(page.get());
+    CompareBitmapWithExpectationSuffix(page_bitmap.get(), kHelloWorldPng);
+  }
+  CheckMarkCounts(page.get(), 0, 2, 2, 0, 0, 0);
+
+  // Save the file.
+  EXPECT_TRUE(FPDFPage_GenerateContent(page.get()));
+  EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
+
+  // Re-open the file and check the new mark is present.
+  ScopedSavedDoc saved_document = OpenScopedSavedDocument();
+  ASSERT_TRUE(saved_document);
+  ScopedSavedPage saved_page = LoadScopedSavedPage(0);
+  ASSERT_TRUE(saved_page);
+
+  {
+    ScopedFPDFBitmap page_bitmap = RenderPage(saved_page.get());
+    CompareBitmapWithExpectationSuffix(page_bitmap.get(), kHelloWorldPng);
+  }
+  CheckMarkCounts(saved_page.get(), 0, 2, 2, 0, 0, 0);
+}
+
 TEST_F(FPDFEditEmbedderTest, SetMarkParam) {
   // Load document with some text.
   ASSERT_TRUE(OpenDocument("text_in_page_marked.pdf"));

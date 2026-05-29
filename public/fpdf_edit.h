@@ -465,6 +465,22 @@ FPDF_EXPORT FPDF_PAGEOBJECTMARK FPDF_CALLCONV
 FPDFPageObj_AddMark(FPDF_PAGEOBJECT page_object, FPDF_BYTESTRING name);
 
 // Experimental API.
+// Add an existing content mark to a |page_object|. If consecutive page objects
+// have the same |mark|, the generated PDF will contain a single mark that spans
+// all of them. If the page objects are not consecutive, multiple copies of the
+// |mark| are inserted in the PDF.
+//
+//   page_object - handle to a page object.
+//   mark        - handle to a mark object.
+//
+// Returns true on success, or false on failure. The handles are all owned by
+// the library. The |page_object| and |mark| params must be associated with the
+// same document.
+FPDF_EXPORT FPDF_BOOL FPDF_CALLCONV
+FPDFPageObj_AddExistingMark(FPDF_PAGEOBJECT page_object,
+                            FPDF_PAGEOBJECTMARK mark);
+
+// Experimental API.
 // Removes a content |mark| from a |page_object|.
 // The mark handle will be invalid after the removal.
 //
