@@ -780,30 +780,16 @@ std::unique_ptr<CFX_GlyphBitmap> CFX_Face::RenderGlyph(
   auto pGlyphBitmap = std::make_unique<CFX_GlyphBitmap>(
       glyph->bitmap_left, glyph->bitmap_top, new_bitmap);
 
-  const uint32_t dest_pitch = new_bitmap->GetPitch();
   const uint32_t src_pitch = abs(ft_bitmap.pitch);
-  pdfium::span<uint8_t> dest_span = new_bitmap->GetWritableBuffer();
   pdfium::span<const uint8_t> src_span =
       UNSAFE_TODO(pdfium::span<const uint8_t>(ft_bitmap.buffer,
                                               src_pitch * ft_bitmap.rows));
 
   if (anti_alias != FontAntiAliasingMode::kMono &&
       ft_bitmap.pixel_mode == FT_PIXEL_MODE_MONO) {
-    for (unsigned int i = 0; i < ft_bitmap.rows; i++) {
-      for (unsigned int n = 0; n < ft_bitmap.width; n++) {
-        dest_span[n] = (src_span[n / 8] & (0x80 >> (n % 8))) ? 255 : 0;
-      }
-      dest_span = dest_span.subspan(dest_pitch);
-      src_span = src_span.subspan(src_pitch);
-    }
+    new_bitmap->Populate8bbpMaskFrom1bppSpan(src_span, src_pitch);
   } else {
-    std::ranges::fill(dest_span, 0);
-    const uint32_t rowbytes = std::min(src_pitch, dest_pitch);
-    for (unsigned int row = 0; row < ft_bitmap.rows; row++) {
-      fxcrt::spancpy(dest_span, src_span.first(rowbytes));
-      dest_span = dest_span.subspan(dest_pitch);
-      src_span = src_span.subspan(src_pitch);
-    }
+    new_bitmap->PopulateFromSpan(src_span, src_pitch);
   }
 #if defined(PDF_ENABLE_SKIA_TYPEFACE_CHECKS)
   // TODO(https://crbug.com/42271123): Compute equivalent result via Skia or
