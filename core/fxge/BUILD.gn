@@ -169,8 +169,6 @@ source_set("fxge") {
       "android/cfpf_skiafont.h",
       "android/cfpf_skiafontmgr.cpp",
       "android/cfpf_skiafontmgr.h",
-      "android/cfpf_skiapathfont.cpp",
-      "android/cfpf_skiapathfont.h",
       "android/cfx_androidfontinfo.cpp",
       "android/cfx_androidfontinfo.h",
       "android/fx_android_impl.cpp",
