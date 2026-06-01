@@ -91,7 +91,7 @@ vars = {
   # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling brotli
   # and whatever else without interference from each other.
-  'brotli_revision': '143b119f452d2ff942ccf788a3b99a3551d48ff8',
+  'brotli_revision': '803ac71664ad62af1de39ff55e63ebbe07006fc8',
   # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling build
   # and whatever else without interference from each other.
