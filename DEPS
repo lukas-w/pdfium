@@ -155,7 +155,7 @@ vars = {
   # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling HarfBuzz
   # and whatever else without interference from each other.
-  'harfbuzz_revision': 'e6741e2205309752839da60ff075b7fa2e7cddd3',
+  'harfbuzz_revision': 'd639197ed529b05c27f38ebaab365a621d5edad5',
   # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling highway
   # and whatever else without interference from each other.
@@ -163,7 +163,7 @@ vars = {
   # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling icu
   # and whatever else without interference from each other.
-  'icu_revision': 'ff7995a708a10ab44db101358083c7f74752da9f',
+  'icu_revision': '3859e64eed5d34544b27fbcab0ac1685ce83df3c',
   # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling instrumented_lib
   # and whatever else without interference from each other.
