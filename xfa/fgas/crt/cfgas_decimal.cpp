@@ -53,9 +53,9 @@ inline uint8_t decimal_helper_div10_any(uint64_t nums[], uint8_t numcount) {
 inline void decimal_helper_mul10(uint64_t& phi, uint64_t& pmid, uint64_t& plo) {
   plo *= 0xA;
   pmid = pmid * 0xA + FXMATH_DECIMAL_RSHIFT32BIT(plo);
-  plo = (uint32_t)plo;
+  plo = static_cast<uint32_t>(plo);
   phi = phi * 0xA + FXMATH_DECIMAL_RSHIFT32BIT(pmid);
-  pmid = (uint32_t)pmid;
+  pmid = static_cast<uint32_t>(pmid);
 }
 
 inline void decimal_helper_mul10_any(uint64_t nums[], uint8_t numcount) {
@@ -63,7 +63,7 @@ inline void decimal_helper_mul10_any(uint64_t nums[], uint8_t numcount) {
   UNSAFE_TODO({
     for (int i = 1; i < numcount; i++) {
       nums[i] = nums[i] * 0xA + FXMATH_DECIMAL_RSHIFT32BIT(nums[i - 1]);
-      nums[i - 1] = (uint32_t)nums[i - 1];
+      nums[i - 1] = static_cast<uint32_t>(nums[i - 1]);
     }
   });
 }
@@ -72,22 +72,22 @@ inline void decimal_helper_normalize(uint64_t& phi,
                                      uint64_t& pmid,
                                      uint64_t& plo) {
   phi += FXMATH_DECIMAL_RSHIFT32BIT(pmid);
-  pmid = (uint32_t)pmid;
+  pmid = static_cast<uint32_t>(pmid);
   pmid += FXMATH_DECIMAL_RSHIFT32BIT(plo);
-  plo = (uint32_t)plo;
+  plo = static_cast<uint32_t>(plo);
   phi += FXMATH_DECIMAL_RSHIFT32BIT(pmid);
-  pmid = (uint32_t)pmid;
+  pmid = static_cast<uint32_t>(pmid);
 }
 
 inline void decimal_helper_normalize_any(uint64_t nums[], uint8_t len) {
   UNSAFE_TODO({
     for (int i = len - 2; i > 0; i--) {
       nums[i + 1] += FXMATH_DECIMAL_RSHIFT32BIT(nums[i]);
-      nums[i] = (uint32_t)nums[i];
+      nums[i] = static_cast<uint32_t>(nums[i]);
     }
     for (int i = 0; i < len - 1; i++) {
       nums[i + 1] += FXMATH_DECIMAL_RSHIFT32BIT(nums[i]);
-      nums[i] = (uint32_t)nums[i];
+      nums[i] = static_cast<uint32_t>(nums[i]);
     }
   });
 }
@@ -123,7 +123,7 @@ inline void decimal_helper_inc_any(uint64_t a[], uint8_t al) {
   UNSAFE_TODO({
     for (int i = 0; i < al; i++) {
       a[i]++;
-      if ((uint32_t)a[i] == a[i]) {
+      if (static_cast<uint32_t>(a[i]) == a[i]) {
         return;
       }
       a[i] = 0;
@@ -145,17 +145,17 @@ inline void decimal_helper_raw_mul(uint64_t a[],
 
     for (int i = 0; i < al; i++) {
       for (int j = 0; j < bl; j++) {
-        uint64_t m = (uint64_t)a[i] * b[j];
-        c[i + j] += (uint32_t)m;
+        uint64_t m = static_cast<uint64_t>(a[i]) * b[j];
+        c[i + j] += static_cast<uint32_t>(m);
         c[i + j + 1] += FXMATH_DECIMAL_RSHIFT32BIT(m);
       }
     }
     for (int i = 0; i < cl - 1; i++) {
       c[i + 1] += FXMATH_DECIMAL_RSHIFT32BIT(c[i]);
-      c[i] = (uint32_t)c[i];
+      c[i] = static_cast<uint32_t>(c[i]);
     }
     for (int i = 0; i < cl; i++) {
-      c[i] = (uint32_t)c[i];
+      c[i] = static_cast<uint32_t>(c[i]);
     }
   });
 }
@@ -348,8 +348,10 @@ CFGAS_Decimal::CFGAS_Decimal(WideStringView str) {
     if (!FXSYS_IsDecimalDigit(static_cast<wchar_t>(str.Front()))) {
       break;
     }
-    hi_ = hi_ * 0xA + FXMATH_DECIMAL_RSHIFT32BIT((uint64_t)mid_ * 0xA);
-    mid_ = mid_ * 0xA + FXMATH_DECIMAL_RSHIFT32BIT((uint64_t)lo_ * 0xA);
+    hi_ = hi_ * 0xA +
+          FXMATH_DECIMAL_RSHIFT32BIT(static_cast<uint64_t>(mid_) * 0xA);
+    mid_ = mid_ * 0xA +
+           FXMATH_DECIMAL_RSHIFT32BIT(static_cast<uint64_t>(lo_) * 0xA);
     lo_ = lo_ * 0xA + (str.Front() - '0');
     if (pointmet) {
       scale++;
@@ -370,7 +372,7 @@ WideString CFGAS_Decimal::ToWideString() const {
     tmpbuf += decimal_helper_div10(phi, pmid, plo) + '0';
   }
 
-  uint8_t outputlen = (uint8_t)tmpbuf.GetLength();
+  uint8_t outputlen = static_cast<uint8_t>(tmpbuf.GetLength());
   uint8_t scale = u_scale_;
   while (scale >= outputlen) {
     tmpbuf += '0';
