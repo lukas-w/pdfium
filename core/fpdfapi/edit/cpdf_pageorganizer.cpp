@@ -6,6 +6,7 @@
 
 #include "core/fpdfapi/edit/cpdf_pageorganizer.h"
 
+#include <set>
 #include <utility>
 #include <vector>
 
@@ -208,7 +209,12 @@ RetainPtr<const CPDF_Object> CPDF_PageOrganizer::PageDictGetInheritableTag(
     return dict->GetObjectFor(src_tag);
   }
 
+  std::set<const CPDF_Dictionary*> visited_parent_dicts;
   while (pp) {
+    if (!visited_parent_dicts.insert(pp.Get()).second) {
+      return nullptr;
+    }
+
     if (pp->KeyExist(src_tag)) {
       return pp->GetObjectFor(src_tag);
     }

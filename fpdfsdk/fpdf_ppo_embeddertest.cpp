@@ -618,6 +618,25 @@ TEST_F(FPDFPPOEmbedderTest, ImportWithZeroLengthStream) {
   CompareBitmapWithExpectationSuffix(new_bitmap.get(), pdfium::kHelloWorldPng);
 }
 
+TEST_F(FPDFPPOEmbedderTest, ImportWithSelfReferentialPageParent) {
+  ASSERT_TRUE(OpenDocument("bug_517126568.pdf"));
+  ASSERT_EQ(1, FPDF_GetPageCount(document()));
+
+  ScopedPage page = LoadScopedPage(0);
+  ASSERT_TRUE(page);
+
+  ScopedFPDFDocument new_doc(FPDF_CreateNewDocument());
+  ASSERT_TRUE(new_doc);
+
+  static constexpr int kIndices[] = {0};
+  EXPECT_TRUE(FPDF_ImportPagesByIndex(new_doc.get(), document(), kIndices,
+                                      std::size(kIndices), 0));
+  EXPECT_EQ(1, FPDF_GetPageCount(new_doc.get()));
+
+  EXPECT_TRUE(FPDF_ImportPages(new_doc.get(), document(), "1", 1));
+  EXPECT_EQ(2, FPDF_GetPageCount(new_doc.get()));
+}
+
 TEST_F(FPDFPPOEmbedderTest, ImportIntoDestDocWithoutInfo) {
   ASSERT_TRUE(OpenDocument("hello_world.pdf"));
   EXPECT_EQ(1, FPDF_GetPageCount(document()));
