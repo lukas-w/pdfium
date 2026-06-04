@@ -940,9 +940,9 @@ uint32_t CPDF_ICCBasedCS::v_Load(CPDF_Document* doc,
     return 0;
   }
 
-  // The PDF 1.7 spec says the number of components must be valid. While some
-  // PDF viewers tolerate invalid values, Acrobat does not, so be consistent
-  // with Acrobat and reject bad values.
+  // The ISO 32000-1:2008 spec says the number of components must be valid.
+  // While some PDF viewers tolerate invalid values, Acrobat does not, so be
+  // consistent with Acrobat and reject bad values.
   RetainPtr<const CPDF_Dictionary> dict = pStream->GetDict();
   const int32_t nDictComponents = dict->GetIntegerFor("N");
   if (!fxcodec::IccTransform::IsValidIccComponents(nDictComponents)) {
@@ -962,7 +962,7 @@ uint32_t CPDF_ICCBasedCS::v_Load(CPDF_Document* doc,
   if (!profile_->IsSupported() &&
       !FindAlternateProfile(doc, dict.Get(), pVisited, nComponents)) {
     // If there is no alternate profile, use a stock profile as mentioned in
-    // the PDF 1.7 spec in table 4.16 in the "Alternate" key description.
+    // the ISO 32000-1:2008 spec in table 66 in the "Alternate" key description.
     DCHECK(!base_cs_);
     base_cs_ = GetStockAlternateProfile(nComponents);
   }
