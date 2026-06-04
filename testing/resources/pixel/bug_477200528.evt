@@ -1,0 +1,4 @@
+# Select the second option and render the focused list box.
+mousemove,150,429
+mousedown,left,150,429
+mouseup,left,150,429

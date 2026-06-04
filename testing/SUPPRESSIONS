@@ -763,6 +763,7 @@ bug_1282.in * * * gdi
 bug_1304714.in * * * gdi
 bug_1337.in * * * gdi
 bug_1372651.in * * * gdi
+bug_477200528.in * * * gdi
 bug_725389.in * * * gdi
 bug_733528.in * * * gdi
 bug_736695_1.in * * * gdi
