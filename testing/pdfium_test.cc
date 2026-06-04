@@ -25,6 +25,7 @@
 
 #include "core/fxcrt/check_op.h"
 #include "core/fxcrt/compiler_specific.h"
+#include "core/fxcrt/fx_memcpy_wrappers.h"
 #include "core/fxcrt/span.h"
 #include "public/cpp/fpdf_scopers.h"
 #include "public/fpdf_annot.h"
@@ -304,7 +305,7 @@ FPDF_FORMFILLINFO_PDFiumTest* ToPDFiumTestFormFillInfo(
 void OutputMD5Hash(const char* file_name, pdfium::span<const uint8_t> output) {
   // Get the MD5 hash and write it to stdout.
   std::string hash = GenerateMD5Base16(output);
-  printf("MD5:%s:%s\n", file_name, hash.c_str());
+  UNSAFE_TODO(printf("MD5:%s:%s\n", file_name, hash.c_str()));
 }
 
 #ifdef PDF_ENABLE_V8
@@ -349,10 +350,12 @@ int ExampleAppResponse(IPDF_JSPLATFORM*,
 
   // UTF-16, always LE regardless of platform.
   auto* ptr = static_cast<uint8_t*>(response);
-  ptr[0] = 'N';
-  ptr[1] = 0;
-  ptr[2] = 'o';
-  ptr[3] = 0;
+  UNSAFE_TODO({
+    ptr[0] = 'N';
+    ptr[1] = 0;
+    ptr[2] = 'o';
+    ptr[3] = 0;
+  });
   return 4;
 }
 
@@ -360,7 +363,7 @@ int ExampleDocGetFilePath(IPDF_JSPLATFORM*, void* file_path, int length) {
   static const char kPath[] = "myfile.pdf";
   static constexpr int kRequired = static_cast<int>(sizeof(kPath));
   if (file_path && length >= kRequired) {
-    memcpy(file_path, kPath, kRequired);
+    UNSAFE_TODO(FXSYS_memcpy(file_path, kPath, kRequired));
   }
   return kRequired;
 }
@@ -401,7 +404,7 @@ void ExampleDocSubmitForm(IPDF_JSPLATFORM*,
          GetPlatformWString(url).c_str(), length);
   uint8_t* ptr = reinterpret_cast<uint8_t*>(formData);
   for (int i = 0; i < length; ++i) {
-    printf(" %02x", ptr[i]);
+    printf(" %02x", UNSAFE_TODO(ptr[i]));
   }
   printf("\n");
 }
@@ -414,7 +417,7 @@ int ExampleFieldBrowse(IPDF_JSPLATFORM*, void* file_path, int length) {
   static const char kPath[] = "selected.txt";
   static constexpr int kRequired = static_cast<int>(sizeof(kPath));
   if (file_path && length >= kRequired) {
-    memcpy(file_path, kPath, kRequired);
+    UNSAFE_TODO(FXSYS_memcpy(file_path, kPath, kRequired));
   }
   return kRequired;
 }
@@ -433,7 +436,7 @@ FPDF_BOOL ExamplePopupMenu(FPDF_FORMFILLINFO* pInfo,
 #endif  // PDF_ENABLE_XFA
 
 void ExampleNamedAction(FPDF_FORMFILLINFO* pInfo, FPDF_BYTESTRING name) {
-  printf("Execute named action: %s\n", name);
+  UNSAFE_TODO(printf("Execute named action: %s\n", name));
 }
 
 void ExampleUnsupportedHandler(UNSUPPORT_INFO*, int type) {
@@ -1242,7 +1245,7 @@ class GdiDisplayPageRenderer : public BitmapPageRenderer {
 
     // Create a BGRA DIB and select it into the in-memory DC.
     BITMAPINFO dib_info;
-    memset(&dib_info, 0, sizeof(BITMAPINFO));
+    UNSAFE_TODO(FXSYS_memset(&dib_info, 0, sizeof(BITMAPINFO)));
     dib_info.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
     dib_info.bmiHeader.biWidth = width();
     dib_info.bmiHeader.biHeight = -height();  // top-down
@@ -1291,9 +1294,9 @@ class GdiDisplayPageRenderer : public BitmapPageRenderer {
         reinterpret_cast<uint32_t*>(FPDFBitmap_GetBuffer(bitmap()));
     for (int row = 0; row < height(); ++row) {
       for (int column = 0; column < width(); ++column) {
-        scanline[column] |= 0xFF000000;
+        UNSAFE_TODO(scanline[column]) |= 0xFF000000;
       }
-      scanline += pixel_stride;
+      UNSAFE_TODO(scanline += pixel_stride);
     }
   }
 
@@ -1966,11 +1969,11 @@ int main(int argc, const char* argv[]) {
   SetUpErrorHandling();
   setlocale(LC_CTYPE, "en_US.UTF-8");  // For printf() of high-characters.
 
-  std::vector<std::string> args(argv, argv + argc);
+  std::vector<std::string> args(argv, UNSAFE_TODO(argv + argc));
   Options options;
   std::vector<std::string> files;
   if (!ParseCommandLine(args, &options, &files)) {
-    fprintf(stderr, "%s", kUsageString);
+    UNSAFE_TODO(fprintf(stderr, "%s", kUsageString));
     return 1;
   }
 

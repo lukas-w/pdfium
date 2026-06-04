@@ -4,12 +4,15 @@
 
 #include "testing/fuzzers/pdfium_fuzzer_util.h"
 
+#include "core/fxcrt/compiler_specific.h"
+
 namespace {
 void* g_fuzzer_init_per_process_state = nullptr;
 }  // namespace
 
 int GetInteger(const uint8_t* data) {
-  return data[0] | (data[1] << 8) | (data[2] << 16) | (data[3] << 24);
+  return UNSAFE_TODO(data[0] | (data[1] << 8) | (data[2] << 16) |
+                     (data[3] << 24));
 }
 
 FPDF_EXPORT void FPDF_CALLCONV FPDF_SetFuzzerPerProcessState(void* state) {

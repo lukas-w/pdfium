@@ -5,11 +5,13 @@
 #include <stdint.h>
 
 #include "core/fpdfapi/page/cpdf_psengine.h"
+#include "core/fxcrt/compiler_specific.h"
 #include "core/fxcrt/span.h"
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
   CPDF_PSEngine engine;
-  if (engine.Parse(pdfium::span(data, size))) {
+  // SAFETY: required across fuzzer API.
+  if (engine.Parse(UNSAFE_BUFFERS(pdfium::span(data, size)))) {
     engine.Execute();
   }
   return 0;

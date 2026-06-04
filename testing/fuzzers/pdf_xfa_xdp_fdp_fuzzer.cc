@@ -6,6 +6,7 @@
 
 #include <string>
 
+#include "core/fxcrt/compiler_specific.h"
 #include "public/fpdf_formfill.h"
 #include "testing/fuzzers/pdf_fuzzer_templates.h"
 #include "testing/fuzzers/pdfium_fuzzer_helper.h"
@@ -181,7 +182,8 @@ bool IsValidForFuzzing(const uint8_t* data, size_t size) {
   }
   const char* ptr = reinterpret_cast<const char*>(data);
   for (size_t i = 0; i < size; i++) {
-    if (!std::isspace(ptr[i]) && !std::isprint(ptr[i])) {
+    if (!std::isspace(UNSAFE_TODO(ptr[i])) &&
+        !std::isprint(UNSAFE_TODO(ptr[i]))) {
       return false;
     }
   }

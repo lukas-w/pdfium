@@ -7,6 +7,7 @@
 #include <ostream>
 
 #include "core/fxcrt/check.h"
+#include "core/fxcrt/compiler_specific.h"
 #include "core/fxcrt/fx_system.h"
 #include "public/fpdfview.h"
 #include "testing/command_line_helpers.h"
@@ -68,7 +69,7 @@ void EmbedderTestEnvironment::TearDown() {
 
 void EmbedderTestEnvironment::AddFlags(int argc, char** argv) {
   for (int i = 1; i < argc; ++i) {
-    AddFlag(argv[i]);
+    AddFlag(UNSAFE_TODO(argv[i]));
   }
   CHECK(CheckFlags());
 }

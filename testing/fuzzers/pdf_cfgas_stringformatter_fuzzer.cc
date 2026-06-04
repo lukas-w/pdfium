@@ -11,6 +11,7 @@
 #include "core/fxcrt/cfx_datetime.h"
 #include "core/fxcrt/compiler_specific.h"
 #include "core/fxcrt/fx_string.h"
+#include "core/fxcrt/span.h"
 #include "public/fpdfview.h"
 #include "testing/fuzzers/pdfium_fuzzer_util.h"
 #include "testing/fuzzers/xfa_process_state.h"
@@ -34,21 +35,20 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
     return 0;
   }
 
+  // SAFETY: required from fuzzer API.
+  auto [pre, span] = UNSAFE_BUFFERS(pdfium::span(data, size)).split_at<3u>();
+  uint8_t test_selector = pre[0] % 10;
+  uint8_t locale_selector = pre[1] % std::size(kLocales);
+  uint8_t type_selector = pre[2] % std::size(kTypes);
+
   auto* state = static_cast<XFAProcessState*>(FPDF_GetFuzzerPerProcessState());
   cppgc::Heap* heap = state->GetHeap();
 
-  uint8_t test_selector = data[0] % 10;
-  uint8_t locale_selector = data[1] % std::size(kLocales);
-  uint8_t type_selector = data[2] % std::size(kTypes);
-  data += 3;
-  size -= 3;
-
-  size_t pattern_len = size / 2;
-  size_t value_len = size - pattern_len;
+  size_t pattern_len = span.size() / 2;
   WideString pattern =
-      WideString::FromLatin1(UNSAFE_TODO(ByteStringView(data, pattern_len)));
-  WideString value = WideString::FromLatin1(
-      UNSAFE_TODO(ByteStringView(data + pattern_len, value_len)));
+      WideString::FromLatin1(ByteStringView(span.first(pattern_len)));
+  WideString value =
+      WideString::FromLatin1(ByteStringView(span.subspan(pattern_len)));
 
   auto fmt = std::make_unique<CFGAS_StringFormatter>(pattern);
 
@@ -61,15 +61,16 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
     case 1: {
       auto* mgr = cppgc::MakeGarbageCollected<CXFA_LocaleMgr>(
           heap->GetAllocationHandle(), heap, nullptr,
-          kLocales[locale_selector]);
+          UNSAFE_TODO(kLocales[locale_selector]));
       fmt->FormatNum(mgr, value, &result);
       break;
     }
     case 2: {
       auto* mgr = cppgc::MakeGarbageCollected<CXFA_LocaleMgr>(
           heap->GetAllocationHandle(), heap, nullptr,
-          kLocales[locale_selector]);
-      fmt->FormatDateTime(mgr, value, kTypes[type_selector], &result);
+          UNSAFE_TODO(kLocales[locale_selector]));
+      fmt->FormatDateTime(mgr, value, UNSAFE_TODO(kTypes[type_selector]),
+                          &result);
       break;
     }
     case 3: {
@@ -87,15 +88,15 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
     case 6: {
       auto* mgr = cppgc::MakeGarbageCollected<CXFA_LocaleMgr>(
           heap->GetAllocationHandle(), heap, nullptr,
-          kLocales[locale_selector]);
+          UNSAFE_TODO(kLocales[locale_selector]));
       fmt->ParseNum(mgr, value, &result);
       break;
     }
     case 7: {
       auto* mgr = cppgc::MakeGarbageCollected<CXFA_LocaleMgr>(
           heap->GetAllocationHandle(), heap, nullptr,
-          kLocales[locale_selector]);
-      fmt->ParseDateTime(mgr, value, kTypes[type_selector], &dt);
+          UNSAFE_TODO(kLocales[locale_selector]));
+      fmt->ParseDateTime(mgr, value, UNSAFE_TODO(kTypes[type_selector]), &dt);
       break;
     }
     case 8: {

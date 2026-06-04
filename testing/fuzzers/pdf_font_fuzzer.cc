@@ -2,6 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include "core/fxcrt/compiler_specific.h"
+#include "core/fxcrt/span.h"
 #include "public/cpp/fpdf_scopers.h"
 #include "public/fpdf_edit.h"
 #include "public/fpdfview.h"
@@ -13,14 +15,16 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
     return 0;
   }
 
+  // SAFETY: required from fuzzer API.
+  auto [pre, span] = UNSAFE_BUFFERS(pdfium::span(data, size)).split_at<2u>();
+  int font_type = pre[0];
+  FPDF_BOOL cid = pre[1];
+
   ScopedFPDFDocument doc(FPDF_CreateNewDocument());
   ScopedFPDFPage page(FPDFPage_New(doc.get(), 0, 612, 792));
-  int font_type = data[0];
-  FPDF_BOOL cid = data[1];
-  data += 2;
-  size -= 2;
-  ScopedFPDFFont font(FPDFText_LoadFont(
-      doc.get(), data, static_cast<uint32_t>(size), font_type, cid));
+  ScopedFPDFFont font(FPDFText_LoadFont(doc.get(), span.data(),
+                                        static_cast<uint32_t>(span.size()),
+                                        font_type, cid));
   if (!font) {
     return 0;
   }

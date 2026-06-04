@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "core/fxcrt/check.h"
+#include "core/fxcrt/compiler_specific.h"
 #include "core/fxcrt/notreached.h"
 #include "public/cpp/fpdf_scopers.h"
 #include "public/fpdf_annot.h"
@@ -242,9 +243,10 @@ std::string WritePng(const char* pdf_name,
     return "";
   }
 
-  auto input = pdfium::span(
-      static_cast<uint8_t*>(buffer),
-      static_cast<size_t>(bitmap_attributes.stride) * bitmap_attributes.height);
+  auto input =
+      UNSAFE_TODO(pdfium::span(static_cast<uint8_t*>(buffer),
+                               static_cast<size_t>(bitmap_attributes.stride) *
+                                   bitmap_attributes.height));
   int format;
   if (bitmap_attributes.has_alpha) {
     format = buffer_has_premultiplied_alpha ? FPDFBitmap_BGRA_Premul
@@ -271,7 +273,7 @@ std::string WritePng(const char* pdf_name,
   }
 
   size_t bytes_written =
-      fwrite(&png_encoding.front(), 1, png_encoding.size(), fp);
+      UNSAFE_TODO(fwrite(&png_encoding.front(), 1, png_encoding.size(), fp));
   if (bytes_written != png_encoding.size()) {
     fprintf(stderr, "Failed to write to %s\n", filename.c_str());
   }
@@ -314,18 +316,20 @@ std::string WritePpm(const char* pdf_name,
   const uint8_t* buffer = reinterpret_cast<const uint8_t*>(buffer_void);
   std::vector<uint8_t> result(out_len);
   for (int h = 0; h < bitmap_attributes.height; ++h) {
-    const uint8_t* src_line = buffer + (bitmap_attributes.stride * h);
-    uint8_t* dest_line = result.data() + (bitmap_attributes.width * h * 3);
-    for (int w = 0; w < bitmap_attributes.width; ++w) {
-      // R
-      dest_line[w * 3] = src_line[(w * 4) + 2];
-      // G
-      dest_line[(w * 3) + 1] = src_line[(w * 4) + 1];
-      // B
-      dest_line[(w * 3) + 2] = src_line[w * 4];
-    }
+    UNSAFE_TODO({
+      const uint8_t* src_line = buffer + (bitmap_attributes.stride * h);
+      uint8_t* dest_line = result.data() + (bitmap_attributes.width * h * 3);
+      for (int w = 0; w < bitmap_attributes.width; ++w) {
+        // R
+        dest_line[w * 3] = src_line[(w * 4) + 2];
+        // G
+        dest_line[(w * 3) + 1] = src_line[(w * 4) + 1];
+        // B
+        dest_line[(w * 3) + 2] = src_line[w * 4];
+      }
+    });
   }
-  if (fwrite(result.data(), out_len, 1, fp) != 1) {
+  if (UNSAFE_TODO(fwrite(result.data(), out_len, 1, fp)) != 1) {
     fprintf(stderr, "Failed to write to %s\n", filename.c_str());
   }
 
@@ -346,7 +350,7 @@ void WriteText(FPDF_TEXTPAGE textpage, const char* pdf_name, int num) {
 
   // Output in UTF32-LE.
   uint32_t bom = 0x0000FEFF;
-  if (fwrite(&bom, sizeof(bom), 1, fp) != 1) {
+  if (UNSAFE_TODO(fwrite(&bom, sizeof(bom), 1, fp)) != 1) {
     fprintf(stderr, "Failed to write to %s\n", filename.c_str());
     (void)fclose(fp);
     return;
@@ -354,7 +358,7 @@ void WriteText(FPDF_TEXTPAGE textpage, const char* pdf_name, int num) {
 
   for (int i = 0; i < FPDFText_CountChars(textpage); i++) {
     uint32_t c = FPDFText_GetUnicode(textpage, i);
-    if (fwrite(&c, sizeof(c), 1, fp) != 1) {
+    if (UNSAFE_TODO(fwrite(&c, sizeof(c), 1, fp)) != 1) {
       fprintf(stderr, "Failed to write to %s\n", filename.c_str());
       break;
     }
@@ -388,7 +392,7 @@ void WriteAnnot(FPDF_PAGE page, const char* pdf_name, int num) {
     }
 
     FPDF_ANNOTATION_SUBTYPE subtype = FPDFAnnot_GetSubtype(annot.get());
-    fprintf(fp, "Subtype: %s\n", AnnotSubtypeToCString(subtype));
+    UNSAFE_TODO(fprintf(fp, "Subtype: %s\n", AnnotSubtypeToCString(subtype)));
 
     // Retrieve the annotation flags.
     fprintf(fp, "Flags set: %s\n",
@@ -402,7 +406,7 @@ void WriteAnnot(FPDF_PAGE page, const char* pdf_name, int num) {
       for (int j = 0; j < obj_count; ++j) {
         const char* type = PageObjectTypeToCString(
             FPDFPageObj_GetType(FPDFAnnot_GetObject(annot.get(), j)));
-        fprintf(fp, "%s  ", type);
+        UNSAFE_TODO(fprintf(fp, "%s  ", type));
       }
       fprintf(fp, "\n");
     }
@@ -532,9 +536,9 @@ std::string WriteBmp(const char* pdf_name,
   file_header.bfSize = sizeof(file_header) + bmi.bmiHeader.biSize + out_len;
   file_header.bfOffBits = file_header.bfSize - out_len;
 
-  if (fwrite(&file_header, sizeof(file_header), 1, fp) != 1 ||
-      fwrite(&bmi, bmi.bmiHeader.biSize, 1, fp) != 1 ||
-      fwrite(buffer, out_len, 1, fp) != 1) {
+  if (UNSAFE_TODO(fwrite(&file_header, sizeof(file_header), 1, fp)) != 1 ||
+      UNSAFE_TODO(fwrite(&bmi, bmi.bmiHeader.biSize, 1, fp)) != 1 ||
+      UNSAFE_TODO(fwrite(buffer, out_len, 1, fp)) != 1) {
     fprintf(stderr, "Failed to write to %s\n", filename.c_str());
   }
   fclose(fp);
@@ -594,8 +598,8 @@ void WritePS(FPDF_PAGE page, const char* pdf_name, int num) {
     const auto* comment = reinterpret_cast<const EMRGDICOMMENT*>(record);
     const char* data = reinterpret_cast<const char*>(comment->Data);
     uint16_t size = *reinterpret_cast<const uint16_t*>(data);
-    if (fwrite(data + sizeof(uint16_t), size, 1, fp) != 1) {
-      fprintf(stderr, "Failed to write to %s\n", filename.c_str());
+    if (UNSAFE_TODO(fwrite(data + sizeof(uint16_t), size, 1, fp)) != 1) {
+      UNSAFE_TODO(fprintf(stderr, "Failed to write to %s\n", filename.c_str()));
       break;
     }
   }
@@ -671,11 +675,12 @@ bool GetThumbnailFilename(char* name_buf,
       break;
   }
 
-  int chars_formatted =
-      snprintf(name_buf, name_buf_size, format, pdf_name, page_num);
+  int chars_formatted = UNSAFE_TODO(
+      snprintf(name_buf, name_buf_size, format, pdf_name, page_num));
   if (chars_formatted < 0 ||
       static_cast<size_t>(chars_formatted) >= name_buf_size) {
-    fprintf(stderr, "Filename %s for saving is too long.\n", name_buf);
+    UNSAFE_TODO(
+        fprintf(stderr, "Filename %s for saving is too long.\n", name_buf));
     return false;
   }
 
@@ -688,15 +693,17 @@ void WriteBufferToFile(const void* buf,
                        const char* filetype) {
   FILE* fp = fopen(filename, "wb");
   if (!fp) {
-    fprintf(stderr, "Failed to open %s for saving %s.", filename, filetype);
+    UNSAFE_TODO(fprintf(stderr, "Failed to open %s for saving %s.", filename,
+                        filetype));
     return;
   }
 
-  size_t bytes_written = fwrite(buf, 1, buflen, fp);
+  size_t bytes_written = UNSAFE_TODO(fwrite(buf, 1, buflen, fp));
   if (bytes_written == buflen) {
-    fprintf(stderr, "Successfully wrote %s %s.\n", filetype, filename);
+    UNSAFE_TODO(
+        fprintf(stderr, "Successfully wrote %s %s.\n", filetype, filename));
   } else {
-    fprintf(stderr, "Failed to write to %s.\n", filename);
+    UNSAFE_TODO(fprintf(stderr, "Failed to write to %s.\n", filename));
   }
   fclose(fp);
 }
@@ -715,9 +722,9 @@ std::vector<uint8_t> EncodeBitmapToPng(ScopedFPDFBitmap bitmap) {
     return png_encoding;
   }
 
-  auto input = pdfium::span(
+  auto input = UNSAFE_TODO(pdfium::span(
       static_cast<const uint8_t*>(FPDFBitmap_GetBuffer(bitmap.get())),
-      static_cast<size_t>(stride) * height);
+      static_cast<size_t>(stride) * height));
 
   png_encoding = EncodePng(input, width, height, stride, format);
   return png_encoding;
@@ -750,7 +757,7 @@ void WriteAttachments(FPDF_DOCUMENT doc, const std::string& name) {
                  attachment_name.c_str());
     if (chars_formatted < 0 ||
         static_cast<size_t>(chars_formatted) >= sizeof(save_name)) {
-      fprintf(stderr, "Filename %s is too long.\n", save_name);
+      UNSAFE_TODO(fprintf(stderr, "Filename %s is too long.\n", save_name));
       continue;
     }
 
@@ -869,7 +876,8 @@ void WriteDecodedThumbnailStream(FPDF_PAGE page,
   std::vector<uint8_t> thumb_buf(decoded_data_size);
   if (FPDFPage_GetDecodedThumbnailData(
           page, thumb_buf.data(), decoded_data_size) != decoded_data_size) {
-    fprintf(stderr, "Failed to get decoded thumbnail data for %s.\n", filename);
+    UNSAFE_TODO(fprintf(
+        stderr, "Failed to get decoded thumbnail data for %s.\n", filename));
     return;
   }
 
@@ -898,7 +906,8 @@ void WriteRawThumbnailStream(FPDF_PAGE page,
   std::vector<uint8_t> thumb_buf(raw_data_size);
   if (FPDFPage_GetRawThumbnailData(page, thumb_buf.data(), raw_data_size) !=
       raw_data_size) {
-    fprintf(stderr, "Failed to get raw thumbnail data for %s.\n", filename);
+    UNSAFE_TODO(fprintf(stderr, "Failed to get raw thumbnail data for %s.\n",
+                        filename));
     return;
   }
 

@@ -45,7 +45,7 @@ class FuzzerTestLoader {
     end += size;
     CHECK_LE(end.ValueOrDie(), pLoader->span_.size());
 
-    FXSYS_memcpy(pBuf, &pLoader->span_[pos], size);
+    UNSAFE_TODO(FXSYS_memcpy(pBuf, &pLoader->span_[pos], size));
     return 1;
   }
 
@@ -72,9 +72,9 @@ int ExampleAppResponse(IPDF_JSPLATFORM*,
   // UTF-16, always LE regardless of platform.
   uint8_t* ptr = static_cast<uint8_t*>(response);
   ptr[0] = 'N';
-  ptr[1] = 0;
-  ptr[2] = 'o';
-  ptr[3] = 0;
+  UNSAFE_TODO(ptr[1]) = 0;
+  UNSAFE_TODO(ptr[2]) = 'o';
+  UNSAFE_TODO(ptr[3]) = 0;
   return 4;
 }
 

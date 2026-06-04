@@ -27,12 +27,12 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
   auto span = UNSAFE_BUFFERS(pdfium::span(data, size));
 
   int width = GetInteger(data);
-  int height = GetInteger(data + 4);
-  int K = GetInteger(data + 8);
-  int Columns = GetInteger(data + 12);
-  int Rows = GetInteger(data + 16);
-  bool EndOfLine = !(data[20] & 0x01);
-  bool ByteAlign = !(data[20] & 0x02);
+  int height = GetInteger(UNSAFE_TODO(data + 4));
+  int K = GetInteger(UNSAFE_TODO(data + 8));
+  int Columns = GetInteger(UNSAFE_TODO(data + 12));
+  int Rows = GetInteger(UNSAFE_TODO(data + 16));
+  bool EndOfLine = !(UNSAFE_TODO(data[20]) & 0x01);
+  bool ByteAlign = !(UNSAFE_TODO(data[20]) & 0x02);
   // This controls if fxcodec::FaxDecoder::InvertBuffer() gets called.
   // The method is not interesting, and calling it doubles the runtime.
   const bool kBlackIs1 = false;

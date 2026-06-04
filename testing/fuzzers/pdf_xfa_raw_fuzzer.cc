@@ -7,6 +7,7 @@
 #include <cctype>
 #include <string>
 
+#include "core/fxcrt/compiler_specific.h"
 #include "public/fpdf_formfill.h"
 #include "testing/fuzzers/pdf_fuzzer_templates.h"
 #include "testing/fuzzers/pdfium_fuzzer_helper.h"
@@ -39,7 +40,8 @@ bool IsValidForFuzzing(const uint8_t* data, size_t size) {
   bool is_open = false;
   size_t tag_size = 0;
   for (size_t i = 0; i < size; i++) {
-    if (!std::isspace(ptr[i]) && !std::isprint(ptr[i])) {
+    if (!std::isspace(UNSAFE_TODO(ptr[i])) &&
+        !std::isprint(UNSAFE_TODO(ptr[i]))) {
       return false;
     }
 
@@ -51,17 +53,17 @@ bool IsValidForFuzzing(const uint8_t* data, size_t size) {
     // may play a role, or other tags, e.g. "Javascript" will end up triggering
     // large explorations of v8 code. The alternative we considered were
     // "<script"
-    if (i + 6 < size && memcmp(ptr + i, "script", 6) == 0) {
+    if (i + 6 < size && UNSAFE_TODO(memcmp(ptr + i, "script", 6)) == 0) {
       return false;
     }
 
-    if (ptr[i] == '<') {
+    if (UNSAFE_TODO(ptr[i]) == '<') {
       if (is_open) {
         return false;
       }
       is_open = true;
       tag_size = 0;
-    } else if (ptr[i] == '>') {
+    } else if (UNSAFE_TODO(ptr[i]) == '>') {
       if (!is_open || tag_size == 0) {
         return false;
       }

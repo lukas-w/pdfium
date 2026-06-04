@@ -5,6 +5,7 @@
 #include <stdint.h>
 
 #include "core/fpdfapi/font/cpdf_cmap.h"
+#include "core/fxcrt/compiler_specific.h"
 #include "core/fxcrt/retain_ptr.h"
 #include "core/fxcrt/span.h"
 
@@ -13,6 +14,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
     return 0;
   }
 
-  pdfium::MakeRetain<CPDF_CMap>(pdfium::span(data, size));
+  // SAFETY: required from fuzzer API.
+  pdfium::MakeRetain<CPDF_CMap>(UNSAFE_BUFFERS(pdfium::span(data, size)));
   return 0;
 }

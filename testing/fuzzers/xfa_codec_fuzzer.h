@@ -11,6 +11,7 @@
 #include "core/fxcodec/fx_codec.h"
 #include "core/fxcodec/progressive_decoder.h"
 #include "core/fxcrt/cfx_read_only_span_stream.h"
+#include "core/fxcrt/compiler_specific.h"
 #include "core/fxcrt/fx_safe_types.h"
 #include "core/fxcrt/retain_ptr.h"
 #include "core/fxcrt/span.h"
@@ -23,10 +24,14 @@ const int kXFACodecFuzzerPixelLimit = 64000000;
 
 class XFACodecFuzzer {
  public:
-  static int Fuzz(const uint8_t* data, size_t size, FXCODEC_IMAGE_TYPE type) {
+  // PRECONDITIONS: `data` must be valid for `size` bytes.
+  UNSAFE_BUFFER_USAGE static int Fuzz(const uint8_t* data,
+                                      size_t size,
+                                      FXCODEC_IMAGE_TYPE type) {
     auto decoder = std::make_unique<ProgressiveDecoder>();
-    auto source =
-        pdfium::MakeRetain<CFX_ReadOnlySpanStream>(pdfium::span(data, size));
+    // SAFETY: required from caller, enforced by UNSAFE_BUFFER_USAGE.
+    auto source = pdfium::MakeRetain<CFX_ReadOnlySpanStream>(
+        UNSAFE_BUFFERS(pdfium::span(data, size)));
     CFX_DIBAttribute attr;
     FXCODEC_STATUS status =
         decoder->LoadImageInfo(std::move(source), type, &attr, true);

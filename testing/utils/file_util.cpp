@@ -9,6 +9,7 @@
 #include <utility>
 #include <vector>
 
+#include "core/fxcrt/compiler_specific.h"
 #include "core/fxcrt/numerics/safe_conversions.h"
 #include "core/fxcrt/span.h"
 #include "core/fxcrt/stl_util.h"
@@ -26,7 +27,7 @@ bool CanReadFile(const char* filename) {
 std::vector<uint8_t> GetFileContents(const char* filename) {
   FILE* file = fopen(filename, "rb");
   if (!file) {
-    fprintf(stderr, "Failed to open: %s\n", filename);
+    UNSAFE_TODO(fprintf(stderr, "Failed to open: %s\n", filename));
     return {};
   }
   (void)fseek(file, 0, SEEK_END);
@@ -36,10 +37,10 @@ std::vector<uint8_t> GetFileContents(const char* filename) {
   }
   (void)fseek(file, 0, SEEK_SET);
   std::vector<uint8_t> buffer(file_length);
-  size_t bytes_read = fread(buffer.data(), 1, file_length, file);
+  size_t bytes_read = UNSAFE_TODO(fread(buffer.data(), 1, file_length, file));
   (void)fclose(file);
   if (bytes_read != file_length) {
-    fprintf(stderr, "Failed to read: %s\n", filename);
+    UNSAFE_TODO(fprintf(stderr, "Failed to read: %s\n", filename));
     return {};
   }
   return buffer;
@@ -65,7 +66,7 @@ int FileAccessForTesting::GetBlockImpl(unsigned long pos,
                                        unsigned char* pBuf,
                                        unsigned long size) {
   fxcrt::Copy(pdfium::span(file_contents_).subspan(pos, size),
-              pdfium::span(pBuf, size));
+              UNSAFE_TODO(pdfium::span(pBuf, size)));
   return size ? 1 : 0;
 }
 

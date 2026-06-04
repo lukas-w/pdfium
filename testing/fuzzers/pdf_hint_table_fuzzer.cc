@@ -11,14 +11,17 @@
 #include "core/fpdfapi/parser/cpdf_linearized_header.h"
 #include "core/fpdfapi/parser/cpdf_number.h"
 #include "core/fxcrt/cfx_bitstream.h"
+#include "core/fxcrt/compiler_specific.h"
 #include "core/fxcrt/span.h"
 
 int32_t GetData(const int32_t** data32, const uint8_t** data, size_t* size) {
-  const int32_t* ret = *data32;
-  ++(*data32);
-  *data += 4;
-  *size -= 4;
-  return *ret;
+  UNSAFE_TODO({
+    const int32_t* ret = *data32;
+    ++(*data32);
+    *data += 4;
+    *size -= 4;
+    return *ret;
+  });
 }
 
 class HintTableForFuzzing final : public CPDF_HintTables {
@@ -29,7 +32,8 @@ class HintTableForFuzzing final : public CPDF_HintTables {
         shared_hint_table_offset_(shared_hint_table_offset) {}
   ~HintTableForFuzzing() override = default;
 
-  void Fuzz(const uint8_t* data, size_t size) {
+  // PRECONDITIONS: `data` must be valid for `size` bytes.
+  UNSAFE_BUFFER_USAGE void Fuzz(const uint8_t* data, size_t size) {
     if (shared_hint_table_offset_ <= 0) {
       return;
     }
@@ -38,7 +42,8 @@ class HintTableForFuzzing final : public CPDF_HintTables {
       return;
     }
 
-    CFX_BitStream bs(pdfium::span(data, size));
+    // SAFETY: required from caller, enforced by UNSAFE_BUFFER_USAGE.
+    CFX_BitStream bs(UNSAFE_BUFFERS(pdfium::span(data, size)));
     if (!ReadPageHintTable(&bs)) {
       return;
     }
@@ -90,7 +95,9 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
   {
     FakeLinearized linearized(linearized_dict.Get());
     HintTableForFuzzing hint_table(&linearized, shared_hint_table_offset);
-    hint_table.Fuzz(data, size);
+
+    // SAFETY: required across fuzzer API.
+    UNSAFE_BUFFERS(hint_table.Fuzz(data, size));
   }
   return 0;
 }

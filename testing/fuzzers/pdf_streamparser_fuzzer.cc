@@ -6,10 +6,12 @@
 
 #include "core/fpdfapi/page/cpdf_streamparser.h"
 #include "core/fpdfapi/parser/cpdf_object.h"
+#include "core/fxcrt/compiler_specific.h"
 #include "core/fxcrt/span.h"
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
-  CPDF_StreamParser parser(pdfium::span(data, size));
+  // SAFETY: required from fuzzer API.
+  CPDF_StreamParser parser(UNSAFE_BUFFERS(pdfium::span(data, size)));
   while (RetainPtr<CPDF_Object> pObj = parser.ReadNextObject(true, false, 0)) {
     continue;
   }

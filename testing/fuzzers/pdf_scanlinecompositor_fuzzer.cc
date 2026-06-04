@@ -6,6 +6,7 @@
 #include <memory>
 #include <utility>
 
+#include "core/fxcrt/compiler_specific.h"
 #include "core/fxcrt/fx_coordinates.h"
 #include "core/fxcrt/fx_safe_types.h"
 #include "core/fxge/dib/cfx_dibitmap.h"
@@ -41,53 +42,55 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
     return 0;
   }
 
-  int width = GetInteger(data);
-  int height = GetInteger(data + 4);
-  uint32_t argb = GetInteger(data + 8);
-  int src_left = GetInteger(data + 12);
-  int src_top = GetInteger(data + 16);
-  int dest_left = GetInteger(data + 20);
-  int dest_top = GetInteger(data + 24);
+  UNSAFE_TODO({
+    int width = GetInteger(data);
+    int height = GetInteger(data + 4);
+    uint32_t argb = GetInteger(data + 8);
+    int src_left = GetInteger(data + 12);
+    int src_top = GetInteger(data + 16);
+    int dest_left = GetInteger(data + 20);
+    int dest_top = GetInteger(data + 24);
 
-  BlendMode blend_mode = static_cast<BlendMode>(
-      data[28] % (static_cast<int>(BlendMode::kLast) + 1));
-  FXDIB_Format dest_format = kFormat[data[29] % std::size(kFormat)];
-  FXDIB_Format src_format = kFormat[data[30] % std::size(kFormat)];
-  bool is_clip = !(data[31] % 2);
-  bool is_rgb_byte_order = !(data[32] % 2);
-  size -= kParameterSize;
-  data += kParameterSize;
+    BlendMode blend_mode = static_cast<BlendMode>(
+        data[28] % (static_cast<int>(BlendMode::kLast) + 1));
+    FXDIB_Format dest_format = kFormat[data[29] % std::size(kFormat)];
+    FXDIB_Format src_format = kFormat[data[30] % std::size(kFormat)];
+    bool is_clip = !(data[31] % 2);
+    bool is_rgb_byte_order = !(data[32] % 2);
+    size -= kParameterSize;
+    data += kParameterSize;
 
-  static constexpr uint32_t kMemLimit = 128'000'000;
-  static constexpr uint32_t kComponents = 4;
-  FX_SAFE_UINT32 mem = width;
-  mem *= height;
-  mem *= kComponents;
-  if (!mem.IsValid() || mem.ValueOrDie() > kMemLimit) {
-    return 0;
-  }
+    static constexpr uint32_t kMemLimit = 128'000'000;
+    static constexpr uint32_t kComponents = 4;
+    FX_SAFE_UINT32 mem = width;
+    mem *= height;
+    mem *= kComponents;
+    if (!mem.IsValid() || mem.ValueOrDie() > kMemLimit) {
+      return 0;
+    }
 
-  auto src_bitmap = pdfium::MakeRetain<CFX_DIBitmap>();
-  auto dest_bitmap = pdfium::MakeRetain<CFX_DIBitmap>();
-  if (!src_bitmap->Create(width, height, src_format) ||
-      !dest_bitmap->Create(width, height, dest_format)) {
-    return 0;
-  }
-  if (src_bitmap->GetBuffer().empty() || dest_bitmap->GetBuffer().empty()) {
-    return 0;
-  }
+    auto src_bitmap = pdfium::MakeRetain<CFX_DIBitmap>();
+    auto dest_bitmap = pdfium::MakeRetain<CFX_DIBitmap>();
+    if (!src_bitmap->Create(width, height, src_format) ||
+        !dest_bitmap->Create(width, height, dest_format)) {
+      return 0;
+    }
+    if (src_bitmap->GetBuffer().empty() || dest_bitmap->GetBuffer().empty()) {
+      return 0;
+    }
 
-  FX_RECT clip_rect(0, 0, width, height);
-  if (src_bitmap->IsMaskFormat()) {
-    dest_bitmap->CompositeMask(dest_left, dest_top, width, height,
-                               std::move(src_bitmap), argb, src_left, src_top,
-                               blend_mode, is_clip ? &clip_rect : nullptr,
-                               nullptr, is_rgb_byte_order);
-  } else {
-    dest_bitmap->CompositeBitmap(dest_left, dest_top, width, height,
-                                 std::move(src_bitmap), src_left, src_top,
+    FX_RECT clip_rect(0, 0, width, height);
+    if (src_bitmap->IsMaskFormat()) {
+      dest_bitmap->CompositeMask(dest_left, dest_top, width, height,
+                                 std::move(src_bitmap), argb, src_left, src_top,
                                  blend_mode, is_clip ? &clip_rect : nullptr,
                                  nullptr, is_rgb_byte_order);
-  }
-  return 0;
+    } else {
+      dest_bitmap->CompositeBitmap(dest_left, dest_top, width, height,
+                                   std::move(src_bitmap), src_left, src_top,
+                                   blend_mode, is_clip ? &clip_rect : nullptr,
+                                   nullptr, is_rgb_byte_order);
+    }
+    return 0;
+  });
 }

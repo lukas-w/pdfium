@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 
+#include "core/fxcrt/compiler_specific.h"
 #include "core/fxcrt/containers/adapters.h"
 #include "public/fpdf_formfill.h"
 #include "testing/fuzzers/pdf_fuzzer_templates.h"
@@ -214,7 +215,7 @@ std::string GenXfaFormCalcScriptFuncName(FuzzedDataProvider* data_provider) {
 
   size_t elem_selector = data_provider->ConsumeIntegralInRange<size_t>(
       0, std::size(kXfaScriptFuncs) - 1);
-  return kXfaScriptFuncs[elem_selector];
+  return UNSAFE_TODO(kXfaScriptFuncs[elem_selector]);
 }
 
 std::string MaybeQuote(FuzzedDataProvider* data_provider, std::string body) {
@@ -310,7 +311,7 @@ std::string GenXfaScriptParam(FuzzedDataProvider* data_provider) {
 
   size_t elem_selector = data_provider->ConsumeIntegralInRange<size_t>(
       0, std::size(kXfaFuncParams) - 1);
-  return MaybeQuote(data_provider, kXfaFuncParams[elem_selector]);
+  return MaybeQuote(data_provider, UNSAFE_TODO(kXfaFuncParams[elem_selector]));
 }
 
 // Possible XFA tags
@@ -640,7 +641,7 @@ std::string GenXfaTag(FuzzedDataProvider* data_provider) {
 
   size_t elem_selector = data_provider->ConsumeIntegralInRange<size_t>(
       0, std::size(kXfaElemTags) - 1);
-  return kXfaElemTags[elem_selector];
+  return UNSAFE_TODO(kXfaElemTags[elem_selector]);
 }
 
 // Possible XFA attributes values
@@ -662,7 +663,7 @@ std::string GenXfaTagValue(FuzzedDataProvider* data_provider) {
 
   size_t elem_selector = data_provider->ConsumeIntegralInRange<size_t>(
       0, std::size(kXfaTagVals) - 1);
-  return MaybeQuote(data_provider, kXfaTagVals[elem_selector]);
+  return MaybeQuote(data_provider, UNSAFE_TODO(kXfaTagVals[elem_selector]));
 }
 
 // possible XFA attributes
@@ -688,7 +689,7 @@ std::string GenXfaTagName(FuzzedDataProvider* data_provider) {
   };
   size_t elem_selector = data_provider->ConsumeIntegralInRange<size_t>(
       0, std::size(kXfaTagNames) - 1);
-  return kXfaTagNames[elem_selector];
+  return UNSAFE_TODO(kXfaTagNames[elem_selector]);
 }
 
 // Will create a simple XFA FormCalc script that calls a single function.
