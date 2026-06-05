@@ -13,7 +13,6 @@
 -skia/
 -testing/gmock/
 -testing/gtest/
--testing/image_diff/
 -third_party/
 -tools/
 -v8/
