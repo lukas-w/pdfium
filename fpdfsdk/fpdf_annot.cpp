@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "constants/annotation_common.h"
+#include "constants/catalog.h"
 #include "core/fpdfapi/edit/cpdf_pagecontentgenerator.h"
 #include "core/fpdfapi/page/cpdf_annotcontext.h"
 #include "core/fpdfapi/page/cpdf_form.h"
@@ -367,7 +368,7 @@ std::optional<CFX_Color::TypeAndARGB> GetFreetextFontColor(
   CPDF_Document* doc = form ? form->GetInteractiveForm()->document() : nullptr;
   const CPDF_Dictionary* root_dict = doc ? doc->GetRoot() : nullptr;
   RetainPtr<const CPDF_Dictionary> acroform_dict =
-      root_dict ? root_dict->GetDictFor("AcroForm") : nullptr;
+      root_dict ? root_dict->GetDictFor(pdfium::catalog::kAcroForm) : nullptr;
   CPDF_DefaultAppearance default_appearance(annot_dict, acroform_dict);
   return default_appearance.GetColorARGB();
 }

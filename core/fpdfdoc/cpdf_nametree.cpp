@@ -9,6 +9,7 @@
 #include <utility>
 #include <vector>
 
+#include "constants/catalog.h"
 #include "core/fpdfapi/parser/cpdf_array.h"
 #include "core/fpdfapi/parser/cpdf_dictionary.h"
 #include "core/fpdfapi/parser/cpdf_document.h"
@@ -453,7 +454,8 @@ RetainPtr<const CPDF_Array> GetNamedDestFromObject(
 
 RetainPtr<const CPDF_Array> LookupOldStyleNamedDest(CPDF_Document* doc,
                                                     const ByteString& name) {
-  RetainPtr<const CPDF_Dictionary> pDests = doc->GetRoot()->GetDictFor("Dests");
+  RetainPtr<const CPDF_Dictionary> pDests =
+      doc->GetRoot()->GetDictFor(pdfium::catalog::kDests);
   if (!pDests) {
     return nullptr;
   }
@@ -478,7 +480,8 @@ std::unique_ptr<CPDF_NameTree> CPDF_NameTree::Create(CPDF_Document* doc,
     return nullptr;
   }
 
-  RetainPtr<CPDF_Dictionary> pNames = pRoot->GetMutableDictFor("Names");
+  RetainPtr<CPDF_Dictionary> pNames =
+      pRoot->GetMutableDictFor(pdfium::catalog::kNames);
   if (!pNames) {
     return nullptr;
   }
@@ -502,10 +505,12 @@ std::unique_ptr<CPDF_NameTree> CPDF_NameTree::CreateWithRootNameArray(
   }
 
   // Retrieve the document's Names dictionary; create it if missing.
-  RetainPtr<CPDF_Dictionary> pNames = pRoot->GetMutableDictFor("Names");
+  RetainPtr<CPDF_Dictionary> pNames =
+      pRoot->GetMutableDictFor(pdfium::catalog::kNames);
   if (!pNames) {
     pNames = doc->NewIndirect<CPDF_Dictionary>();
-    pRoot->SetNewFor<CPDF_Reference>("Names", doc, pNames->GetObjNum());
+    pRoot->SetNewFor<CPDF_Reference>(pdfium::catalog::kNames, doc,
+                                     pNames->GetObjNum());
   }
 
   // Create the |category| dictionary if missing.
@@ -552,7 +557,8 @@ bool CPDF_NameTree::AddValueAndName(RetainPtr<CPDF_Object> pObj,
   NodeToInsert node_to_insert;
   // Handle the corner case where the root node is empty. i.e. No kids and no
   // names. In which case, just insert into it and skip all the searches.
-  RetainPtr<CPDF_Array> pNames = root_->GetMutableArrayFor("Names");
+  RetainPtr<CPDF_Array> pNames =
+      root_->GetMutableArrayFor(pdfium::catalog::kNames);
   if (pNames && pNames->IsEmpty() && !root_->GetArrayFor("Kids")) {
     node_to_insert.names = pNames;
   }

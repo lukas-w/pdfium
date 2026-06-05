@@ -2,12 +2,15 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include "public/fpdf_ppo.h"
+
 #include <array>
 #include <iterator>
 #include <memory>
 #include <string>
 #include <vector>
 
+#include "constants/catalog.h"
 #include "core/fpdfapi/page/cpdf_form.h"
 #include "core/fpdfapi/page/cpdf_formobject.h"
 #include "core/fpdfapi/parser/cpdf_array.h"
@@ -21,7 +24,6 @@
 #include "fpdfsdk/cpdfsdk_helpers.h"
 #include "public/cpp/fpdf_scopers.h"
 #include "public/fpdf_edit.h"
-#include "public/fpdf_ppo.h"
 #include "public/fpdf_save.h"
 #include "public/fpdfview.h"
 #include "testing/embedder_test.h"
@@ -397,7 +399,8 @@ TEST_F(FPDFPPOEmbedderTest, CopyViewerPrefTypes) {
   const CPDF_Document* output_doc_impl =
       CPDFDocumentFromFPDFDocument(output_doc.get());
   RetainPtr<const CPDF_Dictionary> prefs =
-      output_doc_impl->GetRoot()->GetDictFor("ViewerPreferences");
+      output_doc_impl->GetRoot()->GetDictFor(
+          pdfium::catalog::kViewerPreferences);
   ASSERT_TRUE(prefs);
   EXPECT_EQ(6u, prefs->size());
 

@@ -10,6 +10,7 @@
 #include <utility>
 #include <vector>
 
+#include "constants/catalog.h"
 #include "constants/page_object.h"
 #include "core/fpdfapi/parser/cpdf_array.h"
 #include "core/fpdfapi/parser/cpdf_dictionary.h"
@@ -52,13 +53,15 @@ bool CPDF_PageOrganizer::InitDestDoc() {
   }
 
   RetainPtr<CPDF_Dictionary> pages;
-  if (RetainPtr<CPDF_Object> current_pages = root->GetMutableObjectFor("Pages");
+  if (RetainPtr<CPDF_Object> current_pages =
+          root->GetMutableObjectFor(pdfium::catalog::kPages);
       current_pages) {
     pages = ToDictionary(current_pages->GetMutableDirect());
   }
   if (!pages) {
     pages = dest()->NewIndirect<CPDF_Dictionary>();
-    root->SetNewFor<CPDF_Reference>("Pages", dest(), pages->GetObjNum());
+    root->SetNewFor<CPDF_Reference>(pdfium::catalog::kPages, dest(),
+                                    pages->GetObjNum());
   }
   if (pages->GetByteStringFor("Type", ByteStringView()).IsEmpty()) {
     pages->SetNewFor<CPDF_Name>("Type", "Pages");

@@ -12,6 +12,7 @@
 
 #include "constants/annotation_common.h"
 #include "constants/appearance.h"
+#include "constants/catalog.h"
 #include "constants/font_encodings.h"
 #include "constants/form_fields.h"
 #include "core/fpdfapi/edit/cpdf_contentstream_write_utils.h"
@@ -1035,7 +1036,7 @@ bool GenerateFreeTextAP(CPDF_Document* doc, CPDF_Dictionary* annot_dict) {
   }
 
   RetainPtr<CPDF_Dictionary> form_dict =
-      root_dict->GetMutableDictFor("AcroForm");
+      root_dict->GetMutableDictFor(pdfium::catalog::kAcroForm);
   if (!form_dict) {
     form_dict = CPDF_InteractiveForm::InitAcroFormDict(doc);
     CHECK(form_dict);
@@ -1438,7 +1439,7 @@ void CPDF_GenerateAP::GenerateFormAP(CPDF_Document* doc,
   }
 
   RetainPtr<CPDF_Dictionary> form_dict =
-      root_dict->GetMutableDictFor("AcroForm");
+      root_dict->GetMutableDictFor(pdfium::catalog::kAcroForm);
   if (!form_dict) {
     return;
   }
@@ -1617,7 +1618,7 @@ bool CPDF_GenerateAP::GenerateDefaultAppearanceWithColor(
   }
 
   RetainPtr<CPDF_Dictionary> acroform_dict =
-      root_dict->GetMutableDictFor("AcroForm");
+      root_dict->GetMutableDictFor(pdfium::catalog::kAcroForm);
   if (!acroform_dict) {
     acroform_dict = CPDF_InteractiveForm::InitAcroFormDict(doc);
     CHECK(acroform_dict);

@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "build/build_config.h"
+#include "constants/catalog.h"
 #include "constants/form_fields.h"
 #include "constants/form_flags.h"
 #include "constants/stream_dict_common.h"
@@ -303,8 +304,8 @@ FX_Charset GetNativeCharSet() {
 
 RetainPtr<CPDF_Dictionary> InitDict(CPDF_Document* document) {
   auto form_dict = document->NewIndirect<CPDF_Dictionary>();
-  document->GetMutableRoot()->SetNewFor<CPDF_Reference>("AcroForm", document,
-                                                        form_dict->GetObjNum());
+  document->GetMutableRoot()->SetNewFor<CPDF_Reference>(
+      pdfium::catalog::kAcroForm, document, form_dict->GetObjNum());
 
   ByteString base_name;
   FX_Charset charset = GetNativeCharSet();
@@ -593,7 +594,7 @@ CPDF_InteractiveForm::CPDF_InteractiveForm(CPDF_Document* document)
     return;
   }
 
-  form_dict_ = pRoot->GetMutableDictFor("AcroForm");
+  form_dict_ = pRoot->GetMutableDictFor(pdfium::catalog::kAcroForm);
   if (!form_dict_) {
     return;
   }
@@ -630,7 +631,7 @@ RetainPtr<CPDF_Font> CPDF_InteractiveForm::AddNativeInteractiveFormFont(
   DCHECK(name_tag);
 
   RetainPtr<CPDF_Dictionary> form_dict =
-      document->GetMutableRoot()->GetMutableDictFor("AcroForm");
+      document->GetMutableRoot()->GetMutableDictFor(pdfium::catalog::kAcroForm);
   if (!form_dict) {
     form_dict = InitDict(document);
   }

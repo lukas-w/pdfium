@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "build/build_config.h"
+#include "constants/catalog.h"
 #include "core/fpdfapi/page/cpdf_docpagedata.h"
 #include "core/fpdfapi/page/cpdf_occontext.h"
 #include "core/fpdfapi/page/cpdf_page.h"
@@ -116,7 +117,8 @@ RetainPtr<const CPDF_Object> GetXFAEntryFromDocument(const CPDF_Document* doc) {
     return nullptr;
   }
 
-  RetainPtr<const CPDF_Dictionary> acro_form = root->GetDictFor("AcroForm");
+  RetainPtr<const CPDF_Dictionary> acro_form =
+      root->GetDictFor(pdfium::catalog::kAcroForm);
   return acro_form ? acro_form->GetObjectFor("XFA") : nullptr;
 }
 
@@ -300,7 +302,8 @@ FPDF_EXPORT int FPDF_CALLCONV FPDF_GetFormType(FPDF_DOCUMENT document) {
     return FORMTYPE_NONE;
   }
 
-  RetainPtr<const CPDF_Dictionary> pAcroForm = pRoot->GetDictFor("AcroForm");
+  RetainPtr<const CPDF_Dictionary> pAcroForm =
+      pRoot->GetDictFor(pdfium::catalog::kAcroForm);
   if (!pAcroForm) {
     return FORMTYPE_NONE;
   }
@@ -383,7 +386,7 @@ FPDF_EXPORT FPDF_BOOL FPDF_CALLCONV FPDF_GetFileVersion(FPDF_DOCUMENT doc,
 
   const CPDF_Dictionary* root_dict = document->GetRoot();
   if (root_dict) {
-    ByteString version = root_dict->GetNameFor("Version");
+    ByteString version = root_dict->GetNameFor(pdfium::catalog::kVersion);
     if (!version.IsEmpty()) {
       // Check for valid PDF version format "X.Y"
       const bool has_valid_length = version.GetLength() == 3;
@@ -1240,7 +1243,8 @@ FPDF_CountNamedDests(FPDF_DOCUMENT document) {
 
   auto name_tree = CPDF_NameTree::Create(doc, "Dests");
   FX_SAFE_UINT32 count = name_tree ? name_tree->GetCount() : 0;
-  RetainPtr<const CPDF_Dictionary> pOldStyleDests = pRoot->GetDictFor("Dests");
+  RetainPtr<const CPDF_Dictionary> pOldStyleDests =
+      pRoot->GetDictFor(pdfium::catalog::kDests);
   if (pOldStyleDests) {
     count += pOldStyleDests->size();
   }
@@ -1367,7 +1371,8 @@ FPDF_EXPORT FPDF_DEST FPDF_CALLCONV FPDF_GetNamedDest(FPDF_DOCUMENT document,
   if (static_cast<size_t>(index) >= name_tree_count) {
     // If |index| is out of bounds, then try to retrieve the Nth old style named
     // destination. Where N is 0-indexed, with N = index - name_tree_count.
-    RetainPtr<const CPDF_Dictionary> pDest = pRoot->GetDictFor("Dests");
+    RetainPtr<const CPDF_Dictionary> pDest =
+        pRoot->GetDictFor(pdfium::catalog::kDests);
     if (!pDest) {
       return nullptr;
     }
