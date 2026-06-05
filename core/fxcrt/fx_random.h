@@ -17,7 +17,8 @@
 // A Mersenne Twister (MT) pseudo-random number generator.
 class FX_Random {
  public:
-  static constexpr size_t kStateSize = 848;
+  static constexpr size_t kStateSize = 624;
+  static constexpr size_t kTwistOffset = 397;
 
   // Using a temporary MT generator, fills `buffer` with random 32-bit unsigned
   // integers.

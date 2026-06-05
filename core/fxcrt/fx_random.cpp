@@ -23,7 +23,6 @@
 
 namespace {
 
-constexpr uint32_t kTwistOffset = 456;
 constexpr uint32_t kUpperMask = 0x80000000;
 constexpr uint32_t kLowerMask = 0x7fffffff;
 
