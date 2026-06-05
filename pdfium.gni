@@ -16,6 +16,9 @@ declare_args() {
   #    //build/config/freetype.
   pdf_bundle_freetype = pdf_bundle_freetype_override
 
+  # Build PDFium with experimental Brotli compression support.
+  pdf_enable_brotli = pdf_enable_brotli_override
+
   # Generate logging messages for click events that reach PDFium
   pdf_enable_click_logging = false
 
