@@ -22,6 +22,7 @@
 #include "core/fxcrt/fx_folder.h"
 #include "core/fxcrt/fx_safe_types.h"
 #include "core/fxcrt/fx_system.h"
+#include "core/fxcrt/span_io.h"
 #include "core/fxge/cfx_fontmapper.h"
 #include "core/fxge/fx_font.h"
 
@@ -82,8 +83,7 @@ ByteString ReadStringFromFile(FILE* pFile, uint32_t size) {
     // Span's lifetime must end before ReleaseBuffer() below.
     pdfium::span<char> buffer = result.GetBuffer(size);
 
-    // SAFETY: GetBuffer(size) ensures size bytes available.
-    if (!UNSAFE_BUFFERS(fread(buffer.data(), size, 1, pFile))) {
+    if (fxcrt::spanread(buffer.first(size), pFile).size() != size) {
       return ByteString();
     }
   }
@@ -174,13 +174,10 @@ void CFX_FolderFontInfo::ScanFile(const ByteString& path) {
   fseek(pFile.get(), 0, SEEK_END);
 
   FX_FILESIZE filesize = ftell(pFile.get());
-  uint8_t buffer[16];
   fseek(pFile.get(), 0, SEEK_SET);
 
-  // SAFETY: 12 byte read fits into 16 byte buffer,
-  size_t items_read =
-      UNSAFE_BUFFERS(fread(buffer, /*size=*/12, /*nmemb=*/1, pFile.get()));
-  if (items_read != 1) {
+  uint8_t buffer[12];
+  if (fxcrt::spanread(buffer, pFile.get()).size() != sizeof(buffer)) {
     return;
   }
   uint32_t magic = fxcrt::GetUInt32MSBFirst(pdfium::span(buffer).first<4u>());
@@ -199,17 +196,13 @@ void CFX_FolderFontInfo::ScanFile(const ByteString& path) {
 
   auto offsets =
       FixedSizeDataVector<uint8_t>::Uninit(safe_face_bytes.ValueOrDie());
-  pdfium::span<uint8_t> offsets_span = offsets.span();
-  items_read = UNSAFE_TODO(fread(offsets_span.data(), /*size=*/1,
-                                 /*nmemb=*/offsets_span.size(), pFile.get()));
-  if (items_read != offsets_span.size()) {
+  if (fxcrt::spanread(offsets.span(), pFile.get()).size() != offsets.size()) {
     return;
   }
 
   for (uint32_t i = 0; i < nFaces; i++) {
-    ReportFace(
-        path, pFile.get(), filesize,
-        fxcrt::GetUInt32MSBFirst(offsets_span.subspan(i * 4).first<4u>()));
+    ReportFace(path, pFile.get(), filesize,
+               fxcrt::GetUInt32MSBFirst(offsets.subspan(i * 4).first<4u>()));
   }
 }
 
@@ -217,12 +210,12 @@ void CFX_FolderFontInfo::ReportFace(const ByteString& path,
                                     FILE* pFile,
                                     FX_FILESIZE filesize,
                                     uint32_t offset) {
-  char buffer[16];
   if (fseek(pFile, offset, SEEK_SET) < 0) {
     return;
   }
-  // SAFTEY: 12 byt read fits in 16 byte buffer.
-  if (UNSAFE_BUFFERS(!fread(buffer, 12, 1, pFile))) {
+
+  uint8_t buffer[12];
+  if (fxcrt::spanread(buffer, pFile).size() != sizeof(buffer)) {
     return;
   }
 
@@ -445,7 +438,7 @@ size_t CFX_FolderFontInfo::GetFontData(void* hFont,
   if (fseek(pFile.get(), offset, SEEK_SET) < 0) {
     return 0;
   }
-  if (UNSAFE_TODO(fread(buffer.data(), datasize, 1, pFile.get())) != 1) {
+  if (fxcrt::spanread(buffer.first(datasize), pFile.get()).size() != datasize) {
     return 0;
   }
   return datasize;

@@ -14,12 +14,14 @@
 #include "core/fxcrt/check.h"
 #include "core/fxcrt/compiler_specific.h"
 #include "core/fxcrt/notreached.h"
+#include "core/fxcrt/span_io.h"
 #include "public/cpp/fpdf_scopers.h"
 #include "public/fpdf_annot.h"
 #include "public/fpdf_attachment.h"
 #include "public/fpdf_edit.h"
 #include "public/fpdf_thumbnail.h"
 #include "testing/fx_string_testhelpers.h"
+#include "testing/utils/file_util.h"
 #include "testing/utils/png_encode.h"
 
 #ifdef PDF_ENABLE_SKIA
@@ -266,19 +268,17 @@ std::string WritePng(const char* pdf_name,
   if (filename.empty()) {
     return std::string();
   }
-  FILE* fp = fopen(filename.c_str(), "wb");
+  pdfium::ScopedFILE scoped_fp(fopen(filename.c_str(), "wb"));
+  FILE* fp = scoped_fp.get();
   if (!fp) {
     fprintf(stderr, "Failed to open %s for output\n", filename.c_str());
     return std::string();
   }
 
-  size_t bytes_written =
-      UNSAFE_TODO(fwrite(&png_encoding.front(), 1, png_encoding.size(), fp));
-  if (bytes_written != png_encoding.size()) {
+  if (fxcrt::spanwrite(png_encoding, fp) != png_encoding.size()) {
     fprintf(stderr, "Failed to write to %s\n", filename.c_str());
   }
 
-  (void)fclose(fp);
   return filename;
 }
 
@@ -304,7 +304,8 @@ std::string WritePpm(const char* pdf_name,
   if (filename.empty()) {
     return std::string();
   }
-  FILE* fp = fopen(filename.c_str(), "wb");
+  pdfium::ScopedFILE scoped_fp(fopen(filename.c_str(), "wb"));
+  FILE* fp = scoped_fp.get();
   if (!fp) {
     return std::string();
   }
@@ -329,11 +330,10 @@ std::string WritePpm(const char* pdf_name,
       }
     });
   }
-  if (UNSAFE_TODO(fwrite(result.data(), out_len, 1, fp)) != 1) {
+  if (fxcrt::spanwrite(result, fp) != result.size()) {
     fprintf(stderr, "Failed to write to %s\n", filename.c_str());
   }
 
-  fclose(fp);
   return filename;
 }
 
@@ -342,7 +342,8 @@ void WriteText(FPDF_TEXTPAGE textpage, const char* pdf_name, int num) {
   if (filename.empty()) {
     return;
   }
-  FILE* fp = fopen(filename.c_str(), "w");
+  pdfium::ScopedFILE scoped_fp(fopen(filename.c_str(), "w"));
+  FILE* fp = scoped_fp.get();
   if (!fp) {
     fprintf(stderr, "Failed to open %s for output\n", filename.c_str());
     return;
@@ -350,20 +351,18 @@ void WriteText(FPDF_TEXTPAGE textpage, const char* pdf_name, int num) {
 
   // Output in UTF32-LE.
   uint32_t bom = 0x0000FEFF;
-  if (UNSAFE_TODO(fwrite(&bom, sizeof(bom), 1, fp)) != 1) {
+  if (fxcrt::spanwrite(pdfium::span_from_ref(bom), fp) != 1) {
     fprintf(stderr, "Failed to write to %s\n", filename.c_str());
-    (void)fclose(fp);
     return;
   }
 
   for (int i = 0; i < FPDFText_CountChars(textpage); i++) {
     uint32_t c = FPDFText_GetUnicode(textpage, i);
-    if (UNSAFE_TODO(fwrite(&c, sizeof(c), 1, fp)) != 1) {
+    if (fxcrt::spanwrite(pdfium::span_from_ref(c), fp) != 1) {
       fprintf(stderr, "Failed to write to %s\n", filename.c_str());
       break;
     }
   }
-  (void)fclose(fp);
 }
 
 void WriteAnnot(FPDF_PAGE page, const char* pdf_name, int num) {
@@ -372,7 +371,8 @@ void WriteAnnot(FPDF_PAGE page, const char* pdf_name, int num) {
   if (filename.empty()) {
     return;
   }
-  FILE* fp = fopen(filename.c_str(), "w");
+  pdfium::ScopedFILE scoped_fp(fopen(filename.c_str(), "w"));
+  FILE* fp = scoped_fp.get();
   if (!fp) {
     fprintf(stderr, "Failed to open %s for output\n", filename.c_str());
     return;
@@ -474,8 +474,6 @@ void WriteAnnot(FPDF_PAGE page, const char* pdf_name, int num) {
       fprintf(fp, "Failed to retrieve annotation rectangle.\n");
     }
   }
-
-  (void)fclose(fp);
 }
 
 std::string WriteStraightAlphaBufferToPng(
@@ -513,11 +511,16 @@ std::string WriteBmp(const char* pdf_name,
     return std::string();
   }
 
+  auto src_span =
+      UNSAFE_TODO(pdfium::span(static_cast<const uint8_t*>(buffer),
+                               pdfium::checked_cast<size_t>(out_len)));
+
   std::string filename = GeneratePageOutputFilename(pdf_name, num, "bmp");
   if (filename.empty()) {
     return std::string();
   }
-  FILE* fp = fopen(filename.c_str(), "wb");
+  pdfium::ScopedFILE scoped_fp(fopen(filename.c_str(), "wb"));
+  FILE* fp = scoped_fp.get();
   if (!fp) {
     return std::string();
   }
@@ -530,18 +533,18 @@ std::string WriteBmp(const char* pdf_name,
   bmi.bmiHeader.biBitCount = 32;
   bmi.bmiHeader.biCompression = BI_RGB;
   bmi.bmiHeader.biSizeImage = 0;
+  auto bmi_span = pdfium::byte_span_from_ref(bmi).first(bmi.bmiHeader.biSize);
 
   BITMAPFILEHEADER file_header = {};
   file_header.bfType = 0x4d42;
   file_header.bfSize = sizeof(file_header) + bmi.bmiHeader.biSize + out_len;
   file_header.bfOffBits = file_header.bfSize - out_len;
 
-  if (UNSAFE_TODO(fwrite(&file_header, sizeof(file_header), 1, fp)) != 1 ||
-      UNSAFE_TODO(fwrite(&bmi, bmi.bmiHeader.biSize, 1, fp)) != 1 ||
-      UNSAFE_TODO(fwrite(buffer, out_len, 1, fp)) != 1) {
+  if (fxcrt::spanwrite(pdfium::span_from_ref(file_header), fp) != 1 ||
+      fxcrt::spanwrite(bmi_span, fp) != bmi_span.size() ||
+      fxcrt::spanwrite(src_span, fp) != src_span.size()) {
     fprintf(stderr, "Failed to write to %s\n", filename.c_str());
   }
-  fclose(fp);
   return filename;
 }
 
@@ -575,7 +578,8 @@ void WritePS(FPDF_PAGE page, const char* pdf_name, int num) {
   if (filename.empty()) {
     return;
   }
-  FILE* fp = fopen(filename.c_str(), "wb");
+  pdfium::ScopedFILE scoped_fp(fopen(filename.c_str(), "wb"));
+  FILE* fp = scoped_fp.get();
   if (!fp) {
     return;
   }
@@ -598,12 +602,13 @@ void WritePS(FPDF_PAGE page, const char* pdf_name, int num) {
     const auto* comment = reinterpret_cast<const EMRGDICOMMENT*>(record);
     const char* data = reinterpret_cast<const char*>(comment->Data);
     uint16_t size = *reinterpret_cast<const uint16_t*>(data);
-    if (UNSAFE_TODO(fwrite(data + sizeof(uint16_t), size, 1, fp)) != 1) {
-      UNSAFE_TODO(fprintf(stderr, "Failed to write to %s\n", filename.c_str()));
+    auto src_span = UNSAFE_TODO(pdfium::span(
+        reinterpret_cast<const uint8_t*>(data + sizeof(uint16_t)), size));
+    if (fxcrt::spanwrite(src_span, fp) != src_span.size()) {
+      fprintf(stderr, "Failed to write to %s\n", filename.c_str());
       break;
     }
   }
-  fclose(fp);
   DeleteEnhMetaFile(emf);
 }
 #endif  // _WIN32
@@ -691,21 +696,22 @@ void WriteBufferToFile(const void* buf,
                        size_t buflen,
                        const char* filename,
                        const char* filetype) {
-  FILE* fp = fopen(filename, "wb");
+  pdfium::ScopedFILE scoped_fp(fopen(filename, "wb"));
+  FILE* fp = scoped_fp.get();
   if (!fp) {
     UNSAFE_TODO(fprintf(stderr, "Failed to open %s for saving %s.", filename,
                         filetype));
     return;
   }
 
-  size_t bytes_written = UNSAFE_TODO(fwrite(buf, 1, buflen, fp));
-  if (bytes_written == buflen) {
+  auto buf_span =
+      UNSAFE_TODO(pdfium::span(static_cast<const uint8_t*>(buf), buflen));
+  if (fxcrt::spanwrite(buf_span, fp) == buf_span.size()) {
     UNSAFE_TODO(
         fprintf(stderr, "Successfully wrote %s %s.\n", filetype, filename));
   } else {
     UNSAFE_TODO(fprintf(stderr, "Failed to write to %s.\n", filename));
   }
-  fclose(fp);
 }
 
 std::vector<uint8_t> EncodeBitmapToPng(ScopedFPDFBitmap bitmap) {
