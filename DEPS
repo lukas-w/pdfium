@@ -685,7 +685,6 @@ deps = {
   'third_party/simdutf': {
     'url': Var('chromium_git') + '/chromium/src/third_party/simdutf@' +
         Var('simdutf_revision'),
-    'condition': 'checkout_v8',
   },
 
   'third_party/siso/cipd': {
