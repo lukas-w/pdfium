@@ -525,7 +525,7 @@ void CFGAS_RTFBreak::EndBreakAlignment(const std::deque<TPO>& tpos,
     int32_t j = bArabic ? 0 : ttp.GetCharCount() - 1;
     while (j > -1 && j < ttp.GetCharCount()) {
       const CFGAS_Char* tc = ttp.GetChar(j);
-      if (tc->line_break_type_ == FX_LINEBREAKTYPE::kDIRECT_BRK) {
+      if (tc->line_break_type_ == pdfium::LineBreakType::kDirectBreak) {
         ++iGapChars;
       }
 
@@ -568,7 +568,7 @@ void CFGAS_RTFBreak::EndBreakAlignment(const std::deque<TPO>& tpos,
 
       for (int32_t j = 0; j < ttp.GetCharCount(); ++j) {
         CFGAS_Char* tc = ttp.GetChar(j);
-        if (tc->line_break_type_ != FX_LINEBREAKTYPE::kDIRECT_BRK ||
+        if (tc->line_break_type_ != pdfium::LineBreakType::kDirectBreak ||
             tc->char_width_ < 0) {
           continue;
         }
@@ -624,7 +624,7 @@ int32_t CFGAS_RTFBreak::GetBreakPos(std::vector<CFGAS_Char>& tca,
   CFGAS_Char* pCur = UNSAFE_TODO(pCharArray + iLength);
   --iLength;
   if (bAllChars) {
-    pCur->line_break_type_ = FX_LINEBREAKTYPE::kUNKNOWN;
+    pCur->line_break_type_ = pdfium::LineBreakType::kUnknown;
   }
 
   FX_BREAKPROPERTY nNext = pdfium::unicode::GetBreakProperty(pCur->char_code());
@@ -638,20 +638,20 @@ int32_t CFGAS_RTFBreak::GetBreakPos(std::vector<CFGAS_Char>& tca,
     FX_BREAKPROPERTY nCur =
         pdfium::unicode::GetBreakProperty(pCur->char_code());
     bool bNeedBreak = false;
-    FX_LINEBREAKTYPE eType;
+    pdfium::LineBreakType eType;
     if (nCur == FX_BREAKPROPERTY::kTB) {
       bNeedBreak = true;
       eType = nNext == FX_BREAKPROPERTY::kTB
-                  ? FX_LINEBREAKTYPE::kPROHIBITED_BRK
-                  : GetLineBreakTypeFromPair(nCur, nNext);
+                  ? pdfium::LineBreakType::kProhibitedBreak
+                  : pdfium::GetLineBreakTypeFromPair(nCur, nNext);
     } else {
       if (nCur == FX_BREAKPROPERTY::kSP) {
         bNeedBreak = true;
       }
 
       eType = nNext == FX_BREAKPROPERTY::kSP
-                  ? FX_LINEBREAKTYPE::kPROHIBITED_BRK
-                  : GetLineBreakTypeFromPair(nCur, nNext);
+                  ? pdfium::LineBreakType::kProhibitedBreak
+                  : pdfium::GetLineBreakTypeFromPair(nCur, nNext);
     }
     if (bAllChars) {
       pCur->line_break_type_ = eType;
@@ -660,13 +660,14 @@ int32_t CFGAS_RTFBreak::GetBreakPos(std::vector<CFGAS_Char>& tca,
     if (!bOnlyBrk) {
       iCharWidth = pCur->char_width_;
       if (*pEndPos <= line_width_ || bNeedBreak) {
-        if (eType == FX_LINEBREAKTYPE::kDIRECT_BRK && iBreak < 0) {
+        if (eType == pdfium::LineBreakType::kDirectBreak && iBreak < 0) {
           iBreak = iLength;
           iBreakPos = *pEndPos;
           if (!bAllChars) {
             return iLength;
           }
-        } else if (eType == FX_LINEBREAKTYPE::kINDIRECT_BRK && iIndirect < 0) {
+        } else if (eType == pdfium::LineBreakType::kIndirectBreak &&
+                   iIndirect < 0) {
           iIndirect = iLength;
           iIndirectPos = *pEndPos;
         }
@@ -721,7 +722,7 @@ void CFGAS_RTFBreak::SplitTextLine(CFGAS_BreakLine* pCurLine,
   ++iCharPos;
   if (iCharPos >= fxcrt::CollectionSize<int32_t>(pCurLine->line_chars_)) {
     pNextLine->Clear();
-    curChars[iCharPos - 1].line_break_type_ = FX_LINEBREAKTYPE::kUNKNOWN;
+    curChars[iCharPos - 1].line_break_type_ = pdfium::LineBreakType::kUnknown;
     return;
   }
 
@@ -731,7 +732,7 @@ void CFGAS_RTFBreak::SplitTextLine(CFGAS_BreakLine* pCurLine,
   pNextLine->start_ = pCurLine->start_;
   pNextLine->width_ = pCurLine->GetLineEnd() - iEndPos;
   pCurLine->width_ = iEndPos;
-  curChars[iCharPos - 1].line_break_type_ = FX_LINEBREAKTYPE::kUNKNOWN;
+  curChars[iCharPos - 1].line_break_type_ = pdfium::LineBreakType::kUnknown;
 
   for (size_t i = 0; i < pNextLine->line_chars_.size(); ++i) {
     if (pNextLine->line_chars_[i].GetCharType() >= FX_CHARTYPE::kArabicAlef) {

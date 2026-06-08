@@ -15,17 +15,19 @@
 #include "core/fxcrt/compiler_specific.h"
 #include "core/fxcrt/fx_unicode.h"
 
+namespace pdfium {
+
 namespace {
 
-#define FX_LBUN FX_LINEBREAKTYPE::kUNKNOWN
-#define FX_LBDB FX_LINEBREAKTYPE::kDIRECT_BRK
-#define FX_LBIB FX_LINEBREAKTYPE::kINDIRECT_BRK
-#define FX_LBCB FX_LINEBREAKTYPE::kCOM_INDIRECT_BRK
-#define FX_LBCP FX_LINEBREAKTYPE::kCOM_PROHIBITED_BRK
-#define FX_LBPB FX_LINEBREAKTYPE::kPROHIBITED_BRK
-#define FX_LBHS FX_LINEBREAKTYPE::kHANGUL_SPACE_BRK
+#define FX_LBUN LineBreakType::kUnknown
+#define FX_LBDB LineBreakType::kDirectBreak
+#define FX_LBIB LineBreakType::kIndirectBreak
+#define FX_LBCB LineBreakType::kCommonIndirectBreak
+#define FX_LBCP LineBreakType::kCommonProhibitedBreak
+#define FX_LBPB LineBreakType::kProhibitedBreak
+#define FX_LBHS LineBreakType::kHangulSpaceBreak
 
-using LineBreakPairRow = std::array<const FX_LINEBREAKTYPE, 38>;
+using LineBreakPairRow = std::array<const LineBreakType, 38>;
 constexpr std::array<const LineBreakPairRow, 38> kLineBreakPairTable = {{
     {FX_LBPB, FX_LBPB, FX_LBPB, FX_LBPB, FX_LBPB, FX_LBPB, FX_LBPB, FX_LBPB,
      FX_LBPB, FX_LBPB, FX_LBPB, FX_LBPB, FX_LBPB, FX_LBPB, FX_LBPB, FX_LBPB,
@@ -229,9 +231,11 @@ constexpr std::array<const LineBreakPairRow, 38> kLineBreakPairTable = {{
 
 }  // namespace
 
-FX_LINEBREAKTYPE GetLineBreakTypeFromPair(FX_BREAKPROPERTY curr_char,
-                                          FX_BREAKPROPERTY next_char) {
+LineBreakType GetLineBreakTypeFromPair(FX_BREAKPROPERTY curr_char,
+                                       FX_BREAKPROPERTY next_char) {
   const size_t row = static_cast<size_t>(curr_char);
   const size_t col = static_cast<size_t>(next_char);
   return kLineBreakPairTable[row][col];
 }
+
+}  // namespace pdfium
