@@ -74,7 +74,6 @@ bool CFX_AndroidFontInfo::GetFaceName(void* hFont, ByteString* name) {
   if (!hFont) {
     return false;
   }
-
   *name = static_cast<CFPF_SkiaFont*>(hFont)->GetFamilyName();
   return true;
 }
@@ -83,9 +82,8 @@ bool CFX_AndroidFontInfo::GetFontCharset(void* hFont, FX_Charset* charset) {
   if (!hFont) {
     return false;
   }
-
   *charset = static_cast<CFPF_SkiaFont*>(hFont)->GetCharset();
-  return false;
+  return true;
 }
 
 void CFX_AndroidFontInfo::DeleteFont(void* hFont) {}
