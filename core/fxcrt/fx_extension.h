@@ -51,6 +51,10 @@ inline constexpr bool FXSYS_IsUpperASCII(int32_t c) {
   return c >= 'A' && c <= 'Z';
 }
 
+inline constexpr char FXSYS_ToLowerASCII(char c) {
+  return FXSYS_IsUpperASCII(c) ? (c + ('a' - 'A')) : c;
+}
+
 inline constexpr char FXSYS_ToUpperASCII(char c) {
   return FXSYS_IsLowerASCII(c) ? (c + ('A' - 'a')) : c;
 }

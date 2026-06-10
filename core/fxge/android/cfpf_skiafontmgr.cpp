@@ -43,10 +43,7 @@ constexpr uint32_t HashNormalizeFontName(const char* family) {
       if (ch == ' ' || ch == '-' || ch == ',') {
         continue;
       }
-      if (FXSYS_IsUpperASCII(ch)) {
-        ch = ch - 'A' + 'a';
-      }
-      hash_code = 31 * hash_code + ch;
+      hash_code = 31 * hash_code + FXSYS_ToLowerASCII(ch);
     }
   });
   return hash_code;
