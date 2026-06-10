@@ -43,15 +43,15 @@ inline int32_t FXSYS_towupper(wchar_t c) {
   return u_toupper(c);
 }
 
-inline bool FXSYS_IsLowerASCII(int32_t c) {
+inline constexpr bool FXSYS_IsLowerASCII(int32_t c) {
   return c >= 'a' && c <= 'z';
 }
 
-inline bool FXSYS_IsUpperASCII(int32_t c) {
+inline constexpr bool FXSYS_IsUpperASCII(int32_t c) {
   return c >= 'A' && c <= 'Z';
 }
 
-inline char FXSYS_ToUpperASCII(char c) {
+inline constexpr char FXSYS_ToUpperASCII(char c) {
   return FXSYS_IsLowerASCII(c) ? (c + ('A' - 'a')) : c;
 }
 
@@ -67,19 +67,21 @@ inline bool FXSYS_iswspace(wchar_t c) {
   return u_isspace(c);
 }
 
-inline bool FXSYS_IsOctalDigit(char c) {
+inline constexpr bool FXSYS_IsOctalDigit(char c) {
   return c >= '0' && c <= '7';
 }
 
-inline bool FXSYS_IsHexDigit(char c) {
-  return !((c & 0x80) || !isxdigit(c));
+inline constexpr bool FXSYS_IsHexDigit(char c) {
+  return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') ||
+         (c >= 'A' && c <= 'F');
 }
 
-inline bool FXSYS_IsWideHexDigit(wchar_t c) {
-  return !((c & 0xFFFFFF80) || !isxdigit(c));
+inline constexpr bool FXSYS_IsWideHexDigit(wchar_t c) {
+  return (c >= L'0' && c <= L'9') || (c >= L'a' && c <= L'f') ||
+         (c >= L'A' && c <= L'F');
 }
 
-inline int FXSYS_HexCharToInt(char c) {
+inline constexpr int FXSYS_HexCharToInt(char c) {
   if (!FXSYS_IsHexDigit(c)) {
     return 0;
   }
@@ -87,11 +89,11 @@ inline int FXSYS_HexCharToInt(char c) {
   return upchar > '9' ? upchar - 'A' + 10 : upchar - '0';
 }
 
-inline int FXSYS_WideHexCharToInt(wchar_t c) {
+inline constexpr int FXSYS_WideHexCharToInt(wchar_t c) {
   if (!FXSYS_IsWideHexDigit(c)) {
     return 0;
   }
-  char upchar = toupper(static_cast<char>(c));
+  char upchar = FXSYS_ToUpperASCII(static_cast<char>(c));
   return upchar > '9' ? upchar - 'A' + 10 : upchar - '0';
 }
 
