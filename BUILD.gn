@@ -138,6 +138,10 @@ config("pdfium_implementation_config") {
 config("pdfium_public_config") {
   defines = []
 
+  if (pdf_enable_brotli) {
+    defines += [ "PDF_ENABLE_BROTLI" ]
+  }
+
   if (pdf_enable_v8) {
     defines += [ "PDF_ENABLE_V8" ]
 

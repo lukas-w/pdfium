@@ -1,0 +1,32 @@
+{{header}}
+{{object 1 0}} <<
+  /Type /Catalog
+  /Pages 2 0 R
+>>
+endobj
+{{object 2 0}} <<
+  /Type /Pages
+  /MediaBox [0 0 200 300]
+  /Count 1
+  /Kids [3 0 R]
+>>
+endobj
+{{object 3 0}} <<
+  /Type /Page
+  /Parent 2 0 R
+  /Contents 4 0 R
+>>
+endobj
+{{object 4 0}} <<
+  {{streamlen}}
+  /Filter [/ASCII85Decode /BrotliDecode]
+>>
+stream
+)nH$"N7/e'Hg<RDh,:["e_:-.Mf>l\P6tl6DK&bcbV8%0$a.qhi.K)>R=&nogJ:5oUlIhe0CBCnPUTn7
+8Cg:kZ+]G.@.iB`(qE<%g;F3~>
+endstream
+endobj
+{{xref}}
+{{trailer}}
+{{startxref}}
+%%EOF
