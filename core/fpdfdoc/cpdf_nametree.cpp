@@ -32,14 +32,20 @@ struct NodeToInsert {
 };
 
 std::pair<WideString, WideString> GetNodeLimits(CPDF_Array* limits) {
-  WideString left = limits->GetUnicodeTextAt(0);
-  WideString right = limits->GetUnicodeTextAt(1);
+  while (limits->size() < 2) {
+    limits->AppendNew<CPDF_String>("");
+  }
+
+  RetainPtr<CPDF_Object> obj0 = limits->GetMutableObjectAt(0);
+  RetainPtr<CPDF_Object> obj1 = limits->GetMutableObjectAt(1);
+  WideString left = obj0->GetUnicodeText();
+  WideString right = obj1->GetUnicodeText();
 
   // If the lower limit is greater than the upper limit, swap them.
   if (left.Compare(right) > 0) {
     std::swap(left, right);
-    limits->SetNewAt<CPDF_String>(0, left.AsStringView());
-    limits->SetNewAt<CPDF_String>(1, right.AsStringView());
+    limits->SetAt(0, std::move(obj1));
+    limits->SetAt(1, std::move(obj0));
   }
 
   return {std::move(left), std::move(right)};
