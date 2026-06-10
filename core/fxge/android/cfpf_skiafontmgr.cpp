@@ -26,6 +26,51 @@
 
 namespace {
 
+constexpr char kRoboto[] = "Roboto";
+constexpr char kDroidSans[] = "Droid Sans";
+constexpr char kDroidSerif[] = "Droid Serif";
+constexpr char kDroidSansMono[] = "Droid Sans Mono";
+constexpr char kDroidSansFallback[] = "Droid Sans Fallback";
+
+// Repeat the function from bytestring.cpp here, so it can be used in
+// a constexpr context. Then make the compiler prove the mappings are
+// correct.
+constexpr uint32_t HashNormalizeFontName(const char* family) {
+  uint32_t hash_code = 0;
+  UNSAFE_BUFFERS({
+    for (size_t i = 0; family[i] != '\0'; ++i) {
+      char ch = family[i];
+      if (ch == ' ' || ch == '-' || ch == ',') {
+        continue;
+      }
+      if (FXSYS_IsUpperASCII(ch)) {
+        ch = ch - 'A' + 'a';
+      }
+      hash_code = 31 * hash_code + ch;
+    }
+  });
+  return hash_code;
+}
+
+static_assert(HashNormalizeFontName("Arial") == 0x058c5083);
+static_assert(HashNormalizeFontName("Baskerville") == 0x3d49f40e);
+static_assert(HashNormalizeFontName("Courier New") == 0x83746053);
+static_assert(HashNormalizeFontName("Courier") == 0x3918fe2d);
+static_assert(HashNormalizeFontName("Cursive") == 0x432c41c5);
+static_assert(HashNormalizeFontName("Fantasy") == 0xbf85ff26);
+static_assert(HashNormalizeFontName("Georgia") == 0xfb4ce0de);
+static_assert(HashNormalizeFontName("Goudy") == 0x05dfade2);
+static_assert(HashNormalizeFontName("Monaco") == 0xc04fe601);
+static_assert(HashNormalizeFontName("Monospace") == 0xaaa60c03);
+static_assert(HashNormalizeFontName("Palatino") == 0x3b98b31c);
+static_assert(HashNormalizeFontName("STSong") == 0xcad5eaf6);
+static_assert(HashNormalizeFontName("Sanserif") == 0x779ce19d);
+static_assert(HashNormalizeFontName("Serif") == 0x0684317d);
+static_assert(HashNormalizeFontName("SimHei") == 0xca3812d5);
+static_assert(HashNormalizeFontName("SimSun") == 0xca383e15);
+static_assert(HashNormalizeFontName("Tahoma") == 0xcb7a04c8);
+static_assert(HashNormalizeFontName("Verdana") == 0x14ee2d13);
+
 constexpr int kSkiaMatchNameWeight = 62;
 constexpr int kSkiaMatchSystemNameWeight = 60;
 constexpr int kSkiaMatchSerifStyleWeight = 16;
@@ -33,38 +78,50 @@ constexpr int kSkiaMatchScriptStyleWeight = 8;
 
 struct SkiaFontMap {
   uint32_t family;
-  uint32_t subst;
+  const char* subst;
 };
 
 const SkiaFontMap kSkiaFontmap[] = {
-    {0x58c5083, 0xc8d2e345},  {0x5dfade2, 0xe1633081},
-    {0x684317d, 0xe1633081},  {0x14ee2d13, 0xc8d2e345},
-    {0x3918fe2d, 0xbbeeec72}, {0x3b98b31c, 0xe1633081},
-    {0x3d49f40e, 0xe1633081}, {0x432c41c5, 0xe1633081},
-    {0x491b6ad0, 0xe1633081}, {0x5612cab1, 0x59b9f8f1},
-    {0x779ce19d, 0xc8d2e345}, {0x7cc9510b, 0x59b9f8f1},
-    {0x83746053, 0xbbeeec72}, {0xaaa60c03, 0xbbeeec72},
-    {0xbf85ff26, 0xe1633081}, {0xc04fe601, 0xbbeeec72},
-    {0xca3812d5, 0x59b9f8f1}, {0xca383e15, 0x59b9f8f1},
-    {0xcad5eaf6, 0x59b9f8f1}, {0xcb7a04c8, 0xc8d2e345},
-    {0xfb4ce0de, 0xe1633081},
+    {0x058c5083, kRoboto},             // Arial
+    {0x05dfade2, kDroidSerif},         // Goudy
+    {0x0684317d, kDroidSerif},         // Serif
+    {0x14ee2d13, kRoboto},             // Verdana
+    {0x3918fe2d, kDroidSansMono},      // Courier
+    {0x3b98b31c, kDroidSerif},         // Palatino
+    {0x3d49f40e, kDroidSerif},         // Baskerville
+    {0x432c41c5, kDroidSerif},         // Cursive
+    {0x491b6ad0, kDroidSerif},         // Unknown
+    {0x5612cab1, kDroidSansFallback},  // Unknown
+    {0x779ce19d, kRoboto},             // Sanserif
+    {0x7cc9510b, kDroidSansFallback},  // Unknown
+    {0x83746053, kDroidSansMono},      // Courier New
+    {0xaaa60c03, kDroidSansMono},      // Monospace
+    {0xbf85ff26, kDroidSerif},         // Fantasy
+    {0xc04fe601, kDroidSansMono},      // Monaco
+    {0xca3812d5, kDroidSansFallback},  // SimHei
+    {0xca383e15, kDroidSansFallback},  // SimSun
+    {0xcad5eaf6, kDroidSansFallback},  // STSong
+    {0xcb7a04c8, kRoboto},             // Tahoma
+    {0xfb4ce0de, kDroidSerif},         // Georgia
 };
 
 const SkiaFontMap kSkiaSansFontMap[] = {
-    {0x58c5083, 0xd5b8d10f},  {0x14ee2d13, 0xd5b8d10f},
-    {0x779ce19d, 0xd5b8d10f}, {0xcb7a04c8, 0xd5b8d10f},
-    {0xfb4ce0de, 0xd5b8d10f},
+    {0x058c5083, kDroidSans},  // Arial
+    {0x14ee2d13, kDroidSans},  // Verdana
+    {0x779ce19d, kDroidSans},  // Sanserif
+    {0xcb7a04c8, kDroidSans},  // Tahoma
+    {0xfb4ce0de, kDroidSans},  // Georgia
 };
 
-uint32_t SkiaGetSubstFont(uint32_t hash,
-                          pdfium::span<const SkiaFontMap> font_map) {
+const char* SkiaGetSubstFont(uint32_t hash,
+                             pdfium::span<const SkiaFontMap> font_map) {
   const SkiaFontMap* it = std::ranges::lower_bound(
       font_map, hash, std::less<>{}, &SkiaFontMap::family);
 
   if (it != font_map.end() && it->family == hash) {
     return it->subst;
   }
-  return 0;
+  return nullptr;
 }
 
 enum SKIACHARSET {
@@ -254,9 +311,13 @@ CFPF_SkiaFont* CFPF_SkiaFontMgr::CreateFont(ByteStringView family_name,
   }
 
   const uint32_t face_name_hash = SkiaNormalizeFontName(family_name);
-  const uint32_t subst_hash = SkiaGetSubstFont(face_name_hash, kSkiaFontmap);
-  const uint32_t subst_sans_hash =
+  const char* subst_name = SkiaGetSubstFont(face_name_hash, kSkiaFontmap);
+  const char* subst_sans_name =
       SkiaGetSubstFont(face_name_hash, kSkiaSansFontMap);
+  const uint32_t subst_hash =
+      subst_name ? SkiaNormalizeFontName(subst_name) : 0;
+  const uint32_t subst_sans_hash =
+      subst_sans_name ? SkiaNormalizeFontName(subst_sans_name) : 0;
   const bool maybe_symbol = SkiaMaybeSymbol(family_name);
   if (charset != FX_Charset::kMSWin_Arabic && SkiaMaybeArabic(family_name)) {
     charset = FX_Charset::kMSWin_Arabic;
