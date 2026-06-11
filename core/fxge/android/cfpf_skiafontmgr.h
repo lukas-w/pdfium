@@ -13,6 +13,7 @@
 
 #include "core/fxcrt/bytestring.h"
 #include "core/fxcrt/fx_codepage_forward.h"
+#include "core/fxcrt/mask.h"
 #include "core/fxcrt/retain_ptr.h"
 #include "core/fxge/cfx_face.h"
 
@@ -39,7 +40,7 @@ class CFPF_SkiaFontMgr {
     ByteString family;
     uint32_t style;
     int32_t face_index;
-    uint32_t charsets;
+    Mask<FX_CharsetFlag> charsets;
     int32_t glyph_num;
   };
 

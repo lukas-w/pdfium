@@ -256,30 +256,32 @@ void CFX_FolderFontInfo::ReportFace(const ByteString& path,
       LoadTableFromTT(pFile, tables.unsigned_str(), nTables, kOs2Tag, filesize);
   if (os2.GetLength() >= 86) {
     pdfium::span<const uint8_t> p = os2.unsigned_span().subspan(78u);
+    // `codepages` corresponds to OS/2 table ulCodePageRange1.
+    // See https://learn.microsoft.com/en-us/typography/opentype/spec/os2
     uint32_t codepages = fxcrt::GetUInt32MSBFirst(p.first<4u>());
     if (codepages & (1U << 17)) {
       mapper_->AddInstalledFont(facename, FX_Charset::kShiftJIS);
-      pInfo->charsets_ |= FontFaceInfo::CharsetFlag::kShiftJis;
+      pInfo->charsets_ |= FX_CharsetFlag::kShiftJIS;
     }
     if (codepages & (1U << 18)) {
       mapper_->AddInstalledFont(facename, FX_Charset::kChineseSimplified);
-      pInfo->charsets_ |= FontFaceInfo::CharsetFlag::kGb;
+      pInfo->charsets_ |= FX_CharsetFlag::kChineseSimplified;
     }
     if (codepages & (1U << 20)) {
       mapper_->AddInstalledFont(facename, FX_Charset::kChineseTraditional);
-      pInfo->charsets_ |= FontFaceInfo::CharsetFlag::kBig5;
+      pInfo->charsets_ |= FX_CharsetFlag::kChineseTraditional;
     }
     if ((codepages & (1U << 19)) || (codepages & (1U << 21))) {
       mapper_->AddInstalledFont(facename, FX_Charset::kHangul);
-      pInfo->charsets_ |= FontFaceInfo::CharsetFlag::kKorean;
+      pInfo->charsets_ |= FX_CharsetFlag::kHangul;
     }
     if (codepages & (1U << 31)) {
       mapper_->AddInstalledFont(facename, FX_Charset::kSymbol);
-      pInfo->charsets_ |= FontFaceInfo::CharsetFlag::kSymbol;
+      pInfo->charsets_ |= FX_CharsetFlag::kSymbol;
     }
   }
   mapper_->AddInstalledFont(facename, FX_Charset::kANSI);
-  pInfo->charsets_ |= FontFaceInfo::CharsetFlag::kAnsi;
+  pInfo->charsets_ |= FX_CharsetFlag::kANSI;
   pInfo->styles_ = 0;
   if (style.Contains("Bold")) {
     pInfo->styles_ |= pdfium::kFontStyleForceBold;
@@ -304,26 +306,6 @@ void* CFX_FolderFontInfo::GetSubstFont(const ByteString& face) {
   return nullptr;
 }
 
-CFX_FolderFontInfo::FontFaceInfo::CharsetFlag
-CFX_FolderFontInfo::FontFaceInfo::GetCharset(FX_Charset charset) {
-  switch (charset) {
-    case FX_Charset::kShiftJIS:
-      return CharsetFlag::kShiftJis;
-    case FX_Charset::kChineseSimplified:
-      return CharsetFlag::kGb;
-    case FX_Charset::kChineseTraditional:
-      return CharsetFlag::kBig5;
-    case FX_Charset::kHangul:
-      return CharsetFlag::kKorean;
-    case FX_Charset::kSymbol:
-      return CharsetFlag::kSymbol;
-    case FX_Charset::kANSI:
-      return CharsetFlag::kAnsi;
-    default:
-      return CharsetFlag::kNone;
-  }
-}
-
 void* CFX_FolderFontInfo::FindFont(int weight,
                                    bool bItalic,
                                    FX_Charset charset,
@@ -331,7 +313,7 @@ void* CFX_FolderFontInfo::FindFont(int weight,
                                    const ByteString& family,
                                    bool bMatchName) {
   FontFaceInfo* pFind = nullptr;
-  FontFaceInfo::CharsetFlag charset_flag = FontFaceInfo::GetCharset(charset);
+  FX_CharsetFlag charset_flag = FX_CharsetFlagForCharset(charset);
 
   int32_t iBestSimilar = 0;
   if (bMatchName) {
@@ -470,7 +452,7 @@ CFX_FolderFontInfo::FontFaceInfo::FontFaceInfo(ByteString filePath,
       file_size_(fileSize) {}
 
 bool CFX_FolderFontInfo::FontFaceInfo::IsEligibleForFindFont(
-    CharsetFlag flag,
+    FX_CharsetFlag flag,
     FX_Charset charset) const {
   return (charsets_ & flag) || charset == FX_Charset::kDefault;
 }

@@ -44,18 +44,6 @@ class CFX_FolderFontInfo : public SystemFontInfoIface {
 
   class FontFaceInfo {
    public:
-    enum class CharsetFlag : uint8_t {
-      kNone = 0,
-      kAnsi = 1 << 0,
-      kSymbol = 1 << 1,
-      kShiftJis = 1 << 2,
-      kBig5 = 1 << 3,
-      kGb = 1 << 4,
-      kKorean = 1 << 5,
-    };
-
-    static CharsetFlag GetCharset(FX_Charset charset);
-
     static constexpr int32_t kSimilarityScoreMax = 68;
 
     FontFaceInfo(ByteString filePath,
@@ -64,7 +52,7 @@ class CFX_FolderFontInfo : public SystemFontInfoIface {
                  uint32_t fontOffset,
                  uint32_t fileSize);
 
-    bool IsEligibleForFindFont(CharsetFlag flag, FX_Charset charset) const;
+    bool IsEligibleForFindFont(FX_CharsetFlag flag, FX_Charset charset) const;
     int32_t SimilarityScore(int weight,
                             bool italic,
                             int pitch_family,
@@ -76,7 +64,7 @@ class CFX_FolderFontInfo : public SystemFontInfoIface {
     const uint32_t font_offset_;
     const uint32_t file_size_;
     uint32_t styles_ = 0;
-    Mask<CharsetFlag> charsets_;
+    Mask<FX_CharsetFlag> charsets_;
   };
 
   void ScanPath(const ByteString& path);
