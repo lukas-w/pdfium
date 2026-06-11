@@ -259,6 +259,38 @@ void CFX_FolderFontInfo::ReportFace(const ByteString& path,
     // `codepages` corresponds to OS/2 table ulCodePageRange1.
     // See https://learn.microsoft.com/en-us/typography/opentype/spec/os2
     uint32_t codepages = fxcrt::GetUInt32MSBFirst(p.first<4u>());
+    if (codepages & (1U << 1)) {
+      mapper_->AddInstalledFont(facename, FX_Charset::kMSWin_EasternEuropean);
+      pInfo->charsets_ |= FX_CharsetFlag::kMSWin_EasternEuropean;
+    }
+    if (codepages & (1U << 2)) {
+      mapper_->AddInstalledFont(facename, FX_Charset::kMSWin_Cyrillic);
+      pInfo->charsets_ |= FX_CharsetFlag::kMSWin_Cyrillic;
+    }
+    if (codepages & (1U << 3)) {
+      mapper_->AddInstalledFont(facename, FX_Charset::kMSWin_Greek);
+      pInfo->charsets_ |= FX_CharsetFlag::kMSWin_Greek;
+    }
+    if (codepages & (1U << 4)) {
+      mapper_->AddInstalledFont(facename, FX_Charset::kMSWin_Turkish);
+      pInfo->charsets_ |= FX_CharsetFlag::kMSWin_Turkish;
+    }
+    if (codepages & (1U << 5)) {
+      mapper_->AddInstalledFont(facename, FX_Charset::kMSWin_Hebrew);
+      pInfo->charsets_ |= FX_CharsetFlag::kMSWin_Hebrew;
+    }
+    if (codepages & (1U << 6)) {
+      mapper_->AddInstalledFont(facename, FX_Charset::kMSWin_Arabic);
+      pInfo->charsets_ |= FX_CharsetFlag::kMSWin_Arabic;
+    }
+    if (codepages & (1U << 7)) {
+      mapper_->AddInstalledFont(facename, FX_Charset::kMSWin_Baltic);
+      pInfo->charsets_ |= FX_CharsetFlag::kMSWin_Baltic;
+    }
+    if (codepages & (1U << 16)) {
+      mapper_->AddInstalledFont(facename, FX_Charset::kThai);
+      pInfo->charsets_ |= FX_CharsetFlag::kThai;
+    }
     if (codepages & (1U << 17)) {
       mapper_->AddInstalledFont(facename, FX_Charset::kShiftJIS);
       pInfo->charsets_ |= FX_CharsetFlag::kShiftJIS;
