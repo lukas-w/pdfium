@@ -287,6 +287,10 @@ void CFX_FolderFontInfo::ReportFace(const ByteString& path,
       mapper_->AddInstalledFont(facename, FX_Charset::kMSWin_Baltic);
       pInfo->charsets_ |= FX_CharsetFlag::kMSWin_Baltic;
     }
+    if (codepages & (1U << 8)) {
+      mapper_->AddInstalledFont(facename, FX_Charset::kMSWin_Vietnamese);
+      pInfo->charsets_ |= FX_CharsetFlag::kMSWin_Vietnamese;
+    }
     if (codepages & (1U << 16)) {
       mapper_->AddInstalledFont(facename, FX_Charset::kThai);
       pInfo->charsets_ |= FX_CharsetFlag::kThai;
@@ -299,13 +303,21 @@ void CFX_FolderFontInfo::ReportFace(const ByteString& path,
       mapper_->AddInstalledFont(facename, FX_Charset::kChineseSimplified);
       pInfo->charsets_ |= FX_CharsetFlag::kChineseSimplified;
     }
+    if (codepages & (1U << 19)) {
+      mapper_->AddInstalledFont(facename, FX_Charset::kHangul);
+      pInfo->charsets_ |= FX_CharsetFlag::kHangul;
+    }
     if (codepages & (1U << 20)) {
       mapper_->AddInstalledFont(facename, FX_Charset::kChineseTraditional);
       pInfo->charsets_ |= FX_CharsetFlag::kChineseTraditional;
     }
-    if ((codepages & (1U << 19)) || (codepages & (1U << 21))) {
-      mapper_->AddInstalledFont(facename, FX_Charset::kHangul);
-      pInfo->charsets_ |= FX_CharsetFlag::kHangul;
+    if (codepages & (1U << 21)) {
+      mapper_->AddInstalledFont(facename, FX_Charset::kJohab);
+      pInfo->charsets_ |= FX_CharsetFlag::kJohab;
+    }
+    if (codepages & (1U << 30)) {
+      mapper_->AddInstalledFont(facename, FX_Charset::kOEM);
+      pInfo->charsets_ |= FX_CharsetFlag::kOEM;
     }
     if (codepages & (1U << 31)) {
       mapper_->AddInstalledFont(facename, FX_Charset::kSymbol);
