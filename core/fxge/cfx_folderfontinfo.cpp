@@ -57,8 +57,12 @@ struct FxFileCloser {
   }
 };
 
-bool FindFamilyNameMatch(ByteStringView family_name,
-                         const ByteString& installed_font_name) {
+}  // namespace
+
+// static
+bool CFX_FolderFontInfo::FindFamilyNameMatch(
+    ByteStringView family_name,
+    const ByteString& installed_font_name) {
   std::optional<size_t> result = installed_font_name.Find(family_name, 0);
   if (!result.has_value()) {
     return false;
@@ -77,7 +81,8 @@ bool FindFamilyNameMatch(ByteStringView family_name,
   return true;
 }
 
-ByteString ReadStringFromFile(FILE* pFile, uint32_t size) {
+// static
+ByteString CFX_FolderFontInfo::ReadStringFromFile(FILE* pFile, uint32_t size) {
   ByteString result;
   {
     // Span's lifetime must end before ReleaseBuffer() below.
@@ -91,11 +96,12 @@ ByteString ReadStringFromFile(FILE* pFile, uint32_t size) {
   return result;
 }
 
-ByteString LoadTableFromTT(FILE* pFile,
-                           const uint8_t* pTables,
-                           uint32_t nTables,
-                           uint32_t tag,
-                           FX_FILESIZE fileSize) {
+// static
+ByteString CFX_FolderFontInfo::LoadTableFromTT(FILE* pFile,
+                                               const uint8_t* pTables,
+                                               uint32_t nTables,
+                                               uint32_t tag,
+                                               FX_FILESIZE fileSize) {
   UNSAFE_TODO({
     for (uint32_t i = 0; i < nTables; i++) {
       // TODO(tsepez): use actual span.
@@ -114,8 +120,6 @@ ByteString LoadTableFromTT(FILE* pFile,
   });
   return ByteString();
 }
-
-}  // namespace
 
 CFX_FolderFontInfo::CFX_FolderFontInfo() = default;
 

@@ -19,6 +19,15 @@
 
 class CFX_FolderFontInfo : public SystemFontInfoIface {
  public:
+  static bool FindFamilyNameMatch(ByteStringView family_name,
+                                  const ByteString& installed_font_name);
+  static ByteString ReadStringFromFile(FILE* pFile, uint32_t size);
+  static ByteString LoadTableFromTT(FILE* pFile,
+                                    const uint8_t* pTables,
+                                    uint32_t nTables,
+                                    uint32_t tag,
+                                    FX_FILESIZE fileSize);
+
   CFX_FolderFontInfo();
   ~CFX_FolderFontInfo() override;
 
