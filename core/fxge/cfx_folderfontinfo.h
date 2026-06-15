@@ -36,7 +36,7 @@ class CFX_FolderFontInfo : public SystemFontInfoIface {
   // SystemFontInfoIface:
   void EnumFontList(CFX_FontMapper* pMapper) override;
   void* MapFont(int weight,
-                bool bItalic,
+                bool italic,
                 FX_Charset charset,
                 int pitch_family,
                 const ByteString& face) override;
@@ -74,7 +74,16 @@ class CFX_FolderFontInfo : public SystemFontInfoIface {
     const uint32_t file_size_;
     uint32_t styles_ = 0;
     Mask<FX_CharsetFlag> charsets_;
+    uint32_t glyph_count_ = 0;
   };
+
+  virtual bool IsBetterMatch(const FontFaceInfo* candidate,
+                             int32_t candidate_score,
+                             const FontFaceInfo* current_best,
+                             int32_t current_best_score,
+                             FX_Charset charset,
+                             const ByteString& family,
+                             bool must_match_name) const;
 
   void ScanPath(const ByteString& path);
   void ScanFile(const ByteString& path);
@@ -84,11 +93,11 @@ class CFX_FolderFontInfo : public SystemFontInfoIface {
                   uint32_t offset);
   void* GetSubstFont(const ByteString& face);
   void* FindFont(int weight,
-                 bool bItalic,
+                 bool italic,
                  FX_Charset charset,
                  int pitch_family,
                  const ByteString& family,
-                 bool bMatchName);
+                 bool must_match_name);
 
   std::map<ByteString, std::unique_ptr<FontFaceInfo>> font_list_;
   std::vector<ByteString> path_list_;
