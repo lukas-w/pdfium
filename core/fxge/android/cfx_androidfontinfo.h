@@ -9,6 +9,7 @@
 
 #include <stdint.h>
 
+#include "core/fxcrt/bytestring.h"
 #include "core/fxcrt/span.h"
 #include "core/fxcrt/unowned_ptr.h"
 #include "core/fxge/cfx_fontmapper.h"
@@ -41,5 +42,19 @@ class CFX_AndroidFontInfo final : public SystemFontInfoIface {
  private:
   UnownedPtr<CFPF_SkiaFontMgr> font_mgr_;
 };
+
+struct SkiaFontMap {
+  uint32_t family;
+  const char* subst;
+};
+
+pdfium::span<const SkiaFontMap> GetSkiaFontmap();
+pdfium::span<const SkiaFontMap> GetSkiaSansFontMap();
+
+uint32_t SkiaNormalizeFontName(ByteStringView family);
+const char* SkiaGetSubstFont(uint32_t hash,
+                             pdfium::span<const SkiaFontMap> font_map);
+bool SkiaMaybeArabic(ByteStringView facename);
+bool SkiaMaybeSymbol(ByteStringView facename);
 
 #endif  // CORE_FXGE_ANDROID_CFX_ANDROIDFONTINFO_H_
