@@ -86,6 +86,7 @@ class CFX_Face final : public Retainable, public Observable {
 
   FX_RECT GetBBox() const;
   uint16_t GetUnitsPerEm() const;
+  int EmAdjust(int value) const;
   int16_t GetAscender() const;
   int16_t GetDescender() const;
 
