@@ -19,7 +19,6 @@ class CXFA_TextProvider;
 class CXFA_FFPushButton final : public CXFA_FFField {
  public:
   enum class HighlightStyle : uint32_t {
-    kNone = 0,
     kInverted = 1L << 0,
     kPush = 1L << 1,
     kOutline = 1L << 2,

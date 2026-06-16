@@ -7,7 +7,7 @@
 #include "xfa/fxfa/cxfa_ffpushbutton.h"
 
 #include "core/fxcrt/check.h"
-#include "core/fxcrt/to_underlying.h"
+#include "core/fxcrt/mask.h"
 #include "v8/include/cppgc/visitor.h"
 #include "xfa/fgas/graphics/cfgas_gecolor.h"
 #include "xfa/fgas/graphics/cfgas_gepath.h"
@@ -83,22 +83,21 @@ bool CXFA_FFPushButton::LoadWidget() {
 }
 
 void CXFA_FFPushButton::UpdateWidgetProperty() {
-  HighlightStyle highlight = HighlightStyle::kNone;
+  Mask<HighlightStyle> highlight;
   switch (button_->GetHighlight()) {
     case XFA_AttributeValue::Inverted:
-      highlight = HighlightStyle::kInverted;
+      highlight |= HighlightStyle::kInverted;
       break;
     case XFA_AttributeValue::Outline:
-      highlight = HighlightStyle::kOutline;
+      highlight |= HighlightStyle::kOutline;
       break;
     case XFA_AttributeValue::Push:
-      highlight = HighlightStyle::kPush;
+      highlight |= HighlightStyle::kPush;
       break;
     default:
       break;
   }
-  GetNormalWidget()->ModifyStyleExts(fxcrt::to_underlying(highlight),
-                                     0xFFFFFFFF);
+  GetNormalWidget()->ModifyStyleExts(highlight.UncheckedValue(), 0xFFFFFFFF);
 }
 
 void CXFA_FFPushButton::PerformLayout() {
@@ -222,8 +221,9 @@ void CXFA_FFPushButton::OnProcessEvent(pdfium::CFWL_Event* pEvent) {
 void CXFA_FFPushButton::OnDrawWidget(CFGAS_GEGraphics* pGraphics,
                                      const CFX_Matrix& matrix) {
   auto* pWidget = GetNormalWidget();
-  if (pWidget->GetStyleExts() &
-      fxcrt::to_underlying(HighlightStyle::kInverted)) {
+  auto exts_mask =
+      Mask<HighlightStyle>::FromUnderlyingUnchecked(pWidget->GetStyleExts());
+  if (exts_mask & HighlightStyle::kInverted) {
     if ((pWidget->GetStates() & FWL_STATE_PSB_Pressed) &&
         (pWidget->GetStates() & FWL_STATE_PSB_Hovered)) {
       CFX_RectF rtFill(0, 0, pWidget->GetWidgetRect().Size());
@@ -238,8 +238,7 @@ void CXFA_FFPushButton::OnDrawWidget(CFGAS_GEGraphics* pGraphics,
     return;
   }
 
-  if (pWidget->GetStyleExts() &
-      fxcrt::to_underlying(HighlightStyle::kOutline)) {
+  if (exts_mask & HighlightStyle::kOutline) {
     if ((pWidget->GetStates() & FWL_STATE_PSB_Pressed) &&
         (pWidget->GetStates() & FWL_STATE_PSB_Hovered)) {
       float fLineWidth = GetLineWidth();
