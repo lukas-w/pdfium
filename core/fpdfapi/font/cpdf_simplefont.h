@@ -16,6 +16,8 @@
 #include "core/fpdfapi/font/cpdf_fontencoding.h"
 #include "core/fxcrt/fx_string.h"
 
+// 8-bit fonts, supporting at most 256 characters mapped via /Encoding.
+// See ISO 32000-1:2008, section 9.6
 class CPDF_SimpleFont : public CPDF_Font {
  public:
   ~CPDF_SimpleFont() override;

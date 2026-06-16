@@ -35,6 +35,7 @@ class CPDF_Type3Font;
 class CPDF_ToUnicodeMap;
 enum class FontEncoding;
 
+// Abstract base class for all PDF fonts.
 class CPDF_Font : public Retainable, public Observable {
  public:
   // Callback mechanism for Type3 fonts to get pixels from forms.

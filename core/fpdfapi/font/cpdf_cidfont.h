@@ -44,6 +44,8 @@ class CPDF_CID2UnicodeMap;
 class CPDF_CMap;
 class CPDF_StreamAcc;
 
+// CID-keyed fonts, mapping multi-byte characters to glyphs using CMaps.
+// See ISO 32000-1:2008, section 9.7.2
 class CPDF_CIDFont final : public CPDF_Font {
  public:
   CONSTRUCT_VIA_MAKE_RETAIN;
