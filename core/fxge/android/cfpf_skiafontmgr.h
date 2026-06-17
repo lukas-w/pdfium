@@ -22,16 +22,19 @@ class CFPF_SkiaFont;
 class CFPF_SkiaFontMgr {
  public:
   CFPF_SkiaFontMgr();
-  ~CFPF_SkiaFontMgr();
+  virtual ~CFPF_SkiaFontMgr();
 
   void LoadFonts(const char** user_paths);
   CFPF_SkiaFont* CreateFont(ByteStringView family_name,
                             FX_Charset charset,
                             uint32_t style);
 
-  RetainPtr<CFX_Face> GetFontFace(const ByteString& path, int32_t face_index);
+  virtual RetainPtr<CFX_Face> GetFontFace(const ByteString& path,
+                                          int32_t face_index);
 
  private:
+  friend class CFPFSkiaFontMgrTest;
+
   struct Entry {
     Entry();
     ~Entry();

@@ -618,7 +618,7 @@ std::optional<std::array<uint32_t, 4>> CFX_Face::GetOs2UnicodeRange() {
 }
 #endif  // defined(PDF_ENABLE_XFA)
 
-#if defined(PDF_ENABLE_XFA) || BUILDFLAG(IS_ANDROID)
+#if defined(PDF_ENABLE_XFA) || BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_LINUX)
 std::optional<std::array<uint32_t, 2>> CFX_Face::GetOs2CodePageRange() {
   auto* os2 = static_cast<TT_OS2*>(FT_Get_Sfnt_Table(GetRec(), FT_SFNT_OS2));
   std::optional<std::array<uint32_t, 2>> ft_result;
@@ -1440,7 +1440,7 @@ void CFX_Face::AdjustVariationParams(int glyph_index,
   FT_Set_MM_Design_Coordinates(rec, 2, coords);
 }
 
-#if defined(PDF_ENABLE_XFA) || BUILDFLAG(IS_ANDROID)
+#if defined(PDF_ENABLE_XFA) || BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_LINUX)
 uint32_t CFX_Face::GetFontStyle() {
   uint32_t style = 0;
   if (IsBold()) {

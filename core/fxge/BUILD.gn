@@ -290,6 +290,20 @@ pdfium_unittest_source_set("unittests") {
     sources += [ "win32/cfx_psrenderer_unittest.cpp" ]
   }
 
+  # CFPF_SkiaFontMgr contains cross-platform logic that can be tested on
+  # Linux without Android-specific APIs.
+  if (is_linux) {
+    sources += [
+      "android/cfpf_skiafont.cpp",
+      "android/cfpf_skiafont.h",
+      "android/cfpf_skiafontmgr.cpp",
+      "android/cfpf_skiafontmgr.h",
+      "android/cfpf_skiafontmgr_unittest.cpp",
+      "android/cfx_androidfontinfo.cpp",
+      "android/cfx_androidfontinfo.h",
+    ]
+  }
+
   if (pdf_enable_fontations) {
     sources += [ "skrifa/fx_skrifa_unittest.cpp" ]
     deps += [

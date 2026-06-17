@@ -139,7 +139,7 @@ class CFX_Face final : public Retainable, public Observable {
   void SetCharMapByIndex(size_t index);
   bool SelectCharMap(fxge::FontEncoding encoding);
 
-#if defined(PDF_ENABLE_XFA) || BUILDFLAG(IS_ANDROID)
+#if defined(PDF_ENABLE_XFA) || BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_LINUX)
   // Returns enum FontStyle values.
   uint32_t GetFontStyle();
 
@@ -184,7 +184,7 @@ class CFX_Face final : public Retainable, public Observable {
 
   pdfium::span<const FT_CharMap> GetCharMaps() const;
 
-#if BUILDFLAG(IS_ANDROID) || defined(PDF_ENABLE_XFA)
+#if defined(PDF_ENABLE_XFA) || BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_LINUX)
   std::optional<std::array<uint8_t, 2>> GetOs2Panose();
 #endif
 
