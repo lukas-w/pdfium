@@ -224,7 +224,7 @@ v8::Intercepted NamedPropertyQueryCallback(
   // SAFETY: required from V8.
   auto szFxPropName =
       UNSAFE_BUFFERS(ByteStringView(*szPropName, szPropName.length()));
-  if (DynPropQueryAdapter(info.GetIsolate(), pClass, info.HolderV2(),
+  if (DynPropQueryAdapter(info.GetIsolate(), pClass, info.Holder(),
                           szFxPropName)) {
     info.GetReturnValue().Set(v8::DontDelete);
     return v8::Intercepted::kYes;
@@ -248,7 +248,7 @@ v8::Intercepted NamedPropertyGetterCallback(
   auto szFxPropName =
       UNSAFE_BUFFERS(ByteStringView(*szPropName, szPropName.length()));
   v8::Local<v8::Value> new_value = DynPropGetterAdapter(
-      info.GetIsolate(), pClass, info.HolderV2(), szFxPropName);
+      info.GetIsolate(), pClass, info.Holder(), szFxPropName);
   info.GetReturnValue().Set(new_value);
   return v8::Intercepted::kYes;
 }
@@ -268,7 +268,7 @@ v8::Intercepted NamedPropertySetterCallback(
   // SAFETY: required from V8.
   auto szFxPropName =
       UNSAFE_BUFFERS(ByteStringView(*szPropName, szPropName.length()));
-  DynPropSetterAdapter(info.GetIsolate(), pClass, info.HolderV2(), szFxPropName,
+  DynPropSetterAdapter(info.GetIsolate(), pClass, info.Holder(), szFxPropName,
                        value);
   return v8::Intercepted::kYes;
 }
