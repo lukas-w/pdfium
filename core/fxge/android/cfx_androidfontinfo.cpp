@@ -8,14 +8,12 @@
 
 #include <algorithm>
 #include <functional>
+#include <utility>
 
 #include "core/fxcrt/compiler_specific.h"
+#include "core/fxcrt/fx_codepage.h"
 #include "core/fxcrt/fx_extension.h"
-#include "core/fxcrt/fx_system.h"
-#include "core/fxge/android/cfpf_skiafont.h"
-#include "core/fxge/android/cfpf_skiafontmgr.h"
-#include "core/fxge/cfx_fontmapper.h"
-#include "core/fxge/fx_font.h"
+#include "core/fxcrt/span.h"
 
 namespace {
 
@@ -61,7 +59,12 @@ static_assert(HashNormalizeFontName("SimSun") == 0xca383e15);
 static_assert(HashNormalizeFontName("Tahoma") == 0xcb7a04c8);
 static_assert(HashNormalizeFontName("Verdana") == 0x14ee2d13);
 
-const SkiaFontMap kSkiaFontmap[] = {
+struct AndroidFontMap {
+  uint32_t family;
+  const char* subst;
+};
+
+const AndroidFontMap kAndroidFontmap[] = {
     {0x058c5083, kRoboto},             // Arial
     {0x05dfade2, kDroidSerif},         // Goudy
     {0x0684317d, kDroidSerif},         // Serif
@@ -85,7 +88,7 @@ const SkiaFontMap kSkiaFontmap[] = {
     {0xfb4ce0de, kDroidSerif},         // Georgia
 };
 
-const SkiaFontMap kSkiaSansFontMap[] = {
+const AndroidFontMap kAndroidSansFontMap[] = {
     {0x058c5083, kDroidSans},  // Arial
     {0x14ee2d13, kDroidSans},  // Verdana
     {0x779ce19d, kDroidSans},  // Sanserif
@@ -93,17 +96,7 @@ const SkiaFontMap kSkiaSansFontMap[] = {
     {0xfb4ce0de, kDroidSans},  // Georgia
 };
 
-}  // namespace
-
-pdfium::span<const SkiaFontMap> GetSkiaFontmap() {
-  return kSkiaFontmap;
-}
-
-pdfium::span<const SkiaFontMap> GetSkiaSansFontMap() {
-  return kSkiaSansFontMap;
-}
-
-uint32_t SkiaNormalizeFontName(ByteStringView family) {
+uint32_t AndroidNormalizeFontName(ByteStringView family) {
   uint32_t hash_code = 0;
   for (char ch : family) {
     if (ch == ' ' || ch == '-' || ch == ',') {
@@ -114,10 +107,10 @@ uint32_t SkiaNormalizeFontName(ByteStringView family) {
   return hash_code;
 }
 
-const char* SkiaGetSubstFont(uint32_t hash,
-                             pdfium::span<const SkiaFontMap> font_map) {
+const char* AndroidGetSubstFont(uint32_t hash,
+                                pdfium::span<const AndroidFontMap> font_map) {
   auto it = std::ranges::lower_bound(font_map, hash, std::less<>{},
-                                     &SkiaFontMap::family);
+                                     &AndroidFontMap::family);
 
   if (it != font_map.end() && it->family == hash) {
     return it->subst;
@@ -125,90 +118,127 @@ const char* SkiaGetSubstFont(uint32_t hash,
   return nullptr;
 }
 
-bool SkiaMaybeArabic(ByteStringView facename) {
+bool AndroidMaybeArabic(ByteStringView facename) {
   ByteString name(facename);
   name.MakeLower();
   return name.Contains("arabic");
 }
 
-bool SkiaMaybeSymbol(ByteStringView facename) {
+bool AndroidMaybeSymbol(ByteStringView facename) {
   ByteString name(facename);
   name.MakeLower();
   return name.Contains("symbol");
 }
 
+}  // namespace
+
 CFX_AndroidFontInfo::CFX_AndroidFontInfo() = default;
 
 CFX_AndroidFontInfo::~CFX_AndroidFontInfo() = default;
 
-bool CFX_AndroidFontInfo::Init(CFPF_SkiaFontMgr* font_mgr,
-                               const char** user_paths) {
-  if (!font_mgr) {
-    return false;
+void CFX_AndroidFontInfo::Init(const char** user_paths) {
+  AddPath("/system/fonts");
+  if (user_paths) {
+    // SAFETY: nullptr-terminated array required from caller.
+    UNSAFE_BUFFERS({
+      for (const char** path = user_paths; *path; ++path) {
+        AddPath(*path);
+      }
+    });
   }
-
-  font_mgr_ = font_mgr;
-  font_mgr_->LoadFonts(user_paths);
-  return true;
 }
-
-void CFX_AndroidFontInfo::EnumFontList(CFX_FontMapper* pMapper) {}
 
 void* CFX_AndroidFontInfo::MapFont(int weight,
                                    bool bItalic,
                                    FX_Charset charset,
                                    int pitch_family,
                                    const ByteString& face) {
-  if (!font_mgr_) {
-    return nullptr;
+  bool is_cjk = FX_CharSetIsCJK(charset);
+  if (charset != FX_Charset::kMSWin_Arabic &&
+      AndroidMaybeArabic(face.AsStringView())) {
+    charset = FX_Charset::kMSWin_Arabic;
+  } else if (charset == FX_Charset::kANSI ||
+             AndroidMaybeSymbol(face.AsStringView())) {
+    charset = FX_Charset::kDefault;
   }
 
-  uint32_t dwStyle = 0;
-  if (weight >= 700) {
-    dwStyle |= pdfium::kFontStyleForceBold;
+  // First try to match the actual face name.
+  void* font = FindFont(weight, bItalic, charset, pitch_family, face,
+                        /*must_match_name=*/true);
+  if (font) {
+    return font;
   }
-  if (bItalic) {
-    dwStyle |= pdfium::kFontStyleItalic;
-  }
-  if (FontFamilyIsFixedPitch(pitch_family)) {
-    dwStyle |= pdfium::kFontStyleFixedPitch;
-  }
-  if (FontFamilyIsScript(pitch_family)) {
-    dwStyle |= pdfium::kFontStyleScript;
-  }
-  if (FontFamilyIsRoman(pitch_family)) {
-    dwStyle |= pdfium::kFontStyleSerif;
-  }
-  return font_mgr_->CreateFont(face.AsStringView(), charset, dwStyle);
-}
 
-void* CFX_AndroidFontInfo::GetFont(const ByteString& face) {
+  const uint32_t face_name_hash = AndroidNormalizeFontName(face.AsStringView());
+  const char* subst_name = AndroidGetSubstFont(face_name_hash, kAndroidFontmap);
+  if (subst_name) {
+    font = FindFont(weight, bItalic, charset, pitch_family, subst_name,
+                    /*must_match_name=*/true);
+    if (font) {
+      return font;
+    }
+  }
+
+  const char* subst_sans_name =
+      AndroidGetSubstFont(face_name_hash, kAndroidSansFontMap);
+  if (subst_sans_name) {
+    font = FindFont(weight, bItalic, charset, pitch_family, subst_sans_name,
+                    /*must_match_name=*/true);
+    if (font) {
+      return font;
+    }
+  }
+
+  font = GetSubstFont(face);
+  if (font) {
+    return font;
+  }
+
+  if (is_cjk) {
+    return FindFont(weight, bItalic, charset, pitch_family, face,
+                    /*must_match_name=*/false);
+  }
   return nullptr;
 }
 
-size_t CFX_AndroidFontInfo::GetFontData(void* hFont,
-                                        uint32_t table,
-                                        pdfium::span<uint8_t> buffer) {
-  if (!hFont) {
-    return 0;
+bool CFX_AndroidFontInfo::IsBetterMatch(const FontFaceInfo* candidate,
+                                        int32_t candidate_score,
+                                        const FontFaceInfo* current_best,
+                                        int32_t current_best_score,
+                                        FX_Charset charset,
+                                        const ByteString& family,
+                                        bool must_match_name) const {
+  if (!FX_CharSetIsCJK(charset)) {
+    return CFX_FolderFontInfo::IsBetterMatch(candidate, candidate_score,
+                                             current_best, current_best_score,
+                                             charset, family, must_match_name);
   }
-  return static_cast<CFPF_SkiaFont*>(hFont)->GetFontData(table, buffer);
-}
 
-bool CFX_AndroidFontInfo::GetFaceName(void* hFont, ByteString* name) {
-  if (!hFont) {
-    return false;
+  if (must_match_name) {
+    // When a name match is required, prefer score over glyph count.
+    if (current_best && candidate_score < current_best_score) {
+      return false;
+    }
+    ByteStringView family_view = family.AsStringView();
+    if (candidate->face_name_ != family &&
+        !FindFamilyNameMatch(family_view, candidate->face_name_)) {
+      return false;
+    }
+    if (current_best) {
+      if (candidate_score != current_best_score) {
+        return candidate_score > current_best_score;
+      }
+      return candidate->glyph_count_ > current_best->glyph_count_;
+    }
+    return true;
   }
-  *name = static_cast<CFPF_SkiaFont*>(hFont)->GetFamilyName();
-  return true;
-}
 
-bool CFX_AndroidFontInfo::GetFontCharset(void* hFont, FX_Charset* charset) {
-  if (!hFont) {
-    return false;
+  // When a name match is not required, prefer glyph count over score to
+  // avoid empty boxes.
+  uint32_t current_best_glyphs = current_best ? current_best->glyph_count_ : 0;
+  if (candidate->glyph_count_ != current_best_glyphs) {
+    return candidate->glyph_count_ > current_best_glyphs;
   }
-  *charset = static_cast<CFPF_SkiaFont*>(hFont)->GetCharset();
-  return true;
-}
 
-void CFX_AndroidFontInfo::DeleteFont(void* hFont) {}
+  return candidate_score > current_best_score;
+}

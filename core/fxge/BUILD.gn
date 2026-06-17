@@ -165,10 +165,6 @@ source_set("fxge") {
 
   if (is_android) {
     sources += [
-      "android/cfpf_skiafont.cpp",
-      "android/cfpf_skiafont.h",
-      "android/cfpf_skiafontmgr.cpp",
-      "android/cfpf_skiafontmgr.h",
       "android/cfx_androidfontinfo.cpp",
       "android/cfx_androidfontinfo.h",
       "android/fx_android_impl.cpp",
@@ -290,17 +286,13 @@ pdfium_unittest_source_set("unittests") {
     sources += [ "win32/cfx_psrenderer_unittest.cpp" ]
   }
 
-  # CFPF_SkiaFontMgr contains cross-platform logic that can be tested on
+  # CFX_AndroidFontInfo contains cross-platform logic that can be tested on
   # Linux without Android-specific APIs.
   if (is_linux) {
     sources += [
-      "android/cfpf_skiafont.cpp",
-      "android/cfpf_skiafont.h",
-      "android/cfpf_skiafontmgr.cpp",
-      "android/cfpf_skiafontmgr.h",
-      "android/cfpf_skiafontmgr_unittest.cpp",
       "android/cfx_androidfontinfo.cpp",
       "android/cfx_androidfontinfo.h",
+      "android/cfx_androidfontinfo_unittest.cpp",
     ]
   }
 
