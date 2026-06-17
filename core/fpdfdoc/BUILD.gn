@@ -70,6 +70,7 @@ source_set("fpdfdoc") {
     "cpvt_section.h",
     "cpvt_variabletext.cpp",
     "cpvt_variabletext.h",
+    "cpvt_word.cpp",
     "cpvt_word.h",
     "cpvt_wordinfo.cpp",
     "cpvt_wordinfo.h",
