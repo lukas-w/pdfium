@@ -24,6 +24,7 @@
 #include "core/fpdfdoc/cpdf_interactiveform.h"
 #include "core/fxcrt/check.h"
 #include "core/fxcrt/notreached.h"
+#include "core/fxcrt/retain_ptr.h"
 #include "core/fxge/cfx_fillrenderoptions.h"
 #include "core/fxge/cfx_graphstatedata.h"
 #include "core/fxge/cfx_path.h"

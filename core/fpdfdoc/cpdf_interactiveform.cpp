@@ -422,11 +422,11 @@ class CFieldTree {
 
     size_t CountFields() const { return CountFieldsInternal(); }
 
-    void SetField(std::unique_ptr<CPDF_FormField> field) {
+    void SetField(RetainPtr<CPDF_FormField> field) {
       field_ = std::move(field);
     }
 
-    CPDF_FormField* GetField() const { return field_.get(); }
+    CPDF_FormField* GetField() const { return field_.Get(); }
     WideString GetShortName() const { return short_name_; }
     int GetLevel() const { return level_; }
 
@@ -434,7 +434,7 @@ class CFieldTree {
     CPDF_FormField* GetFieldInternal(size_t* pFieldsToGo) {
       if (field_) {
         if (*pFieldsToGo == 0) {
-          return field_.get();
+          return field_.Get();
         }
 
         --*pFieldsToGo;
@@ -462,15 +462,14 @@ class CFieldTree {
 
     std::vector<std::unique_ptr<Node>> children_;
     WideString short_name_;
-    std::unique_ptr<CPDF_FormField> field_;
+    RetainPtr<CPDF_FormField> field_;
     const int level_;
   };
 
   CFieldTree();
   ~CFieldTree();
 
-  bool SetField(const WideString& full_name,
-                std::unique_ptr<CPDF_FormField> field);
+  bool SetField(const WideString& full_name, RetainPtr<CPDF_FormField> field);
   CPDF_FormField* GetField(const WideString& full_name);
 
   Node* GetRoot() { return root_.get(); }
@@ -518,7 +517,7 @@ CFieldTree::Node* CFieldTree::Lookup(Node* pParent, WideStringView short_name) {
 }
 
 bool CFieldTree::SetField(const WideString& full_name,
-                          std::unique_ptr<CPDF_FormField> field) {
+                          RetainPtr<CPDF_FormField> field) {
   if (full_name.IsEmpty()) {
     return false;
   }
@@ -947,8 +946,9 @@ void CPDF_InteractiveForm::AddTerminalField(
       }
     }
 
-    auto new_field = std::make_unique<CPDF_FormField>(this, std::move(pParent));
-    field = new_field.get();
+    auto new_field =
+        pdfium::MakeRetain<CPDF_FormField>(this, std::move(pParent));
+    field = new_field.Get();
     RetainPtr<const CPDF_Object> t_obj =
         field_dict->GetObjectFor(pdfium::form_fields::kT);
     if (ToReference(t_obj)) {
