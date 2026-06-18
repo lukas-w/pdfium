@@ -92,9 +92,6 @@ class CFX_Face final : public Retainable, public Observable {
 
   pdfium::span<const uint8_t> GetData() const;
 
-  // Returns the size of the data, or 0 on failure. Only write into `buffer` if
-  // it is large enough to hold the data.
-  size_t GetSfntTable(uint32_t table, pdfium::span<uint8_t> buffer);
 
   std::unique_ptr<CFX_CTTGSUBTable> ParseGSUBTable();
 
@@ -183,6 +180,10 @@ class CFX_Face final : public Retainable, public Observable {
   void AdjustVariationParams(int glyph_index, int dest_width, int weight);
 
   pdfium::span<const FT_CharMap> GetCharMaps() const;
+
+  // Returns the size of the data, or 0 on failure. Only write into `buffer` if
+  // it is large enough to hold the data.
+  size_t GetSfntTable(uint32_t table, pdfium::span<uint8_t> buffer);
 
 #if defined(PDF_ENABLE_XFA) || BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_LINUX)
   std::optional<std::array<uint8_t, 2>> GetOs2Panose();
