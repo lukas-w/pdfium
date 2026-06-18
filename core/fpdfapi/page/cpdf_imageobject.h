@@ -23,7 +23,6 @@ class CPDF_ImageObject final : public CPDF_PageObject {
   // CPDF_PageObject
   Type GetType() const override;
   void Transform(const CFX_Matrix& matrix) override;
-  bool IsImage() const override;
   CPDF_ImageObject* AsImage() override;
 
   void CalcBoundingBox();

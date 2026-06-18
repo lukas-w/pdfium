@@ -28,7 +28,6 @@ class CPDF_Type3Font final : public CPDF_SimpleFont {
   ~CPDF_Type3Font() override;
 
   // CPDF_Font:
-  bool IsType3Font() const override;
   CPDF_Type3Font* AsType3Font() override;
   void WillBeDestroyed() override;
   int GetCharWidth(uint32_t charcode) override;

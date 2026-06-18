@@ -44,31 +44,35 @@ class CPDF_PageObject {
 
   virtual Type GetType() const = 0;
   virtual void Transform(const CFX_Matrix& matrix) = 0;
-  virtual bool IsText() const;
-  virtual bool IsPath() const;
-  virtual bool IsImage() const;
-  virtual bool IsShading() const;
-  virtual bool IsForm() const;
   virtual CPDF_TextObject* AsText();
+  virtual CPDF_PathObject* AsPath();
+  virtual CPDF_ImageObject* AsImage();
+  virtual CPDF_ShadingObject* AsShading();
+  virtual CPDF_FormObject* AsForm();
+
+  // Const methods wrap non-const virtual As*() methods.
   const CPDF_TextObject* AsText() const {
     return const_cast<CPDF_PageObject*>(this)->AsText();
   }
-  virtual CPDF_PathObject* AsPath();
   const CPDF_PathObject* AsPath() const {
     return const_cast<CPDF_PageObject*>(this)->AsPath();
   }
-  virtual CPDF_ImageObject* AsImage();
   const CPDF_ImageObject* AsImage() const {
     return const_cast<CPDF_PageObject*>(this)->AsImage();
   }
-  virtual CPDF_ShadingObject* AsShading();
   const CPDF_ShadingObject* AsShading() const {
     return const_cast<CPDF_PageObject*>(this)->AsShading();
   }
-  virtual CPDF_FormObject* AsForm();
   const CPDF_FormObject* AsForm() const {
     return const_cast<CPDF_PageObject*>(this)->AsForm();
   }
+
+  // Type-testing methods merely wrap As*() methods.
+  bool IsText() const { return !!AsText(); }
+  bool IsPath() const { return !!AsPath(); }
+  bool IsImage() const { return !!AsImage(); }
+  bool IsShading() const { return !!AsShading(); }
+  bool IsForm() const { return !!AsForm(); }
 
   void SetDirty(bool value) { dirty_ = value; }
   bool IsDirty() const { return dirty_ || matrix_dirty_; }

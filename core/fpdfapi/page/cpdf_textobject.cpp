@@ -146,10 +146,6 @@ void CPDF_TextObject::Transform(const CFX_Matrix& matrix) {
   SetDirty(true);
 }
 
-bool CPDF_TextObject::IsText() const {
-  return true;
-}
-
 CPDF_TextObject* CPDF_TextObject::AsText() {
   return this;
 }

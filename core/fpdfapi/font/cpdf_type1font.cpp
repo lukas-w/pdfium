@@ -79,10 +79,6 @@ CPDF_Type1Font::CPDF_Type1Font(CPDF_Document* document,
 
 CPDF_Type1Font::~CPDF_Type1Font() = default;
 
-bool CPDF_Type1Font::IsType1Font() const {
-  return true;
-}
-
 CPDF_Type1Font* CPDF_Type1Font::AsType1Font() {
   return this;
 }

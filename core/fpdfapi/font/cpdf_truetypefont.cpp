@@ -42,10 +42,6 @@ CPDF_TrueTypeFont::CPDF_TrueTypeFont(CPDF_Document* document,
 
 CPDF_TrueTypeFont::~CPDF_TrueTypeFont() = default;
 
-bool CPDF_TrueTypeFont::IsTrueTypeFont() const {
-  return true;
-}
-
 CPDF_TrueTypeFont* CPDF_TrueTypeFont::AsTrueTypeFont() {
   return this;
 }

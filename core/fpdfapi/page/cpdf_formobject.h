@@ -24,7 +24,6 @@ class CPDF_FormObject final : public CPDF_PageObject {
   // CPDF_PageObject:
   Type GetType() const override;
   void Transform(const CFX_Matrix& matrix) override;
-  bool IsForm() const override;
   CPDF_FormObject* AsForm() override;
 
   void CalcBoundingBox();

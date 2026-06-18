@@ -23,10 +23,6 @@ void CPDF_PathObject::Transform(const CFX_Matrix& matrix) {
   SetDirty(true);
 }
 
-bool CPDF_PathObject::IsPath() const {
-  return true;
-}
-
 CPDF_PathObject* CPDF_PathObject::AsPath() {
   return this;
 }

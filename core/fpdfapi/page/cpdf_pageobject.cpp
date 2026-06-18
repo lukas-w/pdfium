@@ -15,26 +15,6 @@ CPDF_PageObject::CPDF_PageObject(int32_t content_stream)
 
 CPDF_PageObject::~CPDF_PageObject() = default;
 
-bool CPDF_PageObject::IsText() const {
-  return false;
-}
-
-bool CPDF_PageObject::IsPath() const {
-  return false;
-}
-
-bool CPDF_PageObject::IsImage() const {
-  return false;
-}
-
-bool CPDF_PageObject::IsShading() const {
-  return false;
-}
-
-bool CPDF_PageObject::IsForm() const {
-  return false;
-}
-
 CPDF_TextObject* CPDF_PageObject::AsText() {
   return nullptr;
 }

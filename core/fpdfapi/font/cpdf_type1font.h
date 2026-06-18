@@ -22,7 +22,6 @@ class CPDF_Type1Font final : public CPDF_FaceBasedSimpleFont {
   ~CPDF_Type1Font() override;
 
   // CPDF_Font:
-  bool IsType1Font() const override;
   CPDF_Type1Font* AsType1Font() override;
 #if BUILDFLAG(IS_APPLE)
   int GlyphFromCharCodeExt(uint32_t charcode) override;

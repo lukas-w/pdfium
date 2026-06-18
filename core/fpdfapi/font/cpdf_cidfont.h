@@ -54,7 +54,6 @@ class CPDF_CIDFont final : public CPDF_Font {
   static float CIDTransformToFloat(uint8_t ch);
 
   // CPDF_Font:
-  bool IsCIDFont() const override;
   CPDF_CIDFont* AsCIDFont() override;
   int GlyphFromCharCode(uint32_t charcode, bool* pVertGlyph) override;
   int GetCharWidth(uint32_t charcode) override;

@@ -70,26 +70,30 @@ class CPDF_Font : public Retainable, public Observable {
   static RetainPtr<CPDF_Font> GetStockFont(CPDF_Document* doc,
                                            ByteStringView fontname);
 
-  virtual bool IsType1Font() const;
-  virtual bool IsTrueTypeFont() const;
-  virtual bool IsType3Font() const;
-  virtual bool IsCIDFont() const;
   virtual CPDF_Type1Font* AsType1Font();
+  virtual CPDF_TrueTypeFont* AsTrueTypeFont();
+  virtual CPDF_Type3Font* AsType3Font();
+  virtual CPDF_CIDFont* AsCIDFont();
+
+  // Const methods wrap non-const virtual As*() methods.
   const CPDF_Type1Font* AsType1Font() const {
     return const_cast<CPDF_Font*>(this)->AsType1Font();
   }
-  virtual CPDF_TrueTypeFont* AsTrueTypeFont();
   const CPDF_TrueTypeFont* AsTrueTypeFont() const {
     return const_cast<CPDF_Font*>(this)->AsTrueTypeFont();
   }
-  virtual CPDF_Type3Font* AsType3Font();
   const CPDF_Type3Font* AsType3Font() const {
     return const_cast<CPDF_Font*>(this)->AsType3Font();
   }
-  virtual CPDF_CIDFont* AsCIDFont();
   const CPDF_CIDFont* AsCIDFont() const {
     return const_cast<CPDF_Font*>(this)->AsCIDFont();
   }
+
+  // Type-testing methods merely wrap As*() methods.
+  bool IsType1Font() const { return !!AsType1Font(); }
+  bool IsTrueTypeFont() const { return !!AsTrueTypeFont(); }
+  bool IsType3Font() const { return !!AsType3Font(); }
+  bool IsCIDFont() const { return !!AsCIDFont(); }
 
   virtual void WillBeDestroyed();
   virtual bool IsVertWriting() const;

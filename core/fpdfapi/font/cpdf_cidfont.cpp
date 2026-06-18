@@ -293,10 +293,6 @@ CPDF_CIDFont::CPDF_CIDFont(CPDF_Document* document,
 
 CPDF_CIDFont::~CPDF_CIDFont() = default;
 
-bool CPDF_CIDFont::IsCIDFont() const {
-  return true;
-}
-
 CPDF_CIDFont* CPDF_CIDFont::AsCIDFont() {
   return this;
 }

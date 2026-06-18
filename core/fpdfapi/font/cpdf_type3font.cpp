@@ -35,10 +35,6 @@ CPDF_Type3Font::CPDF_Type3Font(CPDF_Document* document,
 
 CPDF_Type3Font::~CPDF_Type3Font() = default;
 
-bool CPDF_Type3Font::IsType3Font() const {
-  return true;
-}
-
 CPDF_Type3Font* CPDF_Type3Font::AsType3Font() {
   return this;
 }

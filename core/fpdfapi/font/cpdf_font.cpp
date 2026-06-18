@@ -60,22 +60,6 @@ CPDF_Font::~CPDF_Font() {
   }
 }
 
-bool CPDF_Font::IsType1Font() const {
-  return false;
-}
-
-bool CPDF_Font::IsTrueTypeFont() const {
-  return false;
-}
-
-bool CPDF_Font::IsType3Font() const {
-  return false;
-}
-
-bool CPDF_Font::IsCIDFont() const {
-  return false;
-}
-
 CPDF_Type1Font* CPDF_Font::AsType1Font() {
   return nullptr;
 }
