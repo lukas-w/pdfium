@@ -169,8 +169,7 @@ class CPDF_TextPage {
   MarkedContentState PreMarkedContent(const CPDF_TextObject* text_obj);
   void ProcessMarkedContent(const TransformedTextObject& obj);
   void FindPreviousTextObject();
-  void AddCharInfoByLRDirection(wchar_t wc, const CharInfo& info);
-  void AddCharInfoByRLDirection(wchar_t wc, const CharInfo& info);
+  void AddCharInfo(wchar_t wc, const CharInfo& info, bool is_rtl);
   TextOrientation GetTextObjectWritingMode(
       const CPDF_TextObject* text_obj) const;
   TextOrientation FindTextlineFlowOrientation() const;

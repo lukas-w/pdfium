@@ -784,45 +784,31 @@ void CPDF_TextPage::ProcessFormObject(CPDF_FormObject* form_obj,
   }
 }
 
-void CPDF_TextPage::AddCharInfoByLRDirection(wchar_t wc, const CharInfo& info) {
+void CPDF_TextPage::AddCharInfo(wchar_t wc, const CharInfo& info, bool is_rtl) {
   if (!IsNormalCharacter(info)) {
     char_list_.push_back(info);
     return;
+  }
+
+  if (is_rtl) {
+    wc = pdfium::unicode::GetMirrorChar(wc);
   }
 
   DataVector<wchar_t> normalized;
-  if (wc >= 0xFB00 && wc <= 0xFB06) {
+  if (is_rtl || (wc >= 0xFB00 && wc <= 0xFB06)) {
     normalized = GetUnicodeNormalization(wc);
   }
-  if (normalized.empty()) {
-    text_buf_.AppendChar(wc);
-    char_list_.push_back(info);
-    return;
-  }
-  CharInfo modified_info = info;
-  modified_info.set_char_type(CharType::kPiece);
-  for (wchar_t normalized_char : normalized) {
-    modified_info.set_unicode(normalized_char);
-    text_buf_.AppendChar(normalized_char);
-    char_list_.push_back(modified_info);
-  }
-}
-
-void CPDF_TextPage::AddCharInfoByRLDirection(wchar_t wc, const CharInfo& info) {
-  if (!IsNormalCharacter(info)) {
-    char_list_.push_back(info);
-    return;
-  }
 
   CharInfo modified_info = info;
-  wc = pdfium::unicode::GetMirrorChar(wc);
-  DataVector<wchar_t> normalized = GetUnicodeNormalization(wc);
   if (normalized.empty()) {
-    modified_info.set_unicode(wc);
     text_buf_.AppendChar(wc);
+    if (is_rtl) {
+      modified_info.set_unicode(wc);
+    }
     char_list_.push_back(modified_info);
     return;
   }
+
   modified_info.set_char_type(CharType::kPiece);
   for (wchar_t normalized_char : normalized) {
     modified_info.set_unicode(normalized_char);
@@ -862,14 +848,14 @@ void CPDF_TextPage::CloseTempLine() {
          current_direction == CFX_BidiChar::Direction::kRight)) {
       current_direction = CFX_BidiChar::Direction::kRight;
       for (int m = segment.start + segment.count; m > segment.start; --m) {
-        AddCharInfoByRLDirection(str[m - 1], temp_char_list_[m - 1]);
+        AddCharInfo(str[m - 1], temp_char_list_[m - 1], /*is_rtl=*/true);
       }
     } else {
       if (segment.direction != CFX_BidiChar::Direction::kLeftWeak) {
         current_direction = CFX_BidiChar::Direction::kLeft;
       }
       for (int m = segment.start; m < segment.start + segment.count; ++m) {
-        AddCharInfoByLRDirection(str[m], temp_char_list_[m]);
+        AddCharInfo(str[m], temp_char_list_[m], /*is_rtl=*/false);
       }
     }
   }
