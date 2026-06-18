@@ -46,10 +46,6 @@ CPDF_ShadingObject* CPDF_ShadingObject::AsShading() {
   return this;
 }
 
-const CPDF_ShadingObject* CPDF_ShadingObject::AsShading() const {
-  return this;
-}
-
 void CPDF_ShadingObject::CalcBoundingBox() {
   if (!clip_path().HasRef()) {
     return;

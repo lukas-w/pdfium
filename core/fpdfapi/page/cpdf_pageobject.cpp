@@ -39,15 +39,7 @@ CPDF_TextObject* CPDF_PageObject::AsText() {
   return nullptr;
 }
 
-const CPDF_TextObject* CPDF_PageObject::AsText() const {
-  return nullptr;
-}
-
 CPDF_PathObject* CPDF_PageObject::AsPath() {
-  return nullptr;
-}
-
-const CPDF_PathObject* CPDF_PageObject::AsPath() const {
   return nullptr;
 }
 
@@ -55,23 +47,11 @@ CPDF_ImageObject* CPDF_PageObject::AsImage() {
   return nullptr;
 }
 
-const CPDF_ImageObject* CPDF_PageObject::AsImage() const {
-  return nullptr;
-}
-
 CPDF_ShadingObject* CPDF_PageObject::AsShading() {
   return nullptr;
 }
 
-const CPDF_ShadingObject* CPDF_PageObject::AsShading() const {
-  return nullptr;
-}
-
 CPDF_FormObject* CPDF_PageObject::AsForm() {
-  return nullptr;
-}
-
-const CPDF_FormObject* CPDF_PageObject::AsForm() const {
   return nullptr;
 }
 

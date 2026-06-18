@@ -154,10 +154,6 @@ CPDF_TextObject* CPDF_TextObject::AsText() {
   return this;
 }
 
-const CPDF_TextObject* CPDF_TextObject::AsText() const {
-  return this;
-}
-
 bool CPDF_TextObject::SetAbsolutePositions(
     pdfium::span<const float> absolute_positions) {
   if (char_codes_.size() <= 1) {

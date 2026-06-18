@@ -17,7 +17,6 @@ class CPDF_TrueTypeFont final : public CPDF_FaceBasedSimpleFont {
 
   // CPDF_Font:
   bool IsTrueTypeFont() const override;
-  const CPDF_TrueTypeFont* AsTrueTypeFont() const override;
   CPDF_TrueTypeFont* AsTrueTypeFont() override;
 
  private:

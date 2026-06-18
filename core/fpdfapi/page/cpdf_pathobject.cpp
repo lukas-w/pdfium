@@ -31,10 +31,6 @@ CPDF_PathObject* CPDF_PathObject::AsPath() {
   return this;
 }
 
-const CPDF_PathObject* CPDF_PathObject::AsPath() const {
-  return this;
-}
-
 void CPDF_PathObject::CalcBoundingBox() {
   if (!path_.HasRef()) {
     return;

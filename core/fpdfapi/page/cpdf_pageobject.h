@@ -50,15 +50,25 @@ class CPDF_PageObject {
   virtual bool IsShading() const;
   virtual bool IsForm() const;
   virtual CPDF_TextObject* AsText();
-  virtual const CPDF_TextObject* AsText() const;
+  const CPDF_TextObject* AsText() const {
+    return const_cast<CPDF_PageObject*>(this)->AsText();
+  }
   virtual CPDF_PathObject* AsPath();
-  virtual const CPDF_PathObject* AsPath() const;
+  const CPDF_PathObject* AsPath() const {
+    return const_cast<CPDF_PageObject*>(this)->AsPath();
+  }
   virtual CPDF_ImageObject* AsImage();
-  virtual const CPDF_ImageObject* AsImage() const;
+  const CPDF_ImageObject* AsImage() const {
+    return const_cast<CPDF_PageObject*>(this)->AsImage();
+  }
   virtual CPDF_ShadingObject* AsShading();
-  virtual const CPDF_ShadingObject* AsShading() const;
+  const CPDF_ShadingObject* AsShading() const {
+    return const_cast<CPDF_PageObject*>(this)->AsShading();
+  }
   virtual CPDF_FormObject* AsForm();
-  virtual const CPDF_FormObject* AsForm() const;
+  const CPDF_FormObject* AsForm() const {
+    return const_cast<CPDF_PageObject*>(this)->AsForm();
+  }
 
   void SetDirty(bool value) { dirty_ = value; }
   bool IsDirty() const { return dirty_ || matrix_dirty_; }

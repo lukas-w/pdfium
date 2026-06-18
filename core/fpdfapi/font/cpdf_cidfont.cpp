@@ -297,10 +297,6 @@ bool CPDF_CIDFont::IsCIDFont() const {
   return true;
 }
 
-const CPDF_CIDFont* CPDF_CIDFont::AsCIDFont() const {
-  return this;
-}
-
 CPDF_CIDFont* CPDF_CIDFont::AsCIDFont() {
   return this;
 }

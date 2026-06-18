@@ -46,10 +46,6 @@ bool CPDF_TrueTypeFont::IsTrueTypeFont() const {
   return true;
 }
 
-const CPDF_TrueTypeFont* CPDF_TrueTypeFont::AsTrueTypeFont() const {
-  return this;
-}
-
 CPDF_TrueTypeFont* CPDF_TrueTypeFont::AsTrueTypeFont() {
   return this;
 }

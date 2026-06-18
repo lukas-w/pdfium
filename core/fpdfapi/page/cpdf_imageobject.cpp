@@ -42,10 +42,6 @@ CPDF_ImageObject* CPDF_ImageObject::AsImage() {
   return this;
 }
 
-const CPDF_ImageObject* CPDF_ImageObject::AsImage() const {
-  return this;
-}
-
 void CPDF_ImageObject::CalcBoundingBox() {
   static constexpr CFX_FloatRect kRect(0.0f, 0.0f, 1.0f, 1.0f);
   SetOriginalRect(kRect);

@@ -33,10 +33,6 @@ CPDF_FormObject* CPDF_FormObject::AsForm() {
   return this;
 }
 
-const CPDF_FormObject* CPDF_FormObject::AsForm() const {
-  return this;
-}
-
 CPDF_PageObject::Type CPDF_FormObject::GetType() const {
   return Type::kForm;
 }

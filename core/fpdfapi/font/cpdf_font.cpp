@@ -76,15 +76,7 @@ bool CPDF_Font::IsCIDFont() const {
   return false;
 }
 
-const CPDF_Type1Font* CPDF_Font::AsType1Font() const {
-  return nullptr;
-}
-
 CPDF_Type1Font* CPDF_Font::AsType1Font() {
-  return nullptr;
-}
-
-const CPDF_TrueTypeFont* CPDF_Font::AsTrueTypeFont() const {
   return nullptr;
 }
 
@@ -92,15 +84,7 @@ CPDF_TrueTypeFont* CPDF_Font::AsTrueTypeFont() {
   return nullptr;
 }
 
-const CPDF_Type3Font* CPDF_Font::AsType3Font() const {
-  return nullptr;
-}
-
 CPDF_Type3Font* CPDF_Font::AsType3Font() {
-  return nullptr;
-}
-
-const CPDF_CIDFont* CPDF_Font::AsCIDFont() const {
   return nullptr;
 }
 

@@ -25,7 +25,6 @@ class CPDF_ShadingObject final : public CPDF_PageObject {
   void Transform(const CFX_Matrix& matrix) override;
   bool IsShading() const override;
   CPDF_ShadingObject* AsShading() override;
-  const CPDF_ShadingObject* AsShading() const override;
 
   void CalcBoundingBox();
 
