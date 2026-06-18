@@ -106,7 +106,6 @@ class CFWL_Edit : public CFWL_Widget, public CFDE_TextEditEngine::Delegate {
   void ShowCaret(CFX_RectF* pRect);
   void HideCaret(CFX_RectF* pRect);
   const CFX_RectF& GetRTClient() const { return client_rect_; }
-  CFDE_TextEditEngine* GetTxtEdtEngine() { return edit_engine_.get(); }
 
  private:
   void RenderText(CFX_RenderDevice* pRenderDev,
