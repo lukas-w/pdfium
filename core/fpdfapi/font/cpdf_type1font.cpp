@@ -71,7 +71,7 @@ bool UseType1Charmap(const RetainPtr<CFX_Face>& face) {
 
 CPDF_Type1Font::CPDF_Type1Font(CPDF_Document* document,
                                RetainPtr<CPDF_Dictionary> font_dict)
-    : CPDF_SimpleFont(document, std::move(font_dict)) {
+    : CPDF_FaceBasedSimpleFont(document, std::move(font_dict)) {
 #if BUILDFLAG(IS_APPLE)
   ext_gid_.fill(0xffff);
 #endif

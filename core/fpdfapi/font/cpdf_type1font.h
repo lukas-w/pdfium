@@ -12,11 +12,11 @@
 #include <array>
 
 #include "build/build_config.h"
-#include "core/fpdfapi/font/cpdf_simplefont.h"
+#include "core/fpdfapi/font/cpdf_facebasedsimplefont.h"
 #include "core/fxcrt/retain_ptr.h"
 #include "core/fxge/cfx_fontmapper.h"
 
-class CPDF_Type1Font final : public CPDF_SimpleFont {
+class CPDF_Type1Font final : public CPDF_FaceBasedSimpleFont {
  public:
   CONSTRUCT_VIA_MAKE_RETAIN;
   ~CPDF_Type1Font() override;
@@ -37,7 +37,7 @@ class CPDF_Type1Font final : public CPDF_SimpleFont {
   // CPDF_Font:
   bool Load() override;
 
-  // CPDF_SimpleFont:
+  // CPDF_FaceBasedSimpleFont:
   void LoadGlyphMap() override;
 
   bool IsSymbolicFont() const;

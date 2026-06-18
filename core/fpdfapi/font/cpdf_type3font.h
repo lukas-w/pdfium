@@ -51,9 +51,6 @@ class CPDF_Type3Font final : public CPDF_SimpleFont {
   // CPDF_Font:
   bool Load() override;
 
-  // CPDF_SimpleFont:
-  void LoadGlyphMap() override;
-
   // The depth char loading is in, to avoid recurive calling LoadChar().
   int char_loading_depth_ = 0;
   CFX_Matrix font_matrix_;

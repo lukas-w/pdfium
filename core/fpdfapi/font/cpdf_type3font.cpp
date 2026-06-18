@@ -100,8 +100,6 @@ bool CPDF_Type3Font::Load() {
   return true;
 }
 
-void CPDF_Type3Font::LoadGlyphMap() {}
-
 void CPDF_Type3Font::CheckType3FontMetrics() {
   CheckFontMetrics();
 }
