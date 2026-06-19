@@ -50,7 +50,7 @@ uint16_t CPWL_ListCtrl::Item::GetFirstChar() const {
   CPWL_EditImpl::Iterator* pIterator = edit_->GetIterator();
   pIterator->SetAt(1);
   pIterator->GetWord(word);
-  return word.Word;
+  return word.word();
 }
 
 WideString CPWL_ListCtrl::Item::GetText() const {

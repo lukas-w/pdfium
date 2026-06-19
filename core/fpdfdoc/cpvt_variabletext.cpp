@@ -127,7 +127,6 @@ bool CPVT_VariableText::Iterator::NextLine() {
 }
 
 bool CPVT_VariableText::Iterator::GetWord(CPVT_Word& word) const {
-  word.WordPlace = cur_pos_;
   if (!fxcrt::IndexInBounds(vt_->section_array_, cur_pos_.nSecIndex)) {
     return false;
   }
@@ -142,16 +141,12 @@ bool CPVT_VariableText::Iterator::GetWord(CPVT_Word& word) const {
     return false;
   }
 
-  word.Word = pInfo->Word;
-  word.nCharset = pInfo->nCharset;
-  word.fWidth = vt_->GetWordWidth(*pInfo);
-  word.ptWord =
+  word = CPVT_Word(
+      pInfo->Word, pInfo->nCharset,
       vt_->InToOut(CFX_PointF(pInfo->fWordX + pSection->GetRect().left,
-                              pInfo->fWordY + pSection->GetRect().top));
-  word.fAscent = vt_->GetWordAscent(*pInfo);
-  word.fDescent = vt_->GetWordDescent(*pInfo);
-  word.nFontIndex = pInfo->nFontIndex;
-  word.fFontSize = vt_->GetWordFontSize();
+                              pInfo->fWordY + pSection->GetRect().top)),
+      vt_->GetWordAscent(*pInfo), vt_->GetWordDescent(*pInfo),
+      vt_->GetWordWidth(*pInfo), pInfo->nFontIndex, vt_->GetWordFontSize());
   return true;
 }
 

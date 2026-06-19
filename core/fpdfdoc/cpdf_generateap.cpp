@@ -332,8 +332,8 @@ ByteString GenerateEditAP(IPVT_FontMap* font_map,
         }
         CPVT_Word word;
         if (vt_iterator->GetWord(word)) {
-          new_point =
-              CFX_PointF(word.ptWord.x + offset.x, word.ptWord.y + offset.y);
+          new_point = CFX_PointF(word.location().x + offset.x,
+                                 word.location().y + offset.y);
         } else {
           CPVT_Line line;
           vt_iterator->GetLine(line);
@@ -347,35 +347,36 @@ ByteString GenerateEditAP(IPVT_FontMap* font_map,
       }
       CPVT_Word word;
       if (vt_iterator->GetWord(word)) {
-        if (word.nFontIndex != current_font_index) {
+        if (word.font_index() != current_font_index) {
           if (!words.IsEmpty()) {
             line_stream << GetWordRenderString(words.AsStringView());
             words.clear();
           }
-          line_stream << GetFontSetString(font_map, word.nFontIndex,
-                                          word.fFontSize);
-          current_font_index = word.nFontIndex;
+          line_stream << GetFontSetString(font_map, word.font_index(),
+                                          word.font_size());
+          current_font_index = word.font_index();
         }
-        words +=
-            GetPDFWordString(font_map, current_font_index, word.Word, sub_word);
+        words += GetPDFWordString(font_map, current_font_index, word.word(),
+                                  sub_word);
       }
       oldplace = place;
     } else {
       CPVT_Word word;
       if (vt_iterator->GetWord(word)) {
-        new_point =
-            CFX_PointF(word.ptWord.x + offset.x, word.ptWord.y + offset.y);
+        new_point = CFX_PointF(word.location().x + offset.x,
+                               word.location().y + offset.y);
         if (new_point != old_point) {
           WritePoint(edit_stream, new_point - old_point) << " Td\n";
           old_point = new_point;
         }
-        if (word.nFontIndex != current_font_index) {
-          edit_stream << GetFontSetString(font_map, word.nFontIndex,
-                                          word.fFontSize);
-          current_font_index = word.nFontIndex;
+        if (word.font_index() != current_font_index) {
+          edit_stream << GetFontSetString(font_map, word.font_index(),
+                                          word.font_size());
+          current_font_index = word.font_index();
         }
         edit_stream << GetWordRenderString(
-            GetPDFWordString(font_map, current_font_index, word.Word, sub_word)
+            GetPDFWordString(font_map, current_font_index, word.word(),
+                             sub_word)
                 .AsStringView());
       }
     }
