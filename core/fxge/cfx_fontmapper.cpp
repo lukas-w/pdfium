@@ -633,7 +633,7 @@ RetainPtr<CFX_Face> CFX_FontMapper::FindSubstFace(const ByteString& name,
     weight = pdfium::kFontWeightNormal;
   }
 
-  if (!(flags & FXFONT_USEEXTERNATTR)) {
+  if (!(flags & kFontUseExternAttr)) {
     weight = pdfium::kFontWeightNormal;
     italic_angle = 0;
   }

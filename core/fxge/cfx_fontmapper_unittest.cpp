@@ -323,7 +323,7 @@ TEST_F(CFXFontMapperSystemFontInfoTest,
   RetainPtr<CFX_Face> face = font_mapper().FindSubstFace(
       kFaceName,
       /*is_truetype=*/true,
-      /*flags=*/FXFONT_USEEXTERNATTR,
+      /*flags=*/kFontUseExternAttr,
       /*weight=*/kBoldWeight,
       /*italic_angle=*/kItalicAngle, kCodePage, &subst_font);
   EXPECT_TRUE(face);

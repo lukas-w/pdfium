@@ -50,6 +50,10 @@ enum FontWeight {
 
 }  // namespace pdfium
 
+// Indicates that font properties (style, weight, ...) come from an external
+// source rather than the font file itself.
+constexpr uint32_t kFontUseExternAttr = 0x80000;
+
 struct CharCodeAndIndex {
   uint32_t char_code;
   uint32_t glyph_index;
@@ -62,9 +66,6 @@ enum class FontAntiAliasingMode : int {
   kMono,
   kLcd,
 };
-
-/* Other font flags */
-#define FXFONT_USEEXTERNATTR 0x80000
 
 // These numbers come from the OpenType name table specification.
 constexpr uint16_t kNamePlatformAppleUnicode = 0;

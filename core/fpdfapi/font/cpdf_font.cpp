@@ -152,7 +152,7 @@ void CPDF_Font::LoadFontDescriptor(const CPDF_Dictionary* font_desc) {
   }
   if (bExistItalicAngle && bExistAscent && bExistCapHeight && bExistDescent &&
       bExistStemV) {
-    flags_ |= FXFONT_USEEXTERNATTR;
+    flags_ |= kFontUseExternAttr;
   }
   if (descent_ > 10) {
     descent_ = -descent_;
