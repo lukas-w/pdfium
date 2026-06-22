@@ -1091,9 +1091,9 @@ pdfium::span<const uint8_t> CPDF_DIB::GetScanline(int line) const {
   }
 
   uint32_t src_pitch_value = src_pitch.value();
-  // This is used as the buffer of `pSrcLine` when the stream is truncated,
-  // and the remaining bytes count is less than `src_pitch_value`
-  DataVector<uint8_t> temp_buffer;
+  // A fallback member buffer is used as the backing store for `pSrcLine`
+  // when the stream is truncated and the remaining bytes count is less
+  // than `src_pitch_value`.
   pdfium::span<const uint8_t> pSrcLine;
 
   if (cached_bitmap_ && src_pitch_value <= cached_bitmap_->GetPitch()) {
@@ -1109,9 +1109,9 @@ pdfium::span<const uint8_t> CPDF_DIB::GetScanline(int line) const {
     if (remaining_bytes.size() >= src_pitch_value) {
       pSrcLine = remaining_bytes.first(src_pitch_value);
     } else {
-      temp_buffer = DataVector<uint8_t>(src_pitch_value);
-      fxcrt::Copy(remaining_bytes, temp_buffer);
-      pSrcLine = temp_buffer;
+      src_remainder_buf_ = DataVector<uint8_t>(src_pitch_value);
+      fxcrt::Copy(remaining_bytes, src_remainder_buf_);
+      pSrcLine = src_remainder_buf_;
     }
   }
 

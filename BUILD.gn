@@ -179,7 +179,10 @@ config("pdfium_core_config") {
   ]
   defines = []
   if (is_clang) {
-    cflags += [ "-Wcovered-switch-default" ]
+    cflags += [
+      "-Wcovered-switch-default",
+      "-Wlifetime-safety-permissive",
+    ]
   }
 }
 

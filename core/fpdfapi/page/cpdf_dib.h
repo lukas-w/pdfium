@@ -130,6 +130,7 @@ class CPDF_DIB final : public CFX_DIBBase {
   std::vector<DIB_COMP_DATA> comp_data_;
   mutable DataVector<uint8_t> line_buf_;
   mutable DataVector<uint8_t> mask_buf_;
+  mutable DataVector<uint8_t> src_remainder_buf_;
   RetainPtr<CFX_DIBitmap> cached_bitmap_;
   // Note: Must not create a cycle between CPDF_DIB instances.
   RetainPtr<CPDF_DIB> mask_;
