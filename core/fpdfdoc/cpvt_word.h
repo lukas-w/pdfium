@@ -27,28 +27,28 @@ class CPVT_Word {
   CPVT_Word& operator=(const CPVT_Word&);
   ~CPVT_Word();
 
-  uint16_t word() const { return Word; }
-  FX_Charset charset() const { return nCharset; }
-  int32_t font_index() const { return nFontIndex; }
-  const CFX_PointF& location() const { return ptWord; }
-  void set_location(const CFX_PointF& location) { ptWord = location; }
-  float width() const { return fWidth; }
-  float font_size() const { return fFontSize; }
-  float ascent() const { return fAscent; }
-  float descent() const { return fDescent; }
+  uint16_t word() const { return word_; }
+  FX_Charset charset() const { return charset_; }
+  int32_t font_index() const { return font_index_; }
+  const CFX_PointF& location() const { return location_; }
+  void set_location(const CFX_PointF& location) { location_ = location; }
+  float width() const { return width_; }
+  float font_size() const { return font_size_; }
+  float ascent() const { return ascent_; }
+  float descent() const { return descent_; }
 
-  float AscentY() const { return ptWord.y + fAscent; }
-  float DescentY() const { return ptWord.y + fDescent; }
+  float AscentY() const { return location_.y + ascent_; }
+  float DescentY() const { return location_.y + descent_; }
 
  private:
-  uint16_t Word = 0;
-  FX_Charset nCharset = FX_Charset::kANSI;
-  CFX_PointF ptWord;
-  float fAscent = 0.0f;
-  float fDescent = 0.0f;
-  float fWidth = 0.0f;
-  int32_t nFontIndex = -1;
-  float fFontSize = 0.0f;
+  uint16_t word_ = 0;
+  FX_Charset charset_ = FX_Charset::kANSI;
+  CFX_PointF location_;
+  float ascent_ = 0.0f;
+  float descent_ = 0.0f;
+  float width_ = 0.0f;
+  int32_t font_index_ = -1;
+  float font_size_ = 0.0f;
 };
 
 #endif  // CORE_FPDFDOC_CPVT_WORD_H_
