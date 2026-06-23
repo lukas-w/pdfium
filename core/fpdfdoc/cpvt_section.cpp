@@ -543,7 +543,6 @@ CPVT_FloatRect CPVT_Section::SplitLines(bool bTypeset, float fFontSize) {
       fLineDescent = vt_->GetLineDescent();
       line.nBeginWordIndex = -1;
       line.nEndWordIndex = -1;
-      line.nTotalWord = 0;
       line.fLineWidth = 0;
       line.fLineAscent = fLineAscent;
       line.fLineDescent = fLineDescent;
@@ -638,7 +637,6 @@ CPVT_FloatRect CPVT_Section::SplitLines(bool bTypeset, float fFontSize) {
       if (bTypeset) {
         line.nBeginWordIndex = nLineHead;
         line.nEndWordIndex = nLineTail;
-        line.nTotalWord = nLineTail - nLineHead + 1;
         line.fLineWidth = fLineWidth;
         line.fLineAscent = fLineAscent;
         line.fLineDescent = fLineDescent;
@@ -664,7 +662,6 @@ CPVT_FloatRect CPVT_Section::SplitLines(bool bTypeset, float fFontSize) {
     if (bTypeset) {
       line.nBeginWordIndex = nLineHead;
       line.nEndWordIndex = nLineTail;
-      line.nTotalWord = nLineTail - nLineHead + 1;
       line.fLineWidth = fLineWidth;
       line.fLineAscent = fLineAscent;
       line.fLineDescent = fLineDescent;
