@@ -54,12 +54,13 @@ class SystemFontInfoWrapper : public SystemFontInfoIface {
   void EnumFontList(CFX_FontMapper* pMapper) override {
     impl_->EnumFontList(pMapper);
   }
-  void* MapFont(int weight,
+  void* MapFont(CFX_FontMapper* mapper,
+                int weight,
                 bool bItalic,
                 FX_Charset charset,
                 int pitch_family,
                 const ByteString& face) override {
-    void* font = impl_->MapFont(weight, bItalic, charset, pitch_family,
+    void* font = impl_->MapFont(mapper, weight, bItalic, charset, pitch_family,
                                 RenameFontForTesting(face));
     if (font) {
       bool inserted = active_fonts_.insert(font).second;

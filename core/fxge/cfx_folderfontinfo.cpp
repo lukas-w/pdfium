@@ -427,7 +427,8 @@ void* CFX_FolderFontInfo::FindFont(int weight,
   return nullptr;
 }
 
-void* CFX_FolderFontInfo::MapFont(int weight,
+void* CFX_FolderFontInfo::MapFont(CFX_FontMapper* mapper,
+                                  int weight,
                                   bool italic,
                                   FX_Charset charset,
                                   int pitch_family,

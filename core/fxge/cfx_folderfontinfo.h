@@ -29,7 +29,8 @@ class CFX_FolderFontInfo : public SystemFontInfoIface {
 
   // SystemFontInfoIface:
   void EnumFontList(CFX_FontMapper* pMapper) override;
-  void* MapFont(int weight,
+  void* MapFont(CFX_FontMapper* mapper,
+                int weight,
                 bool italic,
                 FX_Charset charset,
                 int pitch_family,

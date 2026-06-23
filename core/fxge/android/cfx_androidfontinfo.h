@@ -20,7 +20,8 @@ class CFX_AndroidFontInfo final : public CFX_FolderFontInfo {
   UNSAFE_BUFFER_USAGE void Init(const char** user_paths);
 
   // SystemFontInfoIface:
-  void* MapFont(int weight,
+  void* MapFont(CFX_FontMapper* mapper,
+                int weight,
                 bool bItalic,
                 FX_Charset charset,
                 int pitch_family,

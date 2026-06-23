@@ -477,7 +477,7 @@ void CFX_FontMapper::AddInstalledFont(const ByteString& name,
     void* font_handle = font_info_->GetFont(name);
     if (!font_handle) {
       font_handle =
-          font_info_->MapFont(0, false, FX_Charset::kDefault, 0, name);
+          font_info_->MapFont(this, 0, false, FX_Charset::kDefault, 0, name);
       if (!font_handle) {
         return;
       }
@@ -769,8 +769,8 @@ RetainPtr<CFX_Face> CFX_FontMapper::FindSubstFace(const ByteString& name,
   } else if (FontStyleIsItalic(flags)) {
     is_italic = true;
   }
-  void* font_handle =
-      font_info_->MapFont(weight, is_italic, Charset, pitch_family, family);
+  void* font_handle = font_info_->MapFont(this, weight, is_italic, Charset,
+                                          pitch_family, family);
   if (font_handle) {
     return UseExternalSubst(font_handle, subst_name, weight, is_italic,
                             italic_angle, Charset, subst_font);
@@ -877,8 +877,8 @@ std::optional<ByteString> CFX_FontMapper::LocalizedFontNameStartingWith(
 FixedSizeDataVector<uint8_t> CFX_FontMapper::RawBytesForIndex(size_t index) {
   CHECK_LT(index, face_array_.size());
 
-  void* font_handle = font_info_->MapFont(0, false, FX_Charset::kDefault, 0,
-                                          GetFaceName(index));
+  void* font_handle = font_info_->MapFont(this, 0, false, FX_Charset::kDefault,
+                                          0, GetFaceName(index));
   if (!font_handle) {
     return FixedSizeDataVector<uint8_t>();
   }

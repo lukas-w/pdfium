@@ -44,7 +44,8 @@ class CFX_MacFontInfo final : public CFX_FolderFontInfo {
   ~CFX_MacFontInfo() override = default;
 
   // CFX_FolderFontInfo
-  void* MapFont(int weight,
+  void* MapFont(CFX_FontMapper* mapper,
+                int weight,
                 bool bItalic,
                 FX_Charset charset,
                 int pitch_family,
@@ -68,7 +69,8 @@ ByteString GetJapanesePreference(const ByteString& face,
   return kJapanGothic;
 }
 
-void* CFX_MacFontInfo::MapFont(int weight,
+void* CFX_MacFontInfo::MapFont(CFX_FontMapper* mapper,
+                               int weight,
                                bool bItalic,
                                FX_Charset charset,
                                int pitch_family,

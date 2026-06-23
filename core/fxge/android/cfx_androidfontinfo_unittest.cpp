@@ -33,7 +33,8 @@ class CFXAndroidFontInfoTest : public ::testing::Test {
                 FX_Charset charset,
                 int pitch_family,
                 const char* family) {
-    return font_info_.MapFont(weight, bItalic, charset, pitch_family, family);
+    return font_info_.MapFont(nullptr, weight, bItalic, charset, pitch_family,
+                              family);
   }
 
   ByteString GetFaceName(void* font) {

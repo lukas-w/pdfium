@@ -148,7 +148,8 @@ void CFX_AndroidFontInfo::Init(const char** user_paths) {
   }
 }
 
-void* CFX_AndroidFontInfo::MapFont(int weight,
+void* CFX_AndroidFontInfo::MapFont(CFX_FontMapper* mapper,
+                                   int weight,
                                    bool bItalic,
                                    FX_Charset charset,
                                    int pitch_family,

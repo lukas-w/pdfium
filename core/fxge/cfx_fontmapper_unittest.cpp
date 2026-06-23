@@ -35,7 +35,7 @@ class MockSystemFontInfo : public SystemFontInfoIface {
   MOCK_METHOD(void, EnumFontList, (CFX_FontMapper*), (override));
   MOCK_METHOD(void*,
               MapFont,
-              (int, bool, FX_Charset, int, const ByteString&),
+              (CFX_FontMapper*, int, bool, FX_Charset, int, const ByteString&),
               (override));
   MOCK_METHOD(void*, GetFont, (const ByteString&), (override));
   MOCK_METHOD(size_t,
@@ -292,8 +292,9 @@ TEST_F(CFXFontMapperSystemFontInfoTest,
     InSequence s;
     EXPECT_CALL(system_font_info(), EnumFontList(&font_mapper()));
     EXPECT_CALL(system_font_info(),
-                MapFont(kExpectedWeight, /*bItalic=*/true, kExpectedCharset,
-                        kExpectedPitchFamily, ByteString(kExpectedFamily)))
+                MapFont(&font_mapper(), kExpectedWeight, /*bItalic=*/true,
+                        kExpectedCharset, kExpectedPitchFamily,
+                        ByteString(kExpectedFamily)))
         .WillOnce(Return(kFontHandle));
     EXPECT_CALL(system_font_info(), GetFaceName(kFontHandle, _))
         .WillOnce(Return(false));

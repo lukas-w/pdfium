@@ -87,7 +87,8 @@ class CFX_LinuxFontInfo final : public CFX_FolderFontInfo {
   ~CFX_LinuxFontInfo() override = default;
 
   // CFX_FolderFontInfo:
-  void* MapFont(int weight,
+  void* MapFont(CFX_FontMapper* mapper,
+                int weight,
                 bool bItalic,
                 FX_Charset charset,
                 int pitch_family,
@@ -96,7 +97,8 @@ class CFX_LinuxFontInfo final : public CFX_FolderFontInfo {
   bool ParseFontCfg(const char** pUserPaths);
 };
 
-void* CFX_LinuxFontInfo::MapFont(int weight,
+void* CFX_LinuxFontInfo::MapFont(CFX_FontMapper* mapper,
+                                 int weight,
                                  bool bItalic,
                                  FX_Charset charset,
                                  int pitch_family,
