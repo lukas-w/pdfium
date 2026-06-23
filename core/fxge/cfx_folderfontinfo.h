@@ -13,7 +13,6 @@
 
 #include "core/fxcrt/fx_codepage_forward.h"
 #include "core/fxcrt/mask.h"
-#include "core/fxcrt/unowned_ptr.h"
 #include "core/fxge/cfx_fontmapper.h"
 #include "core/fxge/systemfontinfo_iface.h"
 
@@ -80,9 +79,10 @@ class CFX_FolderFontInfo : public SystemFontInfoIface {
                              const ByteString& family,
                              bool must_match_name) const;
 
-  void ScanPath(const ByteString& path);
-  void ScanFile(const ByteString& path);
-  void ReportFace(const ByteString& path,
+  void ScanPath(CFX_FontMapper* mapper, const ByteString& path);
+  void ScanFile(CFX_FontMapper* mapper, const ByteString& path);
+  void ReportFace(CFX_FontMapper* mapper,
+                  const ByteString& path,
                   FILE* pFile,
                   FX_FILESIZE filesize,
                   uint32_t offset);
@@ -96,7 +96,6 @@ class CFX_FolderFontInfo : public SystemFontInfoIface {
 
   std::map<ByteString, std::unique_ptr<FontFaceInfo>> font_list_;
   std::vector<ByteString> path_list_;
-  UnownedPtr<CFX_FontMapper> mapper_;
 };
 
 #endif  // CORE_FXGE_CFX_FOLDERFONTINFO_H_

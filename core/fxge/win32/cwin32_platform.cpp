@@ -20,6 +20,7 @@
 #include "core/fxcrt/numerics/safe_conversions.h"
 #include "core/fxcrt/raw_span.h"
 #include "core/fxcrt/span.h"
+#include "core/fxcrt/unowned_ptr.h"
 #include "core/fxcrt/win/scoped_select_object.h"
 #include "core/fxcrt/win/win_util.h"
 #include "core/fxge/cfx_folderfontinfo.h"
