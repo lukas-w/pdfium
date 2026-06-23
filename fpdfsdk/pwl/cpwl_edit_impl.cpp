@@ -651,15 +651,13 @@ void CPWL_EditImpl::DrawEdit(CFX_RenderDevice* pDevice,
         pIterator->GetLine(line);
         if (pFillerNotify->IsSelectionImplemented()) {
           CFX_FloatRect rc(word.location().x, line.ptLine.y + line.fLineDescent,
-                           word.location().x + word.width(),
-                           line.ptLine.y + line.fLineAscent);
+                           word.CaretX(), line.ptLine.y + line.fLineAscent);
           rc.Intersect(rcClip);
           pFillerNotify->OutputSelectedRect(pSystemData, rc);
         } else {
           CFX_Path pathSelBK;
           pathSelBK.AppendRect(word.location().x,
-                               line.ptLine.y + line.fLineDescent,
-                               word.location().x + word.width(),
+                               line.ptLine.y + line.fLineDescent, word.CaretX(),
                                line.ptLine.y + line.fLineAscent);
 
           pDevice->DrawPath(pathSelBK, &mtUser2Device, nullptr, crSelBK, 0,
@@ -1227,14 +1225,14 @@ void CPWL_EditImpl::ScrollToCaret() {
   CPVT_Word word;
   CPVT_Line line;
   if (pIterator->GetWord(word)) {
-    ptHead.x = word.location().x + word.width();
+    ptHead.x = word.CaretX();
     ptHead.y = word.AscentY();
-    ptFoot.x = word.location().x + word.width();
+    ptFoot.x = ptHead.x;
     ptFoot.y = word.DescentY();
   } else if (pIterator->GetLine(line)) {
     ptHead.x = line.ptLine.x;
     ptHead.y = line.ptLine.y + line.fLineAscent;
-    ptFoot.x = line.ptLine.x;
+    ptFoot.x = ptHead.x;
     ptFoot.y = line.ptLine.y + line.fLineDescent;
   }
 
@@ -1343,10 +1341,9 @@ void CPWL_EditImpl::RefreshWordRange(const CPVT_WordRange& wr) {
     pIterator->GetLine(lineinfo);
     if (place.LineCmp(wrTemp.BeginPos) == 0 ||
         place.LineCmp(wrTemp.EndPos) == 0) {
-      CFX_FloatRect rcWord(wordinfo.location().x,
-                           lineinfo.ptLine.y + lineinfo.fLineDescent,
-                           wordinfo.location().x + wordinfo.width(),
-                           lineinfo.ptLine.y + lineinfo.fLineAscent);
+      CFX_FloatRect rcWord(
+          wordinfo.location().x, lineinfo.ptLine.y + lineinfo.fLineDescent,
+          wordinfo.CaretX(), lineinfo.ptLine.y + lineinfo.fLineAscent);
 
       if (notify_) {
         if (!notify_flag_) {
@@ -1396,14 +1393,14 @@ void CPWL_EditImpl::SetCaretInfo() {
       CPVT_Word word;
       CPVT_Line line;
       if (pIterator->GetWord(word)) {
-        ptHead.x = word.location().x + word.width();
+        ptHead.x = word.CaretX();
         ptHead.y = word.AscentY();
-        ptFoot.x = word.location().x + word.width();
+        ptFoot.x = ptHead.x;
         ptFoot.y = word.DescentY();
       } else if (pIterator->GetLine(line)) {
         ptHead.x = line.ptLine.x;
         ptHead.y = line.ptLine.y + line.fLineAscent;
-        ptFoot.x = line.ptLine.x;
+        ptFoot.x = ptHead.x;
         ptFoot.y = line.ptLine.y + line.fLineDescent;
       }
 
@@ -1938,7 +1935,7 @@ void CPWL_EditImpl::SetCaretOrigin() {
   CPVT_Word word;
   CPVT_Line line;
   if (pIterator->GetWord(word)) {
-    caret_point_.x = word.location().x + word.width();
+    caret_point_.x = word.CaretX();
     caret_point_.y = word.location().y;
   } else if (pIterator->GetLine(line)) {
     caret_point_.x = line.ptLine.x;
