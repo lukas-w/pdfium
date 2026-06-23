@@ -1359,17 +1359,20 @@ bool CFGAS_StringFormatter::ParseNum(LocaleMgrIface* pLocaleMgr,
         ccf--;
         break;
       case 'E': {
-        iExponent = 0;
-        bool bExpSign = false;
+        bool has_exp_sign = false;
+        pdfium::CheckedNumeric<int32_t> safe_exponent = 0;
+        pdfium::CheckedNumeric<int32_t> safe_multiplier = 1;
         while (cc < spSrcNum.size()) {
           if (spSrcNum[cc] == 'E' || spSrcNum[cc] == 'e') {
             break;
           }
           if (FXSYS_IsDecimalDigit(spSrcNum[cc])) {
-            if (iExponent > std::numeric_limits<int>::max() / 10) {
+            int32_t digit = FXSYS_DecimalCharToInt(spSrcNum[cc]);
+            safe_exponent += safe_multiplier * digit;
+            safe_multiplier *= 10;
+            if (!safe_exponent.IsValid() || !safe_multiplier.IsValid()) {
               return false;
             }
-            iExponent = iExponent + FXSYS_DecimalCharToInt(spSrcNum[cc]) * 10;
             cc--;
             continue;
           }
@@ -1380,7 +1383,7 @@ bool CFGAS_StringFormatter::ParseNum(LocaleMgrIface* pLocaleMgr,
           if (cc - iMinusLen + 1 <= spSrcNum.size() &&
               UNSAFE_TODO(wcsncmp(spSrcNum.data() + (cc - iMinusLen + 1),
                                   wsMinus.c_str(), iMinusLen)) == 0) {
-            bExpSign = true;
+            has_exp_sign = true;
             cc -= iMinusLen;
             continue;
           }
@@ -1388,7 +1391,8 @@ bool CFGAS_StringFormatter::ParseNum(LocaleMgrIface* pLocaleMgr,
           return false;
         }
         cc--;
-        iExponent = bExpSign ? -iExponent : iExponent;
+        iExponent = safe_exponent.ValueOrDie();
+        iExponent = has_exp_sign ? -iExponent : iExponent;
         ccf--;
         break;
       }
@@ -1561,13 +1565,13 @@ bool CFGAS_StringFormatter::ParseNum(LocaleMgrIface* pLocaleMgr,
             return false;
           }
           iExponent = 0;
-          bool bExpSign = false;
+          bool has_exp_sign = false;
           cc++;
           if (cc < spSrcNum.size()) {
             if (spSrcNum[cc] == '+') {
               cc++;
             } else if (spSrcNum[cc] == '-') {
-              bExpSign = true;
+              has_exp_sign = true;
               cc++;
             }
           }
@@ -1582,7 +1586,7 @@ bool CFGAS_StringFormatter::ParseNum(LocaleMgrIface* pLocaleMgr,
             iExponent = iExponent * 10 + digit;
             cc++;
           }
-          iExponent = bExpSign ? -iExponent : iExponent;
+          iExponent = has_exp_sign ? -iExponent : iExponent;
           break;
         }
         case '$': {
