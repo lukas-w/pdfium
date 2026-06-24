@@ -16,6 +16,7 @@
 #include "core/fxge/cfx_font.h"
 #include "core/fxge/cfx_fontmapper.h"
 #include "core/fxge/cfx_glyphcache.h"
+#include "core/fxge/cfx_standardfont.h"
 #include "core/fxge/cfx_substfont.h"
 #include "core/fxge/fontdata/chromefontdata/chromefontdata.h"
 #include "core/fxge/fx_font.h"
@@ -41,7 +42,7 @@
 namespace {
 
 constexpr std::array<pdfium::span<const uint8_t>,
-                     CFX_FontMapper::kNumStandardFonts>
+                     CFX_StandardFont::kNumStandardFonts>
     kFoxitFonts = {{
         kFoxitFixedFontData,
         kFoxitFixedBoldFontData,

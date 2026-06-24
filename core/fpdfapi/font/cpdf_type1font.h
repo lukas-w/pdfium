@@ -14,7 +14,7 @@
 #include "build/build_config.h"
 #include "core/fpdfapi/font/cpdf_facebasedsimplefont.h"
 #include "core/fxcrt/retain_ptr.h"
-#include "core/fxge/cfx_fontmapper.h"
+#include "core/fxge/cfx_standardfont.h"
 
 class CPDF_Type1Font final : public CPDF_FaceBasedSimpleFont {
  public:
@@ -48,7 +48,7 @@ class CPDF_Type1Font final : public CPDF_FaceBasedSimpleFont {
   std::array<uint16_t, kInternalTableSize> ext_gid_;
 #endif
 
-  std::optional<CFX_FontMapper::StandardFont> base14_font_;
+  std::optional<CFX_StandardFont::StandardFont> base14_font_;
 };
 
 #endif  // CORE_FPDFAPI_FONT_CPDF_TYPE1FONT_H_

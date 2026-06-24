@@ -16,8 +16,8 @@
 #include "core/fxcrt/compiler_specific.h"
 #include "core/fxcrt/fx_system.h"
 #include "core/fxcrt/span_util.h"
-#include "core/fxge/cfx_fontmapper.h"
 #include "core/fxge/cfx_gemodule.h"
+#include "core/fxge/cfx_standardfont.h"
 #include "core/fxge/fx_font.h"
 
 #if BUILDFLAG(IS_APPLE)
@@ -84,7 +84,7 @@ CPDF_Type1Font* CPDF_Type1Font::AsType1Font() {
 }
 
 bool CPDF_Type1Font::Load() {
-  base14_font_ = CFX_FontMapper::GetStandardFontName(&base_font_name_);
+  base14_font_ = CFX_StandardFont::GetStandardFontName(&base_font_name_);
   if (!IsBase14Font()) {
     return LoadCommon();
   }
@@ -101,9 +101,9 @@ bool CPDF_Type1Font::Load() {
   if (IsFixedFont()) {
     std::ranges::fill(char_width_, 600);
   }
-  if (base14_font_ == CFX_FontMapper::kSymbol) {
+  if (base14_font_ == CFX_StandardFont::kSymbol) {
     base_encoding_ = FontEncoding::kAdobeSymbol;
-  } else if (base14_font_ == CFX_FontMapper::kDingbats) {
+  } else if (base14_font_ == CFX_StandardFont::kDingbats) {
     base_encoding_ = FontEncoding::kZapfDingbats;
   } else if (FontStyleIsNonSymbolic(flags_)) {
     base_encoding_ = FontEncoding::kStandard;
@@ -322,12 +322,12 @@ void CPDF_Type1Font::LoadGlyphMap() {
 
 bool CPDF_Type1Font::IsSymbolicFont() const {
   return base14_font_.has_value() &&
-         CFX_FontMapper::IsSymbolicFont(base14_font_.value());
+         CFX_StandardFont::IsSymbolicFont(base14_font_.value());
 }
 
 bool CPDF_Type1Font::IsFixedFont() const {
   return base14_font_.has_value() &&
-         CFX_FontMapper::IsFixedFont(base14_font_.value());
+         CFX_StandardFont::IsFixedFont(base14_font_.value());
 }
 
 #if BUILDFLAG(IS_APPLE)

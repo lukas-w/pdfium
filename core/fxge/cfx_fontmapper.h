@@ -18,6 +18,7 @@
 #include "core/fxcrt/fx_codepage_forward.h"
 #include "core/fxcrt/retain_ptr.h"
 #include "core/fxge/cfx_face.h"
+#include "core/fxge/cfx_standardfont.h"
 
 #ifdef PDF_ENABLE_XFA
 #include "core/fxcrt/fixed_size_data_vector.h"
@@ -28,32 +29,9 @@ class SystemFontInfoIface;
 
 class CFX_FontMapper {
  public:
-  enum StandardFont : uint8_t {
-    kCourier = 0,
-    kCourierBold,
-    kCourierBoldOblique,
-    kCourierOblique,
-    kHelvetica,
-    kHelveticaBold,
-    kHelveticaBoldOblique,
-    kHelveticaOblique,
-    kTimes,
-    kTimesBold,
-    kTimesBoldOblique,
-    kTimesOblique,
-    kSymbol,
-    kDingbats,
-    kLast = kDingbats
-  };
-  static constexpr int kNumStandardFonts = 14;
-
   CFX_FontMapper();
   ~CFX_FontMapper();
 
-  static std::optional<StandardFont> GetStandardFontName(ByteString* name);
-  static bool IsStandardFontName(const ByteString& name);
-  static bool IsSymbolicFont(StandardFont font);
-  static bool IsFixedFont(StandardFont font);
   static constexpr uint32_t MakeTag(char c1, char c2, char c3, char c4) {
     return static_cast<uint8_t>(c1) << 24 | static_cast<uint8_t>(c2) << 16 |
            static_cast<uint8_t>(c3) << 8 | static_cast<uint8_t>(c4);
@@ -130,7 +108,8 @@ class CFX_FontMapper {
   std::unique_ptr<SystemFontInfoIface> font_info_;
   std::vector<ByteString> installed_ttfonts_;
   std::vector<std::pair<ByteString, ByteString>> localized_ttfonts_;
-  std::array<RetainPtr<CFX_Face>, kNumStandardFonts> standard_faces_;
+  std::array<RetainPtr<CFX_Face>, CFX_StandardFont::kNumStandardFonts>
+      standard_faces_;
   RetainPtr<CFX_Face> generic_sans_face_;
   RetainPtr<CFX_Face> generic_serif_face_;
 };

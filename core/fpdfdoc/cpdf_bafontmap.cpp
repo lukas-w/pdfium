@@ -29,6 +29,7 @@
 #include "core/fxge/cfx_fontmapper.h"
 #include "core/fxge/cfx_fontmgr.h"
 #include "core/fxge/cfx_gemodule.h"
+#include "core/fxge/cfx_standardfont.h"
 
 namespace {
 
@@ -437,7 +438,7 @@ ByteString CPDF_BAFontMap::GetCachedNativeFontName(FX_Charset nCharset) {
 
 RetainPtr<CPDF_Font> CPDF_BAFontMap::AddFontToDocument(ByteString sFontName,
                                                        FX_Charset nCharset) {
-  if (CFX_FontMapper::IsStandardFontName(sFontName)) {
+  if (CFX_StandardFont::IsStandardFontName(sFontName)) {
     return AddStandardFont(sFontName);
   }
 

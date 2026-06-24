@@ -42,7 +42,7 @@
 #include "core/fxcrt/span.h"
 #include "core/fxge/cfx_charmap_resolver.h"
 #include "core/fxge/cfx_font.h"
-#include "core/fxge/cfx_fontmapper.h"
+#include "core/fxge/cfx_standardfont.h"
 #include "core/fxge/cfx_substfont.h"
 #include "core/fxge/fx_font.h"
 
@@ -534,8 +534,8 @@ RetainPtr<CPDF_Font> CPDF_DocPageData::AddStandardFont(
     const ByteString& fontName,
     const CPDF_FontEncoding* pEncoding) {
   ByteString mutable_name(fontName);
-  std::optional<CFX_FontMapper::StandardFont> font_id =
-      CFX_FontMapper::GetStandardFontName(&mutable_name);
+  std::optional<CFX_StandardFont::StandardFont> font_id =
+      CFX_StandardFont::GetStandardFontName(&mutable_name);
   if (!font_id.has_value()) {
     return nullptr;
   }
