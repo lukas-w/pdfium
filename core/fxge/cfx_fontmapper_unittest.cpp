@@ -82,7 +82,6 @@ class CFXFontMapperSystemFontInfoTest : public testing::Test {
 // Deliberately give this global variable external linkage.
 char g_maybe_changes = '\xff';
 
-
 TEST(CFXFontMapperTest, MakeTag) {
   EXPECT_EQ(0x61626364u, CFX_FontMapper::MakeTag('a', 'b', 'c', 'd'));
   EXPECT_EQ(0x00000000u, CFX_FontMapper::MakeTag('\0', '\0', '\0', '\0'));

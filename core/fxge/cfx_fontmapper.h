@@ -8,27 +8,46 @@
 #define CORE_FXGE_CFX_FONTMAPPER_H_
 
 #include <array>
+#include <map>
 #include <memory>
 #include <optional>
+#include <tuple>
 #include <utility>
 #include <vector>
 
 #include "build/build_config.h"
 #include "core/fxcrt/bytestring.h"
+#include "core/fxcrt/cfx_read_only_container_stream.h"
+#include "core/fxcrt/fixed_size_data_vector.h"
 #include "core/fxcrt/fx_codepage_forward.h"
+#include "core/fxcrt/observed_ptr.h"
 #include "core/fxcrt/retain_ptr.h"
 #include "core/fxge/cfx_face.h"
 #include "core/fxge/cfx_standardfont.h"
-
-#ifdef PDF_ENABLE_XFA
-#include "core/fxcrt/fixed_size_data_vector.h"
-#endif
 
 class CFX_SubstFont;
 class SystemFontInfoIface;
 
 class CFX_FontMapper {
  public:
+  class FontCacheEntry final : public Retainable, public Observable {
+   public:
+    CONSTRUCT_VIA_MAKE_RETAIN;
+
+    RetainPtr<CFX_ReadOnlyFixedSizeDataVectorStream> FontStream() {
+      return font_stream_;
+    }
+    void SetFace(uint32_t face_index, CFX_Face* face);
+    CFX_Face* GetFace(uint32_t face_index) const;
+
+   private:
+    explicit FontCacheEntry(FixedSizeDataVector<uint8_t>&& data);
+    ~FontCacheEntry() override;
+
+    const RetainPtr<CFX_ReadOnlyFixedSizeDataVectorStream> font_stream_;
+    std::array<ObservedPtr<CFX_Face>, 16> ttc_faces_;
+  };
+
   CFX_FontMapper();
   ~CFX_FontMapper();
 
@@ -96,6 +115,25 @@ class CFX_FontMapper {
                                     bool is_italic,
                                     size_t data_size);
 
+  using NameWeightItalic = std::tuple<ByteString, int, bool>;
+  using SizeChecksum = std::tuple<size_t, uint32_t>;
+
+  RetainPtr<FontCacheEntry> GetFontCacheEntry(const ByteString& face_name,
+                                              int weight,
+                                              bool italic);
+  RetainPtr<FontCacheEntry> AddFontCacheEntry(
+      const ByteString& face_name,
+      int weight,
+      bool italic,
+      FixedSizeDataVector<uint8_t> data);
+
+  RetainPtr<FontCacheEntry> GetTTCFontCacheEntry(size_t ttc_size,
+                                                 uint32_t checksum);
+  RetainPtr<FontCacheEntry> AddTTCFontCacheEntry(
+      size_t ttc_size,
+      uint32_t checksum,
+      FixedSizeDataVector<uint8_t> data);
+
   struct FaceData {
     ByteString name;
     uint32_t charset;
@@ -112,6 +150,8 @@ class CFX_FontMapper {
       standard_faces_;
   RetainPtr<CFX_Face> generic_sans_face_;
   RetainPtr<CFX_Face> generic_serif_face_;
+  std::map<NameWeightItalic, ObservedPtr<FontCacheEntry>> face_map_;
+  std::map<SizeChecksum, ObservedPtr<FontCacheEntry>> ttc_face_map_;
 };
 
 #endif  // CORE_FXGE_CFX_FONTMAPPER_H_
