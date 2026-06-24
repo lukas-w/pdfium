@@ -603,6 +603,62 @@ TEST_F(FPDFDocEmbedderTest, FindBookmarks) {
   EXPECT_FALSE(FPDFBookmark_Find(document(), bad_title.get()));
 }
 
+TEST_F(FPDFDocEmbedderTest, FindBookmarksWithColor) {
+  ASSERT_TRUE(OpenDocument("bookmarks_color.pdf"));
+
+  float red = 100;
+  float green = 100;
+  float blue = 100;
+
+  ScopedFPDFWideString title = GetFPDFWideString(L"No Color Array");
+  FPDF_BOOKMARK bookmark = FPDFBookmark_Find(document(), title.get());
+  ASSERT_TRUE(bookmark);
+  EXPECT_FALSE(FPDFBookmark_GetColor(bookmark, &red, &green, &blue));
+  EXPECT_FLOAT_EQ(red, 100);
+  EXPECT_FLOAT_EQ(green, 100);
+  EXPECT_FLOAT_EQ(blue, 100);
+
+  title = GetFPDFWideString(L"Color Is Not An Array");
+  bookmark = FPDFBookmark_Find(document(), title.get());
+  ASSERT_TRUE(bookmark);
+  EXPECT_FALSE(FPDFBookmark_GetColor(bookmark, &red, &green, &blue));
+  EXPECT_FLOAT_EQ(red, 100);
+  EXPECT_FLOAT_EQ(green, 100);
+  EXPECT_FLOAT_EQ(blue, 100);
+
+  title = GetFPDFWideString(L"Color Array Has The Wrong Number Of Elements");
+  bookmark = FPDFBookmark_Find(document(), title.get());
+  ASSERT_TRUE(bookmark);
+  EXPECT_FALSE(FPDFBookmark_GetColor(bookmark, &red, &green, &blue));
+  EXPECT_FLOAT_EQ(red, 100);
+  EXPECT_FLOAT_EQ(green, 100);
+  EXPECT_FLOAT_EQ(blue, 100);
+
+  title = GetFPDFWideString(L"Color Array Has Entries Greater Than 1");
+  bookmark = FPDFBookmark_Find(document(), title.get());
+  ASSERT_TRUE(bookmark);
+  EXPECT_FALSE(FPDFBookmark_GetColor(bookmark, &red, &green, &blue));
+  EXPECT_FLOAT_EQ(red, 100);
+  EXPECT_FLOAT_EQ(green, 100);
+  EXPECT_FLOAT_EQ(blue, 100);
+
+  title = GetFPDFWideString(L"Color Array Has Entries Less Than 0");
+  bookmark = FPDFBookmark_Find(document(), title.get());
+  ASSERT_TRUE(bookmark);
+  EXPECT_FALSE(FPDFBookmark_GetColor(bookmark, &red, &green, &blue));
+  EXPECT_FLOAT_EQ(red, 100);
+  EXPECT_FLOAT_EQ(green, 100);
+  EXPECT_FLOAT_EQ(blue, 100);
+
+  title = GetFPDFWideString(L"Valid Color Array");
+  bookmark = FPDFBookmark_Find(document(), title.get());
+  ASSERT_TRUE(bookmark);
+  EXPECT_TRUE(FPDFBookmark_GetColor(bookmark, &red, &green, &blue));
+  EXPECT_FLOAT_EQ(red, 0.1);
+  EXPECT_FLOAT_EQ(green, 0.2);
+  EXPECT_FLOAT_EQ(blue, 0.3);
+}
+
 // Check circular bookmarks will not cause infinite loop.
 TEST_F(FPDFDocEmbedderTest, FindBookmarksBug420) {
   // Open a file with circular bookmarks.
