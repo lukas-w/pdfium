@@ -57,10 +57,6 @@ class CFX_FontMgr {
     std::array<ObservedPtr<CFX_Face>, 16> ttc_faces_;
   };
 
-  // `index` must be less than `CFX_FontMapper::kNumStandardFonts`.
-  static pdfium::span<const uint8_t> GetStandardFont(size_t index);
-  static pdfium::span<const uint8_t> GetGenericSansFont();
-  static pdfium::span<const uint8_t> GetGenericSerifFont();
 
   enum class FontBackend { kFreeType, kFontations };  // Currently skia-only.
 

@@ -10,6 +10,7 @@
 #include <optional>
 
 #include "core/fxcrt/bytestring.h"
+#include "core/fxcrt/span.h"
 
 class CFX_StandardFont {
  public:
@@ -31,6 +32,10 @@ class CFX_StandardFont {
     kLast = kDingbats
   };
   static constexpr int kNumStandardFonts = 14;
+
+  static pdfium::span<const uint8_t> GetStandardFont(size_t index);
+  static pdfium::span<const uint8_t> GetGenericSansFont();
+  static pdfium::span<const uint8_t> GetGenericSerifFont();
 
   static std::optional<StandardFont> GetStandardFontName(ByteString* name);
   static ByteString GetCanonicalFontName(StandardFont font);

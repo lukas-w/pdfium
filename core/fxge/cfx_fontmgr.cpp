@@ -16,9 +16,6 @@
 #include "core/fxge/cfx_font.h"
 #include "core/fxge/cfx_fontmapper.h"
 #include "core/fxge/cfx_glyphcache.h"
-#include "core/fxge/cfx_standardfont.h"
-#include "core/fxge/cfx_substfont.h"
-#include "core/fxge/fontdata/chromefontdata/chromefontdata.h"
 #include "core/fxge/fx_font.h"
 #include "core/fxge/systemfontinfo_iface.h"
 
@@ -40,28 +37,6 @@
 #endif  // PDF_USE_SKIA
 
 namespace {
-
-constexpr std::array<pdfium::span<const uint8_t>,
-                     CFX_StandardFont::kNumStandardFonts>
-    kFoxitFonts = {{
-        kFoxitFixedFontData,
-        kFoxitFixedBoldFontData,
-        kFoxitFixedBoldItalicFontData,
-        kFoxitFixedItalicFontData,
-        kFoxitSansFontData,
-        kFoxitSansBoldFontData,
-        kFoxitSansBoldItalicFontData,
-        kFoxitSansItalicFontData,
-        kFoxitSerifFontData,
-        kFoxitSerifBoldFontData,
-        kFoxitSerifBoldItalicFontData,
-        kFoxitSerifItalicFontData,
-        kFoxitSymbolFontData,
-        kFoxitDingbatsFontData,
-    }};
-
-constexpr pdfium::span<const uint8_t> kGenericSansFont = kFoxitSansMMFontData;
-constexpr pdfium::span<const uint8_t> kGenericSerifFont = kFoxitSerifMMFontData;
 
 #if defined(PDF_USE_SKIA)
 // A singleton SkFontMgr which can be used to decode raw font data or
@@ -194,17 +169,3 @@ sk_sp<SkTypeface> CFX_FontMgr::MakeSkTypeface(
 }
 #endif  // defined(PDF_USE_SKIA)
 
-// static
-pdfium::span<const uint8_t> CFX_FontMgr::GetStandardFont(size_t index) {
-  return kFoxitFonts[index];
-}
-
-// static
-pdfium::span<const uint8_t> CFX_FontMgr::GetGenericSansFont() {
-  return kGenericSansFont;
-}
-
-// static
-pdfium::span<const uint8_t> CFX_FontMgr::GetGenericSerifFont() {
-  return kGenericSerifFont;
-}

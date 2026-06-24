@@ -10,12 +10,35 @@
 
 #include "core/fxcrt/containers/contains.h"
 #include "core/fxcrt/fx_extension.h"
+#include "core/fxge/fontdata/chromefontdata/chromefontdata.h"
 
 namespace {
 
 static_assert(CFX_StandardFont::kLast + 1 ==
                   CFX_StandardFont::kNumStandardFonts,
               "StandardFont enum count mismatch");
+
+constexpr std::array<pdfium::span<const uint8_t>,
+                     CFX_StandardFont::kNumStandardFonts>
+    kFoxitFonts = {{
+        kFoxitFixedFontData,
+        kFoxitFixedBoldFontData,
+        kFoxitFixedBoldItalicFontData,
+        kFoxitFixedItalicFontData,
+        kFoxitSansFontData,
+        kFoxitSansBoldFontData,
+        kFoxitSansBoldItalicFontData,
+        kFoxitSansItalicFontData,
+        kFoxitSerifFontData,
+        kFoxitSerifBoldFontData,
+        kFoxitSerifBoldItalicFontData,
+        kFoxitSerifItalicFontData,
+        kFoxitSymbolFontData,
+        kFoxitDingbatsFontData,
+    }};
+
+constexpr pdfium::span<const uint8_t> kGenericSansFont = kFoxitSansMMFontData;
+constexpr pdfium::span<const uint8_t> kGenericSerifFont = kFoxitSerifMMFontData;
 
 constexpr std::array<const char*, CFX_StandardFont::kNumStandardFonts>
     kBase14FontNames = {{
@@ -171,4 +194,19 @@ bool CFX_StandardFont::IsFixedFont(StandardFont font) {
   return font == StandardFont::kCourier || font == StandardFont::kCourierBold ||
          font == StandardFont::kCourierBoldOblique ||
          font == StandardFont::kCourierOblique;
+}
+
+// static
+pdfium::span<const uint8_t> CFX_StandardFont::GetStandardFont(size_t index) {
+  return kFoxitFonts[index];
+}
+
+// static
+pdfium::span<const uint8_t> CFX_StandardFont::GetGenericSansFont() {
+  return kGenericSansFont;
+}
+
+// static
+pdfium::span<const uint8_t> CFX_StandardFont::GetGenericSerifFont() {
+  return kGenericSerifFont;
 }
