@@ -117,8 +117,8 @@ static void NotifyHideChildWidget(CFWL_WidgetMgr* widgetMgr,
   }
 }
 
-void CFWL_Widget::SetStates(uint32_t dwStates) {
-  properties_.states_ |= dwStates;
+void CFWL_Widget::SetStates(Mask<WidgetState> states) {
+  properties_.states_ |= states;
   if (IsVisible()) {
     return;
   }
@@ -135,8 +135,8 @@ void CFWL_Widget::SetStates(uint32_t dwStates) {
   }
 }
 
-void CFWL_Widget::RemoveStates(uint32_t dwStates) {
-  properties_.states_ &= ~dwStates;
+void CFWL_Widget::ClearStates(Mask<WidgetState> states) {
+  properties_.states_ &= ~states;
 }
 
 FWL_WidgetHit CFWL_Widget::HitTest(const CFX_PointF& point) {
@@ -183,7 +183,7 @@ IFWL_ThemeProvider* CFWL_Widget::GetThemeProvider() const {
 }
 
 bool CFWL_Widget::IsEnabled() const {
-  return (properties_.states_ & FWL_STATE_WGT_Disabled) == 0;
+  return !(properties_.states_ & WidgetState::kDisabled);
 }
 
 bool CFWL_Widget::HasBorder() const {
@@ -191,7 +191,7 @@ bool CFWL_Widget::HasBorder() const {
 }
 
 bool CFWL_Widget::IsVisible() const {
-  return !(properties_.states_ & FWL_STATE_WGT_Invisible);
+  return !(properties_.states_ & WidgetState::kInvisible);
 }
 
 bool CFWL_Widget::IsOverLapper() const {
