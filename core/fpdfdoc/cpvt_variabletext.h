@@ -123,8 +123,6 @@ class CPVT_VariableText {
   CPVT_WordPlace GetSectionBeginPlace(const CPVT_WordPlace& place) const;
   CPVT_WordPlace GetSectionEndPlace(const CPVT_WordPlace& place) const;
   void UpdateWordPlace(CPVT_WordPlace& place) const;
-  CPVT_WordPlace PrevLineHeaderPlace(const CPVT_WordPlace& place) const;
-  CPVT_WordPlace NextLineHeaderPlace(const CPVT_WordPlace& place) const;
   int32_t WordPlaceToWordIndex(const CPVT_WordPlace& place) const;
   CPVT_WordPlace WordIndexToWordPlace(int32_t index) const;
 
@@ -133,11 +131,6 @@ class CPVT_VariableText {
   float GetPlateWidth() const { return plate_rect_.right - plate_rect_.left; }
   float GetPlateHeight() const { return plate_rect_.top - plate_rect_.bottom; }
   CFX_PointF GetBTPoint() const;
-  CFX_PointF GetETPoint() const;
-
-  CFX_PointF InToOut(const CFX_PointF& point) const;
-  CFX_PointF OutToIn(const CFX_PointF& point) const;
-  CFX_FloatRect InToOut(const CPVT_FloatRect& rect) const;
 
   float GetFontAscent(int32_t nFontIndex, float fFontSize) const;
   float GetFontDescent(int32_t nFontIndex, float fFontSize) const;
@@ -168,7 +161,13 @@ class CPVT_VariableText {
                          const CPVT_LineInfo& lineinfo);
   CPVT_WordPlace AddWord(const CPVT_WordPlace& place,
                          const CPVT_WordInfo& wordinfo);
-  float GetWordFontSize() const;
+
+  CPVT_WordPlace PrevLineHeaderPlace(const CPVT_WordPlace& place) const;
+  CPVT_WordPlace NextLineHeaderPlace(const CPVT_WordPlace& place) const;
+
+  CFX_PointF InToOut(const CFX_PointF& point) const;
+  CFX_PointF OutToIn(const CFX_PointF& point) const;
+  CFX_FloatRect InToOut(const CPVT_FloatRect& rect) const;
 
   void ClearSectionRightWords(const CPVT_WordPlace& place);
 
