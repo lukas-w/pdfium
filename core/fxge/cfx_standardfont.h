@@ -29,7 +29,8 @@ class CFX_StandardFont {
     kTimesOblique,
     kSymbol,
     kDingbats,
-    kLast = kDingbats
+    kFirst = kCourier,
+    kLast = kDingbats,
   };
   static constexpr int kNumStandardFonts = 14;
 
