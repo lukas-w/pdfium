@@ -83,8 +83,10 @@ source_set("fxcodec") {
   ]
   defines = []
   if (pdf_enable_brotli) {
-    # TODO(https://crbug.com/475855993): Add Brotli source files here once
-    # Brotli support is implemented.
+    sources += [
+      "brotli/brotli_decoder.cpp",
+      "brotli/brotli_decoder.h",
+    ]
     deps += [ "//third_party/brotli:dec" ]
   }
   if (pdf_enable_xfa) {

@@ -8,9 +8,7 @@
 
 using BrotliEmbedderTest = EmbedderTest;
 
-// TODO(crbug.com/475855993): Enable for all files when BrotliDecode support is
-// added.
-TEST_F(BrotliEmbedderTest, DISABLED_ManyRectanglesBrotli) {
+TEST_F(BrotliEmbedderTest, ManyRectanglesBrotli) {
   ASSERT_TRUE(OpenDocument("many_rectangles_brotli.pdf"));
 
   ScopedPage page = LoadScopedPage(0);
@@ -22,7 +20,7 @@ TEST_F(BrotliEmbedderTest, DISABLED_ManyRectanglesBrotli) {
   CompareBitmapWithExpectationSuffix(bitmap.get(), pdfium::kManyRectanglesPng);
 }
 
-TEST_F(BrotliEmbedderTest, DISABLED_SimpleBrotliWithText) {
+TEST_F(BrotliEmbedderTest, SimpleBrotliWithText) {
   ASSERT_TRUE(OpenDocument("hello_world_brotli.pdf"));
 
   ScopedPage page = LoadScopedPage(0);
@@ -34,7 +32,7 @@ TEST_F(BrotliEmbedderTest, DISABLED_SimpleBrotliWithText) {
   CompareBitmapWithExpectationSuffix(bitmap.get(), pdfium::kHelloWorldPng);
 }
 
-TEST_F(BrotliEmbedderTest, DISABLED_BrotliRectangles) {
+TEST_F(BrotliEmbedderTest, BrotliRectangles) {
   ASSERT_TRUE(OpenDocument("rectangles_brotli.pdf"));
 
   ScopedPage page = LoadScopedPage(0);
@@ -46,7 +44,7 @@ TEST_F(BrotliEmbedderTest, DISABLED_BrotliRectangles) {
   CompareBitmapWithExpectationSuffix(bitmap.get(), pdfium::kRectanglesPng);
 }
 
-TEST_F(BrotliEmbedderTest, DISABLED_BrotliWithLength1Argument) {
+TEST_F(BrotliEmbedderTest, BrotliWithLength1Argument) {
   ASSERT_TRUE(OpenDocument("hello_world_brotli_with_length1.pdf"));
 
   ScopedPage page = LoadScopedPage(0);
