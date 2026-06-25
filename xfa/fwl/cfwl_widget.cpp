@@ -94,10 +94,8 @@ CFX_RectF CFWL_Widget::GetClientRect() {
   return GetEdgeRect();
 }
 
-void CFWL_Widget::ModifyStyles(uint32_t dwStylesAdded,
-                               uint32_t dwStylesRemoved) {
-  properties_.styles_ &= ~dwStylesRemoved;
-  properties_.styles_ |= dwStylesAdded;
+void CFWL_Widget::SetStyles(Mask<WidgetStyle> styles) {
+  properties_.styles_ = styles;
 }
 
 void CFWL_Widget::ModifyStyleExts(uint32_t dwStyleExtsAdded,
@@ -187,7 +185,7 @@ bool CFWL_Widget::IsEnabled() const {
 }
 
 bool CFWL_Widget::HasBorder() const {
-  return !!(properties_.styles_ & FWL_STYLE_WGT_Border);
+  return !!(properties_.styles_ & WidgetStyle::kBorder);
 }
 
 bool CFWL_Widget::IsVisible() const {
@@ -195,16 +193,16 @@ bool CFWL_Widget::IsVisible() const {
 }
 
 bool CFWL_Widget::IsOverLapper() const {
-  return (properties_.styles_ & FWL_STYLE_WGT_WindowTypeMask) ==
-         FWL_STYLE_WGT_OverLapper;
+  return (properties_.styles_ & kWidgetStyleWindowTypeMask) ==
+         WidgetStyle::kOverLapper;
 }
 
 bool CFWL_Widget::IsPopup() const {
-  return !!(properties_.styles_ & FWL_STYLE_WGT_Popup);
+  return !!(properties_.styles_ & WidgetStyle::kPopup);
 }
 
 bool CFWL_Widget::IsChild() const {
-  return !!(properties_.styles_ & FWL_STYLE_WGT_Child);
+  return !!(properties_.styles_ & WidgetStyle::kChild);
 }
 
 CFWL_Widget* CFWL_Widget::GetOutmost() const {

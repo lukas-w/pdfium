@@ -10,6 +10,7 @@
 #include <stdint.h>
 
 #include "core/fxcrt/fx_coordinates.h"
+#include "core/fxcrt/mask.h"
 #include "core/fxcrt/unowned_ptr.h"
 #include "core/fxcrt/widestring.h"
 #include "core/fxge/dib/fx_dib.h"
@@ -31,14 +32,18 @@ class CFWL_Event;
 class CFWL_Widget;
 class IFWL_ThemeProvider;
 
-#define FWL_STYLE_WGT_OverLapper 0
-#define FWL_STYLE_WGT_Popup (1L << 0)
-#define FWL_STYLE_WGT_Child (2L << 0)
-#define FWL_STYLE_WGT_WindowTypeMask (3L << 0)
-#define FWL_STYLE_WGT_Border (1L << 2)
-#define FWL_STYLE_WGT_VScroll (1L << 11)
-#define FWL_STYLE_WGT_Group (1L << 22)
-#define FWL_STYLE_WGT_NoBackground (1L << 28)
+enum class WidgetStyle : uint32_t {
+  kOverLapper = 0,
+  kPopup = 1L << 0,
+  kChild = 2L << 0,
+  kBorder = 1L << 2,
+  kVScroll = 1L << 11,
+  kGroup = 1L << 22,
+  kNoBackground = 1L << 28,
+};
+
+inline constexpr Mask<WidgetStyle> kWidgetStyleWindowTypeMask = {
+    WidgetStyle::kPopup, WidgetStyle::kChild};
 
 // Widget state flags. Per-widget state values (kHovered/kPressed and the
 // checkbox-specific Check* bits, which are also shared by some buttons) are
@@ -95,8 +100,8 @@ class CFWL_Widget : public cppgc::GarbageCollected<CFWL_Widget>,
 
   class Properties {
    public:
-    uint32_t styles_ = FWL_STYLE_WGT_Child;  // Mask of FWL_STYLE_*_*.
-    uint32_t style_exts_ = 0;                // Mask of FWL_STYLEEXT_*_*.
+    Mask<WidgetStyle> styles_ = WidgetStyle::kChild;
+    uint32_t style_exts_ = 0;  // Mask of FWL_STYLEEXT_*_*.
     Mask<WidgetState> states_;
   };
 
@@ -147,7 +152,7 @@ class CFWL_Widget : public cppgc::GarbageCollected<CFWL_Widget>,
   CFWL_Widget* GetOuter() const { return outer_; }
   CFWL_Widget* GetOutmost() const;
 
-  void ModifyStyles(uint32_t dwStylesAdded, uint32_t dwStylesRemoved);
+  void SetStyles(Mask<WidgetStyle> styles);
   uint32_t GetStyleExts() const { return properties_.style_exts_; }
   Mask<WidgetState> GetStates() const { return properties_.states_; }
 

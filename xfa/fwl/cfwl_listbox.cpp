@@ -112,7 +112,7 @@ void CFWL_ListBox::DrawWidget(CFGAS_GEGraphics* pGraphics,
   }
 
   pGraphics->SetClipRect(matrix.TransformRect(rtClip));
-  if ((properties_.styles_ & FWL_STYLE_WGT_NoBackground) == 0) {
+  if (!(properties_.styles_ & WidgetStyle::kNoBackground)) {
     DrawBkground(pGraphics, matrix);
   }
 
@@ -490,7 +490,7 @@ CFX_SizeF CFWL_ListBox::CalcSize() {
   float iHeight = client_rect_.height;
   bool bShowVertScr = false;
   bool bShowHorzScr = false;
-  if (!bShowVertScr && (properties_.styles_ & FWL_STYLE_WGT_VScroll)) {
+  if (!bShowVertScr && (properties_.styles_ & WidgetStyle::kVScroll)) {
     bShowVertScr = (fs.height > iHeight);
   }
 
@@ -609,7 +609,7 @@ void CFWL_ListBox::InitVerticalScrollBar() {
 
   vert_scroll_bar_ = cppgc::MakeGarbageCollected<CFWL_ScrollBar>(
       GetFWLApp()->GetHeap()->GetAllocationHandle(), GetFWLApp(),
-      Properties{0, FWL_STYLEEXT_SCB_Vert, WidgetState::kInvisible}, this);
+      Properties{{}, FWL_STYLEEXT_SCB_Vert, WidgetState::kInvisible}, this);
 }
 
 void CFWL_ListBox::InitHorizontalScrollBar() {
@@ -619,7 +619,7 @@ void CFWL_ListBox::InitHorizontalScrollBar() {
 
   horz_scroll_bar_ = cppgc::MakeGarbageCollected<CFWL_ScrollBar>(
       GetFWLApp()->GetHeap()->GetAllocationHandle(), GetFWLApp(),
-      Properties{0, FWL_STYLEEXT_SCB_Horz, WidgetState::kInvisible}, this);
+      Properties{{}, FWL_STYLEEXT_SCB_Horz, WidgetState::kInvisible}, this);
 }
 
 bool CFWL_ListBox::IsShowVertScrollBar() const {

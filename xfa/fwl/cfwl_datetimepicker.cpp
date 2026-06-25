@@ -26,7 +26,7 @@ constexpr int kDateTimePickerHeight = 20;
 
 CFWL_DateTimePicker::CFWL_DateTimePicker(CFWL_App* app)
     : CFWL_Widget(app,
-                  Properties{0, FWL_STYLEEXT_DTP_ShortDateFormat, {}},
+                  Properties{{}, FWL_STYLEEXT_DTP_ShortDateFormat, {}},
                   nullptr),
       edit_(cppgc::MakeGarbageCollected<CFWL_DateTimeEdit>(
           app->GetHeap()->GetAllocationHandle(),
@@ -36,7 +36,8 @@ CFWL_DateTimePicker::CFWL_DateTimePicker(CFWL_App* app)
       month_cal_(cppgc::MakeGarbageCollected<CFWL_MonthCalendar>(
           app->GetHeap()->GetAllocationHandle(),
           app,
-          Properties{FWL_STYLE_WGT_Popup | FWL_STYLE_WGT_Border, 0,
+          Properties{{WidgetStyle::kPopup, WidgetStyle::kBorder},
+                     0,
                      WidgetState::kInvisible},
           this)) {
   month_cal_->SetWidgetRect(

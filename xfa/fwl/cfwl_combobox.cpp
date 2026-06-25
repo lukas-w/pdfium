@@ -37,7 +37,8 @@ CFWL_ComboBox::CFWL_ComboBox(CFWL_App* app)
       list_box_(cppgc::MakeGarbageCollected<CFWL_ComboList>(
           app->GetHeap()->GetAllocationHandle(),
           app,
-          Properties{FWL_STYLE_WGT_Border | FWL_STYLE_WGT_VScroll, 0,
+          Properties{{WidgetStyle::kBorder, WidgetStyle::kVScroll},
+                     0,
                      WidgetState::kInvisible},
           this)) {}
 

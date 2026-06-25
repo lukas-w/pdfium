@@ -461,7 +461,7 @@ void CFWL_Edit::UpdateEditParams() {
     edit_engine_->EnableMultiLine(true);
     edit_engine_->EnableLineWrap(!auto_hscroll);
     edit_engine_->LimitVerticalScroll(
-        (properties_.styles_ & FWL_STYLE_WGT_VScroll) == 0 &&
+        !(properties_.styles_ & WidgetStyle::kVScroll) &&
         (properties_.style_exts_ & FWL_STYLEEXT_EDT_AutoVScroll) == 0);
   } else {
     edit_engine_->EnableMultiLine(false);
@@ -623,7 +623,7 @@ bool CFWL_Edit::IsShowVertScrollBar() const {
   const bool bShow =
       !(properties_.style_exts_ & FWL_STYLEEXT_EDT_ShowScrollbarFocus) ||
       (properties_.states_ & WidgetState::kFocused);
-  return bShow && (properties_.styles_ & FWL_STYLE_WGT_VScroll) &&
+  return bShow && (properties_.styles_ & WidgetStyle::kVScroll) &&
          (properties_.style_exts_ & FWL_STYLEEXT_EDT_MultiLine) &&
          IsContentHeightOverflow();
 }
@@ -716,7 +716,7 @@ void CFWL_Edit::InitVerticalScrollBar() {
 
   vert_scroll_bar_ = cppgc::MakeGarbageCollected<CFWL_ScrollBar>(
       GetFWLApp()->GetHeap()->GetAllocationHandle(), GetFWLApp(),
-      Properties{0,
+      Properties{{},
                  FWL_STYLEEXT_SCB_Vert,
                  {WidgetState::kDisabled, WidgetState::kInvisible}},
       this);
