@@ -94,11 +94,12 @@ class CFX_FontMapper {
   uint32_t GetChecksumFromTT(void* font_handle);
   ByteString GetPSNameFromTT(void* font_handle);
   ByteString MatchInstalledFonts(const ByteString& norm_name);
-  RetainPtr<CFX_Face> UseInternalSubst(CFX_StandardFont::Index base_font,
-                                       int weight,
-                                       int italic_angle,
-                                       int pitch_family,
-                                       CFX_SubstFont* subst_font);
+  RetainPtr<CFX_Face> UseInternalSubst(
+      std::optional<CFX_StandardFont::Index> base_font,
+      int weight,
+      int italic_angle,
+      int pitch_family,
+      CFX_SubstFont* subst_font);
   RetainPtr<CFX_Face> UseExternalSubst(void* font_handle,
                                        ByteString face_name,
                                        int weight,
