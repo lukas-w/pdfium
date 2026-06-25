@@ -533,7 +533,7 @@ std::unique_ptr<CPDF_Font::FormIface> CPDF_DocPageData::CreateForm(
 RetainPtr<CPDF_Font> CPDF_DocPageData::AddStandardFont(
     const ByteString& fontName,
     const CPDF_FontEncoding* pEncoding) {
-  std::optional<CFX_StandardFont::StandardFont> font_id =
+  std::optional<CFX_StandardFont::Index> font_id =
       CFX_StandardFont::GetStandardFontIndex(fontName);
   if (!font_id.has_value()) {
     return nullptr;

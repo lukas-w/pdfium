@@ -14,7 +14,7 @@
 
 class CFX_StandardFont {
  public:
-  enum StandardFont : uint8_t {
+  enum Index : uint8_t {
     kCourier = 0,
     kCourierBold,
     kCourierBoldOblique,
@@ -33,15 +33,14 @@ class CFX_StandardFont {
   };
   static constexpr int kNumStandardFonts = 14;
 
-  static std::optional<StandardFont> GetStandardFontIndex(
-      const ByteString& name);
-  static ByteString GetCanonicalFontName(StandardFont font);
+  static std::optional<Index> GetStandardFontIndex(const ByteString& name);
+  static ByteString GetCanonicalFontName(Index font);
 
   static bool IsStandardFontName(const ByteString& name);
-  static bool IsSymbolicFont(StandardFont font);
-  static bool IsFixedFont(StandardFont font);
+  static bool IsSymbolicFont(Index font);
+  static bool IsFixedFont(Index font);
 
-  static pdfium::span<const uint8_t> GetFontData(StandardFont font);
+  static pdfium::span<const uint8_t> GetFontData(Index font);
   static pdfium::span<const uint8_t> GetGenericSansFontData();
   static pdfium::span<const uint8_t> GetGenericSerifFontData();
 };

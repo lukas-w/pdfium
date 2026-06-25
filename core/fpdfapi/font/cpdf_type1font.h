@@ -48,7 +48,7 @@ class CPDF_Type1Font final : public CPDF_FaceBasedSimpleFont {
   std::array<uint16_t, kInternalTableSize> ext_gid_;
 #endif
 
-  std::optional<CFX_StandardFont::StandardFont> base14_font_;
+  std::optional<CFX_StandardFont::Index> base14_font_;
 };
 
 #endif  // CORE_FPDFAPI_FONT_CPDF_TYPE1FONT_H_

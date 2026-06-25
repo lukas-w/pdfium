@@ -34,10 +34,9 @@ class CPDF_FontGlobals {
   void LoadEmbeddedMaps();
 
   void Clear(CPDF_Document* doc);
-  RetainPtr<CPDF_Font> Find(CPDF_Document* doc,
-                            CFX_StandardFont::StandardFont index);
+  RetainPtr<CPDF_Font> Find(CPDF_Document* doc, CFX_StandardFont::Index index);
   void Set(CPDF_Document* doc,
-           CFX_StandardFont::StandardFont index,
+           CFX_StandardFont::Index index,
            RetainPtr<CPDF_Font> font);
 
   void SetEmbeddedCharset(CIDSet idx, pdfium::span<const fxcmap::CMap> map) {
