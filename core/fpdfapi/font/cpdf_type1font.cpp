@@ -84,10 +84,12 @@ CPDF_Type1Font* CPDF_Type1Font::AsType1Font() {
 }
 
 bool CPDF_Type1Font::Load() {
-  base14_font_ = CFX_StandardFont::GetStandardFontName(&base_font_name_);
-  if (!IsBase14Font()) {
+  base14_font_ = CFX_StandardFont::GetStandardFontIndex(base_font_name_);
+  if (!base14_font_.has_value()) {
     return LoadCommon();
   }
+  base_font_name_ =
+      CFX_StandardFont::GetCanonicalFontName(base14_font_.value());
 
   RetainPtr<const CPDF_Dictionary> font_desc =
       font_dict_->GetDictFor("FontDescriptor");

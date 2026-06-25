@@ -4,6 +4,9 @@
 
 #include "core/fxge/cfx_standardfont.h"
 
+#include <optional>
+
+#include "core/fxcrt/bytestring.h"
 #include "testing/gtest/include/gtest/gtest.h"
 
 TEST(CFXStandardFontTest, IsStandardFontName) {
@@ -28,56 +31,27 @@ TEST(CFXStandardFontTest, IsStandardFontName) {
   EXPECT_FALSE(CFX_StandardFont::IsStandardFontName("YapfDingbats"));
 }
 
-TEST(CFXStandardFontTest, GetStandardFontName) {
-  // Test exact matches (should not change name, just return StandardFont enum)
-  {
-    ByteString name = "Courier";
-    auto font = CFX_StandardFont::GetStandardFontName(&name);
-    ASSERT_TRUE(font.has_value());
-    EXPECT_EQ(CFX_StandardFont::kCourier, font.value());
-    EXPECT_EQ("Courier", name);
-  }
-  {
-    ByteString name = "Times-Roman";
-    auto font = CFX_StandardFont::GetStandardFontName(&name);
-    ASSERT_TRUE(font.has_value());
-    EXPECT_EQ(CFX_StandardFont::kTimes, font.value());
-    EXPECT_EQ("Times-Roman", name);
-  }
+TEST(CFXStandardFontTest, GetStandardFontIndex) {
+  // Canonical names
+  EXPECT_EQ(CFX_StandardFont::kCourier,
+            CFX_StandardFont::GetStandardFontIndex("Courier"));
+  EXPECT_EQ(CFX_StandardFont::kTimesBold,
+            CFX_StandardFont::GetStandardFontIndex("Times-Bold"));
+  EXPECT_EQ(CFX_StandardFont::kDingbats,
+            CFX_StandardFont::GetStandardFontIndex("ZapfDingbats"));
 
-  // Test alternates (should change name to canonical and return StandardFont
-  // enum)
-  {
-    ByteString name = "Arial";
-    auto font = CFX_StandardFont::GetStandardFontName(&name);
-    ASSERT_TRUE(font.has_value());
-    EXPECT_EQ(CFX_StandardFont::kHelvetica, font.value());
-    EXPECT_EQ("Helvetica", name);
-  }
-  {
-    ByteString name = "CourierNew";
-    auto font = CFX_StandardFont::GetStandardFontName(&name);
-    ASSERT_TRUE(font.has_value());
-    EXPECT_EQ(CFX_StandardFont::kCourier, font.value());
-    EXPECT_EQ("Courier", name);
-  }
+  // Alternates (aliases)
+  EXPECT_EQ(CFX_StandardFont::kHelvetica,
+            CFX_StandardFont::GetStandardFontIndex("Arial"));
+  EXPECT_EQ(CFX_StandardFont::kCourier,
+            CFX_StandardFont::GetStandardFontIndex("CourierNew"));
+  EXPECT_EQ(CFX_StandardFont::kTimesBold,
+            CFX_StandardFont::GetStandardFontIndex("TimesNewRoman,Bold"));
+  EXPECT_EQ(CFX_StandardFont::kHelvetica,
+            CFX_StandardFont::GetStandardFontIndex("arial"));
 
-  // Test case insensitivity for alternates
-  {
-    ByteString name = "arial";
-    auto font = CFX_StandardFont::GetStandardFontName(&name);
-    ASSERT_TRUE(font.has_value());
-    EXPECT_EQ(CFX_StandardFont::kHelvetica, font.value());
-    EXPECT_EQ("Helvetica", name);
-  }
-
-  // Test non-standard fonts
-  {
-    ByteString name = "ComicSans";
-    auto font = CFX_StandardFont::GetStandardFontName(&name);
-    EXPECT_FALSE(font.has_value());
-    EXPECT_EQ("ComicSans", name);  // Should not change
-  }
+  // Non-standard
+  EXPECT_FALSE(CFX_StandardFont::GetStandardFontIndex("ComicSans").has_value());
 }
 
 TEST(CFXStandardFontTest, GetCanonicalFontName) {

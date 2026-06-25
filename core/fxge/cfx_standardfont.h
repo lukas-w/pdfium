@@ -33,15 +33,17 @@ class CFX_StandardFont {
   };
   static constexpr int kNumStandardFonts = 14;
 
-  static pdfium::span<const uint8_t> GetStandardFont(size_t index);
-  static pdfium::span<const uint8_t> GetGenericSansFont();
-  static pdfium::span<const uint8_t> GetGenericSerifFont();
-
-  static std::optional<StandardFont> GetStandardFontName(ByteString* name);
+  static std::optional<StandardFont> GetStandardFontIndex(
+      const ByteString& name);
   static ByteString GetCanonicalFontName(StandardFont font);
+
   static bool IsStandardFontName(const ByteString& name);
   static bool IsSymbolicFont(StandardFont font);
   static bool IsFixedFont(StandardFont font);
+
+  static pdfium::span<const uint8_t> GetFontData(StandardFont font);
+  static pdfium::span<const uint8_t> GetGenericSansFontData();
+  static pdfium::span<const uint8_t> GetGenericSerifFontData();
 };
 
 #endif  // CORE_FXGE_CFX_STANDARDFONT_H_
