@@ -353,7 +353,7 @@ CPVT_WordPlace CPVT_Section::SearchWordPlace(const CFX_PointF& point) const {
       nMid = (nLeft + nRight) / 2;
       continue;
     }
-    place = SearchWordPlace(
+    place = SearchWordPlaceImpl(
         point.x,
         CPVT_WordRange(pLine->GetNextWordPlace(pLine->GetBeginWordPlace()),
                        pLine->GetEndWordPlace()));
@@ -377,13 +377,13 @@ CPVT_WordPlace CPVT_Section::SearchWordPlace(
   }
 
   Line* pLine = line_array_[lineplace.nLineIndex].get();
-  return SearchWordPlace(
+  return SearchWordPlaceImpl(
       fx - rect_.left,
       CPVT_WordRange(pLine->GetNextWordPlace(pLine->GetBeginWordPlace()),
                      pLine->GetEndWordPlace()));
 }
 
-CPVT_WordPlace CPVT_Section::SearchWordPlace(
+CPVT_WordPlace CPVT_Section::SearchWordPlaceImpl(
     float fx,
     const CPVT_WordRange& range) const {
   CPVT_WordPlace wordplace = range.BeginPos;

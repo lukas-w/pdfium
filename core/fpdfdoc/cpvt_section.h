@@ -57,7 +57,6 @@ class CPVT_Section final {
   CPVT_WordPlace SearchWordPlace(const CFX_PointF& point) const;
   CPVT_WordPlace SearchWordPlace(float fx,
                                  const CPVT_WordPlace& lineplace) const;
-  CPVT_WordPlace SearchWordPlace(float fx, const CPVT_WordRange& range) const;
 
   void SetPlace(const CPVT_WordPlace& place) { sec_place_ = place; }
   void SetPlaceIndex(int32_t index) { sec_place_.nSecIndex = index; }
@@ -79,6 +78,9 @@ class CPVT_Section final {
   void ClearLeftWords(int32_t nWordIndex);
   void ClearRightWords(int32_t nWordIndex);
   void ClearMidWords(int32_t nBeginIndex, int32_t nEndIndex);
+
+  CPVT_WordPlace SearchWordPlaceImpl(float fx,
+                                     const CPVT_WordRange& range) const;
 
   CPVT_WordPlace sec_place_;
   CPVT_FloatRect rect_;
