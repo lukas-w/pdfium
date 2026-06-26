@@ -694,41 +694,38 @@ CPVT_FloatRect CPVT_Section::OutputLines(const CPVT_FloatRect& rect) const {
   float fMaxX = fMinX + rect.Width();
   float fMinY = 0.0f;
   float fMaxY = rect.Height();
-  int32_t nTotalLines = fxcrt::CollectionSize<int32_t>(line_array_);
-  if (nTotalLines > 0) {
-    float fPosX = 0.0f;
-    float fPosY = 0.0f;
-    for (int32_t l = 0; l < nTotalLines; l++) {
-      CPVT_Section::Line* pLine = line_array_[l].get();
-      switch (vt_->GetAlignment()) {
-        default:
-        case 0:
-          fPosX = 0;
-          break;
-        case 1:
-          fPosX = (fTypesetWidth - pLine->line_info_.fLineWidth) * 0.5f;
-          break;
-        case 2:
-          fPosX = fTypesetWidth - pLine->line_info_.fLineWidth;
-          break;
-      }
-      fPosX += fLineIndent;
-      fPosY += vt_->GetLineLeading();
-      fPosY += pLine->line_info_.fLineAscent;
-      pLine->line_info_.fLineX = fPosX - fMinX;
-      pLine->line_info_.fLineY = fPosY - fMinY;
-      for (int32_t w = pLine->line_info_.nBeginWordIndex;
-           w <= pLine->line_info_.nEndWordIndex; w++) {
-        if (fxcrt::IndexInBounds(word_array_, w)) {
-          CPVT_WordInfo* pWord = word_array_[w].get();
-          pWord->fWordX = fPosX - fMinX;
-          pWord->fWordY = fPosY - fMinY;
 
-          fPosX += vt_->GetWordWidth(*pWord);
-        }
-      }
-      fPosY -= pLine->line_info_.fLineDescent;
+  float fPosX = 0.0f;
+  float fPosY = 0.0f;
+  for (const auto& line : line_array_) {
+    switch (vt_->GetAlignment()) {
+      default:
+      case 0:
+        fPosX = 0;
+        break;
+      case 1:
+        fPosX = (fTypesetWidth - line->line_info_.fLineWidth) * 0.5f;
+        break;
+      case 2:
+        fPosX = fTypesetWidth - line->line_info_.fLineWidth;
+        break;
     }
+    fPosX += fLineIndent;
+    fPosY += vt_->GetLineLeading();
+    fPosY += line->line_info_.fLineAscent;
+    line->line_info_.fLineX = fPosX - fMinX;
+    line->line_info_.fLineY = fPosY - fMinY;
+    for (int32_t w = line->line_info_.nBeginWordIndex;
+         w <= line->line_info_.nEndWordIndex; w++) {
+      if (fxcrt::IndexInBounds(word_array_, w)) {
+        CPVT_WordInfo* pWord = word_array_[w].get();
+        pWord->fWordX = fPosX - fMinX;
+        pWord->fWordY = fPosY - fMinY;
+
+        fPosX += vt_->GetWordWidth(*pWord);
+      }
+    }
+    fPosY -= line->line_info_.fLineDescent;
   }
   return CPVT_FloatRect(fMinX, fMinY, fMaxX, fMaxY);
 }
