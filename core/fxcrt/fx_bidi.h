@@ -7,7 +7,7 @@
 #ifndef CORE_FXCRT_FX_BIDI_H_
 #define CORE_FXCRT_FX_BIDI_H_
 
-#include <stdint.h>
+#include <stddef.h>
 
 #include <vector>
 
@@ -18,8 +18,8 @@ class CFX_BidiChar {
  public:
   enum class Direction { kNeutral, kLeft, kRight, kLeftWeak };
   struct Segment {
-    int32_t start;        // Start position.
-    int32_t count;        // Character count.
+    size_t start;         // Start position.
+    size_t count;         // Character count.
     Direction direction;  // Segment direction.
   };
 

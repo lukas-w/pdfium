@@ -847,14 +847,14 @@ void CPDF_TextPage::CloseTempLine() {
         (segment.direction == CFX_BidiChar::Direction::kNeutral &&
          current_direction == CFX_BidiChar::Direction::kRight)) {
       current_direction = CFX_BidiChar::Direction::kRight;
-      for (int m = segment.start + segment.count; m > segment.start; --m) {
+      for (size_t m = segment.start + segment.count; m > segment.start; --m) {
         AddCharInfo(str[m - 1], temp_char_list_[m - 1], /*is_rtl=*/true);
       }
     } else {
       if (segment.direction != CFX_BidiChar::Direction::kLeftWeak) {
         current_direction = CFX_BidiChar::Direction::kLeft;
       }
-      for (int m = segment.start; m < segment.start + segment.count; ++m) {
+      for (size_t m = segment.start; m < segment.start + segment.count; ++m) {
         AddCharInfo(str[m], temp_char_list_[m], /*is_rtl=*/false);
       }
     }
