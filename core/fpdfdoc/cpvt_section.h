@@ -17,6 +17,7 @@
 #include "core/fpdfdoc/cpvt_wordinfo.h"
 #include "core/fpdfdoc/cpvt_wordrange.h"
 #include "core/fxcrt/fx_coordinates.h"
+#include "core/fxcrt/span.h"
 #include "core/fxcrt/unowned_ptr.h"
 
 class CPVT_VariableText;
@@ -95,6 +96,11 @@ class CPVT_Section final {
   // If `begin_index` > `end_index`, returns an empty range.
   WordRangeIteratorPair GetWordRangeIteratorPair(int32_t begin_index,
                                                  int32_t end_index) const;
+
+  // Like GetWordRangeIteratorPair(), but returns a span into `word_array_`.
+  pdfium::span<const std::unique_ptr<CPVT_WordInfo>> GetWordRangeSpan(
+      int32_t begin_index,
+      int32_t end_index) const;
 
   CPVT_WordPlace SearchWordPlaceImpl(float fx,
                                      const CPVT_WordRange& range) const;
