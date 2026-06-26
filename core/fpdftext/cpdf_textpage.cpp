@@ -34,6 +34,7 @@
 #include "core/fxcrt/notreached.h"
 #include "core/fxcrt/span.h"
 #include "core/fxcrt/stl_util.h"
+#include "core/fxcrt/zip.h"
 
 namespace {
 
@@ -843,19 +844,22 @@ void CPDF_TextPage::CloseTempLine() {
   }
   CFX_BidiChar::Direction current_direction = bidi.OverallDirection();
   for (const auto& segment : bidi) {
+    auto str_span = str.span().subspan(segment.start, segment.count);
+    auto char_span =
+        pdfium::span(temp_char_list_).subspan(segment.start, segment.count);
     if (segment.direction == CFX_BidiChar::Direction::kRight ||
         (segment.direction == CFX_BidiChar::Direction::kNeutral &&
          current_direction == CFX_BidiChar::Direction::kRight)) {
       current_direction = CFX_BidiChar::Direction::kRight;
-      for (size_t m = segment.start + segment.count; m > segment.start; --m) {
-        AddCharInfo(str[m - 1], temp_char_list_[m - 1], /*is_rtl=*/true);
+      for (size_t i = segment.count; i > 0; --i) {
+        AddCharInfo(str_span[i - 1], char_span[i - 1], /*is_rtl=*/true);
       }
     } else {
       if (segment.direction != CFX_BidiChar::Direction::kLeftWeak) {
         current_direction = CFX_BidiChar::Direction::kLeft;
       }
-      for (size_t m = segment.start; m < segment.start + segment.count; ++m) {
-        AddCharInfo(str[m], temp_char_list_[m], /*is_rtl=*/false);
+      for (auto [c, info] : fxcrt::Zip(str_span, char_span)) {
+        AddCharInfo(c, info, /*is_rtl=*/false);
       }
     }
   }
