@@ -70,6 +70,14 @@ class CPVT_Section final {
   void EraseWordsFrom(int32_t index);
 
  private:
+  using WordIterator =
+      std::vector<std::unique_ptr<CPVT_WordInfo>>::const_iterator;
+
+  struct WordRangeIteratorPair {
+    WordIterator begin;
+    WordIterator end;
+  };
+
   CPVT_FloatRect RearrangeCharArray() const;
   CPVT_FloatRect RearrangeTypeset();
   CPVT_FloatRect SplitLines(bool bTypeset, float fFontSize);
@@ -81,6 +89,12 @@ class CPVT_Section final {
   void ClearRightWords(int32_t word_index);
   // Clears (begin_index, end_index] from `word_array_`.
   void ClearMidWords(int32_t begin_index, int32_t end_index);
+
+  // Returns iterators for the range [begin_index, end_index) in `word_array_`.
+  // Both indices are clamped to [0, word_array_.size()].
+  // If `begin_index` > `end_index`, returns an empty range.
+  WordRangeIteratorPair GetWordRangeIteratorPair(int32_t begin_index,
+                                                 int32_t end_index) const;
 
   CPVT_WordPlace SearchWordPlaceImpl(float fx,
                                      const CPVT_WordRange& range) const;

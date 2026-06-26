@@ -12,6 +12,7 @@
 #include "core/fpdfdoc/cpvt_variabletext.h"
 #include "core/fpdfdoc/cpvt_wordinfo.h"
 #include "core/fxcrt/check.h"
+#include "core/fxcrt/compiler_specific.h"
 #include "core/fxcrt/stl_util.h"
 
 namespace {
@@ -733,28 +734,31 @@ CPVT_FloatRect CPVT_Section::OutputLines(const CPVT_FloatRect& rect) const {
 }
 
 void CPVT_Section::ClearLeftWords(int32_t word_index) {
-  for (int32_t i = word_index; i >= 0; i--) {
-    if (fxcrt::IndexInBounds(word_array_, i)) {
-      word_array_.erase(word_array_.begin() + i);
-    }
-  }
+  WordRangeIteratorPair range = GetWordRangeIteratorPair(0, word_index + 1);
+  word_array_.erase(range.begin, range.end);
 }
 
 void CPVT_Section::ClearRightWords(int32_t word_index) {
-  int32_t sz = fxcrt::CollectionSize<int32_t>(word_array_);
-  for (int32_t i = sz - 1; i > word_index; i--) {
-    if (fxcrt::IndexInBounds(word_array_, i)) {
-      word_array_.erase(word_array_.begin() + i);
-    }
-  }
+  WordRangeIteratorPair range =
+      GetWordRangeIteratorPair(word_index + 1, GetWordArraySize());
+  word_array_.erase(range.begin, range.end);
 }
 
 void CPVT_Section::ClearMidWords(int32_t begin_index, int32_t end_index) {
-  for (int32_t i = end_index; i > begin_index; i--) {
-    if (fxcrt::IndexInBounds(word_array_, i)) {
-      word_array_.erase(word_array_.begin() + i);
-    }
-  }
+  WordRangeIteratorPair range =
+      GetWordRangeIteratorPair(begin_index + 1, end_index + 1);
+  word_array_.erase(range.begin, range.end);
+}
+
+CPVT_Section::WordRangeIteratorPair CPVT_Section::GetWordRangeIteratorPair(
+    int32_t begin_index,
+    int32_t end_index) const {
+  int32_t size = fxcrt::CollectionSize<int32_t>(word_array_);
+  end_index = std::clamp(end_index, 0, size);
+  begin_index = std::clamp(begin_index, 0, end_index);
+  // SAFETY: indices clamped to `word_array_` size.
+  return UNSAFE_BUFFERS(
+      {word_array_.begin() + begin_index, word_array_.begin() + end_index});
 }
 
 void CPVT_Section::ClearWords(const CPVT_WordRange& PlaceRange) {
