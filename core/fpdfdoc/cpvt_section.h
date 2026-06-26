@@ -75,9 +75,12 @@ class CPVT_Section final {
   CPVT_FloatRect SplitLines(bool bTypeset, float fFontSize);
   CPVT_FloatRect OutputLines(const CPVT_FloatRect& rect) const;
 
-  void ClearLeftWords(int32_t nWordIndex);
-  void ClearRightWords(int32_t nWordIndex);
-  void ClearMidWords(int32_t nBeginIndex, int32_t nEndIndex);
+  // Clears [0, word_index] from `word_array_`.
+  void ClearLeftWords(int32_t word_index);
+  // Clears (word_index, word_array_.size()) from `word_array_`.
+  void ClearRightWords(int32_t word_index);
+  // Clears (begin_index, end_index] from `word_array_`.
+  void ClearMidWords(int32_t begin_index, int32_t end_index);
 
   CPVT_WordPlace SearchWordPlaceImpl(float fx,
                                      const CPVT_WordRange& range) const;

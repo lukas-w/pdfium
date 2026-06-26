@@ -732,25 +732,25 @@ CPVT_FloatRect CPVT_Section::OutputLines(const CPVT_FloatRect& rect) const {
   return CPVT_FloatRect(fMinX, fMinY, fMaxX, fMaxY);
 }
 
-void CPVT_Section::ClearLeftWords(int32_t nWordIndex) {
-  for (int32_t i = nWordIndex; i >= 0; i--) {
+void CPVT_Section::ClearLeftWords(int32_t word_index) {
+  for (int32_t i = word_index; i >= 0; i--) {
     if (fxcrt::IndexInBounds(word_array_, i)) {
       word_array_.erase(word_array_.begin() + i);
     }
   }
 }
 
-void CPVT_Section::ClearRightWords(int32_t nWordIndex) {
+void CPVT_Section::ClearRightWords(int32_t word_index) {
   int32_t sz = fxcrt::CollectionSize<int32_t>(word_array_);
-  for (int32_t i = sz - 1; i > nWordIndex; i--) {
+  for (int32_t i = sz - 1; i > word_index; i--) {
     if (fxcrt::IndexInBounds(word_array_, i)) {
       word_array_.erase(word_array_.begin() + i);
     }
   }
 }
 
-void CPVT_Section::ClearMidWords(int32_t nBeginIndex, int32_t nEndIndex) {
-  for (int32_t i = nEndIndex; i > nBeginIndex; i--) {
+void CPVT_Section::ClearMidWords(int32_t begin_index, int32_t end_index) {
+  for (int32_t i = end_index; i > begin_index; i--) {
     if (fxcrt::IndexInBounds(word_array_, i)) {
       word_array_.erase(word_array_.begin() + i);
     }
