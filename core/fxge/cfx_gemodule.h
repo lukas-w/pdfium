@@ -12,13 +12,14 @@
 #include <memory>
 
 #include "build/build_config.h"
+#include "core/fxcrt/data_vector.h"
+#include "core/fxcrt/retain_ptr.h"
+#include "core/fxcrt/span.h"
+#include "core/fxcrt/unowned_ptr.h"
 #include "core/fxcrt/unowned_ptr_exclusion.h"
 #include "core/fxge/cfx_fontmgr.h"
 
-#if BUILDFLAG(IS_APPLE)
-#include "core/fxcrt/span.h"
-#endif
-
+class CFX_DIBBase;
 class SystemFontInfoIface;
 
 #if BUILDFLAG(IS_WIN)
@@ -34,6 +35,17 @@ enum class WindowsPrintMode {
   kPostScript3Type42PassThrough = 8,
 };
 #endif
+
+struct EncoderIface {
+  DataVector<uint8_t> (*pA85EncodeFunc)(pdfium::span<const uint8_t> src_span);
+  DataVector<uint8_t> (*pFaxEncodeFunc)(RetainPtr<const CFX_DIBBase> src);
+  DataVector<uint8_t> (*pFlateEncodeFunc)(pdfium::span<const uint8_t> src_span);
+  bool (*pJpegEncodeFunc)(const RetainPtr<const CFX_DIBBase>& pSource,
+                          uint8_t** dest_buf,
+                          size_t* dest_size);
+  DataVector<uint8_t> (*pRunLengthEncodeFunc)(
+      pdfium::span<const uint8_t> src_span);
+};
 
 class CFX_GEModule {
  public:
@@ -74,6 +86,11 @@ class CFX_GEModule {
   PlatformIface* GetPlatform() const { return platform_.get(); }
   const char** GetUserFontPaths() const { return user_font_paths_; }
 
+  void SetEncoderIface(const EncoderIface* encoders) {
+    encoder_iface_ = encoders;
+  }
+  const EncoderIface* GetEncoderIface() const { return encoder_iface_.get(); }
+
 #if BUILDFLAG(IS_WIN)
   void SetPrintMode(WindowsPrintMode mode) { print_mode_ = mode; }
   WindowsPrintMode GetPrintMode() const { return print_mode_; }
@@ -97,6 +114,8 @@ class CFX_GEModule {
 
   // Exclude because taken from public API.
   UNOWNED_PTR_EXCLUSION const char** const user_font_paths_;
+
+  UnownedPtr<const EncoderIface> encoder_iface_;
 #if BUILDFLAG(IS_WIN)
   WindowsPrintMode print_mode_ = WindowsPrintMode::kEmf;
 #endif

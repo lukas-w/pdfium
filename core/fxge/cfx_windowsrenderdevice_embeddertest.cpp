@@ -28,8 +28,8 @@ class CFXWindowsRenderDeviceTest : public EmbedderTest {
     // Get a device context with Windows GDI.
     dc_handle_ = CreateCompatibleDC(nullptr);
     ASSERT_TRUE(dc_handle_);
-    driver_ = std::make_unique<CFX_WindowsRenderDevice>(
-        dc_handle_, &psfont_tracker_, /*encoder_iface=*/nullptr);
+    driver_ =
+        std::make_unique<CFX_WindowsRenderDevice>(dc_handle_, &psfont_tracker_);
     driver_->SaveState();
   }
 

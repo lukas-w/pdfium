@@ -32,6 +32,7 @@
 #include "core/fpdfapi/render/cpdf_renderoptions.h"
 #include "core/fpdfdoc/cpdf_nametree.h"
 #include "core/fpdfdoc/cpdf_viewerpreferences.h"
+#include "core/fxcodec/fx_codec.h"
 #include "core/fxcrt/cfx_fileaccess_stream.h"
 #include "core/fxcrt/cfx_read_only_span_stream.h"
 #include "core/fxcrt/cfx_timer.h"
@@ -233,6 +234,7 @@ FPDF_InitLibraryWithConfig(const FPDF_LIBRARY_CONFIG* config) {
   CFX_GEModule::Create(config ? config->m_pUserFontPaths : nullptr,
                        renderer_type, backend);
 
+  fxcodec::RegisterEncoders();
   pdfium::InitializePageModule();
 
 #ifdef PDF_ENABLE_XFA

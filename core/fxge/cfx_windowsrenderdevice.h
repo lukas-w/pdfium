@@ -12,13 +12,10 @@
 #include "core/fxge/cfx_renderdevice.h"
 
 class CFX_PSFontTracker;
-struct EncoderIface;
 
 class CFX_WindowsRenderDevice : public CFX_RenderDevice {
  public:
-  CFX_WindowsRenderDevice(HDC hDC,
-                          CFX_PSFontTracker* ps_font_tracker,
-                          const EncoderIface* encoder_iface);
+  CFX_WindowsRenderDevice(HDC hDC, CFX_PSFontTracker* ps_font_tracker);
   ~CFX_WindowsRenderDevice() override;
 };
 
