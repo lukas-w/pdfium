@@ -152,6 +152,78 @@ TEST(fxcrt, FXSYSToUTF16BE) {
   EXPECT_THAT(result, ElementsAre('D', '8', '4', '0', 'D', 'C', '3', 'E'));
 }
 
+TEST(fxcrt, FXSYSTimeZoneOffsetInMinutes) {
+  {
+    const tm local_time = {
+        .tm_min = 35,
+        .tm_hour = 10,
+        .tm_mday = 23,
+    };
+    const tm utc_time = {
+        .tm_min = 5,
+        .tm_hour = 3,
+        .tm_mday = 23,
+    };
+    EXPECT_EQ(450, FXSYS_TimeZoneOffsetInMinutes(local_time, utc_time));
+  }
+
+  {
+    const tm local_time = {
+        .tm_min = 5,
+        .tm_hour = 23,
+        .tm_mday = 22,
+    };
+    const tm utc_time = {
+        .tm_min = 5,
+        .tm_hour = 3,
+        .tm_mday = 23,
+    };
+    EXPECT_EQ(-240, FXSYS_TimeZoneOffsetInMinutes(local_time, utc_time));
+  }
+
+  {
+    const tm local_time = {
+        .tm_min = 5,
+        .tm_hour = 7,
+        .tm_mday = 24,
+    };
+    const tm utc_time = {
+        .tm_min = 5,
+        .tm_hour = 17,
+        .tm_mday = 23,
+    };
+    EXPECT_EQ(840, FXSYS_TimeZoneOffsetInMinutes(local_time, utc_time));
+  }
+
+  {
+    const tm local_time = {
+        .tm_min = 5,
+        .tm_hour = 7,
+        .tm_mday = 1,
+    };
+    const tm utc_time = {
+        .tm_min = 5,
+        .tm_hour = 17,
+        .tm_mday = 31,
+    };
+    EXPECT_EQ(840, FXSYS_TimeZoneOffsetInMinutes(local_time, utc_time));
+  }
+
+  {
+    const tm local_time = {
+        .tm_min = 5,
+        .tm_hour = 23,
+        .tm_mday = 31,
+    };
+    const tm utc_time = {
+        .tm_min = 5,
+        .tm_hour = 3,
+        .tm_mday = 1,
+    };
+    EXPECT_EQ(-240, FXSYS_TimeZoneOffsetInMinutes(local_time, utc_time));
+  }
+}
+
 TEST(fxcrt, FXSYSwcstof) {
   size_t used_len = 0;
   EXPECT_FLOAT_EQ(-12.0f, FXSYS_wcstof(L"-12", &used_len));
