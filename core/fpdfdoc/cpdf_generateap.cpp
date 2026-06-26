@@ -15,6 +15,7 @@
 #include "constants/catalog.h"
 #include "constants/font_encodings.h"
 #include "constants/form_fields.h"
+#include "constants/form_flags.h"
 #include "core/fpdfapi/edit/cpdf_contentstream_write_utils.h"
 #include "core/fpdfapi/font/cpdf_font.h"
 #include "core/fpdfapi/page/cpdf_docpagedata.h"
@@ -782,17 +783,17 @@ ByteString GenerateTextFieldAP(const CPDF_Dictionary* annot_dict,
   vt.SetAlignment(align);
   SetVtFontSize(font_size, vt);
 
-  bool is_multi_line = (flags >> 12) & 1;
+  const bool is_multi_line = flags & pdfium::form_flags::kTextMultiline;
   if (is_multi_line) {
     vt.SetMultiLine(true);
     vt.SetAutoReturn(true);
   }
-  uint16_t sub_word = 0;
-  if ((flags >> 13) & 1) {
-    sub_word = '*';
-    vt.SetPasswordChar(sub_word);
+  uint16_t substitute_word = 0;
+  if (flags & pdfium::form_flags::kTextPassword) {
+    substitute_word = '*';
+    vt.SetPasswordChar(substitute_word);
   }
-  bool is_char_array = (flags >> 24) & 1;
+  const bool is_char_array = flags & pdfium::form_flags::kTextComb;
   if (is_char_array) {
     vt.SetCharArray(max_len);
   } else {
@@ -808,7 +809,7 @@ ByteString GenerateTextFieldAP(const CPDF_Dictionary* annot_dict,
         0.0f, (vt.GetContentRect().Height() - body_rect.Height()) / 2.0f);
   }
   return GenerateEditAP(vt.GetProvider()->GetFontMap(), vt.GetIterator(),
-                        offset, !is_char_array, sub_word);
+                        offset, !is_char_array, substitute_word);
 }
 
 ByteString GenerateComboBoxAP(const CPDF_Dictionary* annot_dict,
