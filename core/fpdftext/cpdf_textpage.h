@@ -9,7 +9,6 @@
 
 #include <stdint.h>
 
-#include <deque>
 #include <functional>
 #include <optional>
 #include <vector>
@@ -182,8 +181,8 @@ class CPDF_TextPage {
 
   UnownedPtr<const CPDF_Page> const page_;
   DataVector<TextPageCharSegment> char_indices_;
-  std::deque<CharInfo> char_list_;
-  std::deque<CharInfo> temp_char_list_;
+  std::vector<CharInfo> char_list_;
+  std::vector<CharInfo> temp_char_list_;
   WideTextBuffer text_buf_;
   WideTextBuffer temp_text_buf_;
   UnownedPtr<const CPDF_TextObject> prev_text_obj_;
