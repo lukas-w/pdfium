@@ -14,6 +14,7 @@
 #include "core/fxcrt/fx_system.h"
 #include "core/fxcrt/notreached.h"
 #include "core/fxge/cfx_font.h"
+#include "core/fxge/cfx_gemodule.h"
 #include "core/fxge/dib/cfx_dibbase.h"
 #include "core/fxge/dib/cfx_dibitmap.h"
 #include "core/fxge/text_char_pos.h"
@@ -125,7 +126,7 @@ bool CTextOnlyPrinterDriver::DrawDeviceText(
     float font_size,
     uint32_t color,
     const CFX_TextRenderOptions& /*options*/) {
-  if (g_pdfium_print_mode != WindowsPrintMode::kTextOnly) {
+  if (CFX_GEModule::Get()->GetPrintMode() != WindowsPrintMode::kTextOnly) {
     return false;
   }
   if (pCharPos.empty() || !font) {

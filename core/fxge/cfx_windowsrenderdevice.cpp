@@ -8,6 +8,7 @@
 
 #include <memory>
 
+#include "core/fxge/cfx_gemodule.h"
 #include "core/fxge/renderdevicedriver_iface.h"
 #include "core/fxge/win32/cgdi_display_driver.h"
 #include "core/fxge/win32/cgdi_printer_driver.h"
@@ -30,22 +31,21 @@ std::unique_ptr<RenderDeviceDriverIface> CreateDriver(
     return std::make_unique<CGdiDisplayDriver>(hDC);
   }
 
-  if (g_pdfium_print_mode == WindowsPrintMode::kEmf ||
-      g_pdfium_print_mode == WindowsPrintMode::kEmfImageMasks) {
+  WindowsPrintMode print_mode = CFX_GEModule::Get()->GetPrintMode();
+  if (print_mode == WindowsPrintMode::kEmf ||
+      print_mode == WindowsPrintMode::kEmfImageMasks) {
     return std::make_unique<CGdiPrinterDriver>(hDC);
   }
 
-  if (g_pdfium_print_mode == WindowsPrintMode::kTextOnly) {
+  if (print_mode == WindowsPrintMode::kTextOnly) {
     return std::make_unique<CTextOnlyPrinterDriver>(hDC);
   }
 
-  return std::make_unique<CPSPrinterDriver>(hDC, g_pdfium_print_mode,
-                                            ps_font_tracker, encoder_iface);
+  return std::make_unique<CPSPrinterDriver>(hDC, print_mode, ps_font_tracker,
+                                            encoder_iface);
 }
 
 }  // namespace
-
-WindowsPrintMode g_pdfium_print_mode = WindowsPrintMode::kEmf;
 
 CFX_WindowsRenderDevice::CFX_WindowsRenderDevice(
     HDC hDC,

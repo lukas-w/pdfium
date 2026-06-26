@@ -11,7 +11,7 @@
 
 #include <memory>
 
-#include "core/fxge/cfx_windowsrenderdevice.h"
+#include "core/fxge/cfx_gemodule.h"
 #include "core/fxge/renderdevicedriver_iface.h"
 #include "core/fxge/win32/cfx_psrenderer.h"
 

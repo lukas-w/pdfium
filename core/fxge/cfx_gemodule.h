@@ -21,6 +21,20 @@
 
 class SystemFontInfoIface;
 
+#if BUILDFLAG(IS_WIN)
+enum class WindowsPrintMode {
+  kEmf = 0,
+  kTextOnly = 1,
+  kPostScript2 = 2,
+  kPostScript3 = 3,
+  kPostScript2PassThrough = 4,
+  kPostScript3PassThrough = 5,
+  kEmfImageMasks = 6,
+  kPostScript3Type42 = 7,
+  kPostScript3Type42PassThrough = 8,
+};
+#endif
+
 class CFX_GEModule {
  public:
   class PlatformIface {
@@ -60,6 +74,11 @@ class CFX_GEModule {
   PlatformIface* GetPlatform() const { return platform_.get(); }
   const char** GetUserFontPaths() const { return user_font_paths_; }
 
+#if BUILDFLAG(IS_WIN)
+  void SetPrintMode(WindowsPrintMode mode) { print_mode_ = mode; }
+  WindowsPrintMode GetPrintMode() const { return print_mode_; }
+#endif
+
 #if defined(PDF_USE_SKIA)
   // Runtime check to see if Skia is the renderer variant in use.
   bool UseSkiaRenderer() const { return renderer_type_ == RendererType::kSkia; }
@@ -78,6 +97,9 @@ class CFX_GEModule {
 
   // Exclude because taken from public API.
   UNOWNED_PTR_EXCLUSION const char** const user_font_paths_;
+#if BUILDFLAG(IS_WIN)
+  WindowsPrintMode print_mode_ = WindowsPrintMode::kEmf;
+#endif
 };
 
 #endif  // CORE_FXGE_CFX_GEMODULE_H_
