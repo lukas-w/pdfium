@@ -21,14 +21,7 @@
 
 CTextOnlyPrinterDriver::CTextOnlyPrinterDriver(HDC hDC)
     : dc_handle_(hDC),
-      width_(INT_MAX),
-      height_(INT_MAX),
-      horz_size_(INT_MAX),
-      vert_size_(INT_MAX),
-      origin_y_(0.0f),
-      set_origin_(false) {
-  bits_per_pixel_ = ::GetDeviceCaps(dc_handle_, BITSPIXEL);
-}
+      bits_per_pixel_(::GetDeviceCaps(dc_handle_, BITSPIXEL)) {}
 
 CTextOnlyPrinterDriver::~CTextOnlyPrinterDriver() = default;
 
@@ -37,11 +30,11 @@ DeviceType CTextOnlyPrinterDriver::GetDeviceType() const {
 }
 
 int CTextOnlyPrinterDriver::GetPixelWidth() const {
-  return width_;
+  return INT_MAX;
 }
 
 int CTextOnlyPrinterDriver::GetPixelHeight() const {
-  return height_;
+  return INT_MAX;
 }
 
 int CTextOnlyPrinterDriver::GetBitsPerPixel() const {
@@ -49,11 +42,11 @@ int CTextOnlyPrinterDriver::GetBitsPerPixel() const {
 }
 
 int CTextOnlyPrinterDriver::GetHorzSize() const {
-  return horz_size_;
+  return INT_MAX;
 }
 
 int CTextOnlyPrinterDriver::GetVertSize() const {
-  return vert_size_;
+  return INT_MAX;
 }
 
 void CTextOnlyPrinterDriver::SaveState() {}
@@ -94,7 +87,7 @@ bool CTextOnlyPrinterDriver::SetDIBits(RetainPtr<const CFX_DIBBase> bitmap,
 }
 
 FX_RECT CTextOnlyPrinterDriver::GetClipBox() const {
-  return FX_RECT(0, 0, width_, height_);
+  return FX_RECT(0, 0, INT_MAX, INT_MAX);
 }
 
 bool CTextOnlyPrinterDriver::StretchDIBits(RetainPtr<const CFX_DIBBase> bitmap,

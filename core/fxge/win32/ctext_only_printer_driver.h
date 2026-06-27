@@ -71,13 +71,9 @@ class CTextOnlyPrinterDriver final : public RenderDeviceDriverIface {
   bool MultiplyAlphaMask(RetainPtr<const CFX_DIBitmap> mask) override;
 
   HDC dc_handle_;
-  const int width_;
-  const int height_;
   int bits_per_pixel_;
-  const int horz_size_;
-  const int vert_size_;
-  float origin_y_;
-  bool set_origin_;
+  float origin_y_ = 0.0f;
+  bool set_origin_ = false;
 };
 
 #endif  // CORE_FXGE_WIN32_CTEXT_ONLY_PRINTER_DRIVER_H_
