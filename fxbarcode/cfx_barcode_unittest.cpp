@@ -10,7 +10,6 @@
 
 #include "core/fxcrt/fx_coordinates.h"
 #include "core/fxcrt/fx_string.h"
-#include "core/fxge/cfx_defaultrenderdevice.h"
 #include "core/fxge/cfx_renderdevice.h"
 #include "core/fxge/dib/cfx_dibitmap.h"
 #include "testing/gtest/include/gtest/gtest.h"
@@ -22,7 +21,7 @@ class BarcodeTest : public testing::Test {
   void SetUp() override {
     BC_Library_Init();
 
-    auto device = std::make_unique<CFX_DefaultRenderDevice>();
+    auto device = std::make_unique<CFX_RenderDevice>();
     auto bitmap = pdfium::MakeRetain<CFX_DIBitmap>();
     if (bitmap->Create(640, 480, FXDIB_Format::kBgrx)) {
       bitmap_ = bitmap;

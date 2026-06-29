@@ -83,6 +83,7 @@ class RenderDeviceDriverIface {
   virtual int GetVertSize() const;
 #endif
 
+  virtual void Clear(uint32_t color) = 0;
   virtual void SaveState() = 0;
   virtual void RestoreState(bool bKeepSaved) = 0;
 
@@ -139,6 +140,7 @@ class RenderDeviceDriverIface {
                               uint32_t color,
                               const CFX_TextRenderOptions& options);
   virtual int GetDriverType() const;
+
 #if defined(PDF_USE_SKIA)
   virtual bool DrawShading(const CPDF_ShadingPattern& pattern,
                            const CFX_Matrix& matrix,

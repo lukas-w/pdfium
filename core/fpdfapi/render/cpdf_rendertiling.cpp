@@ -21,7 +21,7 @@
 #include "core/fpdfapi/render/cpdf_renderstatus.h"
 #include "core/fxcrt/fx_safe_types.h"
 #include "core/fxcrt/span_util.h"
-#include "core/fxge/cfx_defaultrenderdevice.h"
+#include "core/fxge/cfx_renderdevice.h"
 #include "core/fxge/dib/cfx_dibitmap.h"
 
 namespace {
@@ -43,7 +43,7 @@ RetainPtr<CFX_DIBitmap> DrawPatternBitmap(
                                            : FXDIB_Format::k8bppMask)) {
     return nullptr;
   }
-  CFX_DefaultRenderDevice bitmap_device;
+  CFX_RenderDevice bitmap_device;
   bitmap_device.AttachWithBackdropAndGroupKnockout(
       pBitmap, /*pBackdropBitmap=*/nullptr, /*bGroupKnockout=*/true);
   CFX_FloatRect cell_bbox =

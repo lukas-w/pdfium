@@ -11,7 +11,6 @@
 #include "core/fpdfapi/page/cpdf_page.h"
 #include "core/fpdfapi/render/cpdf_pagerendercontext.h"
 #include "core/fxcrt/fx_codepage.h"
-#include "core/fxge/cfx_defaultrenderdevice.h"
 #include "core/fxge/cfx_fillrenderoptions.h"
 #include "core/fxge/cfx_font.h"
 #include "core/fxge/cfx_gemodule.h"
@@ -183,7 +182,7 @@ void RenderPageToSkCanvas(FPDF_PAGE page,
   CPDF_Page::RenderContextClearer clearer(cpdf_page);
   cpdf_page->SetRenderContext(std::move(context));
 
-  auto default_device = std::make_unique<CFX_DefaultRenderDevice>();
+  auto default_device = std::make_unique<CFX_RenderDevice>();
   CHECK(default_device->AttachCanvas(canvas));
   unowned_context->device_ = std::move(default_device);
 

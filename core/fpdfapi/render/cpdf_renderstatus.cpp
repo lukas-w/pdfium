@@ -62,11 +62,11 @@
 #include "core/fxcrt/stl_util.h"
 #include "core/fxcrt/unowned_ptr.h"
 #include "core/fxcrt/zip.h"
-#include "core/fxge/cfx_defaultrenderdevice.h"
 #include "core/fxge/cfx_fillrenderoptions.h"
 #include "core/fxge/cfx_gemodule.h"
 #include "core/fxge/cfx_glyphbitmap.h"
 #include "core/fxge/cfx_path.h"
+#include "core/fxge/cfx_renderdevice.h"
 #include "core/fxge/dib/cfx_dibitmap.h"
 #include "core/fxge/fx_font.h"
 #include "core/fxge/renderdevicedriver_iface.h"
@@ -670,7 +670,7 @@ bool CPDF_RenderStatus::ProcessTransparency(CPDF_PageObject* pPageObj,
 
   const int width = rect.Width();
   const int height = rect.Height();
-  CFX_DefaultRenderDevice bitmap_device;
+  CFX_RenderDevice bitmap_device;
   RetainPtr<CFX_DIBitmap> backdrop;
   if (!transparency.IsIsolated() && device_->RenderCapGetBits()) {
     backdrop = pdfium::MakeRetain<CFX_DIBitmap>();
@@ -694,7 +694,7 @@ bool CPDF_RenderStatus::ProcessTransparency(CPDF_PageObject* pPageObj,
       return true;
     }
 
-    CFX_DefaultRenderDevice text_device;
+    CFX_RenderDevice text_device;
     text_device.Attach(text_mask_bitmap);
     for (size_t i = 0; i < pPageObj->clip_path().GetTextCount(); ++i) {
       CPDF_TextObject* textobj = pPageObj->clip_path().GetText(i);
@@ -787,7 +787,7 @@ RetainPtr<CFX_DIBitmap> CPDF_RenderStatus::GetBackdrop(
     backdrop->Clear(0xffffffff);
   }
 
-  CFX_DefaultRenderDevice device;
+  CFX_RenderDevice device;
   device.Attach(backdrop);
   context_->Render(&device, pObj, &options_, &FinalMatrix);
   return backdrop;
@@ -1015,7 +1015,7 @@ bool CPDF_RenderStatus::ProcessType3Text(CPDF_TextObject* textobj,
           continue;
         }
 
-        CFX_DefaultRenderDevice bitmap_device;
+        CFX_RenderDevice bitmap_device;
         // TODO(crbug.com/42271020): Consider adding support for
         // `FXDIB_Format::kBgraPremul`
         if (!bitmap_device.Create(rect.Width(), rect.Height(),
@@ -1446,7 +1446,7 @@ RetainPtr<CFX_DIBitmap> CPDF_RenderStatus::LoadSMask(
                  pGroup);
   form.ParseContent();
 
-  CFX_DefaultRenderDevice bitmap_device;
+  CFX_RenderDevice bitmap_device;
   bool bLuminosity =
       smask_dict->GetByteStringFor(pdfium::transparency::kSoftMaskSubType) !=
       pdfium::transparency::kAlpha;

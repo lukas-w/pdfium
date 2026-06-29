@@ -35,10 +35,10 @@
 #include "core/fxcrt/fx_safe_types.h"
 #include "core/fxcrt/maybe_owned.h"
 #include "core/fxcrt/zip.h"
-#include "core/fxge/cfx_defaultrenderdevice.h"
 #include "core/fxge/cfx_fillrenderoptions.h"
 #include "core/fxge/cfx_gemodule.h"
 #include "core/fxge/cfx_path.h"
+#include "core/fxge/cfx_renderdevice.h"
 #include "core/fxge/dib/cfx_dibbase.h"
 #include "core/fxge/dib/cfx_dibitmap.h"
 #include "core/fxge/dib/cfx_imagestretcher.h"
@@ -261,7 +261,7 @@ CFX_Matrix CPDF_ImageRenderer::GetDrawMatrix(const FX_RECT& rect) const {
 }
 
 RetainPtr<const CFX_DIBitmap> CPDF_ImageRenderer::CalculateDrawImage(
-    CFX_DefaultRenderDevice& bitmap_device,
+    CFX_RenderDevice& bitmap_device,
     RetainPtr<CFX_DIBBase> pDIBBase,
     const CFX_Matrix& mtNewMatrix,
     const FX_RECT& rect) const {
@@ -274,7 +274,7 @@ RetainPtr<const CFX_DIBitmap> CPDF_ImageRenderer::CalculateDrawImage(
   {
     // Limit the scope of `mask_device`, so its dtor can flush out pending
     // operations, if any, to `mask_bitmap`.
-    CFX_DefaultRenderDevice mask_device;
+    CFX_RenderDevice mask_device;
     CHECK(mask_device.Attach(mask_bitmap));
 
     CPDF_RenderStatus mask_status(render_status_->GetContext(), &mask_device);
@@ -334,7 +334,7 @@ bool CPDF_ImageRenderer::DrawPatternImage() {
   }
 
   CFX_Matrix new_matrix = GetDrawMatrix(rect);
-  CFX_DefaultRenderDevice bitmap_device;
+  CFX_RenderDevice bitmap_device;
   if (!bitmap_device.Create(rect.Width(), rect.Height(), FXDIB_Format::kBgra)) {
     return true;
   }
@@ -382,7 +382,7 @@ bool CPDF_ImageRenderer::DrawMaskedImage() {
   }
 
   CFX_Matrix new_matrix = GetDrawMatrix(rect);
-  CFX_DefaultRenderDevice bitmap_device;
+  CFX_RenderDevice bitmap_device;
   if (!bitmap_device.Create(rect.Width(), rect.Height(), FXDIB_Format::kBgrx)) {
     return true;
   }

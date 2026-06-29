@@ -33,6 +33,7 @@ class CPSPrinterDriver final : public RenderDeviceDriverIface {
   int GetBitsPerPixel() const override;
   int GetHorzSize() const override;
   int GetVertSize() const override;
+  void Clear(uint32_t color) override;
   void SaveState() override;
   void RestoreState(bool bKeepSaved) override;
   bool SetClip_PathFill(const CFX_Path& paath,

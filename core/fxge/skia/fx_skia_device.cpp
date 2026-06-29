@@ -39,7 +39,6 @@
 #include "core/fxcrt/ptr_util.h"
 #include "core/fxcrt/span.h"
 #include "core/fxcrt/stl_util.h"
-#include "core/fxge/cfx_defaultrenderdevice.h"
 #include "core/fxge/cfx_fillrenderoptions.h"
 #include "core/fxge/cfx_font.h"
 #include "core/fxge/cfx_gemodule.h"
@@ -1682,11 +1681,10 @@ void CFX_SkiaDeviceDriver::DrawPathImpl(const SkPath& path,
 CFX_SkiaDeviceDriver::CharDetail::CharDetail() = default;
 CFX_SkiaDeviceDriver::CharDetail::~CharDetail() = default;
 
-bool CFX_DefaultRenderDevice::AttachSkiaImpl(
-    RetainPtr<CFX_DIBitmap> pBitmap,
-    bool bRgbByteOrder,
-    RetainPtr<CFX_DIBitmap> pBackdropBitmap,
-    bool bGroupKnockout) {
+bool CFX_RenderDevice::AttachSkiaImpl(RetainPtr<CFX_DIBitmap> pBitmap,
+                                      bool bRgbByteOrder,
+                                      RetainPtr<CFX_DIBitmap> pBackdropBitmap,
+                                      bool bGroupKnockout) {
   // FPDF_FFLDrawSkia() ends up calling this method with a deliberately null
   // `pBitmap`.
   if (!pBitmap) {
@@ -1704,7 +1702,7 @@ bool CFX_DefaultRenderDevice::AttachSkiaImpl(
   return true;
 }
 
-bool CFX_DefaultRenderDevice::AttachCanvas(SkCanvas& canvas) {
+bool CFX_RenderDevice::AttachCanvas(SkCanvas& canvas) {
   auto driver = CFX_SkiaDeviceDriver::Create(canvas);
   if (!driver) {
     return false;
@@ -1713,11 +1711,10 @@ bool CFX_DefaultRenderDevice::AttachCanvas(SkCanvas& canvas) {
   return true;
 }
 
-bool CFX_DefaultRenderDevice::CreateSkia(
-    int width,
-    int height,
-    FXDIB_Format format,
-    RetainPtr<CFX_DIBitmap> pBackdropBitmap) {
+bool CFX_RenderDevice::CreateSkia(int width,
+                                  int height,
+                                  FXDIB_Format format,
+                                  RetainPtr<CFX_DIBitmap> pBackdropBitmap) {
   auto pBitmap = pdfium::MakeRetain<CFX_DIBitmap>();
   if (!pBitmap->Create(width, height, format)) {
     return false;

@@ -10,7 +10,7 @@
 
 #include <memory>
 
-#include "core/fxge/cfx_windowsrenderdevice.h"
+#include "core/fxge/cfx_renderdevice.h"
 
 class CTextOnlyPrinterDriver final : public RenderDeviceDriverIface {
  public:
@@ -25,6 +25,7 @@ class CTextOnlyPrinterDriver final : public RenderDeviceDriverIface {
   int GetBitsPerPixel() const override;
   int GetHorzSize() const override;
   int GetVertSize() const override;
+  void Clear(uint32_t color) override;
   void SaveState() override;
   void RestoreState(bool bKeepSaved) override;
   bool SetClip_PathFill(const CFX_Path& path,

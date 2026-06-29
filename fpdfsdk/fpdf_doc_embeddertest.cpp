@@ -12,7 +12,7 @@
 #include "core/fpdfapi/parser/cpdf_reference.h"
 #include "core/fxcrt/bytestring.h"
 #include "core/fxcrt/fx_safe_types.h"
-#include "core/fxge/cfx_defaultrenderdevice.h"
+#include "core/fxge/cfx_renderdevice.h"
 #include "fpdfsdk/cpdfsdk_helpers.h"
 #include "public/cpp/fpdf_scopers.h"
 #include "public/fpdf_doc.h"

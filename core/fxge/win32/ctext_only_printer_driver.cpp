@@ -10,6 +10,7 @@
 #include <algorithm>
 
 #include "core/fxcrt/check_op.h"
+#include "core/fxcrt/fx_memory.h"
 #include "core/fxcrt/fx_string.h"
 #include "core/fxcrt/fx_system.h"
 #include "core/fxcrt/notreached.h"
@@ -48,6 +49,8 @@ int CTextOnlyPrinterDriver::GetHorzSize() const {
 int CTextOnlyPrinterDriver::GetVertSize() const {
   return INT_MAX;
 }
+
+void CTextOnlyPrinterDriver::Clear(uint32_t color) {}
 
 void CTextOnlyPrinterDriver::SaveState() {}
 

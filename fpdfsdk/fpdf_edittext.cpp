@@ -37,8 +37,8 @@
 #include "core/fxcrt/span_util.h"
 #include "core/fxcrt/stl_util.h"
 #include "core/fxcrt/utf16.h"
-#include "core/fxge/cfx_defaultrenderdevice.h"
 #include "core/fxge/cfx_fontmgr.h"
+#include "core/fxge/cfx_renderdevice.h"
 #include "core/fxge/dib/cfx_dibitmap.h"
 #include "core/fxge/fx_font.h"
 #include "core/fxge/text_char_pos.h"
@@ -615,8 +615,8 @@ FPDFTextObj_GetRenderedBitmap(FPDF_DOCUMENT document,
   RetainPtr<CPDF_Dictionary> page_resources =
       optional_page ? optional_page->GetMutablePageResources() : nullptr;
 
-  auto device = std::make_unique<CFX_DefaultRenderDevice>();
-  CFX_DefaultRenderDevice* device_ptr = device.get();
+  auto device = std::make_unique<CFX_RenderDevice>();
+  CFX_RenderDevice* device_ptr = device.get();
   render_context_ptr->device_ = std::move(device);
   render_context_ptr->context_ = std::make_unique<CPDF_RenderContext>(
       doc, std::move(page_resources), /*pPageCache=*/nullptr);

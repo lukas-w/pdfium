@@ -30,7 +30,7 @@
 #include "core/fxcrt/notreached.h"
 #include "core/fxcrt/stl_util.h"
 #include "core/fxcrt/to_underlying.h"
-#include "core/fxge/cfx_defaultrenderdevice.h"
+#include "core/fxge/cfx_renderdevice.h"
 #include "core/fxge/dib/cfx_dibitmap.h"
 #include "fpdfsdk/cpdfsdk_customaccess.h"
 #include "fpdfsdk/cpdfsdk_helpers.h"
@@ -330,7 +330,7 @@ FPDFImageObj_GetRenderedBitmap(FPDF_DOCUMENT document,
       optional_page ? optional_page->GetMutablePageResources() : nullptr;
   CPDF_RenderContext context(doc, std::move(page_resources),
                              /*pPageCache=*/nullptr);
-  CFX_DefaultRenderDevice device;
+  CFX_RenderDevice device;
   device.Attach(result_bitmap);
   CPDF_RenderStatus status(&context, &device);
   CPDF_ImageRenderer renderer(&status);

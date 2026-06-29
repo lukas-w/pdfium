@@ -34,9 +34,9 @@
 #include "core/fxcrt/span_util.h"
 #include "core/fxcrt/stl_util.h"
 #include "core/fxcrt/unowned_ptr.h"
-#include "core/fxge/cfx_defaultrenderdevice.h"
 #include "core/fxge/cfx_fillrenderoptions.h"
 #include "core/fxge/cfx_path.h"
+#include "core/fxge/cfx_renderdevice.h"
 #include "core/fxge/dib/cfx_dibitmap.h"
 #include "core/fxge/dib/fx_dib.h"
 
@@ -858,7 +858,7 @@ void DrawCoonPatchMeshes(
   DCHECK(type == kCoonsPatchMeshShading ||
          type == kTensorProductPatchMeshShading);
 
-  CFX_DefaultRenderDevice device;
+  CFX_RenderDevice device;
   device.Attach(pBitmap);
 
   CPDF_MeshStream stream(type, funcs, std::move(pShadingStream), pCS);

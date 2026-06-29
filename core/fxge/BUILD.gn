@@ -29,8 +29,6 @@ source_set("fxge") {
     "cfx_color.h",
     "cfx_cttgsubtable.cpp",
     "cfx_cttgsubtable.h",
-    "cfx_defaultrenderdevice.cpp",
-    "cfx_defaultrenderdevice.h",
     "cfx_drawutils.cpp",
     "cfx_drawutils.h",
     "cfx_face.cpp",
@@ -190,8 +188,6 @@ source_set("fxge") {
 
   if (is_win) {
     sources += [
-      "cfx_windowsrenderdevice.cpp",
-      "cfx_windowsrenderdevice.h",
       "win32/cfx_psfonttracker.cpp",
       "win32/cfx_psfonttracker.h",
       "win32/cfx_psrenderer.cpp",
@@ -262,11 +258,11 @@ if (pdf_enable_fontations) {
 
 pdfium_unittest_source_set("unittests") {
   sources = [
-    "cfx_defaultrenderdevice_unittest.cpp",
     "cfx_folderfontinfo_unittest.cpp",
     "cfx_font_unittest.cpp",
     "cfx_fontmapper_unittest.cpp",
     "cfx_path_unittest.cpp",
+    "cfx_renderdevice_unittest.cpp",
     "cfx_standardfont_unittest.cpp",
     "dib/blend_unittest.cpp",
     "dib/cfx_cmyk_to_srgb_unittest.cpp",
@@ -323,14 +319,6 @@ pdfium_embeddertest_source_set("embeddertests") {
       "../fpdfapi/page",
       "../fpdfapi/render",
       "//skia",
-    ]
-  }
-
-  if (is_win) {
-    sources += [ "cfx_windowsrenderdevice_embeddertest.cpp" ]
-    deps += [
-      ":fxge",
-      "../fxcodec",
     ]
   }
 }
