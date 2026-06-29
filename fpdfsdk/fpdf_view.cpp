@@ -280,7 +280,7 @@ FPDF_EXPORT FPDF_BOOL FPDF_CALLCONV FPDF_SetPrintMode(int mode) {
     return FALSE;
   }
 
-  CFX_GEModule::Get()->SetPrintMode(static_cast<WindowsPrintMode>(mode));
+  CFX_GEModule::SetPrintMode(static_cast<WindowsPrintMode>(mode));
   return TRUE;
 }
 #endif  // BUILDFLAG(IS_WIN)
@@ -622,7 +622,7 @@ FPDF_EXPORT FPDF_BOOL FPDF_CALLCONV FPDF_RenderPage(HDC dc,
   // individually is inefficient and unlikely to significantly improve spool
   // size.
   const bool bEnableImageMasks =
-      CFX_GEModule::Get()->GetPrintMode() == WindowsPrintMode::kEmfImageMasks;
+      CFX_GEModule::GetPrintMode() == WindowsPrintMode::kEmfImageMasks;
   const bool bNewBitmap = pPage->BackgroundAlphaNeeded() ||
                           (pPage->HasImageMask() && !bEnableImageMasks) ||
                           pPage->GetMaskBoundingBoxes().size() > 100;

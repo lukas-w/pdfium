@@ -30,7 +30,7 @@ std::unique_ptr<RenderDeviceDriverIface> CreateDriver(
     return std::make_unique<CGdiDisplayDriver>(hDC);
   }
 
-  WindowsPrintMode print_mode = CFX_GEModule::Get()->GetPrintMode();
+  WindowsPrintMode print_mode = CFX_GEModule::GetPrintMode();
   if (print_mode == WindowsPrintMode::kEmf ||
       print_mode == WindowsPrintMode::kEmfImageMasks) {
     return std::make_unique<CGdiPrinterDriver>(hDC);

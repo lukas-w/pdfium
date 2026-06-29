@@ -119,7 +119,7 @@ bool CTextOnlyPrinterDriver::DrawDeviceText(
     float font_size,
     uint32_t color,
     const CFX_TextRenderOptions& /*options*/) {
-  if (CFX_GEModule::Get()->GetPrintMode() != WindowsPrintMode::kTextOnly) {
+  if (CFX_GEModule::GetPrintMode() != WindowsPrintMode::kTextOnly) {
     return false;
   }
   if (pCharPos.empty() || !font) {

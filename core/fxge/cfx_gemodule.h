@@ -92,8 +92,8 @@ class CFX_GEModule {
   const EncoderIface* GetEncoderIface() const { return encoder_iface_.get(); }
 
 #if BUILDFLAG(IS_WIN)
-  void SetPrintMode(WindowsPrintMode mode) { print_mode_ = mode; }
-  WindowsPrintMode GetPrintMode() const { return print_mode_; }
+  static void SetPrintMode(WindowsPrintMode mode);
+  static WindowsPrintMode GetPrintMode();
 #endif
 
 #if defined(PDF_USE_SKIA)
@@ -116,9 +116,6 @@ class CFX_GEModule {
   UNOWNED_PTR_EXCLUSION const char** const user_font_paths_;
 
   UnownedPtr<const EncoderIface> encoder_iface_;
-#if BUILDFLAG(IS_WIN)
-  WindowsPrintMode print_mode_ = WindowsPrintMode::kEmf;
-#endif
 };
 
 #endif  // CORE_FXGE_CFX_GEMODULE_H_
