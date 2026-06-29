@@ -147,7 +147,7 @@ vars = {
   # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling goldctl CIPD package version
   # and whatever else without interference from each other.
-  'goldctl_version': 'git_revision:ac4d1516c500f636488b69e0b11a9e126abe28b9',
+  'goldctl_version': 'git_revision:39511f7e42627cd90b53273667b9aca539f50bd3',
   # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling gtest
   # and whatever else without interference from each other.
