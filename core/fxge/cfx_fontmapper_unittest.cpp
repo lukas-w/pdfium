@@ -247,7 +247,7 @@ TEST_F(CFXFontMapperSystemFontInfoTest, SetSubstFontNameWhenGetFaceNameFails) {
   EXPECT_TRUE(font_mapper().UseExternalSubst(kFontHandle, kSubstName, kWeight,
                                              kItalic, kItalicAngle, kCharset,
                                              &subst_font));
-  EXPECT_EQ("Noto Sans SC Regular", subst_font.family_);
+  EXPECT_EQ("Noto Sans SC Regular", subst_font.GetFamily());
 }
 
 TEST_F(CFXFontMapperSystemFontInfoTest,
@@ -306,7 +306,7 @@ TEST_F(CFXFontMapperSystemFontInfoTest,
       /*weight=*/kBoldWeight,
       /*italic_angle=*/kItalicAngle, kCodePage, &subst_font);
   EXPECT_TRUE(face);
-  EXPECT_EQ("Noto Sans SC Regular", subst_font.family_);
+  EXPECT_EQ("Noto Sans SC Regular", subst_font.GetFamily());
 }
 
 TEST(CFXFontMapperTest, LoadInstalledFontsWithEnumeration) {

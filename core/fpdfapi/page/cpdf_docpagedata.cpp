@@ -608,7 +608,7 @@ RetainPtr<CPDF_Font> CPDF_DocPageData::AddFont(std::unique_ptr<CFX_Font> font,
   pBBox->AppendNew<CPDF_Number>(bbox.top);
   int32_t nStemV = 0;
   if (font->GetSubstFont()) {
-    nStemV = font->GetSubstFont()->weight_ / 5;
+    nStemV = font->GetSubstFont()->GetEstimatedStemV();
   } else {
     static constexpr char kStemChars[] = {'i', 'I', '!', '1'};
     static constexpr pdfium::span<const char> kStemSpan{kStemChars};

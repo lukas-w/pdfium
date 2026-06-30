@@ -72,10 +72,10 @@ UniqueKeyGen::UniqueKeyGen(const CFX_Font* font,
 #if BUILDFLAG(IS_APPLE)
   if (bNative) {
     if (font->GetSubstFont()) {
-      Initialize({nMatrixA, nMatrixB, nMatrixC, nMatrixD, dest_width,
-                  fxcrt::to_underlying(anti_alias),
-                  font->GetSubstFont()->weight_,
-                  font->GetSubstFont()->italic_angle_, font->IsVertical(), 3});
+      Initialize(
+          {nMatrixA, nMatrixB, nMatrixC, nMatrixD, dest_width,
+           fxcrt::to_underlying(anti_alias), font->GetSubstFont()->GetWeight(),
+           font->GetSubstFont()->GetItalicAngle(), font->IsVertical(), 3});
     } else {
       Initialize({nMatrixA, nMatrixB, nMatrixC, nMatrixD, dest_width,
                   fxcrt::to_underlying(anti_alias), 3});
@@ -87,8 +87,9 @@ UniqueKeyGen::UniqueKeyGen(const CFX_Font* font,
   CHECK(!bNative);
   if (font->GetSubstFont()) {
     Initialize({nMatrixA, nMatrixB, nMatrixC, nMatrixD, dest_width,
-                fxcrt::to_underlying(anti_alias), font->GetSubstFont()->weight_,
-                font->GetSubstFont()->italic_angle_, font->IsVertical()});
+                fxcrt::to_underlying(anti_alias),
+                font->GetSubstFont()->GetWeight(),
+                font->GetSubstFont()->GetItalicAngle(), font->IsVertical()});
   } else {
     Initialize({nMatrixA, nMatrixB, nMatrixC, nMatrixD, dest_width,
                 fxcrt::to_underlying(anti_alias)});
@@ -125,8 +126,8 @@ const CFX_Path* CFX_GlyphCache::LoadGlyphPath(const CFX_Font* font,
   }
 
   const auto* pSubstFont = font->GetSubstFont();
-  int weight = pSubstFont ? pSubstFont->weight_ : 0;
-  int angle = pSubstFont ? pSubstFont->italic_angle_ : 0;
+  int weight = pSubstFont ? pSubstFont->GetWeight() : 0;
+  int angle = pSubstFont ? pSubstFont->GetItalicAngle() : 0;
   bool vertical = pSubstFont && font->IsVertical();
   const PathMapKey key =
       std::make_tuple(glyph_index, dest_width, weight, angle, vertical);

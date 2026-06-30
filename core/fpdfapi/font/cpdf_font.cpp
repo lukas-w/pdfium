@@ -493,11 +493,11 @@ std::vector<TextCharPos> CPDF_Font::GetCharPosList(
 }
 
 std::optional<FX_Charset> CPDF_Font::GetSubstFontCharset() const {
-  CFX_SubstFont* font = font_.GetSubstFont();
+  const CFX_SubstFont* font = font_.GetSubstFont();
   if (!font) {
     return std::nullopt;
   }
-  return font->charset_;
+  return font->GetCharset();
 }
 
 // static

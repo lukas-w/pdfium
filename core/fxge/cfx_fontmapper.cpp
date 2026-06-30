@@ -435,9 +435,9 @@ RetainPtr<CFX_Face> CFX_FontMapper::UseInternalSubst(
   }
 
   subst_font->SetIsBuiltInGenericFont();
-  subst_font->italic_angle_ = italic_angle;
+  subst_font->SetItalicAngle(italic_angle);
   if (weight) {
-    subst_font->weight_ = weight;
+    subst_font->SetWeight(weight);
   }
   if (FontFamilyIsRoman(pitch_family)) {
     subst_font->UseChromeSerif();
@@ -450,7 +450,7 @@ RetainPtr<CFX_Face> CFX_FontMapper::UseInternalSubst(
     }
     return generic_serif_face_;
   }
-  subst_font->family_ = "Chrome Sans";
+  subst_font->SetFamily("Chrome Sans");
   if (!generic_sans_face_) {
     generic_sans_face_ =
         CFX_Face::New(nullptr,
@@ -499,21 +499,9 @@ RetainPtr<CFX_Face> CFX_FontMapper::UseExternalSubst(
       face_name = maybe_face_name;
     }
   }
-  subst_font->family_ = face_name;
-  subst_font->charset_ = charset;
-  int face_weight =
-      face->IsBold() ? pdfium::kFontWeightBold : pdfium::kFontWeightNormal;
-  if (weight != face_weight) {
-    subst_font->weight_ = weight;
-  }
-  if (is_italic && !face->IsItalic()) {
-    if (italic_angle == 0) {
-      italic_angle = -12;
-    } else if (abs(italic_angle) < 5) {
-      italic_angle = 0;
-    }
-    subst_font->italic_angle_ = italic_angle;
-  }
+  subst_font->ConfigureExternalSubst(face_name, charset, weight, is_italic,
+                                     italic_angle, face->IsBold(),
+                                     face->IsItalic());
   return face;
 }
 
@@ -534,14 +522,14 @@ RetainPtr<CFX_Face> CFX_FontMapper::FindSubstFace(const ByteString& name,
   }
   const ByteString subst_name = GetSubstName(name, is_truetype);
   if (subst_name == "Symbol" && !is_truetype) {
-    subst_font->family_ = "Chrome Symbol";
-    subst_font->charset_ = FX_Charset::kSymbol;
+    subst_font->SetFamily("Chrome Symbol");
+    subst_font->SetCharset(FX_Charset::kSymbol);
     return UseInternalSubst(CFX_StandardFont::kSymbol, weight, italic_angle, 0,
                             subst_font);
   }
   if (subst_name == "ZapfDingbats") {
-    subst_font->family_ = "Chrome Dingbats";
-    subst_font->charset_ = FX_Charset::kSymbol;
+    subst_font->SetFamily("Chrome Dingbats");
+    subst_font->SetCharset(FX_Charset::kSymbol);
     return UseInternalSubst(CFX_StandardFont::kDingbats, weight, italic_angle,
                             0, subst_font);
   }
@@ -640,12 +628,12 @@ RetainPtr<CFX_Face> CFX_FontMapper::FindSubstFace(const ByteString& name,
         family = kNarrowFamily;
       }
     } else {
-      subst_font->subst_cjk_ = true;
+      subst_font->SetSubstCJK(true);
       if (nStyle) {
-        subst_font->weight_cjk_ = nStyle ? weight : pdfium::kFontWeightNormal;
+        subst_font->SetWeightCJK(nStyle ? weight : pdfium::kFontWeightNormal);
       }
       if (FontStyleIsItalic(nStyle)) {
-        subst_font->italic_cjk_ = true;
+        subst_font->SetItalicCJK(true);
       }
     }
     if (FontStyleIsItalic(flags)) {
@@ -688,8 +676,8 @@ RetainPtr<CFX_Face> CFX_FontMapper::FindSubstFace(const ByteString& name,
   if (Charset == FX_Charset::kSymbol) {
 #if !BUILDFLAG(IS_WIN)
     if (subst_name == "Symbol") {
-      subst_font->family_ = "Chrome Symbol";
-      subst_font->charset_ = FX_Charset::kSymbol;
+      subst_font->SetFamily("Chrome Symbol");
+      subst_font->SetCharset(FX_Charset::kSymbol);
       return UseInternalSubst(CFX_StandardFont::kSymbol, old_weight,
                               italic_angle, pitch_family, subst_font);
     }

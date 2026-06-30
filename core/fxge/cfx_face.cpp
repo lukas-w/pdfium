@@ -778,11 +778,8 @@ std::unique_ptr<CFX_GlyphBitmap> CFX_Face::RenderGlyph(
   ft_matrix.xy = matrix.c / 64 * 65536;
   ft_matrix.yx = matrix.b / 64 * 65536;
   ft_matrix.yy = matrix.d / 64 * 65536;
-  bool bUseCJKSubFont = false;
   if (subst_font) {
-    bUseCJKSubFont = subst_font->subst_cjk_ && font_style;
-    int skew =
-        bUseCJKSubFont ? subst_font->GetSkewCJK() : subst_font->GetSkew();
+    int skew = subst_font->GetEffectiveSkew(font_style);
     if (skew) {
       if (is_vertical) {
         ft_matrix.yx += ft_matrix.yy * skew / 100;
@@ -791,7 +788,7 @@ std::unique_ptr<CFX_GlyphBitmap> CFX_Face::RenderGlyph(
       }
     }
     if (subst_font->IsBuiltInGenericFont()) {
-      AdjustVariationParams(glyph_index, dest_width, subst_font->weight_);
+      AdjustVariationParams(glyph_index, dest_width, subst_font->GetWeight());
     }
   }
 
@@ -817,25 +814,16 @@ std::unique_ptr<CFX_GlyphBitmap> CFX_Face::RenderGlyph(
   }
 
   auto* glyph = rec->glyph;
-  int weight;
-  if (bUseCJKSubFont) {
-    weight = subst_font->weight_cjk_;
-  } else {
-    weight = subst_font ? subst_font->weight_ : 0;
-  }
-  if (subst_font && !subst_font->IsBuiltInGenericFont() && weight > 400) {
-    uint32_t index = (weight - 400) / 10;
-    pdfium::CheckedNumeric<signed long> level =
-        subst_font->GetWeightLevel(index);
-    if (level.ValueOrDefault(-1) < 0) {
+  if (subst_font) {
+    int level = subst_font->GetEmboldenLevelForRender(
+        font_style, static_cast<int32_t>(ft_matrix.xx),
+        static_cast<int32_t>(ft_matrix.xy));
+    if (level < 0) {
       return nullptr;
     }
-
-    level = level *
-            (abs(static_cast<int>(ft_matrix.xx)) +
-             abs(static_cast<int>(ft_matrix.xy))) /
-            36655;
-    FT_Outline_Embolden(&glyph->outline, level.ValueOrDefault(0));
+    if (level > 0) {
+      FT_Outline_Embolden(&glyph->outline, level);
+    }
   }
   CFX_FontMgr* font_mgr = CFX_GEModule::Get()->GetFontMgr();
   FT_Library_SetLcdFilter(font_mgr->GetFTLibrary(), FT_LCD_FILTER_DEFAULT);
@@ -908,7 +896,7 @@ std::unique_ptr<CFX_Path> CFX_Face::LoadGlyphPath(
       }
     }
     if (subst_font->IsBuiltInGenericFont()) {
-      AdjustVariationParams(glyph_index, dest_width, subst_font->weight_);
+      AdjustVariationParams(glyph_index, dest_width, subst_font->GetWeight());
     }
   }
   ScopedFaceTransform scoped_transform(GetRec(), &ft_matrix);
@@ -919,11 +907,11 @@ std::unique_ptr<CFX_Path> CFX_Face::LoadGlyphPath(
   if (FT_Load_Glyph(rec, glyph_index, load_flags)) {
     return nullptr;
   }
-  if (subst_font && !subst_font->IsBuiltInGenericFont() &&
-      subst_font->weight_ > 400) {
-    uint32_t index = (subst_font->weight_ - 400) / 10;
-    int level = subst_font->GetWeightLevelForLoad(index);
-    FT_Outline_Embolden(&rec->glyph->outline, level);
+  if (subst_font) {
+    int level = subst_font->GetEmboldenLevelForLoad();
+    if (level > 0) {
+      FT_Outline_Embolden(&rec->glyph->outline, level);
+    }
   }
 
   FT_Outline_Funcs funcs;

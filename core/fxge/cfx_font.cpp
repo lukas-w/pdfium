@@ -143,8 +143,8 @@ FX_Charset CFX_Font::GetCharSetFromUnicode(uint16_t word) {
 CFX_Font::CFX_Font() = default;
 
 int CFX_Font::GetSubstFontItalicAngle() const {
-  CFX_SubstFont* subst_font = GetSubstFont();
-  return subst_font ? subst_font->italic_angle_ : 0;
+  const CFX_SubstFont* subst_font = GetSubstFont();
+  return subst_font ? subst_font->GetItalicAngle() : 0;
 }
 
 std::vector<CharCodeAndIndex> CFX_Font::GetCharCodesAndIndices(
@@ -336,7 +336,7 @@ ByteString CFX_Font::GetFamilyName() const {
   if (face_) {
     return face_->GetFamilyName();
   }
-  return subst_font_->family_;
+  return subst_font_->GetFamily();
 }
 
 ByteString CFX_Font::GetFamilyNameOrUntitled() const {
@@ -361,7 +361,7 @@ ByteString CFX_Font::GetBaseFontName() const {
     return facename;
   }
   if (subst_font_) {
-    return subst_font_->family_;
+    return subst_font_->GetFamily();
   }
   return ByteString();
 }
