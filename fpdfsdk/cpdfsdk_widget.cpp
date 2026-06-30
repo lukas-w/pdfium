@@ -1069,7 +1069,7 @@ CFX_Color CPDFSDK_Widget::GetTextPWLColor() const {
   CPDF_FormControl* pFormCtrl = GetFormControl();
   std::optional<CFX_Color> crText =
       pFormCtrl->GetDefaultAppearance().GetColor();
-  return crText.value_or(CFX_Color(CFX_Color::Type::kGray, 0));
+  return crText.value_or(CFX_Color::MakeGray(0.0f));
 }
 
 CFX_Color CPDFSDK_Widget::GetBorderPWLColor() const {

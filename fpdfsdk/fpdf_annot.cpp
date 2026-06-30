@@ -1531,7 +1531,8 @@ FPDFAnnot_SetFontColor(FPDF_FORMHANDLE handle,
   }
 
   bool generated = CPDF_GenerateAP::GenerateDefaultAppearanceWithColor(
-      form->GetInteractiveForm()->document(), annot_dict, CFX_Color(R, G, B));
+      form->GetInteractiveForm()->document(), annot_dict,
+      CFX_Color::MakeRGBBytes(R, G, B));
   if (!generated) {
     return false;
   }

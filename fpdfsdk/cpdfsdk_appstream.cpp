@@ -1074,9 +1074,7 @@ ByteString GetDropButtonAppStream(const CFX_FloatRect& rcBBox) {
   fxcrt::ostringstream sAppStream;
   {
     AutoClosedQCommand q(&sAppStream);
-    sAppStream << GetFillColorAppStream(
-        CFX_Color(CFX_Color::Type::kRGB, 220.0f / 255.0f, 220.0f / 255.0f,
-                  220.0f / 255.0f));
+    sAppStream << GetFillColorAppStream(CFX_Color::MakeRGBBytes(220, 220, 220));
     WriteAppendRect(sAppStream, rcBBox);
     sAppStream << kFillOperator << "\n";
   }
@@ -1084,10 +1082,8 @@ ByteString GetDropButtonAppStream(const CFX_FloatRect& rcBBox) {
   {
     AutoClosedQCommand q(&sAppStream);
     sAppStream << GetBorderAppStreamInternal(
-        rcBBox, 2, CFX_Color(CFX_Color::Type::kGray, 0),
-        CFX_Color(CFX_Color::Type::kGray, 1),
-        CFX_Color(CFX_Color::Type::kGray, 0.5), BorderStyle::kBeveled,
-        CPWL_Dash{3, 0, 0});
+        rcBBox, 2, CFX_Color::MakeGray(0.0f), CFX_Color::MakeGray(1.0f),
+        CFX_Color::MakeGray(0.5f), BorderStyle::kBeveled, CPWL_Dash{3, 0, 0});
   }
 
   CFX_PointF ptCenter = CFX_PointF((rcBBox.left + rcBBox.right) / 2,
@@ -1181,13 +1177,13 @@ void CPDFSDK_AppStream::SetAsPushButton() {
       break;
     case BorderStyle::kBeveled:
       fBorderWidth *= 2;
-      crLeftTop = CFX_Color(CFX_Color::Type::kGray, 1);
+      crLeftTop = CFX_Color::MakeGray(1.0f);
       crRightBottom = crBackground / 2.0f;
       break;
     case BorderStyle::kInset:
       fBorderWidth *= 2;
-      crLeftTop = CFX_Color(CFX_Color::Type::kGray, 0.5);
-      crRightBottom = CFX_Color(CFX_Color::Type::kGray, 0.75);
+      crLeftTop = CFX_Color::MakeGray(0.5f);
+      crRightBottom = CFX_Color::MakeGray(0.75f);
       break;
     default:
       break;
@@ -1196,7 +1192,7 @@ void CPDFSDK_AppStream::SetAsPushButton() {
   CFX_FloatRect rcClient = rcWindow.GetDeflated(fBorderWidth, fBorderWidth);
   CPDF_DefaultAppearance da = pControl->GetDefaultAppearance();
   std::optional<CFX_Color> color = da.GetColor();
-  CFX_Color crText = color.value_or(CFX_Color(CFX_Color::Type::kGray, 0));
+  CFX_Color crText = color.value_or(CFX_Color::MakeGray(0.0f));
 
   const float font_size =
       da.GetFont()
@@ -1296,8 +1292,8 @@ void CPDFSDK_AppStream::SetAsPushButton() {
         break;
       }
       case BorderStyle::kInset: {
-        crLeftTop = CFX_Color(CFX_Color::Type::kGray, 0);
-        crRightBottom = CFX_Color(CFX_Color::Type::kGray, 1);
+        crLeftTop = CFX_Color::MakeGray(0.0f);
+        crRightBottom = CFX_Color::MakeGray(1.0f);
         break;
       }
       default:
@@ -1338,13 +1334,13 @@ void CPDFSDK_AppStream::SetAsCheckBox() {
       break;
     case BorderStyle::kBeveled:
       fBorderWidth *= 2;
-      crLeftTop = CFX_Color(CFX_Color::Type::kGray, 1);
+      crLeftTop = CFX_Color::MakeGray(1.0f);
       crRightBottom = crBackground / 2.0f;
       break;
     case BorderStyle::kInset:
       fBorderWidth *= 2;
-      crLeftTop = CFX_Color(CFX_Color::Type::kGray, 0.5);
-      crRightBottom = CFX_Color(CFX_Color::Type::kGray, 0.75);
+      crLeftTop = CFX_Color::MakeGray(0.5f);
+      crRightBottom = CFX_Color::MakeGray(0.75f);
       break;
     default:
       break;
@@ -1372,8 +1368,8 @@ void CPDFSDK_AppStream::SetAsCheckBox() {
       break;
     }
     case BorderStyle::kInset: {
-      crLeftTop = CFX_Color(CFX_Color::Type::kGray, 0);
-      crRightBottom = CFX_Color(CFX_Color::Type::kGray, 1);
+      crLeftTop = CFX_Color::MakeGray(0.0f);
+      crRightBottom = CFX_Color::MakeGray(1.0f);
       break;
     }
     default:
@@ -1418,13 +1414,13 @@ void CPDFSDK_AppStream::SetAsRadioButton() {
       break;
     case BorderStyle::kBeveled:
       fBorderWidth *= 2;
-      crLeftTop = CFX_Color(CFX_Color::Type::kGray, 1);
+      crLeftTop = CFX_Color::MakeGray(1.0f);
       crRightBottom = crBackground / 2.0f;
       break;
     case BorderStyle::kInset:
       fBorderWidth *= 2;
-      crLeftTop = CFX_Color(CFX_Color::Type::kGray, 0.5);
-      crRightBottom = CFX_Color(CFX_Color::Type::kGray, 0.75);
+      crLeftTop = CFX_Color::MakeGray(0.5f);
+      crRightBottom = CFX_Color::MakeGray(0.75f);
       break;
     default:
       break;
@@ -1441,11 +1437,11 @@ void CPDFSDK_AppStream::SetAsRadioButton() {
   CFX_FloatRect rcCenter = rcWindow.GetCenterSquare().GetDeflated(1.0f, 1.0f);
   if (nStyle == CheckStyle::kCircle) {
     if (nBorderStyle == BorderStyle::kBeveled) {
-      crLeftTop = CFX_Color(CFX_Color::Type::kGray, 1);
+      crLeftTop = CFX_Color::MakeGray(1.0f);
       crRightBottom = crBackground - 0.25f;
     } else if (nBorderStyle == BorderStyle::kInset) {
-      crLeftTop = CFX_Color(CFX_Color::Type::kGray, 0.5f);
-      crRightBottom = CFX_Color(CFX_Color::Type::kGray, 0.75f);
+      crLeftTop = CFX_Color::MakeGray(0.5f);
+      crRightBottom = CFX_Color::MakeGray(0.75f);
     }
 
     csAP_N_ON =
@@ -1469,8 +1465,8 @@ void CPDFSDK_AppStream::SetAsRadioButton() {
       break;
     }
     case BorderStyle::kInset: {
-      crLeftTop = CFX_Color(CFX_Color::Type::kGray, 0);
-      crRightBottom = CFX_Color(CFX_Color::Type::kGray, 1);
+      crLeftTop = CFX_Color::MakeGray(0.0f);
+      crRightBottom = CFX_Color::MakeGray(1.0f);
       break;
     }
     default:
@@ -1483,11 +1479,11 @@ void CPDFSDK_AppStream::SetAsRadioButton() {
     CFX_Color crBK = crBackground - 0.25f;
     if (nBorderStyle == BorderStyle::kBeveled) {
       crLeftTop = crBackground - 0.25f;
-      crRightBottom = CFX_Color(CFX_Color::Type::kGray, 1);
+      crRightBottom = CFX_Color::MakeGray(1.0f);
       crBK = crBackground;
     } else if (nBorderStyle == BorderStyle::kInset) {
-      crLeftTop = CFX_Color(CFX_Color::Type::kGray, 0);
-      crRightBottom = CFX_Color(CFX_Color::Type::kGray, 1);
+      crLeftTop = CFX_Color::MakeGray(0.0f);
+      crRightBottom = CFX_Color::MakeGray(1.0f);
     }
 
     csAP_D_ON =
@@ -1636,14 +1632,13 @@ void CPDFSDK_AppStream::SetAsListBox() {
           CFX_FloatRect(rcClient.left, fy - fItemHeight, rcClient.right, fy);
       {
         AutoClosedQCommand q(&sList);
-        sList << GetFillColorAppStream(CFX_Color(
-            CFX_Color::Type::kRGB, 0, 51.0f / 255.0f, 113.0f / 255.0f));
+        sList << GetFillColorAppStream(CFX_Color::MakeRGBBytes(0, 51, 113));
         WriteAppendRect(sList, rcItem);
         sList << kFillOperator << "\n";
       }
 
       AutoClosedCommand bt(&sList, kTextBeginOperator, kTextEndOperator);
-      sList << GetFillColorAppStream(CFX_Color(CFX_Color::Type::kGray, 1))
+      sList << GetFillColorAppStream(CFX_Color::MakeGray(1.0f))
             << GetEditAppStream(pEdit.get(), CFX_PointF(0.0f, fy), true, 0);
     } else {
       CFX_Color crText = widget_->GetTextPWLColor();
@@ -1908,13 +1903,13 @@ ByteString CPDFSDK_AppStream::GetBorderAppStream() const {
       break;
     case BorderStyle::kBeveled:
       fBorderWidth *= 2;
-      crLeftTop = CFX_Color(CFX_Color::Type::kGray, 1);
+      crLeftTop = CFX_Color::MakeGray(1.0f);
       crRightBottom = crBackground / 2.0f;
       break;
     case BorderStyle::kInset:
       fBorderWidth *= 2;
-      crLeftTop = CFX_Color(CFX_Color::Type::kGray, 0.5);
-      crRightBottom = CFX_Color(CFX_Color::Type::kGray, 0.75);
+      crLeftTop = CFX_Color::MakeGray(0.5f);
+      crRightBottom = CFX_Color::MakeGray(0.75f);
       break;
     default:
       break;

@@ -258,6 +258,7 @@ if (pdf_enable_fontations) {
 
 pdfium_unittest_source_set("unittests") {
   sources = [
+    "cfx_color_unittest.cpp",
     "cfx_folderfontinfo_unittest.cpp",
     "cfx_font_unittest.cpp",
     "cfx_fontmapper_unittest.cpp",
