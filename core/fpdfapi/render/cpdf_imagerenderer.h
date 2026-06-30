@@ -77,7 +77,7 @@ class CPDF_ImageRenderer {
   CFX_Matrix GetDrawMatrix(const FX_RECT& rect) const;
   // Returns the mask, or nullptr if the mask could not be created.
   RetainPtr<const CFX_DIBitmap> CalculateDrawImage(
-      CFX_RenderDevice& bitmap_device,
+      CFX_RenderDevice* bitmap_device,
       RetainPtr<CFX_DIBBase> pDIBBase,
       const CFX_Matrix& mtNewMatrix,
       const FX_RECT& rect) const;

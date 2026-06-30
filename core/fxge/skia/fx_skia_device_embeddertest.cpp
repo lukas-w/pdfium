@@ -182,8 +182,8 @@ void RenderPageToSkCanvas(FPDF_PAGE page,
   CPDF_Page::RenderContextClearer clearer(cpdf_page);
   cpdf_page->SetRenderContext(std::move(context));
 
-  auto default_device = std::make_unique<CFX_RenderDevice>();
-  CHECK(default_device->AttachCanvas(canvas));
+  auto default_device = CFX_RenderDevice::CreateForSkiaCanvas(canvas);
+  CHECK(default_device);
   unowned_context->device_ = std::move(default_device);
 
   CPDFSDK_RenderPageWithContext(unowned_context, cpdf_page, start_x, start_y,

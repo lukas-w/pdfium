@@ -330,9 +330,12 @@ FPDFImageObj_GetRenderedBitmap(FPDF_DOCUMENT document,
       optional_page ? optional_page->GetMutablePageResources() : nullptr;
   CPDF_RenderContext context(doc, std::move(page_resources),
                              /*pPageCache=*/nullptr);
-  CFX_RenderDevice device;
-  device.Attach(result_bitmap);
-  CPDF_RenderStatus status(&context, &device);
+  std::unique_ptr<CFX_RenderDevice> device =
+      CFX_RenderDevice::CreateForBitmap(result_bitmap);
+  if (!device) {
+    return nullptr;
+  }
+  CPDF_RenderStatus status(&context, device.get());
   CPDF_ImageRenderer renderer(&status);
 
   // Need to first flip the image, as expected by |renderer|.

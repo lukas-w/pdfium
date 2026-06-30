@@ -21,13 +21,13 @@ class BarcodeTest : public testing::Test {
   void SetUp() override {
     BC_Library_Init();
 
-    auto device = std::make_unique<CFX_RenderDevice>();
     auto bitmap = pdfium::MakeRetain<CFX_DIBitmap>();
     if (bitmap->Create(640, 480, FXDIB_Format::kBgrx)) {
       bitmap_ = bitmap;
     }
     ASSERT_TRUE(bitmap_);
-    ASSERT_TRUE(device->Attach(bitmap_));
+    auto device = CFX_RenderDevice::CreateForBitmap(bitmap_);
+    ASSERT_TRUE(device);
     device_ = std::move(device);
   }
 

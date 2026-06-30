@@ -267,13 +267,16 @@ void CFGAS_GEGraphics::FillPathWithPattern(
       matrix.TransformRect(path.GetPath().GetBoundingBox());
   const FX_RECT rect = rectf.ToRoundedFxRect();
 
-  CFX_RenderDevice device;
-  device.Attach(bmp);
-  device.FillRect(rect, info_.fillColor.GetPattern()->GetBackArgb());
+  std::unique_ptr<CFX_RenderDevice> device =
+      CFX_RenderDevice::CreateForBitmap(bmp);
+  if (!device) {
+    return;
+  }
+  device->FillRect(rect, info_.fillColor.GetPattern()->GetBackArgb());
   for (int32_t j = rect.bottom; j < rect.top; j += mask->GetHeight()) {
     for (int32_t i = rect.left; i < rect.right; i += mask->GetWidth()) {
-      device.SetBitMask(mask, i, j,
-                        info_.fillColor.GetPattern()->GetForeArgb());
+      device->SetBitMask(mask, i, j,
+                         info_.fillColor.GetPattern()->GetForeArgb());
     }
   }
   CFX_RenderDevice::StateRestorer restorer(render_device_);

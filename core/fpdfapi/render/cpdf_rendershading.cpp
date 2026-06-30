@@ -858,8 +858,11 @@ void DrawCoonPatchMeshes(
   DCHECK(type == kCoonsPatchMeshShading ||
          type == kTensorProductPatchMeshShading);
 
-  CFX_RenderDevice device;
-  device.Attach(pBitmap);
+  std::unique_ptr<CFX_RenderDevice> device =
+      CFX_RenderDevice::CreateForBitmap(pBitmap);
+  if (!device) {
+    return;
+  }
 
   CPDF_MeshStream stream(type, funcs, std::move(pShadingStream), pCS);
   if (!stream.Load()) {
@@ -878,7 +881,7 @@ void DrawCoonPatchMeshes(
 
   PatchDrawer patch_drawer;
   patch_drawer.alpha = alpha;
-  patch_drawer.pDevice = &device;
+  patch_drawer.pDevice = device.get();
   patch_drawer.bNoPathSmooth = bNoPathSmooth;
 
   for (size_t i = 0; i < CubicBezierPatch::kBoundaryPathSize; i++) {

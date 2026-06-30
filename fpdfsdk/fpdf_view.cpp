@@ -627,8 +627,11 @@ FPDF_EXPORT FPDF_BOOL FPDF_CALLCONV FPDF_RenderPage(HDC dc,
   const bool bHasMask = pPage->HasImageMask() && !bNewBitmap;
   auto* render_data = CPDF_DocRenderData::FromDocument(pPage->GetDocument());
   if (!bNewBitmap && !bHasMask) {
-    context->device_ =
-        std::make_unique<CFX_RenderDevice>(dc, render_data->GetPSFontTracker());
+    context->device_ = CFX_RenderDevice::CreateForWindowsDC(
+        dc, render_data->GetPSFontTracker());
+    if (!context->device_) {
+      return false;
+    }
     CPDFSDK_RenderPageWithContext(context, pPage, start_x, start_y, size_x,
                                   size_y, rotate, flags,
                                   /*color_scheme=*/nullptr,
@@ -646,8 +649,10 @@ FPDF_EXPORT FPDF_BOOL FPDF_CALLCONV FPDF_RenderPage(HDC dc,
     pBitmap->Clear(0x00ffffff);
   }
 #endif
-  auto device = std::make_unique<CFX_RenderDevice>();
-  device->Attach(pBitmap);
+  auto device = CFX_RenderDevice::CreateForBitmap(pBitmap);
+  if (!device) {
+    return false;
+  }
   context->device_ = std::move(device);
   if (bHasMask) {
     context->options_ = std::make_unique<CPDF_RenderOptions>();
@@ -660,9 +665,14 @@ FPDF_EXPORT FPDF_BOOL FPDF_CALLCONV FPDF_RenderPage(HDC dc,
                                 /*pause=*/nullptr);
 
   if (!bHasMask) {
-    CFX_RenderDevice win_dc(dc, render_data->GetPSFontTracker());
+    std::unique_ptr<CFX_RenderDevice> win_dc =
+        CFX_RenderDevice::CreateForWindowsDC(dc,
+                                             render_data->GetPSFontTracker());
+    if (!win_dc) {
+      return false;
+    }
     bool bitsStretched = false;
-    if (win_dc.GetDeviceType() == DeviceType::kPrinter) {
+    if (win_dc->GetDeviceType() == DeviceType::kPrinter) {
       auto dest_bitmap = pdfium::MakeRetain<CFX_DIBitmap>();
       if (dest_bitmap->Create(size_x, size_y, FXDIB_Format::kBgrx)) {
         std::ranges::fill(dest_bitmap->GetWritableBuffer().first(
@@ -670,12 +680,12 @@ FPDF_EXPORT FPDF_BOOL FPDF_CALLCONV FPDF_RenderPage(HDC dc,
                           -1);
         dest_bitmap->CompositeBitmap(0, 0, size_x, size_y, pBitmap, 0, 0,
                                      BlendMode::kNormal);
-        win_dc.StretchDIBits(std::move(dest_bitmap), 0, 0, size_x, size_y);
+        win_dc->StretchDIBits(std::move(dest_bitmap), 0, 0, size_x, size_y);
         bitsStretched = true;
       }
     }
     if (!bitsStretched) {
-      win_dc.SetDIBits(std::move(pBitmap), 0, 0);
+      win_dc->SetDIBits(std::move(pBitmap), 0, 0);
     }
     return true;
   }
@@ -698,7 +708,10 @@ FPDF_EXPORT FPDF_BOOL FPDF_CALLCONV FPDF_RenderPage(HDC dc,
   context = owned_context.get();
   pPage->SetRenderContext(std::move(owned_context));
   context->device_ =
-      std::make_unique<CFX_RenderDevice>(dc, render_data->GetPSFontTracker());
+      CFX_RenderDevice::CreateForWindowsDC(dc, render_data->GetPSFontTracker());
+  if (!context->device_) {
+    return false;
+  }
   context->options_ = std::make_unique<CPDF_RenderOptions>();
   context->options_->GetOptions().bBreakForMasks = true;
 
@@ -749,9 +762,11 @@ FPDF_EXPORT void FPDF_CALLCONV FPDF_RenderPageBitmap(FPDF_BITMAP bitmap,
 #if defined(PDF_USE_SKIA)
   CFX_DIBitmap::ScopedPremultiplier scoped_premultiplier(pBitmap);
 #endif
-  auto device = std::make_unique<CFX_RenderDevice>();
-  device->AttachWithRgbByteOrder(std::move(pBitmap),
-                                 !!(flags & FPDF_REVERSE_BYTE_ORDER));
+  auto device = CFX_RenderDevice::CreateForBitmap(
+      std::move(pBitmap), !!(flags & FPDF_REVERSE_BYTE_ORDER));
+  if (!device) {
+    return;
+  }
   context->device_ = std::move(device);
 
   CPDFSDK_RenderPageWithContext(context, pPage, start_x, start_y, size_x,
@@ -785,9 +800,11 @@ FPDF_RenderPageBitmapWithMatrix(FPDF_BITMAP bitmap,
 #if defined(PDF_USE_SKIA)
   CFX_DIBitmap::ScopedPremultiplier scoped_premultiplier(pBitmap);
 #endif
-  auto device = std::make_unique<CFX_RenderDevice>();
-  device->AttachWithRgbByteOrder(std::move(pBitmap),
-                                 !!(flags & FPDF_REVERSE_BYTE_ORDER));
+  auto device = CFX_RenderDevice::CreateForBitmap(
+      std::move(pBitmap), !!(flags & FPDF_REVERSE_BYTE_ORDER));
+  if (!device) {
+    return;
+  }
   context->device_ = std::move(device);
 
   CFX_FloatRect clipping_rect;
@@ -824,8 +841,8 @@ FPDF_EXPORT void FPDF_CALLCONV FPDF_RenderPageSkia(FPDF_SKIA_CANVAS canvas,
   CPDF_Page::RenderContextClearer clearer(cpdf_page);
   cpdf_page->SetRenderContext(std::move(owned_context));
 
-  auto device = std::make_unique<CFX_RenderDevice>();
-  if (!device->AttachCanvas(*sk_canvas)) {
+  auto device = CFX_RenderDevice::CreateForSkiaCanvas(*sk_canvas);
+  if (!device) {
     return;
   }
   context->device_ = std::move(device);
@@ -1015,9 +1032,12 @@ FPDF_EXPORT FPDF_BOOL FPDF_CALLCONV FPDFBitmap_FillRect(FPDF_BITMAP bitmap,
   // Let CFX_RenderDevice handle the 8-bit case.
   const int bpp = pBitmap->GetBPP();
   if (bpp == 8) {
-    CFX_RenderDevice device;
-    device.Attach(std::move(pBitmap));
-    return device.FillRect(fill_rect, static_cast<uint32_t>(color));
+    std::unique_ptr<CFX_RenderDevice> device =
+        CFX_RenderDevice::CreateForBitmap(std::move(pBitmap));
+    if (!device) {
+      return false;
+    }
+    return device->FillRect(fill_rect, static_cast<uint32_t>(color));
   }
 
   // Handle filling 24/32-bit bitmaps directly without CFX_RenderDevice.

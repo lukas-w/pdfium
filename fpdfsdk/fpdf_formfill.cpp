@@ -230,18 +230,17 @@ void FFLCommon(FPDF_FORMHANDLE hHandle,
   const FX_RECT rect(start_x, start_y, start_x + size_x, start_y + size_y);
   CFX_Matrix matrix = pPage->GetDisplayMatrixForRect(rect, rotate);
 
-  auto pDevice = std::make_unique<CFX_RenderDevice>();
+  std::unique_ptr<CFX_RenderDevice> pDevice;
   if (dest_is_bitmap) {
-    if (!pDevice->AttachWithRgbByteOrder(holder,
-                                         !!(flags & FPDF_REVERSE_BYTE_ORDER))) {
-      return;
-    }
+    pDevice = CFX_RenderDevice::CreateForBitmap(
+        holder, !!(flags & FPDF_REVERSE_BYTE_ORDER));
   } else {
 #if defined(PDF_USE_SKIA)
-    if (!pDevice->AttachCanvas(*canvas)) {
-      return;
-    }
+    pDevice = CFX_RenderDevice::CreateForSkiaCanvas(*canvas);
 #endif
+  }
+  if (!pDevice) {
+    return;
   }
 
   {

@@ -18,6 +18,7 @@
 #include "core/fxcrt/check_op.h"
 #include "core/fxcrt/compiler_specific.h"
 #include "core/fxcrt/fx_safe_types.h"
+#include "core/fxcrt/ptr_util.h"
 #include "core/fxcrt/span.h"
 #include "core/fxcrt/zip.h"
 #include "core/fxge/cfx_color.h"
@@ -869,16 +870,19 @@ bool CFX_RenderDevice::DrawFillStrokePath(
     }
     backdrop->Copy(bitmap);
   }
-  CFX_RenderDevice bitmap_device;
-  bitmap_device.AttachWithBackdropAndGroupKnockout(bitmap, std::move(backdrop),
-                                                   /*bGroupKnockout=*/true);
+  std::unique_ptr<CFX_RenderDevice> bitmap_device =
+      CFX_RenderDevice::CreateForBitmapWithBackdropAndGroupKnockout(
+          bitmap, std::move(backdrop), /*group_knockout=*/true);
+  if (!bitmap_device) {
+    return false;
+  }
 
   CFX_Matrix matrix;
   if (pObject2Device) {
     matrix = *pObject2Device;
   }
   matrix.Translate(-rect.left, -rect.top);
-  if (!bitmap_device.GetDeviceDriver()->DrawPath(
+  if (!bitmap_device->GetDeviceDriver()->DrawPath(
           path, &matrix, pGraphState, fill_color, stroke_color, fill_options)) {
     return false;
   }
@@ -1699,33 +1703,26 @@ void CFX_RenderDevice::Clear(uint32_t color) {
 #if BUILDFLAG(IS_WIN)
 CFX_RenderDevice::CFX_RenderDevice(HDC hdc,
                                    CFX_PSFontTracker* ps_font_tracker) {
-  InitWithWindowsDevice(hdc, ps_font_tracker);
-}
-
-void CFX_RenderDevice::InitWithWindowsDevice(
-    HDC hdc,
-    CFX_PSFontTracker* ps_font_tracker) {
   const EncoderIface* encoder_iface = CFX_GEModule::Get()->GetEncoderIface();
-  std::unique_ptr<RenderDeviceDriverIface> driver =
-      CreateDriver(hdc, ps_font_tracker, encoder_iface);
-  SetDeviceDriver(std::move(driver));
+  SetDeviceDriver(CreateDriver(hdc, ps_font_tracker, encoder_iface));
 }
 
 // static
 std::unique_ptr<CFX_RenderDevice> CFX_RenderDevice::CreateForWindowsDC(
     HDC hdc,
     CFX_PSFontTracker* ps_font_tracker) {
-  auto device = std::make_unique<CFX_RenderDevice>();
-  device->InitWithWindowsDevice(hdc, ps_font_tracker);
-  return device;
+  // Private ctor.
+  return pdfium::WrapUnique(new CFX_RenderDevice(hdc, ps_font_tracker));
 }
 #endif
 
 // static
 std::unique_ptr<CFX_RenderDevice> CFX_RenderDevice::CreateForBitmap(
-    RetainPtr<CFX_DIBitmap> bitmap) {
-  auto device = std::make_unique<CFX_RenderDevice>();
-  if (!device->Attach(std::move(bitmap))) {
+    RetainPtr<CFX_DIBitmap> bitmap,
+    bool rgb_byte_order) {
+  // Private ctor.
+  auto device = pdfium::WrapUnique(new CFX_RenderDevice());
+  if (!device->AttachWithRgbByteOrder(std::move(bitmap), rgb_byte_order)) {
     return nullptr;
   }
   return device;
@@ -1737,7 +1734,8 @@ CFX_RenderDevice::CreateForBitmapWithBackdropAndGroupKnockout(
     RetainPtr<CFX_DIBitmap> bitmap,
     RetainPtr<CFX_DIBitmap> backdrop_bitmap,
     bool group_knockout) {
-  auto device = std::make_unique<CFX_RenderDevice>();
+  // Private ctor.
+  auto device = pdfium::WrapUnique(new CFX_RenderDevice());
   if (!device->AttachWithBackdropAndGroupKnockout(
           std::move(bitmap), std::move(backdrop_bitmap), group_knockout)) {
     return nullptr;
@@ -1750,8 +1748,24 @@ std::unique_ptr<CFX_RenderDevice> CFX_RenderDevice::CreateForNewBitmap(
     int width,
     int height,
     FXDIB_Format format) {
-  auto device = std::make_unique<CFX_RenderDevice>();
+  // Private ctor.
+  auto device = pdfium::WrapUnique(new CFX_RenderDevice());
   if (!device->Create(width, height, format)) {
+    return nullptr;
+  }
+  return device;
+}
+
+// static
+std::unique_ptr<CFX_RenderDevice>
+CFX_RenderDevice::CreateForNewBitmapWithBackdrop(
+    int width,
+    int height,
+    FXDIB_Format format,
+    RetainPtr<CFX_DIBitmap> backdrop) {
+  // Private ctor.
+  auto device = pdfium::WrapUnique(new CFX_RenderDevice());
+  if (!device->CreateWithBackdrop(width, height, format, std::move(backdrop))) {
     return nullptr;
   }
   return device;
@@ -1761,7 +1775,8 @@ std::unique_ptr<CFX_RenderDevice> CFX_RenderDevice::CreateForNewBitmap(
 // static
 std::unique_ptr<CFX_RenderDevice> CFX_RenderDevice::CreateForSkiaCanvas(
     SkCanvas& canvas) {
-  auto device = std::make_unique<CFX_RenderDevice>();
+  // Private ctor.
+  auto device = pdfium::WrapUnique(new CFX_RenderDevice());
   if (!device->AttachCanvas(canvas)) {
     return nullptr;
   }

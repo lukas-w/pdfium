@@ -20,10 +20,11 @@
 #endif
 
 TEST(CFXRenderDeviceTest, GetClipBoxDefault) {
-  CFX_RenderDevice device;
-  ASSERT_TRUE(device.Create(/*width=*/16, /*height=*/16, FXDIB_Format::kBgra));
+  std::unique_ptr<CFX_RenderDevice> device =
+      CFX_RenderDevice::CreateForNewBitmap(16, 16, FXDIB_Format::kBgra);
+  ASSERT_TRUE(device);
 
-  EXPECT_EQ(FX_RECT(0, 0, 16, 16), device.GetClipBox());
+  EXPECT_EQ(FX_RECT(0, 0, 16, 16), device->GetClipBox());
 }
 
 TEST(CFXRenderDeviceTest, GetClipBoxPathFill) {
@@ -34,14 +35,15 @@ TEST(CFXRenderDeviceTest, GetClipBoxPathFill) {
   const CFX_FillRenderOptions fill_options(
       CFX_FillRenderOptions::FillType::kEvenOdd);
 
-  CFX_RenderDevice device;
-  ASSERT_TRUE(device.Create(/*width=*/16, /*height=*/16, FXDIB_Format::kBgra));
+  std::unique_ptr<CFX_RenderDevice> device =
+      CFX_RenderDevice::CreateForNewBitmap(16, 16, FXDIB_Format::kBgra);
+  ASSERT_TRUE(device);
 
   CFX_Path path;
   path.AppendRect(2, 4, 14, 12);
-  EXPECT_TRUE(device.SetClip_PathFill(path, &object_to_device, fill_options));
+  EXPECT_TRUE(device->SetClip_PathFill(path, &object_to_device, fill_options));
 
-  EXPECT_EQ(FX_RECT(5, 1, 13, 13), device.GetClipBox());
+  EXPECT_EQ(FX_RECT(5, 1, 13, 13), device->GetClipBox());
 }
 
 TEST(CFXRenderDeviceTest, GetClipBoxPathStroke) {
@@ -51,33 +53,36 @@ TEST(CFXRenderDeviceTest, GetClipBoxPathStroke) {
   // Default line width is 1.
   const CFX_GraphStateData graphics_state;
 
-  CFX_RenderDevice device;
-  ASSERT_TRUE(device.Create(/*width=*/16, /*height=*/16, FXDIB_Format::kBgra));
+  std::unique_ptr<CFX_RenderDevice> device =
+      CFX_RenderDevice::CreateForNewBitmap(16, 16, FXDIB_Format::kBgra);
+  ASSERT_TRUE(device);
 
   CFX_Path path;
   path.AppendRect(2, 4, 14, 12);
   EXPECT_TRUE(
-      device.SetClip_PathStroke(path, &object_to_device, &graphics_state));
+      device->SetClip_PathStroke(path, &object_to_device, &graphics_state));
 
-  EXPECT_EQ(FX_RECT(4, 0, 14, 14), device.GetClipBox());
+  EXPECT_EQ(FX_RECT(4, 0, 14, 14), device->GetClipBox());
 }
 
 TEST(CFXRenderDeviceTest, GetClipBoxRect) {
-  CFX_RenderDevice device;
-  ASSERT_TRUE(device.Create(/*width=*/16, /*height=*/16, FXDIB_Format::kBgra));
+  std::unique_ptr<CFX_RenderDevice> device =
+      CFX_RenderDevice::CreateForNewBitmap(16, 16, FXDIB_Format::kBgra);
+  ASSERT_TRUE(device);
 
-  EXPECT_TRUE(device.SetClip_Rect({2, 4, 14, 12}));
+  EXPECT_TRUE(device->SetClip_Rect({2, 4, 14, 12}));
 
-  EXPECT_EQ(FX_RECT(2, 4, 14, 12), device.GetClipBox());
+  EXPECT_EQ(FX_RECT(2, 4, 14, 12), device->GetClipBox());
 }
 
 TEST(CFXRenderDeviceTest, GetClipBoxEmpty) {
-  CFX_RenderDevice device;
-  ASSERT_TRUE(device.Create(/*width=*/16, /*height=*/16, FXDIB_Format::kBgra));
+  std::unique_ptr<CFX_RenderDevice> device =
+      CFX_RenderDevice::CreateForNewBitmap(16, 16, FXDIB_Format::kBgra);
+  ASSERT_TRUE(device);
 
-  EXPECT_TRUE(device.SetClip_Rect({2, 8, 14, 8}));
+  EXPECT_TRUE(device->SetClip_Rect({2, 8, 14, 8}));
 
-  EXPECT_TRUE(device.GetClipBox().IsEmpty());
+  EXPECT_TRUE(device->GetClipBox().IsEmpty());
 }
 
 #if BUILDFLAG(IS_WIN)
@@ -95,8 +100,9 @@ class CFXWindowsRenderDeviceTest : public testing::Test {
     // Get a device context with Windows GDI.
     dc_handle_ = CreateCompatibleDC(nullptr);
     ASSERT_TRUE(dc_handle_);
-    device_ = std::make_unique<CFX_RenderDevice>();
-    device_->InitWithWindowsDevice(dc_handle_, &psfont_tracker_);
+    device_ =
+        CFX_RenderDevice::CreateForWindowsDC(dc_handle_, &psfont_tracker_);
+    ASSERT_TRUE(device_);
     device_->SaveState();
   }
 

@@ -33,7 +33,7 @@ class CPDF_ScaledRenderBuffer {
 
  private:
   UnownedPtr<CFX_RenderDevice> const device_;
-  std::unique_ptr<CFX_RenderDevice> const bitmap_device_;
+  std::unique_ptr<CFX_RenderDevice> bitmap_device_;
   const FX_RECT rect_;
   CFX_Matrix matrix_;
 };
