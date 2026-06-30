@@ -56,7 +56,7 @@ class CFX_RenderDevice final {
 
   CFX_RenderDevice();
 #if BUILDFLAG(IS_WIN)
-  CFX_RenderDevice(HDC hDC, CFX_PSFontTracker* ps_font_tracker);
+  CFX_RenderDevice(HDC hdc, CFX_PSFontTracker* ps_font_tracker);
 #endif
   ~CFX_RenderDevice();
 
@@ -80,7 +80,30 @@ class CFX_RenderDevice final {
   void Clear(uint32_t color);
 
 #if BUILDFLAG(IS_WIN)
-  void InitWithWindowsDevice(HDC hDC, CFX_PSFontTracker* ps_font_tracker);
+  void InitWithWindowsDevice(HDC hdc, CFX_PSFontTracker* ps_font_tracker);
+#endif
+
+  static std::unique_ptr<CFX_RenderDevice> CreateForBitmap(
+      RetainPtr<CFX_DIBitmap> bitmap);
+
+  static std::unique_ptr<CFX_RenderDevice>
+  CreateForBitmapWithBackdropAndGroupKnockout(
+      RetainPtr<CFX_DIBitmap> bitmap,
+      RetainPtr<CFX_DIBitmap> backdrop_bitmap,
+      bool group_knockout);
+
+  static std::unique_ptr<CFX_RenderDevice>
+  CreateForNewBitmap(int width, int height, FXDIB_Format format);
+
+#if BUILDFLAG(IS_WIN)
+  static std::unique_ptr<CFX_RenderDevice> CreateForWindowsDC(
+      HDC hdc,
+      CFX_PSFontTracker* ps_font_tracker);
+#endif
+
+#if defined(PDF_USE_SKIA)
+  static std::unique_ptr<CFX_RenderDevice> CreateForSkiaCanvas(
+      SkCanvas& canvas);
 #endif
 
   static CFX_Matrix GetFlipMatrix(float width,

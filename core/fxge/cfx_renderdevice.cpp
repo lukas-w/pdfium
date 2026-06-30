@@ -517,30 +517,30 @@ FXDIB_Format GetCreateCompatibleBitmapFormat(bool bytemask_output,
 
 #if BUILDFLAG(IS_WIN)
 std::unique_ptr<RenderDeviceDriverIface> CreateDriver(
-    HDC hDC,
+    HDC hdc,
     CFX_PSFontTracker* ps_font_tracker,
     const EncoderIface* encoder_iface) {
-  int device_type = ::GetDeviceCaps(hDC, TECHNOLOGY);
-  int obj_type = ::GetObjectType(hDC);
+  int device_type = ::GetDeviceCaps(hdc, TECHNOLOGY);
+  int obj_type = ::GetObjectType(hdc);
   const bool use_printer =
       device_type == DT_RASPRINTER || device_type == DT_PLOTTER ||
       device_type == DT_CHARSTREAM || obj_type == OBJ_ENHMETADC;
 
   if (!use_printer) {
-    return std::make_unique<CGdiDisplayDriver>(hDC);
+    return std::make_unique<CGdiDisplayDriver>(hdc);
   }
 
   WindowsPrintMode print_mode = CFX_GEModule::Get()->GetPrintMode();
   if (print_mode == WindowsPrintMode::kEmf ||
       print_mode == WindowsPrintMode::kEmfImageMasks) {
-    return std::make_unique<CGdiPrinterDriver>(hDC);
+    return std::make_unique<CGdiPrinterDriver>(hdc);
   }
 
   if (print_mode == WindowsPrintMode::kTextOnly) {
-    return std::make_unique<CTextOnlyPrinterDriver>(hDC);
+    return std::make_unique<CTextOnlyPrinterDriver>(hdc);
   }
 
-  return std::make_unique<CPSPrinterDriver>(hDC, print_mode, ps_font_tracker,
+  return std::make_unique<CPSPrinterDriver>(hdc, print_mode, ps_font_tracker,
                                             encoder_iface);
 }
 #endif  // BUILDFLAG(IS_WIN)
@@ -1697,17 +1697,74 @@ void CFX_RenderDevice::Clear(uint32_t color) {
 }
 
 #if BUILDFLAG(IS_WIN)
-CFX_RenderDevice::CFX_RenderDevice(HDC hDC,
+CFX_RenderDevice::CFX_RenderDevice(HDC hdc,
                                    CFX_PSFontTracker* ps_font_tracker) {
-  InitWithWindowsDevice(hDC, ps_font_tracker);
+  InitWithWindowsDevice(hdc, ps_font_tracker);
 }
 
 void CFX_RenderDevice::InitWithWindowsDevice(
-    HDC hDC,
+    HDC hdc,
     CFX_PSFontTracker* ps_font_tracker) {
   const EncoderIface* encoder_iface = CFX_GEModule::Get()->GetEncoderIface();
   std::unique_ptr<RenderDeviceDriverIface> driver =
-      CreateDriver(hDC, ps_font_tracker, encoder_iface);
+      CreateDriver(hdc, ps_font_tracker, encoder_iface);
   SetDeviceDriver(std::move(driver));
 }
-#endif  // BUILDFLAG(IS_WIN)
+
+// static
+std::unique_ptr<CFX_RenderDevice> CFX_RenderDevice::CreateForWindowsDC(
+    HDC hdc,
+    CFX_PSFontTracker* ps_font_tracker) {
+  auto device = std::make_unique<CFX_RenderDevice>();
+  device->InitWithWindowsDevice(hdc, ps_font_tracker);
+  return device;
+}
+#endif
+
+// static
+std::unique_ptr<CFX_RenderDevice> CFX_RenderDevice::CreateForBitmap(
+    RetainPtr<CFX_DIBitmap> bitmap) {
+  auto device = std::make_unique<CFX_RenderDevice>();
+  if (!device->Attach(std::move(bitmap))) {
+    return nullptr;
+  }
+  return device;
+}
+
+// static
+std::unique_ptr<CFX_RenderDevice>
+CFX_RenderDevice::CreateForBitmapWithBackdropAndGroupKnockout(
+    RetainPtr<CFX_DIBitmap> bitmap,
+    RetainPtr<CFX_DIBitmap> backdrop_bitmap,
+    bool group_knockout) {
+  auto device = std::make_unique<CFX_RenderDevice>();
+  if (!device->AttachWithBackdropAndGroupKnockout(
+          std::move(bitmap), std::move(backdrop_bitmap), group_knockout)) {
+    return nullptr;
+  }
+  return device;
+}
+
+// static
+std::unique_ptr<CFX_RenderDevice> CFX_RenderDevice::CreateForNewBitmap(
+    int width,
+    int height,
+    FXDIB_Format format) {
+  auto device = std::make_unique<CFX_RenderDevice>();
+  if (!device->Create(width, height, format)) {
+    return nullptr;
+  }
+  return device;
+}
+
+#if defined(PDF_USE_SKIA)
+// static
+std::unique_ptr<CFX_RenderDevice> CFX_RenderDevice::CreateForSkiaCanvas(
+    SkCanvas& canvas) {
+  auto device = std::make_unique<CFX_RenderDevice>();
+  if (!device->AttachCanvas(canvas)) {
+    return nullptr;
+  }
+  return device;
+}
+#endif
