@@ -637,7 +637,7 @@ ByteString GetWordRenderString(ByteStringView strWords) {
 
 ByteString GetEditAppStream(CPWL_EditImpl* pEdit,
                             const CFX_PointF& ptOffset,
-                            bool bContinuous,
+                            bool use_continuous_formatting,
                             uint16_t SubWord) {
   CPWL_EditImpl::Iterator* pIterator = pEdit->GetIterator();
   pIterator->SetAt(0);
@@ -651,62 +651,61 @@ ByteString GetEditAppStream(CPWL_EditImpl* pEdit,
 
   while (pIterator->NextWord()) {
     CPVT_WordPlace place = pIterator->GetAt();
-    if (bContinuous) {
+    CPVT_Word word;
+    bool has_word = pIterator->GetWord(word);
+
+    if (use_continuous_formatting) {
       if (place.LineCmp(oldplace) != 0) {
         if (!sWords.IsEmpty()) {
           sEditStream << GetWordRenderString(sWords.AsStringView());
           sWords.clear();
         }
 
-        CPVT_Word word;
-        if (pIterator->GetWord(word)) {
-          ptNew = CFX_PointF(word.location().x + ptOffset.x,
-                             word.location().y + ptOffset.y);
+        if (has_word) {
+          ptNew = word.location() + ptOffset;
         } else {
           CPVT_Line line;
           pIterator->GetLine(line);
-          ptNew = CFX_PointF(line.ptLine.x + ptOffset.x,
-                             line.ptLine.y + ptOffset.y);
+          ptNew = line.ptLine + ptOffset;
         }
 
-        if (ptNew.x != ptOld.x || ptNew.y != ptOld.y) {
-          WritePoint(sEditStream, {ptNew.x - ptOld.x, ptNew.y - ptOld.y})
+        if (ptNew != ptOld) {
+          WritePoint(sEditStream, ptNew - ptOld)
               << " " << kMoveTextPositionOperator << "\n";
 
           ptOld = ptNew;
         }
       }
 
-      CPVT_Word word;
-      if (pIterator->GetWord(word)) {
-        if (word.font_index() != nCurFontIndex) {
+      if (has_word) {
+        int32_t font_index = word.font_index();
+        if (font_index != nCurFontIndex) {
           if (!sWords.IsEmpty()) {
             sEditStream << GetWordRenderString(sWords.AsStringView());
             sWords.clear();
           }
-          sEditStream << GetFontSetString(pEdit->GetFontMap(),
-                                          word.font_index(), word.font_size());
-          nCurFontIndex = word.font_index();
+          sEditStream << GetFontSetString(pEdit->GetFontMap(), font_index,
+                                          word.font_size());
+          nCurFontIndex = font_index;
         }
 
         sWords += pEdit->GetPDFWordString(nCurFontIndex, word.word(), SubWord);
       }
       oldplace = place;
     } else {
-      CPVT_Word word;
-      if (pIterator->GetWord(word)) {
-        ptNew = CFX_PointF(word.location().x + ptOffset.x,
-                           word.location().y + ptOffset.y);
+      if (has_word) {
+        ptNew = word.location() + ptOffset;
 
-        if (ptNew.x != ptOld.x || ptNew.y != ptOld.y) {
-          WritePoint(sEditStream, {ptNew.x - ptOld.x, ptNew.y - ptOld.y})
+        if (ptNew != ptOld) {
+          WritePoint(sEditStream, ptNew - ptOld)
               << " " << kMoveTextPositionOperator << "\n";
           ptOld = ptNew;
         }
-        if (word.font_index() != nCurFontIndex) {
-          sEditStream << GetFontSetString(pEdit->GetFontMap(),
-                                          word.font_index(), word.font_size());
-          nCurFontIndex = word.font_index();
+        int32_t font_index = word.font_index();
+        if (font_index != nCurFontIndex) {
+          sEditStream << GetFontSetString(pEdit->GetFontMap(), font_index,
+                                          word.font_size());
+          nCurFontIndex = font_index;
         }
         sEditStream << GetWordRenderString(
             pEdit->GetPDFWordString(nCurFontIndex, word.word(), SubWord)

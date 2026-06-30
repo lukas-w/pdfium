@@ -323,6 +323,9 @@ ByteString GenerateEditAP(IPVT_FontMap* font_map,
   vt_iterator->SetAt(0);
   while (vt_iterator->NextWord()) {
     CPVT_WordPlace place = vt_iterator->GetWordPlace();
+    CPVT_Word word;
+    bool has_word = vt_iterator->GetWord(word);
+
     if (continuous) {
       if (place.LineCmp(oldplace) != 0) {
         if (!words.IsEmpty()) {
@@ -331,49 +334,47 @@ ByteString GenerateEditAP(IPVT_FontMap* font_map,
           line_stream.str("");
           words.clear();
         }
-        CPVT_Word word;
-        if (vt_iterator->GetWord(word)) {
-          new_point = CFX_PointF(word.location().x + offset.x,
-                                 word.location().y + offset.y);
+
+        if (has_word) {
+          new_point = word.location() + offset;
         } else {
           CPVT_Line line;
           vt_iterator->GetLine(line);
-          new_point =
-              CFX_PointF(line.ptLine.x + offset.x, line.ptLine.y + offset.y);
+          new_point = line.ptLine + offset;
         }
         if (new_point != old_point) {
           WritePoint(line_stream, new_point - old_point) << " Td\n";
           old_point = new_point;
         }
       }
-      CPVT_Word word;
-      if (vt_iterator->GetWord(word)) {
-        if (word.font_index() != current_font_index) {
+
+      if (has_word) {
+        int32_t font_index = word.font_index();
+        if (font_index != current_font_index) {
           if (!words.IsEmpty()) {
             line_stream << GetWordRenderString(words.AsStringView());
             words.clear();
           }
-          line_stream << GetFontSetString(font_map, word.font_index(),
+          line_stream << GetFontSetString(font_map, font_index,
                                           word.font_size());
-          current_font_index = word.font_index();
+          current_font_index = font_index;
         }
         words += GetPDFWordString(font_map, current_font_index, word.word(),
                                   sub_word);
       }
       oldplace = place;
     } else {
-      CPVT_Word word;
-      if (vt_iterator->GetWord(word)) {
-        new_point = CFX_PointF(word.location().x + offset.x,
-                               word.location().y + offset.y);
+      if (has_word) {
+        new_point = word.location() + offset;
         if (new_point != old_point) {
           WritePoint(edit_stream, new_point - old_point) << " Td\n";
           old_point = new_point;
         }
-        if (word.font_index() != current_font_index) {
-          edit_stream << GetFontSetString(font_map, word.font_index(),
+        int32_t font_index = word.font_index();
+        if (font_index != current_font_index) {
+          edit_stream << GetFontSetString(font_map, font_index,
                                           word.font_size());
-          current_font_index = word.font_index();
+          current_font_index = font_index;
         }
         edit_stream << GetWordRenderString(
             GetPDFWordString(font_map, current_font_index, word.word(),
