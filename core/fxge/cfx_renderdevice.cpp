@@ -1259,7 +1259,7 @@ bool CFX_RenderDevice::DrawNormalText(pdfium::span<const TextCharPos> pCharPos,
 
     CFX_Matrix matrix = charpos.GetEffectiveMatrix(char2device);
     glyph.glyph_ = font->LoadGlyphBitmap(
-        charpos.glyph_index_, charpos.font_style_, matrix,
+        charpos.glyph_index_, charpos.is_cid_font_, matrix,
         charpos.font_char_width_, anti_alias, &text_options);
   }
   if (!anti_alias_is_lcd && glyphs.size() > 1) {

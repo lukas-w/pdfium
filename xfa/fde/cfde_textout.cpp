@@ -82,7 +82,7 @@ bool CFDE_TextOut::DrawString(CFX_RenderDevice* device,
     RetainPtr<CFGAS_GEFont> pSTFont =
         pFont->GetSubstFont(static_cast<int32_t>(pos.glyph_index_));
     pos.glyph_index_ &= 0x00FFFFFF;
-    pos.font_style_ = false;
+    pos.is_cid_font_ = false;
     if (pCurFont != pSTFont) {
       if (pCurFont) {
         pFxFont = pCurFont->GetDevFont();

@@ -24,10 +24,10 @@ class CFX_DIBitmap;
 class CFX_Font;
 class CFX_GraphStateData;
 class PauseIndicatorIface;
-class TextCharPos;
 struct CFX_Color;
 struct CFX_FillRenderOptions;
 struct CFX_TextRenderOptions;
+struct TextCharPos;
 
 enum class BorderStyle { kSolid, kDash, kBeveled, kInset, kUnderline };
 

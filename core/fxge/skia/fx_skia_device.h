@@ -29,8 +29,8 @@ class SkCanvas;
 class SkPaint;
 class SkPath;
 class SkSurface;
-class TextCharPos;
 struct CFX_TextRenderOptions;
+struct TextCharPos;
 
 // Assumes Skia is not going to add non-data members to its fundamental types.
 FX_DATA_PARTITION_EXCEPTION(SkColor4f);

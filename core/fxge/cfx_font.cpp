@@ -413,14 +413,14 @@ std::unique_ptr<CFX_Path> CFX_Font::LoadGlyphPathImpl(uint32_t glyph_index,
 
 const CFX_GlyphBitmap* CFX_Font::LoadGlyphBitmap(
     uint32_t glyph_index,
-    bool bFontStyle,
+    bool is_cid_font,
     const CFX_Matrix& matrix,
     int dest_width,
     FontAntiAliasingMode anti_alias,
     CFX_TextRenderOptions* text_options) const {
-  return GetOrCreateGlyphCache()->LoadGlyphBitmap(this, glyph_index, bFontStyle,
-                                                  matrix, dest_width,
-                                                  anti_alias, text_options);
+  return GetOrCreateGlyphCache()->LoadGlyphBitmap(
+      this, glyph_index, is_cid_font, matrix, dest_width, anti_alias,
+      text_options);
 }
 
 const CFX_Path* CFX_Font::LoadGlyphPath(uint32_t glyph_index,

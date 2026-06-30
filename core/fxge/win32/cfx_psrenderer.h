@@ -30,8 +30,8 @@ class CFX_Font;
 class CFX_GlyphCache;
 class CFX_PSFontTracker;
 class CFX_Path;
-class TextCharPos;
 struct CFX_FillRenderOptions;
+struct TextCharPos;
 
 namespace fxge {
 struct FXDIB_ResampleOptions;

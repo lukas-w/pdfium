@@ -102,7 +102,7 @@ class CFX_Face final : public Retainable, public Observable {
   FX_RECT GetGlyphBBox() const;
   std::optional<FX_RECT> GetFontGlyphBBox(uint32_t glyph_index);
   std::unique_ptr<CFX_GlyphBitmap> RenderGlyph(uint32_t glyph_index,
-                                               bool font_style,
+                                               bool is_cid_font,
                                                bool is_vertical,
                                                const CFX_Matrix& matrix,
                                                int dest_width,

@@ -58,10 +58,11 @@ void EmptyTest(CFX_SkiaDeviceDriver* driver, const State&) {
 }
 
 void CommonTest(CFX_SkiaDeviceDriver* driver, const State& state) {
-  TextCharPos charPos[1];
-  charPos[0].origin_ = CFX_PointF(0, 1);
-  charPos[0].glyph_index_ = 0;
-  charPos[0].font_char_width_ = 4;
+  TextCharPos charPos = {
+      .origin_ = CFX_PointF(0, 1),
+      .glyph_index_ = 0,
+      .font_char_width_ = 4,
+  };
 
   CFX_Font font;
   font.LoadSubstFace("Courier", /*bTrueType=*/true, /*flags=*/0,
@@ -96,8 +97,8 @@ void CommonTest(CFX_SkiaDeviceDriver* driver, const State& state) {
     driver->DrawPath(path1, &matrix, &graphState, 0xFF112233, 0,
                      CFX_FillRenderOptions::WindingOptions());
   } else if (state.graphic_ == State::Graphic::kText) {
-    driver->DrawDeviceText(charPos, &font, matrix, fontSize, 0xFF445566,
-                           kTextOptions);
+    driver->DrawDeviceText(pdfium::span_from_ref(charPos), &font, matrix,
+                           fontSize, 0xFF445566, kTextOptions);
   }
   if (state.save_ == State::Save::kYes) {
     driver->RestoreState(true);
@@ -122,8 +123,8 @@ void CommonTest(CFX_SkiaDeviceDriver* driver, const State& state) {
     driver->DrawPath(path2, &matrix2, &graphState, 0xFF112233, 0,
                      CFX_FillRenderOptions::WindingOptions());
   } else if (state.graphic_ == State::Graphic::kText) {
-    driver->DrawDeviceText(charPos, &font, matrix2, fontSize, 0xFF445566,
-                           kTextOptions);
+    driver->DrawDeviceText(pdfium::span_from_ref(charPos), &font, matrix2,
+                           fontSize, 0xFF445566, kTextOptions);
   }
   if (state.save_ == State::Save::kYes) {
     driver->RestoreState(false);

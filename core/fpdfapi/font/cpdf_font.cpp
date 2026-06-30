@@ -401,7 +401,7 @@ std::vector<TextCharPos> CPDF_Font::GetCharPosList(
     results.emplace_back();
     TextCharPos& text_char_pos = results.back();
     if (cid_font) {
-      text_char_pos.font_style_ = true;
+      text_char_pos.is_cid_font_ = true;
     }
     WideString unicode = UnicodeFromCharCode(char_code);
     text_char_pos.unicode_ = !unicode.IsEmpty() ? unicode.Front() : char_code;

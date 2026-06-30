@@ -25,10 +25,10 @@ class CFX_Matrix;
 class CFX_Path;
 class CPDF_ShadingPattern;
 class PauseIndicatorIface;
-class TextCharPos;
 struct CFX_FillRenderOptions;
 struct CFX_TextRenderOptions;
 struct FX_RECT;
+struct TextCharPos;
 
 enum class DeviceType : bool {
   kDisplay,
