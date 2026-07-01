@@ -742,7 +742,7 @@ void GenerateAndSetAPDict(CPDF_Document* doc,
                           fxcrt::ostringstream* app_stream,
                           RetainPtr<CPDF_Dictionary> resource_dict,
                           bool is_text_markup_annotation) {
-  auto stream_dict = pdfium::MakeRetain<CPDF_Dictionary>();
+  auto stream_dict = doc->New<CPDF_Dictionary>();
   stream_dict->SetNewFor<CPDF_Number>("FormType", 1);
   stream_dict->SetNewFor<CPDF_Name>("Type", "XObject");
   stream_dict->SetNewFor<CPDF_Name>("Subtype", "Form");
@@ -1503,8 +1503,7 @@ void CPDF_GenerateAP::GenerateFormAP(CPDF_Document* doc,
     }
     resources_dict = stream_dict->GetMutableDictFor("Resources");
   } else {
-    normal_stream =
-        doc->NewIndirect<CPDF_Stream>(pdfium::MakeRetain<CPDF_Dictionary>());
+    normal_stream = doc->NewIndirect<CPDF_Stream>(doc->New<CPDF_Dictionary>());
     ap_dict->SetNewFor<CPDF_Reference>("N", doc, normal_stream->GetObjNum());
   }
 

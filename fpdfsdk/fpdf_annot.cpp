@@ -260,8 +260,7 @@ RetainPtr<CPDF_Dictionary> SetExtGStateInResourceDict(
     CPDF_Document* doc,
     const CPDF_Dictionary* pAnnotDict,
     const ByteString& sBlendMode) {
-  auto pGSDict =
-      pdfium::MakeRetain<CPDF_Dictionary>(pAnnotDict->GetByteStringPool());
+  auto pGSDict = doc->New<CPDF_Dictionary>();
 
   // ExtGState represents a graphics state parameter dictionary.
   pGSDict->SetNewFor<CPDF_Name>("Type", "ExtGState");
@@ -284,8 +283,7 @@ RetainPtr<CPDF_Dictionary> SetExtGStateInResourceDict(
   // BM represents Blend Mode
   pGSDict->SetNewFor<CPDF_Name>("BM", sBlendMode);
 
-  auto pExtGStateDict =
-      pdfium::MakeRetain<CPDF_Dictionary>(pAnnotDict->GetByteStringPool());
+  auto pExtGStateDict = doc->New<CPDF_Dictionary>();
 
   pExtGStateDict->SetFor("GS", pGSDict);
 
@@ -1222,7 +1220,7 @@ FPDFAnnot_SetAP(FPDF_ANNOTATION annot,
     return false;
   }
 
-  auto stream_dict = pdfium::MakeRetain<CPDF_Dictionary>();
+  auto stream_dict = doc->New<CPDF_Dictionary>();
   stream_dict->SetNewFor<CPDF_Name>(pdfium::annotation::kType, "XObject");
   stream_dict->SetNewFor<CPDF_Name>(pdfium::annotation::kSubtype, "Form");
   stream_dict->SetRectFor("BBox", rect);

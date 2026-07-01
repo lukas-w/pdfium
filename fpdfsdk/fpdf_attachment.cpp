@@ -238,7 +238,7 @@ FPDFAttachment_SetFile(FPDF_ATTACHMENT attachment,
   }
 
   // Create a dictionary for the new embedded file stream.
-  auto pFileStreamDict = pdfium::MakeRetain<CPDF_Dictionary>();
+  auto pFileStreamDict = doc->New<CPDF_Dictionary>();
   auto pParamsDict = pFileStreamDict->SetNewFor<CPDF_Dictionary>("Params");
 
   // Set the size of the new file in the dictionary.

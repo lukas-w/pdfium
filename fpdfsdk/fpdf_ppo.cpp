@@ -267,7 +267,7 @@ FPDF_CopyViewerPreferences(FPDF_DOCUMENT dest_doc, FPDF_DOCUMENT src_doc) {
     return false;
   }
 
-  auto cloned_dict = pdfium::MakeRetain<CPDF_Dictionary>();
+  auto cloned_dict = cdest_doc->New<CPDF_Dictionary>();
   CPDF_DictionaryLocker locker(pref_dict);
   for (const auto& it : locker) {
     if (IsValidViewerPreferencesObject(it.second)) {
