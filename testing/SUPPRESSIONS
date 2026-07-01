@@ -785,6 +785,7 @@ scrollable_widgets2.in * * * gdi
 static_list_box_caption.pdf * * * gdi
 static_password_field_rotate.pdf * * * gdi
 text_form_custom_font.in * * * gdi
+text_form_multiline.in * * * gdi
 xfa_bmp_image.in * * * gdi
 xfa_gif_image.in * * * gdi
 xfa_jpg_image.in * * * gdi
