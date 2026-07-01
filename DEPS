@@ -83,7 +83,7 @@ vars = {
   # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling abseil
   # and whatever else without interference from each other.
-  'abseil_revision': '5e42a36a85a252d8cdee6c39661d2bfd9883fd5c',
+  'abseil_revision': 'd8e483edd8b44da1845874ee84b42489589bb90f',
   # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling android_ndk
   # and whatever else without interference from each other.
