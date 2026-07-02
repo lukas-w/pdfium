@@ -61,9 +61,6 @@ config("pdfium_common_config") {
   }
 
   if (is_clang) {
-    # Override -Wno-c++11-narrowing.
-    cflags += [ "-Wc++11-narrowing" ]
-
     # May flag some issues when converting int to size_t.
     cflags += [ "-Wtautological-unsigned-zero-compare" ]
 
@@ -74,9 +71,6 @@ config("pdfium_common_config") {
 
   if (!is_win && !is_clang) {
     cflags += [
-      # Override -Wno-narrowing for GCC.
-      "-Wnarrowing",
-
       # GCC assumes that control can get past an exhaustive switch and then
       # warns if there's no return there.
       "-Wno-return-type",
