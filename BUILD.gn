@@ -66,6 +66,10 @@ config("pdfium_common_config") {
 
     # May flag some issues when converting int to size_t.
     cflags += [ "-Wtautological-unsigned-zero-compare" ]
+
+    # Enforce style guide decision regarding CTAD usage:
+    # https://google.github.io/styleguide/cppguide.html#CTAD
+    cflags += [ "-Wctad-maybe-unsupported" ]
   }
 
   if (!is_win && !is_clang) {
