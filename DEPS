@@ -119,7 +119,7 @@ vars = {
   # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling cpu_features
   # and whatever else without interference from each other.
-  'cpu_features_revision': 'd3b2440fcfc25fe8e6d0d4a85f06d68e98312f5b',
+  'cpu_features_revision': '81d13c49649f0714dd41fb56bb246398b6584085',
   # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling depot_tools
   # and whatever else without interference from each other.
