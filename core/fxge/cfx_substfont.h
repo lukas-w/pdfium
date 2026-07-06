@@ -53,7 +53,7 @@ class CFX_SubstFont {
   bool IsSymbolic() const { return charset_ == FX_Charset::kSymbol; }
   bool IsBold() const { return weight_ == pdfium::kFontWeightBold; }
 
-#if BUILDFLAG(IS_MAC)
+#if BUILDFLAG(IS_APPLE)
   bool IsMediumWeight() const { return weight_ >= 500 && weight_ <= 600; }
 #endif
 
