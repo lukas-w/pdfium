@@ -2482,3 +2482,28 @@ TEST_F(FPDFTextEmbedderTest, Bug491516663) {
   EXPECT_THAT(pdfium::span(buffer).first<kHelloWorldTextSize>(),
               ElementsAreArray(kHelloWorldText));
 }
+
+TEST_F(FPDFTextEmbedderTest, ActualTextRtl) {
+  ASSERT_TRUE(OpenDocument("actual_text_rtl.pdf"));
+  ScopedPage page = LoadScopedPage(0);
+  ASSERT_TRUE(page);
+
+  ScopedFPDFTextPage text_page(FPDFText_LoadPage(page.get()));
+  ASSERT_TRUE(text_page);
+
+  // TODO(crbug.com/525087036): `kExpectedText` is wrong. RTL text is backwards.
+  static constexpr auto kExpectedText = std::to_array<unsigned short>(
+      {'H', 'e', 'l', 'l', 'o', ' ', 'i', 's', ' ',
+       // םולש:
+       0x05dd, 0x05d5, 0x05dc, 0x05e9, '\r', '\n', 'W', 'a', 't', 'e', 'r', ' ',
+       'i', 's', ' ', 'w', 'a', 't', 'e', 'r', ' ',
+       // םים:
+       0x05dd, 0x05d9, 0x05de, '\0'});
+  static constexpr int kExpectedTextSize = std::size(kExpectedText);
+
+  unsigned short buffer[128] = {};
+  EXPECT_EQ(kExpectedTextSize,
+            FPDFText_GetText(text_page.get(), 0, std::size(buffer), buffer));
+  EXPECT_THAT(pdfium::span(buffer).first<kExpectedTextSize>(),
+              ElementsAreArray(kExpectedText));
+}
