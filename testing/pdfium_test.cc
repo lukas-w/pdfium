@@ -195,6 +195,9 @@ struct Options {
 #endif  // PDF_ENABLE_V8
   bool pages = false;
   bool md5 = false;
+#ifdef PDF_ENABLE_BROTLI
+  bool enable_brotli = false;
+#endif  // PDF_ENABLE_BROTLI
 #ifdef ENABLE_CALLGRIND
   bool callgrind_delimiters = false;
 #endif
@@ -590,6 +593,10 @@ bool ParseCommandLine(const std::vector<std::string>& args,
       options->disable_xfa = true;
 #endif  // PDF_ENABLE_XFA
 #endif  // PDF_ENABLE_V8
+#ifdef PDF_ENABLE_BROTLI
+    } else if (cur_arg == "--enable-brotli") {
+      options->enable_brotli = true;
+#endif  // PDF_ENABLE_BROTLI
 #ifdef ENABLE_CALLGRIND
     } else if (cur_arg == "--callgrind-delim") {
       options->callgrind_delimiters = true;
@@ -1909,6 +1916,10 @@ constexpr char kUsageString[] =
     "  --disable-xfa          - do not process XFA forms\n"
 #endif  // PDF_ENABLE_XFA
 #endif  // PDF_ENABLE_V8
+#ifdef PDF_ENABLE_BROTLI
+    "  --enable-brotli   - Enable support for the experimental PDF 2.0 "
+    "/BrotliDecode filter.\n"
+#endif  // PDF_ENABLE_BROTLI
 #ifdef ENABLE_CALLGRIND
     "  --callgrind-delim      - delimit interesting section when using "
     "callgrind\n"
@@ -1988,12 +1999,17 @@ int main(int argc, const char* argv[]) {
   }
 
   FPDF_LIBRARY_CONFIG config;
-  config.version = 5;
+  config.version = 6;
   config.m_pUserFontPaths = nullptr;
   config.m_pIsolate = nullptr;
   config.m_v8EmbedderSlot = 0;
   config.m_pPlatform = nullptr;
   config.m_FontLibraryType = FPDF_FONTBACKENDTYPE_FREETYPE;
+#ifdef PDF_ENABLE_BROTLI
+  config.m_BrotliEnabled = options.enable_brotli;
+#else
+  config.m_BrotliEnabled = false;
+#endif  // PDF_ENABLE_BROTLI
 
   switch (options.use_renderer_type) {
     case RendererType::kDefault:
