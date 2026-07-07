@@ -60,6 +60,10 @@
 #include "fxjs/ijs_runtime.h"
 #include "public/fpdf_formfill.h"
 
+#if defined(PDF_ENABLE_BROTLI)
+#include "core/fxcodec/brotli/brotli_decoder.h"
+#endif
+
 #ifdef PDF_ENABLE_V8
 #include "fxjs/cfx_v8_array_buffer_allocator.h"
 #endif
@@ -228,6 +232,11 @@ FPDF_InitLibraryWithConfig(const FPDF_LIBRARY_CONFIG* config) {
     CHECK_EQ(config->m_FontLibraryType, FPDF_FONTBACKENDTYPE_FREETYPE);
 #endif
   }
+#if defined(PDF_ENABLE_BROTLI)
+  if (config && config->version >= 6) {
+    BrotliDecoder::SetBrotliEnabled(config->m_BrotliEnabled);
+  }
+#endif
 
   CFX_GEModule::Create(config ? config->m_pUserFontPaths : nullptr,
                        renderer_type, backend);

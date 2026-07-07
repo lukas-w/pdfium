@@ -14,6 +14,8 @@ class BrotliDecoder {
  public:
   static DataAndBytesConsumed Decode(pdfium::span<const uint8_t> src_span,
                                      uint32_t estimated_decode_size);
+  static void SetBrotliEnabled(bool enabled);
+  static bool GetBrotliEnabled();
 };
 
 #endif  // CORE_FXCODEC_BROTLI_BROTLI_DECODER_H_
