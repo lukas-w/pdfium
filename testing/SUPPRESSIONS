@@ -547,6 +547,8 @@ form_combobox_product.pdf * * * gdi
 form_combobox_time.pdf * * * gdi
 form_radio.pdf * * * gdi
 form_same.pdf * * * gdi
+form_textfield_focused_ltr.in * * * gdi
+form_textfield_focused_rtl.in * * * gdi
 format_alert_box.pdf * * * gdi
 format_combo_box.pdf * * * gdi
 format_custom_format.pdf * * * gdi

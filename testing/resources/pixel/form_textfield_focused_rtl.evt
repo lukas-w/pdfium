@@ -1,0 +1,21 @@
+# This test explicitly tests the interactive UI rendering (CPWL_EditImpl).
+# Must leave the text field focused at the end of the test. No clicking
+# outside. If the field loses focus, it will fall back to generating a static
+# Appearance Stream.
+mousemove,100,50
+mousedown,left,100,50
+mouseup,left,100,50
+# Type Word 1 (Bet, Het, Resh)
+charcode,1489
+charcode,1495
+charcode,1512
+# Type ...
+charcode,46
+charcode,46
+charcode,46
+# Type Space
+charcode,32
+# Type Word 2 (Alef, Gimel, Tav)
+charcode,1488
+charcode,1490
+charcode,1514
