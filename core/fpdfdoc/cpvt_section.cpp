@@ -13,7 +13,8 @@
 #include "core/fpdfdoc/cpvt_variabletext.h"
 #include "core/fpdfdoc/cpvt_wordinfo.h"
 #include "core/fxcrt/check.h"
-#include "core/fxcrt/compiler_specific.h"
+#include "core/fxcrt/containers/adapters.h"
+#include "core/fxcrt/fx_bidi.h"
 #include "core/fxcrt/stl_util.h"
 
 namespace {
@@ -719,10 +720,39 @@ CPVT_FloatRect CPVT_Section::OutputLines(const CPVT_FloatRect& rect) const {
     line->line_info_.fLineY = fPosY - fMinY;
     pdfium::span<const std::unique_ptr<CPVT_WordInfo>> words = GetWordRangeSpan(
         line->line_info_.nBeginWordIndex, line->line_info_.nEndWordIndex + 1);
-    for (const std::unique_ptr<CPVT_WordInfo>& word : words) {
-      word->fWordX = fPosX - fMinX;
-      word->fWordY = fPosY - fMinY;
-      fPosX += vt_->GetWordWidth(*word);
+
+    WideString line_str;
+    line_str.Reserve(words.size());
+    for (const auto& word : words) {
+      line_str += word->Word;
+    }
+
+    CFX_BidiString bidi(line_str);
+    const bool is_overall_direction_right =
+        bidi.OverallDirection() == CFX_BidiChar::Direction::kRight;
+
+    auto position_word = [&](CPVT_WordInfo& word) {
+      word.fWordX = fPosX - fMinX;
+      word.fWordY = fPosY - fMinY;
+      fPosX += vt_->GetWordWidth(word);
+    };
+
+    for (const auto& segment : bidi) {
+      auto segment_words = words.subspan(segment.start, segment.count);
+      const bool is_rtl =
+          (segment.direction == CFX_BidiChar::Direction::kRight ||
+           (segment.direction == CFX_BidiChar::Direction::kNeutral &&
+            is_overall_direction_right));
+
+      if (is_rtl) {
+        for (const auto& word : pdfium::Reversed(segment_words)) {
+          position_word(*word);
+        }
+      } else {
+        for (const auto& word : segment_words) {
+          position_word(*word);
+        }
+      }
     }
     fPosY -= line->line_info_.fLineDescent;
   }

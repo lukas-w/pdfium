@@ -126,11 +126,8 @@ TEST_F(CPVT_VariableTextTest, RTLTextLayout) {
 
   EXPECT_FALSE(it->NextWord());
 
-  // TODO(crbug.com/40115028): This should be in RTL order. Currently, it falls
-  // back to LTR, so coordinates increase from left to right. Once RTL is
-  // supported, the first logical character should have the largest X
-  // coordinate, and this test case should use EXPECT_GT instead.
-  EXPECT_LT(first_x, second_x);
-  EXPECT_LT(second_x, third_x);
-  EXPECT_LT(third_x, fourth_x);
+  // The first logical character has the largest X coordinate.
+  EXPECT_GT(first_x, second_x);
+  EXPECT_GT(second_x, third_x);
+  EXPECT_GT(third_x, fourth_x);
 }
