@@ -24,6 +24,7 @@ struct CPVT_WordInfo {
   float fWordY;
   float fWordTail;
   int32_t nFontIndex;
+  bool is_rtl;
 };
 
 #endif  // CORE_FPDFDOC_CPVT_WORDINFO_H_

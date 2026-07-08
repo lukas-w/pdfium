@@ -16,7 +16,8 @@ CPVT_WordInfo::CPVT_WordInfo(uint16_t word,
       fWordX(0.0f),
       fWordY(0.0f),
       fWordTail(0.0f),
-      nFontIndex(fontIndex) {}
+      nFontIndex(fontIndex),
+      is_rtl(false) {}
 
 CPVT_WordInfo::CPVT_WordInfo(const CPVT_WordInfo& word) = default;
 

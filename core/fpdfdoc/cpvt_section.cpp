@@ -746,10 +746,12 @@ CPVT_FloatRect CPVT_Section::OutputLines(const CPVT_FloatRect& rect) const {
 
       if (is_rtl) {
         for (const auto& word : pdfium::Reversed(segment_words)) {
+          word->is_rtl = true;
           position_word(*word);
         }
       } else {
         for (const auto& word : segment_words) {
+          word->is_rtl = false;
           position_word(*word);
         }
       }
