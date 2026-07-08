@@ -678,7 +678,7 @@ void CPWL_Edit::GetCaretInfo(CFX_PointF* ptHead, CFX_PointF* ptFoot) const {
     ptFoot->x = ptHead->x;
     ptFoot->y = word.DescentY();
   } else if (pIterator->GetLine(line)) {
-    ptHead->x = line.ptLine.x;
+    ptHead->x = pIterator->GetLineCaretX(line);
     ptHead->y = line.ptLine.y + line.fLineAscent;
     ptFoot->x = ptHead->x;
     ptFoot->y = line.ptLine.y + line.fLineDescent;

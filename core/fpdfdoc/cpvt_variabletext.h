@@ -41,6 +41,7 @@ class CPVT_VariableText {
     void SetAt(int32_t nWordIndex);
     void SetAt(const CPVT_WordPlace& place);
     const CPVT_WordPlace& GetWordPlace() const { return cur_pos_; }
+    float GetLineCaretX(const CPVT_Line& line);
 
    private:
     CPVT_WordPlace cur_pos_;

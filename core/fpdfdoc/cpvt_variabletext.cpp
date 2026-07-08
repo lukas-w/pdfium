@@ -99,6 +99,10 @@ void CPVT_VariableText::Iterator::SetAt(const CPVT_WordPlace& place) {
   cur_pos_ = place;
 }
 
+float CPVT_VariableText::Iterator::GetLineCaretX(const CPVT_Line& line) {
+  return line.ptLine.x;
+}
+
 bool CPVT_VariableText::Iterator::NextWord() {
   if (cur_pos_ == vt_->GetEndWordPlace()) {
     return false;
