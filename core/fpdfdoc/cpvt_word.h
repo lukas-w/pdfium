@@ -39,7 +39,7 @@ class CPVT_Word {
   float ascent() const { return ascent_; }
   float descent() const { return descent_; }
 
-  float CaretX() const { return location_.x + width_; }
+  float CaretX() const { return is_rtl_ ? location_.x : location_.x + width_; }
   float AscentY() const { return location_.y + ascent_; }
   float DescentY() const { return location_.y + descent_; }
 

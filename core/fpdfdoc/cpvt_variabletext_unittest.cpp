@@ -112,29 +112,25 @@ TEST_F(CPVT_VariableTextTest, RTLTextLayout) {
   CPVT_Word word;
   ASSERT_TRUE(it->GetWord(word));
   EXPECT_EQ(0x05E9, word.word());
-  // TODO(crbug.com/40115028): Broken RTL CaretX. Should be 0.3f once fixed.
-  EXPECT_FLOAT_EQ(0.4f, word.CaretX());
+  EXPECT_FLOAT_EQ(0.3f, word.CaretX());
   float first_x = word.location().x;
 
   ASSERT_TRUE(it->NextWord());
   ASSERT_TRUE(it->GetWord(word));
   EXPECT_EQ(0x05DC, word.word());
-  // TODO(crbug.com/40115028): Broken RTL CaretX. Should be 0.2f once fixed.
-  EXPECT_FLOAT_EQ(0.3f, word.CaretX());
+  EXPECT_FLOAT_EQ(0.2f, word.CaretX());
   float second_x = word.location().x;
 
   ASSERT_TRUE(it->NextWord());
   ASSERT_TRUE(it->GetWord(word));
   EXPECT_EQ(0x05D5, word.word());
-  // TODO(crbug.com/40115028): Broken RTL CaretX. Should be 0.1f once fixed.
-  EXPECT_FLOAT_EQ(0.2f, word.CaretX());
+  EXPECT_FLOAT_EQ(0.1f, word.CaretX());
   float third_x = word.location().x;
 
   ASSERT_TRUE(it->NextWord());
   ASSERT_TRUE(it->GetWord(word));
   EXPECT_EQ(0x05DD, word.word());
-  // TODO(crbug.com/40115028): Broken RTL CaretX. Should be 0.0f once fixed.
-  EXPECT_FLOAT_EQ(0.1f, word.CaretX());
+  EXPECT_FLOAT_EQ(0.0f, word.CaretX());
   float fourth_x = word.location().x;
 
   EXPECT_FALSE(it->NextWord());
@@ -154,32 +150,30 @@ TEST_F(CPVT_VariableTextTest, GetLineCaretX) {
   vt.Initialize();
 
   CPVT_VariableText::Iterator* it = vt.GetIterator();
+  const CPVT_WordPlace kFirstWordPlace(0, 0, -1);
 
   // Test 1: Empty text
   vt.SetText(L"");
   vt.RearrangeAll();
   CPVT_Line line;
-  it->SetAt(CPVT_WordPlace(0, 0, -1));
+  it->SetAt(kFirstWordPlace);
   ASSERT_TRUE(it->GetLine(line));
   EXPECT_FLOAT_EQ(0.0f, it->GetLineCaretX(line));
+  EXPECT_EQ(kFirstWordPlace, it->GetWordPlace());
 
   // Test 2: LTR text (Helvetica font, starts with left caret)
   vt.SetText(L"hello");
   vt.RearrangeAll();
-  it->SetAt(CPVT_WordPlace(0, 0, -1));
+  it->SetAt(kFirstWordPlace);
   ASSERT_TRUE(it->GetLine(line));
   EXPECT_FLOAT_EQ(0.0f, it->GetLineCaretX(line));
+  EXPECT_EQ(kFirstWordPlace, it->GetWordPlace());
 
   // Test 3: RTL text (starts with right caret)
-  // TODO(crbug.com/40115028): For RTL text, the caret should start on the right
-  // side of the line. GetLineCaretX() is currently broken and just returns the
-  // left side of the line (line.ptLine.x), assert that broken behavior here.
-  // Once GetLineCaretX() is fixed to properly offset RTL text, this test
-  // assertion should be updated to expect the mathematically correct right-side
-  // coordinate (0.4f).
   vt.SetText(L"\x05E9\x05DC\x05D5\x05DD");
   vt.RearrangeAll();
-  it->SetAt(CPVT_WordPlace(0, 0, -1));
+  it->SetAt(kFirstWordPlace);
   ASSERT_TRUE(it->GetLine(line));
-  EXPECT_FLOAT_EQ(0.0f, it->GetLineCaretX(line));
+  EXPECT_FLOAT_EQ(0.4f, it->GetLineCaretX(line));
+  EXPECT_EQ(kFirstWordPlace, it->GetWordPlace());
 }
