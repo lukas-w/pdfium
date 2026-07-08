@@ -13,7 +13,8 @@ CPVT_Word::CPVT_Word(uint16_t word,
                      float descent,
                      float width,
                      int32_t font_index,
-                     float font_size)
+                     float font_size,
+                     bool is_rtl)
     : word_(word),
       charset_(charset),
       location_(location),
@@ -21,7 +22,8 @@ CPVT_Word::CPVT_Word(uint16_t word,
       descent_(descent),
       width_(width),
       font_index_(font_index),
-      font_size_(font_size) {}
+      font_size_(font_size),
+      is_rtl_(is_rtl) {}
 
 CPVT_Word::CPVT_Word(const CPVT_Word&) = default;
 CPVT_Word& CPVT_Word::operator=(const CPVT_Word&) = default;

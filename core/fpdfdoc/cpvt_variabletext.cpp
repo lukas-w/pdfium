@@ -146,7 +146,8 @@ bool CPVT_VariableText::Iterator::GetWord(CPVT_Word& word) const {
       vt_->InToOut(CFX_PointF(pInfo->fWordX + pSection->GetRect().left,
                               pInfo->fWordY + pSection->GetRect().top)),
       vt_->GetWordAscent(*pInfo), vt_->GetWordDescent(*pInfo),
-      vt_->GetWordWidth(*pInfo), pInfo->nFontIndex, vt_->GetFontSize());
+      vt_->GetWordWidth(*pInfo), pInfo->nFontIndex, vt_->GetFontSize(),
+      pInfo->is_rtl);
   return true;
 }
 
