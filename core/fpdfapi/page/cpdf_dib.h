@@ -95,8 +95,7 @@ class CPDF_DIB final : public CFX_DIBBase {
   void LoadPalette();
   LoadState CreateDecoder(uint8_t resolution_levels_to_skip);
   bool CreateDCTDecoder(pdfium::span<const uint8_t> src_span,
-                        const CPDF_Dictionary* pParams,
-                        uint8_t resolution_levels_to_skip);
+                        const CPDF_Dictionary* pParams);
   void TranslateScanline24bpp(pdfium::span<uint8_t> dest_scan,
                               pdfium::span<const uint8_t> src_scan) const;
   bool TranslateScanline24bppDefaultDecode(
