@@ -157,6 +157,50 @@ TEST(ScanlineCompositorTest, CompositeRgbBitmapLineBgraNormal) {
   RunTest(compositor, kSrcScan3, kExpectations3);
 }
 
+TEST(ScanlineCompositorTest, CompositeRgbBitmapLineBgraScreen) {
+  CFX_ScanlineCompositor compositor;
+  ASSERT_TRUE(compositor.Init(/*dest_format=*/FXDIB_Format::kBgra,
+                              /*src_format=*/FXDIB_Format::kBgra,
+                              /*src_palette=*/{},
+                              /*mask_color=*/0,
+                              /*blend_type=*/BlendMode::kScreen,
+                              /*bRgbByteOrder=*/false));
+
+  static constexpr FX_BGRA_STRUCT<uint8_t> kExpectations1[] = {
+      {.blue = 255, .green = 100, .red = 0, .alpha = 0},
+      {.blue = 255, .green = 100, .red = 0, .alpha = 255},
+      {.blue = 255, .green = 100, .red = 0, .alpha = 255},
+      {.blue = 255, .green = 161, .red = 0, .alpha = 255},
+      {.blue = 255, .green = 114, .red = 0, .alpha = 161},
+      {.blue = 255, .green = 120, .red = 0, .alpha = 222},
+      {.blue = 255, .green = 121, .red = 0, .alpha = 222},
+      {.blue = 255, .green = 138, .red = 0, .alpha = 244},
+  };
+  RunTest(compositor, kSrcScan1, kExpectations1);
+  static constexpr FX_BGRA_STRUCT<uint8_t> kExpectations2[] = {
+      {.blue = 100, .green = 0, .red = 255, .alpha = 0},
+      {.blue = 100, .green = 0, .red = 255, .alpha = 255},
+      {.blue = 255, .green = 100, .red = 0, .alpha = 255},
+      {.blue = 255, .green = 100, .red = 255, .alpha = 255},
+      {.blue = 196, .green = 62, .red = 158, .alpha = 161},
+      {.blue = 169, .green = 45, .red = 229, .alpha = 222},
+      {.blue = 239, .green = 90, .red = 114, .alpha = 222},
+      {.blue = 227, .green = 81, .red = 209, .alpha = 244},
+  };
+  RunTest(compositor, kSrcScan2, kExpectations2);
+  static constexpr FX_BGRA_STRUCT<uint8_t> kExpectations3[] = {
+      {.blue = 0, .green = 255, .red = 100, .alpha = 0},
+      {.blue = 0, .green = 255, .red = 100, .alpha = 255},
+      {.blue = 255, .green = 100, .red = 0, .alpha = 255},
+      {.blue = 255, .green = 255, .red = 100, .alpha = 255},
+      {.blue = 158, .green = 196, .red = 61, .alpha = 161},
+      {.blue = 115, .green = 239, .red = 89, .alpha = 222},
+      {.blue = 230, .green = 169, .red = 44, .alpha = 222},
+      {.blue = 209, .green = 227, .red = 81, .alpha = 244},
+  };
+  RunTest(compositor, kSrcScan3, kExpectations3);
+}
+
 TEST(ScanlineCompositorTest, CompositeRgbBitmapLineBgraDarken) {
   CFX_ScanlineCompositor compositor;
   ASSERT_TRUE(compositor.Init(/*dest_format=*/FXDIB_Format::kBgra,
@@ -289,6 +333,56 @@ TEST(ScanlineCompositorTest, CompositeRgbBitmapLineBgraPremulNormal) {
   };
   RunPreMultiplyTest(compositor, kSrcScan3, kExpectations3);
 }
+
+#if !defined(NDEBUG)
+// TODO(crbug.com/514846121): Should pass in release mode as well.
+TEST(ScanlineCompositorTest, CompositeRgbBitmapLineBgraPremulScreen) {
+  CFX_ScanlineCompositor compositor;
+  ASSERT_TRUE(compositor.Init(/*dest_format=*/FXDIB_Format::kBgraPremul,
+                              /*src_format=*/FXDIB_Format::kBgraPremul,
+                              /*src_palette=*/{},
+                              /*mask_color=*/0,
+                              /*blend_type=*/BlendMode::kScreen,
+                              /*bRgbByteOrder=*/false));
+
+  // TODO(crbug.com/514846121): Blue and green values are wrong.
+  static constexpr FX_BGRA_STRUCT<uint8_t> kExpectations1[] = {
+      {.blue = 0, .green = 0, .red = 0, .alpha = 0},
+      {.blue = 255, .green = 100, .red = 0, .alpha = 255},
+      {.blue = 255, .green = 100, .red = 0, .alpha = 255},
+      {.blue = 255, .green = 161, .red = 0, .alpha = 255},
+      {.blue = 51, .green = 121, .red = 0, .alpha = 161},
+      {.blue = 22, .green = 128, .red = 0, .alpha = 222},
+      {.blue = 22, .green = 128, .red = 0, .alpha = 222},
+      {.blue = 49, .green = 147, .red = 0, .alpha = 244},
+  };
+  RunPreMultiplyTest(compositor, kSrcScan1, kExpectations1);
+  // TODO(crbug.com/514846121): Some blue values are wrong.
+  static constexpr FX_BGRA_STRUCT<uint8_t> kExpectations2[] = {
+      {.blue = 0, .green = 0, .red = 0, .alpha = 0},
+      {.blue = 100, .green = 0, .red = 255, .alpha = 255},
+      {.blue = 255, .green = 100, .red = 0, .alpha = 255},
+      {.blue = 255, .green = 100, .red = 255, .alpha = 255},
+      {.blue = 215, .green = 60, .red = 156, .alpha = 161},
+      {.blue = 191, .green = 43, .red = 228, .alpha = 222},
+      {.blue = 5, .green = 88, .red = 113, .alpha = 222},
+      {.blue = 249, .green = 80, .red = 207, .alpha = 244},
+  };
+  RunPreMultiplyTest(compositor, kSrcScan2, kExpectations2);
+  // TODO(crbug.com/514846121): Some green values are wrong.
+  static constexpr FX_BGRA_STRUCT<uint8_t> kExpectations3[] = {
+      {.blue = 0, .green = 0, .red = 0, .alpha = 0},
+      {.blue = 0, .green = 255, .red = 100, .alpha = 255},
+      {.blue = 255, .green = 100, .red = 0, .alpha = 255},
+      {.blue = 255, .green = 255, .red = 100, .alpha = 255},
+      {.blue = 156, .green = 215, .red = 60, .alpha = 161},
+      {.blue = 113, .green = 5, .red = 88, .alpha = 222},
+      {.blue = 228, .green = 191, .red = 43, .alpha = 222},
+      {.blue = 207, .green = 249, .red = 80, .alpha = 244},
+  };
+  RunPreMultiplyTest(compositor, kSrcScan3, kExpectations3);
+}
+#endif
 
 TEST(ScanlineCompositorTest, CompositeRgbBitmapLineBgraPremulDarken) {
   CFX_ScanlineCompositor compositor;
