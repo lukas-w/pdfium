@@ -246,43 +246,6 @@ SkMatrix ToFlippedSkMatrix(const CFX_Matrix& m, float flip) {
   return skMatrix;
 }
 
-SkBlendMode GetSkiaBlendMode(BlendMode blend_type) {
-  switch (blend_type) {
-    case BlendMode::kMultiply:
-      return SkBlendMode::kMultiply;
-    case BlendMode::kScreen:
-      return SkBlendMode::kScreen;
-    case BlendMode::kOverlay:
-      return SkBlendMode::kOverlay;
-    case BlendMode::kDarken:
-      return SkBlendMode::kDarken;
-    case BlendMode::kLighten:
-      return SkBlendMode::kLighten;
-    case BlendMode::kColorDodge:
-      return SkBlendMode::kColorDodge;
-    case BlendMode::kColorBurn:
-      return SkBlendMode::kColorBurn;
-    case BlendMode::kHardLight:
-      return SkBlendMode::kHardLight;
-    case BlendMode::kSoftLight:
-      return SkBlendMode::kSoftLight;
-    case BlendMode::kDifference:
-      return SkBlendMode::kDifference;
-    case BlendMode::kExclusion:
-      return SkBlendMode::kExclusion;
-    case BlendMode::kHue:
-      return SkBlendMode::kHue;
-    case BlendMode::kSaturation:
-      return SkBlendMode::kSaturation;
-    case BlendMode::kColor:
-      return SkBlendMode::kColor;
-    case BlendMode::kLuminosity:
-      return SkBlendMode::kLuminosity;
-    case BlendMode::kNormal:
-      return SkBlendMode::kSrcOver;
-  }
-}
-
 SkColor4f MakeColor4f(float r, float g, float b) {
   r = std::clamp(r, 0.0f, 1.0f);
   g = std::clamp(g, 0.0f, 1.0f);
