@@ -261,12 +261,6 @@ CPDFSDK_InteractiveForm* FormHandleToInteractiveForm(FPDF_FORMHANDLE hHandle) {
   return pFormFillEnv ? pFormFillEnv->GetInteractiveForm() : nullptr;
 }
 
-ByteString ByteStringFromFPDFWideString(FPDF_WIDESTRING wide_string) {
-  // SAFETY: caller ensures `wide_string` is NUL-terminated and enforced
-  // by UNSAFE_BUFFER_USAGE in header file.
-  return UNSAFE_BUFFERS(WideStringFromFPDFWideString(wide_string).ToUTF8());
-}
-
 WideString WideStringFromFPDFWideString(FPDF_WIDESTRING wide_string) {
   // SAFETY: caller ensures `wide_string` is NUL-terminated and enforced
   // by UNSAFE_BUFFER_USAGE in header file.

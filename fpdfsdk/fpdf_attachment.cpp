@@ -169,14 +169,15 @@ FPDFAttachment_SetStringValue(FPDF_ATTACHMENT attachment,
   }
 
   // SAFETY: required from caller.
-  ByteString bsValue = UNSAFE_BUFFERS(ByteStringFromFPDFWideString(value));
-  ByteString bsKey = key;
-  if (bsKey == kChecksumKey) {
-    pParamsDict->SetNewFor<CPDF_String>(bsKey,
-                                        HexDecode(bsValue.unsigned_span()).data,
-                                        CPDF_String::DataType::kIsHex);
+  WideString value_string = UNSAFE_BUFFERS(WideStringFromFPDFWideString(value));
+  ByteString key_string = key;
+  if (key_string == kChecksumKey) {
+    pParamsDict->SetNewFor<CPDF_String>(
+        key_string, HexDecode(value_string.ToUTF8().unsigned_span()).data,
+        CPDF_String::DataType::kIsHex);
   } else {
-    pParamsDict->SetNewFor<CPDF_String>(bsKey, bsValue);
+    pParamsDict->SetNewFor<CPDF_String>(key_string,
+                                        value_string.AsStringView());
   }
   return true;
 }
