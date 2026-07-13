@@ -339,6 +339,39 @@ TEST_F(FPDFAttachmentEmbedderTest, AddAttachmentsToFileWithNoAttachments) {
   EXPECT_EQ(std::string(kContents2), std::string(content_buf.data(), 6));
 }
 
+TEST_F(FPDFAttachmentEmbedderTest, AddAttachmentWIthNonAsciiStringValue) {
+  ASSERT_TRUE(OpenDocument("hello_world.pdf"));
+  ScopedPage page = LoadScopedPage(0);
+  ASSERT_TRUE(page);
+
+  // Add a new attachment to the document.
+  ScopedFPDFWideString file_name = GetFPDFWideString(L"attachment.txt");
+  FPDF_ATTACHMENT attachment =
+      FPDFDoc_AddAttachment(document(), file_name.get());
+  ASSERT_TRUE(attachment);
+
+  static constexpr char kContents[] = "Test Contents";
+  EXPECT_TRUE(FPDFAttachment_SetFile(attachment, document(), kContents,
+                                     strlen(kContents)));
+
+  // Then add a non-ASCII string.
+  static constexpr wchar_t kData[] = L"\xf6\xe4";
+  static constexpr char kTestKey[] = "test";
+  ScopedFPDFWideString text = GetFPDFWideString(kData);
+  EXPECT_TRUE(FPDFAttachment_SetStringValue(attachment, kTestKey, text.get()));
+
+  // Read back the string value. It should be `kData`.
+  static constexpr size_t kBufSize = 10;
+  std::vector<FPDF_WCHAR> buf = GetFPDFWideStringBuffer(kBufSize);
+  unsigned long length_bytes =
+      FPDFAttachment_GetStringValue(attachment, kTestKey, buf.data(), kBufSize);
+
+  // TODO(thestig): Behavior is wrong. should be 6 and the data should be
+  // `kData`.
+  EXPECT_EQ(kBufSize, length_bytes);
+  EXPECT_EQ(L"\xC3\xB6\xC3\xA4", GetPlatformWString(buf.data()));
+}
+
 TEST_F(FPDFAttachmentEmbedderTest, DeleteAttachment) {
   // Open a file with two attachments.
   ASSERT_TRUE(OpenDocument("embedded_attachments.pdf"));
