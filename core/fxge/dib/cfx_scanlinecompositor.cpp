@@ -198,21 +198,17 @@ void CompositeRowBgra2Mask(pdfium::span<const FX_BGRA_STRUCT<uint8_t>> src_span,
 }
 
 void CompositeRow_Rgb2Mask(pdfium::span<uint8_t> dest_span,
-                           int width,
+                           size_t width,
                            pdfium::span<const uint8_t> clip_span) {
+  auto dest_sub = dest_span.first(width);
   if (clip_span.empty()) {
-    std::ranges::fill(dest_span.first(static_cast<size_t>(width)), 0xff);
+    std::ranges::fill(dest_sub, 0xff);
     return;
   }
-  uint8_t* dest_scan = dest_span.data();
-  const uint8_t* clip_scan = clip_span.data();
-  UNSAFE_TODO({
-    for (int i = 0; i < width; ++i) {
-      *dest_scan = AlphaUnion(*dest_scan, *clip_scan);
-      ++dest_scan;
-      ++clip_scan;
-    }
-  });
+  auto clip_sub = clip_span.first(width);
+  for (auto [clip, output] : fxcrt::Zip(clip_sub, dest_sub)) {
+    output = AlphaUnion(output, clip);
+  }
 }
 
 bool IsNonSeparableBlendMode(BlendMode mode) {
@@ -2063,7 +2059,7 @@ void CFX_ScanlineCompositor::CompositeRgbBitmapLineSrcBgrx(
     }
     case FXDIB_Format::k8bppMask: {
       CHECK(!rgb_byte_order_);  // Disallowed by Init();
-      CompositeRow_Rgb2Mask(dest_scan, width, clip_scan);
+      CompositeRow_Rgb2Mask(dest_scan, static_cast<size_t>(width), clip_scan);
       return;
     }
     case FXDIB_Format::kBgr:
@@ -2317,6 +2313,7 @@ void CFX_ScanlineCompositor::CompositePalBitmapLineSrcBpp1(
     int width,
     pdfium::span<const uint8_t> clip_scan) const {
   CHECK_EQ(src_format_, FXDIB_Format::k1bppRgb);
+  CHECK_GE(width, 0);
 
   switch (dest_format_) {
     case FXDIB_Format::kInvalid:
@@ -2333,7 +2330,7 @@ void CFX_ScanlineCompositor::CompositePalBitmapLineSrcBpp1(
     }
     case FXDIB_Format::k8bppMask: {
       CHECK(!rgb_byte_order_);  // Disallowed by Init();
-      CompositeRow_Rgb2Mask(dest_scan, width, clip_scan);
+      CompositeRow_Rgb2Mask(dest_scan, static_cast<size_t>(width), clip_scan);
       return;
     }
     case FXDIB_Format::kBgr:
@@ -2378,6 +2375,7 @@ void CFX_ScanlineCompositor::CompositePalBitmapLineSrcBpp8(
     int width,
     pdfium::span<const uint8_t> clip_scan) const {
   CHECK_EQ(src_format_, FXDIB_Format::k8bppRgb);
+  CHECK_GE(width, 0);
 
   switch (dest_format_) {
     case FXDIB_Format::kInvalid:
@@ -2394,7 +2392,7 @@ void CFX_ScanlineCompositor::CompositePalBitmapLineSrcBpp8(
     }
     case FXDIB_Format::k8bppMask: {
       CHECK(!rgb_byte_order_);  // Disallowed by Init();
-      CompositeRow_Rgb2Mask(dest_scan, width, clip_scan);
+      CompositeRow_Rgb2Mask(dest_scan, static_cast<size_t>(width), clip_scan);
       return;
     }
     case FXDIB_Format::kBgr:
