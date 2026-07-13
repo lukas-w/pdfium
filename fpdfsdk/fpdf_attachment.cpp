@@ -222,6 +222,55 @@ FPDFAttachment_GetStringValue(FPDF_ATTACHMENT attachment,
 }
 
 FPDF_EXPORT FPDF_BOOL FPDF_CALLCONV
+FPDFAttachment_SetDescription(FPDF_ATTACHMENT attachment,
+                              FPDF_WIDESTRING value) {
+  CPDF_Object* file = CPDFObjectFromFPDFAttachment(attachment);
+  if (!file) {
+    return false;
+  }
+
+  CPDF_FileSpec spec(pdfium::WrapRetain(file));
+  RetainPtr<CPDF_Dictionary> file_spec_dict = spec.GetMutableFileSpecDict();
+  if (!file_spec_dict) {
+    return false;
+  }
+
+  // SAFETY: required from caller.
+  WideString wide_string_value =
+      UNSAFE_BUFFERS(WideStringFromFPDFWideString(value));
+  file_spec_dict->SetNewFor<CPDF_String>("Desc",
+                                         wide_string_value.AsStringView());
+  return true;
+}
+
+FPDF_EXPORT unsigned long FPDF_CALLCONV
+FPDFAttachment_GetDescription(FPDF_ATTACHMENT attachment,
+                              FPDF_WCHAR* buffer,
+                              unsigned long buflen) {
+  CPDF_Object* file = CPDFObjectFromFPDFAttachment(attachment);
+  if (!file) {
+    return 0;
+  }
+
+  CPDF_FileSpec spec(pdfium::WrapRetain(file));
+  RetainPtr<const CPDF_Dictionary> file_spec_dict = spec.GetFileSpecDict();
+  if (!file_spec_dict) {
+    return 0;
+  }
+
+  // SAFETY: required from caller.
+  auto buffer_span = UNSAFE_BUFFERS(SpanFromFPDFApiArgs(buffer, buflen));
+
+  RetainPtr<const CPDF_Object> object = file_spec_dict->GetObjectFor("Desc");
+  if (!object || !object->IsString()) {
+    // Per API description, return an empty string in these cases.
+    return Utf16EncodeMaybeCopyAndReturnLength(WideString(), buffer_span);
+  }
+  return Utf16EncodeMaybeCopyAndReturnLength(object->GetUnicodeText(),
+                                             buffer_span);
+}
+
+FPDF_EXPORT FPDF_BOOL FPDF_CALLCONV
 FPDFAttachment_SetFile(FPDF_ATTACHMENT attachment,
                        FPDF_DOCUMENT document,
                        const void* contents,

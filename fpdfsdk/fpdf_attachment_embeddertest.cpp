@@ -439,3 +439,59 @@ TEST_F(FPDFAttachmentEmbedderTest, GetSubtypeInvalid) {
   EXPECT_EQ(2u * (strlen(kExpectedSubtype) + 1),
             FPDFAttachment_GetSubtype(attachment, nullptr, 10));
 }
+
+TEST_F(FPDFAttachmentEmbedderTest, ReadAttachmentDescription) {
+  ASSERT_TRUE(OpenDocument("embedded_attachments_with_desc.pdf"));
+
+  FPDF_ATTACHMENT valid_attachment = FPDFDoc_GetAttachment(document(), 0);
+  FPDF_ATTACHMENT desc_absent = FPDFDoc_GetAttachment(document(), 1);
+  FPDF_ATTACHMENT numeric_desc = FPDFDoc_GetAttachment(document(), 2);
+  FPDF_ATTACHMENT empty_desc = FPDFDoc_GetAttachment(document(), 3);
+  ASSERT_TRUE(valid_attachment);
+  ASSERT_TRUE(desc_absent);
+  ASSERT_TRUE(empty_desc);
+  ASSERT_TRUE(numeric_desc);
+
+  std::vector<FPDF_WCHAR> buf(128);
+  constexpr char kExpectedValue[] = "Hello, World!";
+
+  // Buf is not filled if it is too small, but the needed buf size is returned.
+  EXPECT_EQ(2u * std::size(kExpectedValue),
+            FPDFAttachment_GetDescription(valid_attachment, buf.data(), 3));
+  EXPECT_EQ("", GetPlatformString(buf.data()));
+
+  EXPECT_EQ(
+      2u * std::size(kExpectedValue),
+      FPDFAttachment_GetDescription(valid_attachment, buf.data(), buf.size()));
+  EXPECT_EQ(kExpectedValue, GetPlatformString(buf.data()));
+
+  EXPECT_EQ(2u,
+            FPDFAttachment_GetDescription(desc_absent, buf.data(), buf.size()));
+  EXPECT_EQ("", GetPlatformString(buf.data()));
+
+  EXPECT_EQ(
+      2u, FPDFAttachment_GetDescription(numeric_desc, buf.data(), buf.size()));
+  EXPECT_EQ("", GetPlatformString(buf.data()));
+
+  EXPECT_EQ(2u,
+            FPDFAttachment_GetDescription(empty_desc, buf.data(), buf.size()));
+  EXPECT_EQ("", GetPlatformString(buf.data()));
+}
+
+TEST_F(FPDFAttachmentEmbedderTest, WriteAttachmentDescription) {
+  ASSERT_TRUE(OpenDocument("embedded_attachments_with_desc.pdf"));
+
+  FPDF_ATTACHMENT attachment = FPDFDoc_GetAttachment(document(), 0);
+  ASSERT_TRUE(attachment);
+
+  std::vector<FPDF_WCHAR> buf(128);
+  static constexpr wchar_t kTestValue[] = L"\xFCber";
+  static constexpr size_t kTestLength = 6u;
+  ScopedFPDFWideString test_value = GetFPDFWideString(kTestValue);
+
+  EXPECT_TRUE(FPDFAttachment_SetDescription(attachment, test_value.get()));
+
+  EXPECT_EQ(kTestLength,
+            FPDFAttachment_GetDescription(attachment, buf.data(), buf.size()));
+  EXPECT_EQ(kTestValue, GetPlatformWString(buf.data()));
+}
