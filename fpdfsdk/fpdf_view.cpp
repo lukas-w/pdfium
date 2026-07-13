@@ -238,8 +238,19 @@ FPDF_InitLibraryWithConfig(const FPDF_LIBRARY_CONFIG* config) {
   }
 #endif
 
-  CFX_GEModule::Create(config ? config->m_pUserFontPaths : nullptr,
-                       renderer_type, backend);
+  std::optional<pdfium::span<const char* const>> user_font_paths_opt;
+  if (config && config->m_pUserFontPaths) {
+    size_t count = 0;
+    // SAFETY: `m_pUserFontPaths` is a null-pointer-terminated array per
+    // public API contract.
+    UNSAFE_BUFFERS({
+      while (config->m_pUserFontPaths[count]) {
+        ++count;
+      }
+      user_font_paths_opt = pdfium::span(config->m_pUserFontPaths, count);
+    });
+  }
+  CFX_GEModule::Create(user_font_paths_opt, renderer_type, backend);
 
   fxcodec::RegisterEncoders();
   pdfium::InitializePageModule();

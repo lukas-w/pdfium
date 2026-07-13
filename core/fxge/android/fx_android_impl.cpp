@@ -7,7 +7,6 @@
 #include <memory>
 #include <utility>
 
-#include "core/fxcrt/compiler_specific.h"
 #include "core/fxge/android/cfx_androidfontinfo.h"
 #include "core/fxge/cfx_fontmgr.h"
 #include "core/fxge/cfx_gemodule.h"
@@ -22,9 +21,7 @@ class CAndroidPlatform : public CFX_GEModule::PlatformIface {
 
   std::unique_ptr<SystemFontInfoIface> CreateDefaultSystemFontInfo() override {
     auto font_info = std::make_unique<CFX_AndroidFontInfo>();
-    // SAFETY: GetUserFontPaths() must return a null-terminated array of
-    // NUL-terminated strings.
-    UNSAFE_BUFFERS(font_info->Init(CFX_GEModule::Get()->GetUserFontPaths()));
+    font_info->Init(CFX_GEModule::Get()->GetUserFontPaths());
     return font_info;
   }
 };

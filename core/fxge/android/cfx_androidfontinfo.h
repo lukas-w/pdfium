@@ -7,7 +7,9 @@
 #ifndef CORE_FXGE_ANDROID_CFX_ANDROIDFONTINFO_H_
 #define CORE_FXGE_ANDROID_CFX_ANDROIDFONTINFO_H_
 
-#include "core/fxcrt/compiler_specific.h"
+#include <optional>
+
+#include "core/fxcrt/span.h"
 #include "core/fxge/cfx_folderfontinfo.h"
 
 class CFX_AndroidFontInfo final : public CFX_FolderFontInfo {
@@ -15,9 +17,9 @@ class CFX_AndroidFontInfo final : public CFX_FolderFontInfo {
   CFX_AndroidFontInfo();
   ~CFX_AndroidFontInfo() override;
 
-  // PRECONDITIONS: `user_paths` must be a null-terminated array of
-  // NUL-terminated strings.
-  UNSAFE_BUFFER_USAGE void Init(const char** user_paths);
+  // Uses other defaults when `user_paths` is nullopt, otherwise uses
+  // only those in the span, which may lead to using none when empty.
+  void Init(std::optional<pdfium::span<const char* const>> user_paths);
 
   // SystemFontInfoIface:
   void* MapFont(CFX_FontMapper* mapper,

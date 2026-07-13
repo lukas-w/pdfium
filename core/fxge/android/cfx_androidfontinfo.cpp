@@ -136,15 +136,13 @@ CFX_AndroidFontInfo::CFX_AndroidFontInfo() = default;
 
 CFX_AndroidFontInfo::~CFX_AndroidFontInfo() = default;
 
-void CFX_AndroidFontInfo::Init(const char** user_paths) {
+void CFX_AndroidFontInfo::Init(
+    std::optional<pdfium::span<const char* const>> user_paths) {
   AddPath("/system/fonts");
-  if (user_paths) {
-    // SAFETY: nullptr-terminated array required from caller.
-    UNSAFE_BUFFERS({
-      for (const char** path = user_paths; *path; ++path) {
-        AddPath(*path);
-      }
-    });
+  if (user_paths.has_value()) {
+    for (const char* path : user_paths.value()) {
+      AddPath(path);
+    }
   }
 }
 
