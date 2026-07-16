@@ -42,7 +42,13 @@ EMC
 >> BDC
 50 0 Td (water water) Tj
 EMC
-
+-50 -50 Td
+(Mirrored) Tj
+/Span <<
+  /ActualText <FEFF0063005B0029>
+>> BDC
+50 0 Td (char examples) Tj
+EMC
 ET
 endstream
 endobj
