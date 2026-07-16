@@ -2498,8 +2498,8 @@ TEST_F(FPDFTextEmbedderTest, ActualTextRtl) {
        0x05dd, 0x05d5, 0x05dc, 0x05e9, '\r', '\n', 'W', 'a', 't', 'e', 'r', ' ',
        'i', 's', ' ', 'w', 'a', 't', 'e', 'r', ' ',
        // םים:
-       0x05dd, 0x05d9, 0x05de, '\r', '\n', 'M', 'i', 'r', 'r', 'o', 'r', 'e',
-       'd', ' ', 'c', '[', ')', '\0'});
+       0x05dd, 0x05d9, 0x05de, '\r', '\n', '(', ']', 0x05dd, ' ', 'M', 'i', 'r',
+       'r', 'o', 'r', 'e', 'd', '\0'});
   static constexpr int kExpectedTextSize = std::size(kExpectedText);
 
   unsigned short buffer[128] = {};
