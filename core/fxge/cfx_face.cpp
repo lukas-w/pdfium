@@ -940,15 +940,17 @@ std::unique_ptr<CFX_Path> CFX_Face::LoadGlyphPath(
   return pPath;
 }
 
-int CFX_Face::GetGlyphTTWidth() const {
+int CFX_Face::GetGlyphTTWidth(uint32_t glyph_index) const {
   const auto* fontglyph = GetRec()->glyph;
+  DCHECK_EQ(glyph_index, fontglyph->glyph_index);
+
   const int ft_result =
       NormalizeFontMetric(fontglyph->metrics.horiAdvance, GetUnitsPerEm());
 #if defined(PDF_ENABLE_SKIA_TYPEFACE_CHECKS)
   if (skia_typeface_) {
     SkFont font(skia_typeface_, GetUnitsPerEm());
     font.setHinting(SkFontHinting::kNone);
-    uint16_t skia_glyph_index = static_cast<uint16_t>(fontglyph->glyph_index);
+    uint16_t skia_glyph_index = static_cast<uint16_t>(glyph_index);
     SkScalar width;
     font.getWidths(pdfium::span_from_ref(skia_glyph_index),
                    pdfium::span_from_ref(width));
@@ -1185,7 +1187,7 @@ FX_RECT CFX_Face::GetCharBBox(uint32_t code, int glyph_index) {
   } else {
     int err = FT_Load_Glyph(rec, glyph_index, FT_LOAD_NO_SCALE);
     if (err == 0) {
-      rect = GetGlyphBBox();
+      rect = GetGlyphBBox(glyph_index);
       if (rect.top <= kMaxRectTop) {
         rect.top += rect.top / 64;
       } else {
@@ -1209,8 +1211,10 @@ FX_RECT CFX_Face::GetCharBBox(uint32_t code, int glyph_index) {
   return rect;
 }
 
-FX_RECT CFX_Face::GetGlyphBBox() const {
+FX_RECT CFX_Face::GetGlyphBBox(uint32_t glyph_index) const {
   const auto* glyph = GetRec()->glyph;
+  DCHECK_EQ(glyph_index, glyph->glyph_index);
+
   pdfium::ClampedNumeric<FT_Pos> left = glyph->metrics.horiBearingX;
   pdfium::ClampedNumeric<FT_Pos> top = glyph->metrics.horiBearingY;
   const uint16_t upem = GetUnitsPerEm();
@@ -1223,7 +1227,7 @@ FX_RECT CFX_Face::GetGlyphBBox() const {
   if (skia_typeface_) {
     SkFont font(skia_typeface_, upem);
     font.setHinting(SkFontHinting::kNone);
-    uint16_t skia_glyph_index = static_cast<uint16_t>(glyph->glyph_index);
+    uint16_t skia_glyph_index = static_cast<uint16_t>(glyph_index);
     SkRect bounds = font.getBounds(skia_glyph_index, nullptr);
 
     CHECK_EQ(ft_result.left,

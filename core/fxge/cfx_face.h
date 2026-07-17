@@ -98,8 +98,7 @@ class CFX_Face final : public Retainable, public Observable {
   std::unique_ptr<CFX_CTTGSUBTable> ParseGSUBTable();
 
   int GetGlyphCount() const;
-  // TODO(crbug.com/42271048): Can this method be private?
-  FX_RECT GetGlyphBBox() const;
+  FX_RECT GetGlyphBBox(uint32_t glyph_index) const;
   std::optional<FX_RECT> GetFontGlyphBBox(uint32_t glyph_index);
   std::unique_ptr<CFX_GlyphBitmap> RenderGlyph(uint32_t glyph_index,
                                                bool is_cid_font,
@@ -112,7 +111,7 @@ class CFX_Face final : public Retainable, public Observable {
                                           int dest_width,
                                           bool is_vertical,
                                           const CFX_SubstFont* subst_font);
-  int GetGlyphTTWidth() const;
+  int GetGlyphTTWidth(uint32_t glyph_index) const;
   int GetGlyphWidth(uint32_t glyph_index,
                     int dest_width,
                     int weight,
