@@ -1064,7 +1064,8 @@ bool CPDF_RenderStatus::ProcessType3Text(CPDF_TextObject* textobj,
       RetainPtr<CPDF_Type3Cache> pCache =
           CPDF_DocRenderData::FromDocument(doc)->GetCachedType3(pType3Font);
 
-      const CFX_GlyphBitmap* pBitmap = pCache->LoadGlyph(charcode, matrix);
+      const CFX_GlyphBitmap* pBitmap =
+          pCache->LoadGlyphBitmap(charcode, matrix);
       if (!pBitmap) {
         continue;
       }
