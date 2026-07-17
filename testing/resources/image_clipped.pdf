@@ -1,0 +1,69 @@
+%PDF-1.7
+% ò¤ô
+1 0 obj <<
+  /Type /Catalog
+  /Pages 2 0 R
+>>
+endobj
+2 0 obj <<
+  /Type /Pages
+  /Kids [3 0 R]
+  /MediaBox [0 0 100 100]
+  /Count 1
+>>
+endobj
+3 0 obj <<
+  /Type /Page
+  /Contents 4 0 R
+  /Parent 2 0 R
+  /Resources <<
+    /XObject <<
+      /Im0 5 0 R
+    >>
+  >>
+>>
+endobj
+4 0 obj <<
+  /Length 41
+>>
+stream
+q
+0 0 2 4 re
+W n
+4 0 0 4 0 0 cm
+/Im0 Do
+Q
+endstream
+endobj
+5 0 obj <<
+  /Type /XObject
+  /Subtype /Image
+  /BitsPerComponent 8
+  /ColorSpace /DeviceRGB
+  /Filter /ASCIIHexDecode
+  /Height 4
+  /Width 4
+  /Length 99
+>>
+stream
+ff0000ff0000ff0000ff0000
+ff0000ff0000ff0000ff0000
+00ff0000ff0000ff0000ff00
+00ff0000ff0000ff0000ff00
+endstream
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000015 00000 n 
+0000000068 00000 n 
+0000000157 00000 n 
+0000000287 00000 n 
+0000000380 00000 n 
+trailer <<
+  /Root 1 0 R
+  /Size 6
+>>
+startxref
+662
+%%EOF

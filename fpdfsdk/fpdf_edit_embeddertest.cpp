@@ -4936,6 +4936,20 @@ TEST_F(FPDFEditEmbedderTest, GetRenderedBitmapHandlesSMask) {
   }
 }
 
+TEST_F(FPDFEditEmbedderTest, GetRenderedBitmapHandlesClipPath) {
+  ASSERT_TRUE(OpenDocument("image_clipped.pdf"));
+  ScopedPage page = LoadScopedPage(0);
+  ASSERT_TRUE(page);
+
+  ASSERT_EQ(1, FPDFPage_CountObjects(page.get()));
+  FPDF_PAGEOBJECT obj = FPDFPage_GetObject(page.get(), 0);
+  ASSERT_EQ(FPDF_PAGEOBJ_IMAGE, FPDFPageObj_GetType(obj));
+
+  ScopedFPDFBitmap bitmap(
+      FPDFImageObj_GetRenderedBitmap(document(), page.get(), obj));
+  CompareBitmap(bitmap.get(), "image_clipped");
+}
+
 TEST_F(FPDFEditEmbedderTest, GetRenderedBitmapBadParams) {
   ASSERT_TRUE(OpenDocument("embedded_images.pdf"));
   ScopedPage page = LoadScopedPage(0);
