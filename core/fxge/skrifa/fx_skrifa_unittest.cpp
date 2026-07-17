@@ -68,3 +68,30 @@ TEST(FxSkrifaTest, TestGetCharCodesAndIndices) {
   EXPECT_EQ(skrifa::CharCodeAndIndex(33, 4), results[1]);
   EXPECT_EQ(skrifa::CharCodeAndIndex(65279, 245), results[277]);
 }
+
+TEST(FxSkrifaTest, TestIsTricky) {
+  std::string font_path = PathService::GetTestFilePath("fonts/bug_2094.ttf");
+  std::vector<uint8_t> bytes = GetFileContents(font_path.c_str());
+
+  auto font = skrifa::new_font(rust::Slice<const uint8_t>(bytes), 0);
+  ASSERT_TRUE(font->is_ok());
+
+  EXPECT_FALSE(font->is_tricky());
+}
+
+TEST(FxSkrifaTest, TestGetNumFaces) {
+  std::string font_path = PathService::GetTestFilePath("fonts/bug_2094.ttf");
+  std::vector<uint8_t> bytes = GetFileContents(font_path.c_str());
+
+  EXPECT_EQ(skrifa::get_num_faces(rust::Slice<const uint8_t>(bytes)), 1u);
+}
+
+TEST(FxSkrifaTest, TestHasOutline) {
+  std::string font_path = PathService::GetTestFilePath("fonts/bug_2094.ttf");
+  std::vector<uint8_t> bytes = GetFileContents(font_path.c_str());
+
+  auto font = skrifa::new_font(rust::Slice<const uint8_t>(bytes), 0);
+  ASSERT_TRUE(font->is_ok());
+
+  EXPECT_TRUE(font->has_outline(0));
+}
