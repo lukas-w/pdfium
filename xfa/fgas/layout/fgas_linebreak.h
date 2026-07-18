@@ -23,8 +23,8 @@ enum class LineBreakType : uint8_t {
   kHangulSpaceBreak = 0x6F,
 };
 
-LineBreakType GetLineBreakTypeFromPair(FX_BREAKPROPERTY curr_char,
-                                       FX_BREAKPROPERTY next_char);
+LineBreakType GetLineBreakTypeFromPair(BreakProperty curr_char,
+                                       BreakProperty next_char);
 
 }  // namespace pdfium
 
