@@ -39,6 +39,7 @@
 #include "core/fxcrt/check_op.h"
 #include "core/fxcrt/compiler_specific.h"
 #include "core/fxcrt/data_vector.h"
+#include "core/fxcrt/fx_2d_size.h"
 #include "core/fxcrt/fx_safe_types.h"
 #include "core/fxcrt/span_util.h"
 #include "core/fxcrt/stl_util.h"
@@ -707,7 +708,7 @@ RetainPtr<CFX_DIBitmap> CPDF_DIB::ConvertArgbJpxBitmapToRgb(
     DCHECK(jpx_inline_data_.data.empty());
     jpx_inline_data_.width = width;
     jpx_inline_data_.height = height;
-    jpx_inline_data_.data.reserve(width * height);
+    jpx_inline_data_.data.reserve(Fx2DSizeOrDie(width, height));
     for (uint32_t row = 0; row < height; ++row) {
       auto src =
           argb_bitmap->GetScanlineAs<FX_BGRA_STRUCT<uint8_t>>(row).first(width);
