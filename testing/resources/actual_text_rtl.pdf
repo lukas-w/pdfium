@@ -15,7 +15,7 @@ endobj
   /Type /Page
   /Contents 4 0 R
   /Parent 2 0 R
-  /MediaBox [0 0 200 200]
+  /MediaBox [0 0 200 400]
   /Resources <<
     /Font <<
       /F1 5 0 R
@@ -24,12 +24,12 @@ endobj
 >>
 endobj
 4 0 obj <<
-  /Length 347
+  /Length 823
 >>
 stream
 BT
 /F1 12 Tf
-20 120 Td
+20 320 Td
 (Hello is) Tj
 /Span <<
   /ActualText <FEFF05E905DC05D505DD>
@@ -50,6 +50,34 @@ EMC
 >> BDC
 50 0 Td (char examples) Tj
 EMC
+% Pure RTL case with only 1 RTL segment.
+-50 -50 Td
+/Span <<
+  /ActualText <FEFF05E905DC05D505DD>
+>> BDC
+(RTLa) Tj
+EMC
+% Predominantly RTL case with 2 RTL segments and 1 LTR segment.
+0 -50 Td
+/Span <<
+  /ActualText <FEFF05E905DC05D505DD0020>
+>> BDC
+(RTLb) Tj
+EMC
+(Ha ) Tj
+/Span <<
+  /ActualText <FEFF05DE05D905DD>
+>> BDC
+(RTLc) Tj
+EMC
+% Tie-Breaker case with 1 RTL segment and 1 LTR segment.
+0 -50 Td
+(He ) Tj
+/Span <<
+  /ActualText <FEFF05E905DC05D505DD>
+>> BDC
+(RTL) Tj
+EMC
 ET
 endstream
 endobj
@@ -66,11 +94,11 @@ xref
 0000000068 00000 n 
 0000000131 00000 n 
 0000000283 00000 n 
-0000000683 00000 n 
+0000001159 00000 n 
 trailer <<
   /Root 1 0 R
   /Size 6
 >>
 startxref
-759
+1235
 %%EOF

@@ -2495,11 +2495,27 @@ TEST_F(FPDFTextEmbedderTest, ActualTextRtl) {
   static constexpr auto kExpectedText = std::to_array<unsigned short>(
       {'H', 'e', 'l', 'l', 'o', ' ', 'i', 's', ' ',
        // םולש:
-       0x05dd, 0x05d5, 0x05dc, 0x05e9, '\r', '\n', 'W', 'a', 't', 'e', 'r', ' ',
-       'i', 's', ' ', 'w', 'a', 't', 'e', 'r', ' ',
-       // םים:
-       0x05dd, 0x05d9, 0x05de, '\r', '\n', '(', ']', 0x05dd, ' ', 'M', 'i', 'r',
-       'r', 'o', 'r', 'e', 'd', '\0'});
+       0x05dd, 0x05d5, 0x05dc, 0x05e9, '\r', '\n',
+       // Second line:
+       'W', 'a', 't', 'e', 'r', ' ', 'i', 's', ' ', 'w', 'a', 't', 'e', 'r',
+       ' ',
+       // םימ:
+       0x05dd, 0x05d9, 0x05de, '\r', '\n',
+       // Third line:
+       '(', ']',
+       // ם:
+       0x05dd, ' ', 'M', 'i', 'r', 'r', 'o', 'r', 'e', 'd', '\r', '\n',
+       // Pure RTL case:
+       // םולש:
+       0x05dd, 0x05d5, 0x05dc, 0x05e9, '\r', '\n',
+       // Predominantly RTL case:
+       // םימ:
+       0x05dd, 0x05d9, 0x05de, ' ', 'H', 'a', ' ',
+       // םולש:
+       0x05dd, 0x05d5, 0x05dc, 0x05e9, '\r', '\n',
+       // Tie-Breaker case:
+       // םולש:
+       0x05dd, 0x05d5, 0x05dc, 0x05e9, ' ', 'H', 'e', '\0'});
   static constexpr int kExpectedTextSize = std::size(kExpectedText);
 
   unsigned short buffer[128] = {};
