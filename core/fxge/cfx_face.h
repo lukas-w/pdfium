@@ -124,6 +124,7 @@ class CFX_Face final : public Retainable, public Observable {
   FX_RECT GetCharBBox(uint32_t code, int glyph_index);
 
   std::vector<CharCodeAndIndex> GetCharCodesAndIndices(char32_t max_char);
+  FT_Face GetFTFaceForTesting() { return GetRec(); }
 
   CharMap GetCurrentCharMap() const;
   std::optional<fxge::FontEncoding> GetCurrentCharMapEncoding() const;
