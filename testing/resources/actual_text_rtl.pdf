@@ -15,7 +15,7 @@ endobj
   /Type /Page
   /Contents 4 0 R
   /Parent 2 0 R
-  /MediaBox [0 0 200 400]
+  /MediaBox [0 0 200 800]
   /Resources <<
     /Font <<
       /F1 5 0 R
@@ -24,12 +24,12 @@ endobj
 >>
 endobj
 4 0 obj <<
-  /Length 823
+  /Length 1810
 >>
 stream
 BT
 /F1 12 Tf
-20 320 Td
+20 750 Td
 (Hello is) Tj
 /Span <<
   /ActualText <FEFF05E905DC05D505DD>
@@ -78,6 +78,65 @@ EMC
 >> BDC
 (RTL) Tj
 EMC
+% Pure LTR text in /ActualText case.
+0 -50 Td
+(Pure ) Tj
+/Span <<
+  /ActualText <FEFF007000640066>
+>> BDC
+(LTRa) Tj
+EMC
+% RTL followed by LTR in /ActualText case.
+0 -50 Td
+(Hi ) Tj
+/Span <<
+  /ActualText <FEFF05E905DC05D505DD002000680069>
+>> BDC
+(Mixed) Tj
+EMC
+% LTR followed by RTL in /ActualText case.
+0 -50 Td
+(Ho ) Tj
+/Span <<
+  /ActualText <FEFF0068006F002005E905DC05D505DD>
+>> BDC
+(RTLd) Tj
+EMC
+% RTL, LTR, RTL in /ActualText case.
+0 -50 Td
+(Hu ) Tj
+/Span <<
+  /ActualText <FEFF05E905DC05D505DD002000480061002005DE05D905DD>
+>> BDC
+(RLR) Tj
+EMC
+% LTR, RTL, LTR in /ActualText case.
+0 -50 Td
+(Na ) Tj
+/Span <<
+  /ActualText <FEFF00480069002005E905DC05D505DD00200047006F>
+>> BDC
+(LRL) Tj
+EMC
+% Pure LTR /ActualText mixed with surrounding RTL text segments case.
+0 -50 Td
+/Span <<
+  /ActualText <FEFF05E905DC05D505DD0020>
+>> BDC
+(RTLe) Tj
+EMC
+(Ne ) Tj
+/Span <<
+  /ActualText <FEFF004C00540052>
+>> BDC
+(LTRb) Tj
+EMC
+( ) Tj
+/Span <<
+  /ActualText <FEFF05DE05D905DD>
+>> BDC
+(RTLf) Tj
+EMC
 ET
 endstream
 endobj
@@ -94,11 +153,11 @@ xref
 0000000068 00000 n 
 0000000131 00000 n 
 0000000283 00000 n 
-0000001159 00000 n 
+0000002147 00000 n 
 trailer <<
   /Root 1 0 R
   /Size 6
 >>
 startxref
-1235
+2223
 %%EOF

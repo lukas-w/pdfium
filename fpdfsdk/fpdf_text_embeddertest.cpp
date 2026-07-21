@@ -2515,10 +2515,34 @@ TEST_F(FPDFTextEmbedderTest, ActualTextRtl) {
        0x05dd, 0x05d5, 0x05dc, 0x05e9, '\r', '\n',
        // Tie-Breaker case:
        // םולש:
-       0x05dd, 0x05d5, 0x05dc, 0x05e9, ' ', 'H', 'e', '\0'});
+       0x05dd, 0x05d5, 0x05dc, 0x05e9, ' ', 'H', 'e', '\r', '\n',
+       // Pure LTR text in /ActualText case:
+       'P', 'u', 'r', 'e', ' ', 'p', 'd', 'f', '\r', '\n',
+       // RTL followed by LTR in /ActualText case:
+       'H', 'i', ' ',
+       // םולש:
+       0x05dd, 0x05d5, 0x05dc, 0x05e9, ' ', 'h', 'i', '\r', '\n',
+       // LTR followed by RTL in /ActualText case:
+       'H', 'o', ' ', 'h', 'o', ' ',
+       // םולש:
+       0x05dd, 0x05d5, 0x05dc, 0x05e9, '\r', '\n',
+       // RTL, LTR, RTL in /ActualText case:
+       // םימ:
+       0x05dd, 0x05d9, 0x05de, ' ', 'H', 'a', ' ',
+       // םולש:
+       0x05dd, 0x05d5, 0x05dc, 0x05e9, ' ', 'H', 'u', '\r', '\n',
+       // LTR, RTL, LTR in /ActualText case:
+       'N', 'a', ' ', 'H', 'i', ' ',
+       // םולש:
+       0x05dd, 0x05d5, 0x05dc, 0x05e9, ' ', 'G', 'o', '\r', '\n',
+       // Pure LTR /ActualText mixed with surrounding RTL text segments case:
+       // םימ:
+       0x05dd, 0x05d9, 0x05de, ' ', 'L', 'T', 'R', ' ', 'N', 'e', ' ',
+       // םולש:
+       0x05dd, 0x05d5, 0x05dc, 0x05e9, '\0'});
   static constexpr int kExpectedTextSize = std::size(kExpectedText);
 
-  unsigned short buffer[128] = {};
+  unsigned short buffer[256] = {};
   EXPECT_EQ(kExpectedTextSize,
             FPDFText_GetText(text_page.get(), 0, std::size(buffer), buffer));
   EXPECT_THAT(pdfium::span(buffer).first<kExpectedTextSize>(),
