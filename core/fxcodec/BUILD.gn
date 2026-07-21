@@ -150,8 +150,13 @@ source_set("fxcodec") {
       ]
       deps += [ "../../third_party:tiff" ]
     }
+    if (pdf_use_skia) {
+      sources += [
+        "codec_memory_sk_stream.cpp",
+        "codec_memory_sk_stream.h",
+      ]
+    }
   }
-
   visibility = [ "../../*" ]
 }
 

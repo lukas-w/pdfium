@@ -1,0 +1,5 @@
+specific_include_rules = {
+  "codec_memory_sk_stream\.(cpp|h)": [
+    '+third_party/skia/include',
+  ],
+}
