@@ -1,0 +1,183 @@
+{{header}}
+{{object 1 0}} <<
+  /Type /Catalog
+  /Pages 2 0 R
+>>
+endobj
+
+{{object 2 0}} <<
+  /Type /Pages
+  /Count 1
+  /Kids [3 0 R]
+>>
+endobj
+
+{{object 3 0}} <<
+  /Type /Page
+  /Parent 2 0 R
+  /Contents 4 0 R
+  /MediaBox [0 0 88 128]
+  /Resources <<
+    /XObject <<
+      /ImBlackRed    5 0 R
+      /ImBlackGreen  6 0 R
+      /ImBlackBlue   7 0 R
+      /ImGreenWhite  8 0 R
+      /ImRedYellow   9 0 R
+      /ImBlueWhite   10 0 R
+    >>
+  >>
+>>
+endobj
+
+{{object 4 0}} <<
+  {{streamlen}}
+>>
+stream
+
+q
+  0 0 0 rg
+  0 0 88 128 re
+  f
+Q
+
+q
+  32 0 0 32 8 88 cm
+  /ImBlackRed Do
+Q
+
+q
+  32 0 0 32 48 88 cm
+  /ImBlackGreen Do
+Q
+
+q
+  32 0 0 32 8 48 cm
+  /ImBlackBlue Do
+Q
+
+q
+  32 0 0 32 48 48 cm
+  /ImGreenWhite Do
+Q
+
+q
+  32 0 0 32 8 8 cm
+  /ImRedYellow Do
+Q
+
+q
+  32 0 0 32 48 8 cm
+  /ImBlueWhite Do
+Q
+
+endstream
+endobj
+
+{{object 5 0}} <<
+  /Type /XObject
+  /Subtype /Image
+  /BitsPerComponent 8
+  /ColorSpace /DeviceRGB
+  /Filter /JPXDecode
+  /Height 1
+  /Width 1
+  /SMaskInData 2
+  /Matte [0 0 0]
+  {{streamlen}}
+>>
+stream
+{{include SMaskInData2/black-red.jp2}}
+endstream
+endobj
+
+{{object 6 0}} <<
+  /Type /XObject
+  /Subtype /Image
+  /BitsPerComponent 8
+  /ColorSpace /DeviceRGB
+  /Filter /JPXDecode
+  /Height 1
+  /Width 1
+  /SMaskInData 2
+  /Matte [0 0 0]
+  {{streamlen}}
+>>
+stream
+{{include SMaskInData2/black-green.jp2}}
+endstream
+endobj
+
+{{object 7 0}} <<
+  /Type /XObject
+  /Subtype /Image
+  /BitsPerComponent 8
+  /ColorSpace /DeviceRGB
+  /Filter /JPXDecode
+  /Height 1
+  /Width 1
+  /SMaskInData 2
+  /Matte [0 0 0]
+  {{streamlen}}
+>>
+stream
+{{include SMaskInData2/black-blue.jp2}}
+endstream
+endobj
+
+{{object 8 0}} <<
+  /Type /XObject
+  /Subtype /Image
+  /BitsPerComponent 8
+  /ColorSpace /DeviceRGB
+  /Filter /JPXDecode
+  /Height 1
+  /Width 1
+  /SMaskInData 2
+  /Matte [0 1 0]
+  {{streamlen}}
+>>
+stream
+{{include SMaskInData2/green-white.jp2}}
+endstream
+endobj
+
+{{object 9 0}} <<
+  /Type /XObject
+  /Subtype /Image
+  /BitsPerComponent 8
+  /ColorSpace /DeviceRGB
+  /Filter /JPXDecode
+  /Height 1
+  /Width 1
+  /SMaskInData 2
+  /Matte [1 0 0]
+  {{streamlen}}
+>>
+stream
+{{include SMaskInData2/red-yellow.jp2}}
+endstream
+endobj
+
+% Blue matte -> White
+{{object 10 0}} <<
+  /Type /XObject
+  /Subtype /Image
+  /BitsPerComponent 8
+  /ColorSpace /DeviceRGB
+  /Filter /JPXDecode
+  /Height 1
+  /Width 1
+  /SMaskInData 2
+  /Matte [0 0 1]
+  {{streamlen}}
+>>
+stream
+{{include SMaskInData2/blue-white.jp2}}
+endstream
+endobj
+
+{{xref}}
+{{trailer}}
+{{startxref}}
+%%EOF
