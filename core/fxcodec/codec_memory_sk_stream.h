@@ -12,15 +12,6 @@
 #include "third_party/skia/include/core/SkStream.h"
 
 // Implements/exposes `SkStream` API on top of `CFX_CodecMemory`.
-//
-// Note that the exposed API does *not* support seeking/rewinding, because this
-// layer only has access to the `CFX_CodecMemory` pushed into `ContinueDecode`
-// and can't reach for `IFX_SeekableReadStream` from which the bytes have been
-// pulled into `CFX_CodecMemory`.  This lack of support for seeking/rewinding
-// requires avoiding calling any Skia APIs that may necessitate this
-// functionality later (e.g. calling `SkCodec::getFrameCount` may attempt to
-// read metadata of subsequent frames).  This is not an issue today, because
-// PDFium only needs to decode the first (or only) image / animation frame.
 class CodecMemorySkStream final : public SkStream {
  public:
   explicit CodecMemorySkStream(RetainPtr<CFX_CodecMemory> codec_memory);
@@ -28,6 +19,12 @@ class CodecMemorySkStream final : public SkStream {
 
   size_t read(void* buffer, size_t size) override;
   bool isAtEnd() const override;
+  bool rewind() override;
+  bool seek(size_t position) override;
+  size_t getPosition() const override;
+  size_t getLength() const override;
+  bool hasPosition() const override;
+  bool hasLength() const override;
 
  private:
   RetainPtr<CFX_CodecMemory> const codec_memory_;

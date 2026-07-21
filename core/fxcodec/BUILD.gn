@@ -185,6 +185,10 @@ pdfium_unittest_source_set("unittests") {
         "gif/lzw_decompressor_unittest.cpp",
       ]
     }
+    if (pdf_use_skia) {
+      sources += [ "codec_memory_sk_stream_unittest.cpp" ]
+      deps += [ "//skia" ]
+    }
   }
 }
 

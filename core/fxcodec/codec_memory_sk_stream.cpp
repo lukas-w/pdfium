@@ -30,3 +30,27 @@ size_t CodecMemorySkStream::read(void* buffer, size_t size) {
 bool CodecMemorySkStream::isAtEnd() const {
   return codec_memory_->IsEOF();
 }
+
+bool CodecMemorySkStream::rewind() {
+  return codec_memory_->Seek(0);
+}
+
+bool CodecMemorySkStream::seek(size_t position) {
+  return codec_memory_->Seek(position);
+}
+
+size_t CodecMemorySkStream::getPosition() const {
+  return codec_memory_->GetPosition();
+}
+
+size_t CodecMemorySkStream::getLength() const {
+  return codec_memory_->GetSize();
+}
+
+bool CodecMemorySkStream::hasPosition() const {
+  return true;
+}
+
+bool CodecMemorySkStream::hasLength() const {
+  return true;
+}
