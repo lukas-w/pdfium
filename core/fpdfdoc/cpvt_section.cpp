@@ -16,6 +16,7 @@
 #include "core/fxcrt/compiler_specific.h"
 #include "core/fxcrt/containers/adapters.h"
 #include "core/fxcrt/fx_bidi.h"
+#include "core/fxcrt/notreached.h"
 #include "core/fxcrt/stl_util.h"
 
 namespace {
@@ -679,39 +680,30 @@ CPVT_FloatRect CPVT_Section::SplitLines(bool bTypeset, float fFontSize) {
 }
 
 CPVT_FloatRect CPVT_Section::OutputLines(const CPVT_FloatRect& rect) const {
-  float fMinX;
   float fLineIndent = vt_->GetLineIndent();
   float fTypesetWidth = std::max(vt_->GetPlateWidth() - fLineIndent, 0.0f);
-  switch (vt_->GetAlignment()) {
-    case CPVT_VariableText::Alignment::kLeft:
-      fMinX = 0.0f;
-      break;
-    case CPVT_VariableText::Alignment::kCenter:
-      fMinX = (fTypesetWidth - rect.Width()) * 0.5f;
-      break;
-    case CPVT_VariableText::Alignment::kRight:
-      fMinX = fTypesetWidth - rect.Width();
-      break;
-  }
+  CPVT_VariableText::Alignment alignment = vt_->GetAlignment();
+  auto get_alignment_offset = [alignment, fTypesetWidth](float line_width) {
+    switch (alignment) {
+      case CPVT_VariableText::Alignment::kLeft:
+        return 0.0f;
+      case CPVT_VariableText::Alignment::kCenter:
+        return (fTypesetWidth - line_width) * 0.5f;
+      case CPVT_VariableText::Alignment::kRight:
+        return fTypesetWidth - line_width;
+    }
+    NOTREACHED();
+  };
+
+  float fMinX = get_alignment_offset(rect.Width());
   float fMaxX = fMinX + rect.Width();
   float fMinY = 0.0f;
   float fMaxY = rect.Height();
 
-  float fPosX = 0.0f;
   float fPosY = 0.0f;
   for (const auto& line : line_array_) {
-    switch (vt_->GetAlignment()) {
-      case CPVT_VariableText::Alignment::kLeft:
-        fPosX = 0;
-        break;
-      case CPVT_VariableText::Alignment::kCenter:
-        fPosX = (fTypesetWidth - line->line_info_.fLineWidth) * 0.5f;
-        break;
-      case CPVT_VariableText::Alignment::kRight:
-        fPosX = fTypesetWidth - line->line_info_.fLineWidth;
-        break;
-    }
-    fPosX += fLineIndent;
+    float fPosX =
+        get_alignment_offset(line->line_info_.fLineWidth) + fLineIndent;
     fPosY += vt_->GetLineLeading();
     fPosY += line->line_info_.fLineAscent;
 
