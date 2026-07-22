@@ -1050,21 +1050,19 @@ void CPDF_TextPage::FindPreviousTextObject() {
   }
 }
 
-void CPDF_TextPage::SwapTempTextBuf(size_t iCharListStartAppend,
-                                    size_t iBufStartAppend) {
+void CPDF_TextPage::ReverseTempTextBufs(size_t char_list_index,
+                                        size_t buf_index) {
   DCHECK(!temp_char_list_.empty());
-  if (iCharListStartAppend < temp_char_list_.size()) {
-    auto fwd = temp_char_list_.begin() + iCharListStartAppend;
-    auto rev = temp_char_list_.end() - 1;
-    for (; fwd < rev; ++fwd, --rev) {
-      std::swap(*fwd, *rev);
-    }
+  if (char_list_index < temp_char_list_.size()) {
+    pdfium::span<CharInfo> reverse_span =
+        pdfium::span(temp_char_list_).subspan(char_list_index);
+    std::ranges::reverse(reverse_span);
   }
   pdfium::span<wchar_t> temp_span = temp_text_buf_.GetWideSpan();
   DCHECK(!temp_span.empty());
-  if (iBufStartAppend < temp_span.size()) {
-    pdfium::span<wchar_t> reverse_span = temp_span.subspan(iBufStartAppend);
-    std::reverse(reverse_span.begin(), reverse_span.end());
+  if (buf_index < temp_span.size()) {
+    pdfium::span<wchar_t> reverse_span = temp_span.subspan(buf_index);
+    std::ranges::reverse(reverse_span);
   }
 }
 
@@ -1111,12 +1109,13 @@ void CPDF_TextPage::ProcessTextObject(const TransformedTextObject& obj) {
   const CFX_Matrix matrix = text_obj->GetTextMatrix() * form_matrix;
   const bool is_bidi_and_mirror_inverse =
       is_rtl && (matrix.a * matrix.d - matrix.b * matrix.c) < 0;
-  const size_t iBufStartAppend = temp_text_buf_.GetLength();
-  const size_t iCharListStartAppend = temp_char_list_.size();
+  // Save these before ProcessTextObjectItems() modifies the containers.
+  const size_t orig_char_list_index = temp_char_list_.size();
+  const size_t orig_buf_index = temp_text_buf_.GetLength();
 
   ProcessTextObjectItems(text_obj, form_matrix, matrix);
   if (is_bidi_and_mirror_inverse) {
-    SwapTempTextBuf(iCharListStartAppend, iBufStartAppend);
+    ReverseTempTextBufs(orig_char_list_index, orig_buf_index);
   }
 }
 

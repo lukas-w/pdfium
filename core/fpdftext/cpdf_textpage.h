@@ -175,7 +175,9 @@ class CPDF_TextPage {
   void AppendGeneratedCharacter(wchar_t unicode,
                                 const CFX_Matrix& form_matrix,
                                 bool use_temp_buffer);
-  void SwapTempTextBuf(size_t iCharListStartAppend, size_t iBufStartAppend);
+  // Reverses elements in `temp_char_list_` starting at `char_list_index` and
+  // characters in `temp_text_buf_` starting at `buf_index`.
+  void ReverseTempTextBufs(size_t char_list_index, size_t buf_index);
   WideString GetTextByPredicate(
       const std::function<bool(const CharInfo&)>& predicate) const;
 
