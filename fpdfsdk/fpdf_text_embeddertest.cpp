@@ -1592,10 +1592,9 @@ TEST_F(FPDFTextEmbedderTest, GetFontWeight) {
   // that is returned should be calculated from that (80*5 == 400).
   EXPECT_EQ(400, FPDFText_GetFontWeight(text_page.get(), 0));
 
-  // Using a /StemV value of 82, the estimate comes out to 410, even though
-  // /FontWeight is 400.
-  // TODO(crbug.com/42270423): Fix this the return value here.
-  EXPECT_EQ(410, FPDFText_GetFontWeight(text_page.get(), 1));
+  // Since the font specifies /FontWeight (400), it should be used instead of
+  // estimating from /StemV (82).
+  EXPECT_EQ(400, FPDFText_GetFontWeight(text_page.get(), 1));
 }
 
 TEST_F(FPDFTextEmbedderTest, GetTextRenderMode) {

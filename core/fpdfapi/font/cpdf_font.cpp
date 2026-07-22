@@ -136,6 +136,14 @@ void CPDF_Font::LoadFontDescriptor(const CPDF_Dictionary* font_desc) {
     stem_v_ = font_desc->GetIntegerFor("StemV");
     bExistStemV = true;
   }
+  bool has_valid_font_weight = false;
+  if (font_desc->KeyExist("FontWeight")) {
+    int font_weight = font_desc->GetIntegerFor("FontWeight");
+    has_valid_font_weight = font_weight > 0;
+    if (has_valid_font_weight) {
+      font_weight_ = font_weight;
+    }
+  }
   bool bExistAscent = false;
   if (font_desc->KeyExist("Ascent")) {
     ascent_ = font_desc->GetIntegerFor("Ascent");
@@ -151,7 +159,7 @@ void CPDF_Font::LoadFontDescriptor(const CPDF_Dictionary* font_desc) {
     bExistCapHeight = true;
   }
   if (bExistItalicAngle && bExistAscent && bExistCapHeight && bExistDescent &&
-      bExistStemV) {
+      (bExistStemV || has_valid_font_weight)) {
     flags_ |= kFontUseExternAttr;
   }
   if (descent_ > 10) {
@@ -600,6 +608,9 @@ bool CPDF_Font::UseTTCharmap(const RetainPtr<CFX_Face>& face,
 }
 
 std::optional<int> CPDF_Font::GetFontWeight() const {
+  if (font_weight_.has_value()) {
+    return font_weight_.value();
+  }
   FX_SAFE_INT32 safe_stem_v(stem_v_);
   if (stem_v_ < 140) {
     safe_stem_v *= 5;

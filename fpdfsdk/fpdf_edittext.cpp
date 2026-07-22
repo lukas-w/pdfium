@@ -767,7 +767,7 @@ FPDF_EXPORT int FPDF_CALLCONV FPDFFont_GetFlags(FPDF_FONT font) {
   return pFont->GetFontFlags() & 0x7ffff;
 }
 
-FPDF_EXPORT FPDF_BOOL FPDF_CALLCONV FPDFFont_GetWeight(FPDF_FONT font) {
+FPDF_EXPORT int FPDF_CALLCONV FPDFFont_GetWeight(FPDF_FONT font) {
   auto* cfont = CPDFFontFromFPDFFont(font);
   if (!cfont) {
     return -1;

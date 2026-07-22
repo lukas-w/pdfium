@@ -190,6 +190,7 @@ class CPDF_Font : public Retainable, public Observable {
   bool will_be_destroyed_ = false;
   int flags_ = 0;
   int stem_v_ = 0;
+  std::optional<int> font_weight_;
   int ascent_ = 0;
   int descent_ = 0;
   int italic_angle_ = 0;
