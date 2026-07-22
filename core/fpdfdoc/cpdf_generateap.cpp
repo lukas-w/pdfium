@@ -798,7 +798,7 @@ ByteString GenerateTextFieldAP(const CPDF_Dictionary* annot_dict,
       CPDF_FormField::GetFieldAttrForDict(annot_dict, "MaxLen");
   const uint32_t max_len = max_len_field ? max_len_field->GetInteger() : 0;
   vt.SetPlateRect(body_rect);
-  vt.SetAlignment(align);
+  vt.SetAlignment(CPVT_VariableText::ToAlignment(align));
   SetVtFontSize(font_size, vt);
 
   const bool is_multi_line = flags & pdfium::form_flags::kTextMultiline;
@@ -1113,7 +1113,8 @@ bool GenerateFreeTextAP(CPDF_Document* doc, CPDF_Dictionary* annot_dict) {
   CPVT_VariableText vt(&provider);
 
   vt.SetPlateRect(body_rect);
-  vt.SetAlignment(annot_dict->GetIntegerFor("Q"));
+  vt.SetAlignment(
+      CPVT_VariableText::ToAlignment(annot_dict->GetIntegerFor("Q")));
   SetVtFontSize(default_appearance_info.value().font_size, vt);
 
   vt.Initialize();

@@ -742,7 +742,7 @@ void CPWL_EditImpl::SetPlateRect(const CFX_FloatRect& rect) {
 }
 
 void CPWL_EditImpl::SetAlignmentH(int32_t nFormat) {
-  vt_->SetAlignment(nFormat);
+  vt_->SetAlignment(CPVT_VariableText::ToAlignment(nFormat));
 }
 
 void CPWL_EditImpl::SetAlignmentV(int32_t nFormat) {
