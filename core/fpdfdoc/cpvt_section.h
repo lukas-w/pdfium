@@ -99,8 +99,8 @@ class CPVT_Section final {
 
   // Like GetWordRangeIteratorPair(), but returns a span into `word_array_`.
   pdfium::span<const std::unique_ptr<CPVT_WordInfo>> GetWordRangeSpan(
-      int32_t begin_index,
-      int32_t end_index) const;
+      int32_t start,
+      int32_t length) const;
 
   CPVT_WordPlace SearchWordPlaceImpl(float fx,
                                      const CPVT_WordRange& range) const;

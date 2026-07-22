@@ -709,8 +709,15 @@ CPVT_FloatRect CPVT_Section::OutputLines(const CPVT_FloatRect& rect) const {
 
     line->line_info_.fLineX = fPosX - fMinX;
     line->line_info_.fLineY = fPosY - fMinY;
-    pdfium::span<const std::unique_ptr<CPVT_WordInfo>> words = GetWordRangeSpan(
-        line->line_info_.nBeginWordIndex, line->line_info_.nEndWordIndex + 1);
+    int32_t line_start = line->line_info_.nBeginWordIndex;
+    // `nEndWordIndex` is inclusive. Thus, `line_start == nEndWordIndex` implies
+    // a single-word line (length 1), except for the special case where both are
+    // -1 (representing an empty line), which also computes to length 1 but
+    // safely yields an empty span due to internal clamping in
+    // GetWordRangeIteratorPair().
+    int32_t line_length = line->line_info_.nEndWordIndex - line_start + 1;
+    pdfium::span<const std::unique_ptr<CPVT_WordInfo>> words =
+        GetWordRangeSpan(line_start, line_length);
 
     WideString line_str;
     line_str.Reserve(words.size());
@@ -781,9 +788,8 @@ CPVT_Section::WordRangeIteratorPair CPVT_Section::GetWordRangeIteratorPair(
 }
 
 pdfium::span<const std::unique_ptr<CPVT_WordInfo>>
-CPVT_Section::GetWordRangeSpan(int32_t begin_index, int32_t end_index) const {
-  WordRangeIteratorPair range =
-      GetWordRangeIteratorPair(begin_index, end_index);
+CPVT_Section::GetWordRangeSpan(int32_t start, int32_t length) const {
+  WordRangeIteratorPair range = GetWordRangeIteratorPair(start, start + length);
   // SAFETY: GetWordRangeIteratorPair() above returns valid iterators or
   // `word_array_.end()`.
   return UNSAFE_BUFFERS(pdfium::span<const std::unique_ptr<CPVT_WordInfo>>(
