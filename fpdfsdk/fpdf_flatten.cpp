@@ -445,7 +445,7 @@ void RemoveFlattenedFields(CPDF_Document* document,
 
 FPDF_EXPORT int FPDF_CALLCONV FPDFPage_Flatten(FPDF_PAGE page, int nFlag) {
   CPDF_Page* pPage = CPDFPageFromFPDFPage(page);
-  if (!page) {
+  if (!pPage) {
     return FLATTEN_FAIL;
   }
 

@@ -28,6 +28,19 @@ TEST_F(FPDFFlattenEmbedderTest, FlatNothing) {
             FPDFPage_Flatten(page.get(), FLAT_NORMALDISPLAY));
 }
 
+#if defined(PDF_ENABLE_XFA)
+TEST_F(FPDFFlattenEmbedderTest, RejectsFullXfaPageWithoutPdfBacking) {
+  ASSERT_TRUE(OpenDocument("simple_xfa.pdf"));
+  ASSERT_EQ(FORMTYPE_XFA_FULL, FPDF_GetFormType(document()));
+  ScopedPage page = LoadScopedPage(0);
+  ASSERT_TRUE(page);
+
+  FS_RECTF bounds;
+  ASSERT_FALSE(FPDF_GetPageBoundingBox(page.get(), &bounds));
+  EXPECT_EQ(FLATTEN_FAIL, FPDFPage_Flatten(page.get(), FLAT_NORMALDISPLAY));
+}
+#endif  // defined(PDF_ENABLE_XFA)
+
 TEST_F(FPDFFlattenEmbedderTest, FlatNormal) {
   ASSERT_TRUE(OpenDocument("annotiter.pdf"));
   ScopedPage page = LoadScopedPage(0);
