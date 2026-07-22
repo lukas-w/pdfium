@@ -103,6 +103,7 @@ source_set("fxcodec") {
       sources += [
         "bmp/bmp_decoder.cpp",
         "bmp/bmp_decoder.h",
+        "bmp/bmp_decoder_delegate.h",
         "bmp/cfx_bmpcontext.cpp",
         "bmp/cfx_bmpcontext.h",
         "bmp/cfx_bmpdecompressor.cpp",

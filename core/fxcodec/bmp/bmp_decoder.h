@@ -11,6 +11,7 @@
 
 #include <memory>
 
+#include "core/fxcodec/bmp/bmp_decoder_delegate.h"
 #include "core/fxcodec/cfx_codec_memory.h"
 #include "core/fxcrt/fx_system.h"
 #include "core/fxcrt/fx_types.h"
@@ -29,17 +30,10 @@ class ProgressiveDecoderContext;
 
 class BmpDecoder {
  public:
-  class Delegate {
-   public:
-    virtual bool BmpInputImagePositionBuf(uint32_t rcd_pos) = 0;
-    virtual void BmpReadScanline(uint32_t row_num,
-                                 pdfium::span<const uint8_t> row_buf) = 0;
-  };
-
   enum class Status : uint8_t { kFail, kSuccess, kContinue };
 
   static std::unique_ptr<ProgressiveDecoderContext> StartDecode(
-      Delegate* pDelegate);
+      BmpDecoderDelegate* pDelegate);
   static Status ReadHeader(ProgressiveDecoderContext* context,
                            int32_t* width,
                            int32_t* height,
