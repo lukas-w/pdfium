@@ -152,7 +152,8 @@ TEST_F(CPVT_VariableTextTest, GetLineCaretX) {
   CPVT_VariableText::Iterator* it = vt.GetIterator();
   const CPVT_WordPlace kFirstWordPlace(0, 0, -1);
 
-  // Test 1: Empty text
+  // Test 1a: Empty text (Left)
+  vt.SetAlignment(CPVT_VariableText::Alignment::kLeft);
   vt.SetText(L"");
   vt.RearrangeAll();
   CPVT_Line line;
@@ -160,6 +161,25 @@ TEST_F(CPVT_VariableTextTest, GetLineCaretX) {
   ASSERT_TRUE(it->GetLine(line));
   EXPECT_FLOAT_EQ(0.0f, it->GetLineCaretX(line));
   EXPECT_EQ(kFirstWordPlace, it->GetWordPlace());
+
+  // Test 1b: Empty text (Center)
+  vt.SetAlignment(CPVT_VariableText::Alignment::kCenter);
+  vt.RearrangeAll();
+  it->SetAt(kFirstWordPlace);
+  ASSERT_TRUE(it->GetLine(line));
+  EXPECT_FLOAT_EQ(50.0f, it->GetLineCaretX(line));
+  EXPECT_EQ(kFirstWordPlace, it->GetWordPlace());
+
+  // Test 1c: Empty text (Right)
+  vt.SetAlignment(CPVT_VariableText::Alignment::kRight);
+  vt.RearrangeAll();
+  it->SetAt(kFirstWordPlace);
+  ASSERT_TRUE(it->GetLine(line));
+  EXPECT_FLOAT_EQ(100.0f, it->GetLineCaretX(line));
+  EXPECT_EQ(kFirstWordPlace, it->GetWordPlace());
+
+  // Reset alignment for subsequent tests
+  vt.SetAlignment(CPVT_VariableText::Alignment::kLeft);
 
   // Test 2: LTR text (Helvetica font, starts with left caret)
   vt.SetText(L"hello");
