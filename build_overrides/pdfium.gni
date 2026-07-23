@@ -43,6 +43,11 @@ pdf_skia_font_manager_target_override = ""
 # The default is to use FreeType when `pdf_enable_fontations_override` is false.
 pdf_enable_fontations_override = false
 
+# Build PDFium with Rust-based BMP decoder. If enabled, it ensures that PDFium
+# doesn't depend on its native C++ BMP decoder. Note that `pdf_enable_rust_bmp`
+# requires Skia and Rust support.
+pdf_enable_rust_bmp_override = false
+
 # Build PDFium with Rust-based PNG decoder and encoder.
 # If enabled, it ensures that PDFium doesn't depend on `libpng`.
 # Note that `pdf_enable_rust_png` requires Skia and Rust support.
