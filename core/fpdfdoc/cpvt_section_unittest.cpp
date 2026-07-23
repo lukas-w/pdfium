@@ -12,9 +12,17 @@
 #include "core/fpdfdoc/cpvt_fontmap.h"
 #include "core/fpdfdoc/cpvt_stub_provider.h"
 #include "core/fpdfdoc/cpvt_variabletext.h"
+#include "core/fxcrt/cfx_bidi_resolver.h"
 #include "core/fxcrt/fx_codepage.h"
+#include "core/fxcrt/notreached.h"
 #include "core/fxcrt/retain_ptr.h"
 #include "testing/gtest/include/gtest/gtest.h"
+
+namespace {
+constexpr uint16_t kHebrewAlef = 0x05D0;
+constexpr uint16_t kHebrewBet = 0x05D1;
+constexpr uint16_t kHebrewGimel = 0x05D2;
+}  // namespace
 
 class CPVT_SectionTest : public testing::Test {
  public:
@@ -36,6 +44,85 @@ class CPVT_SectionTest : public testing::Test {
   }
 
  protected:
+  void PopulateSectionWithText(CPVT_Section& section,
+                               const std::vector<uint32_t>& text) {
+    section.SetPlace(CPVT_WordPlace(0, 0, -1));
+    for (size_t i = 0; i < text.size(); ++i) {
+      section.AddWord(CPVT_WordPlace(0, 0, i),
+                      CPVT_WordInfo(text[i], FX_Charset::kDefault, 0));
+    }
+  }
+
+  void PopulateSectionWithEnglishAndHebrew(CPVT_Section& section) {
+    // "A B C " (3 English words + spaces) + "H1 H2" (Alef + space + Bet)
+    PopulateSectionWithText(
+        section, {'A', ' ', 'B', ' ', 'C', ' ', kHebrewAlef, ' ', kHebrewBet});
+  }
+
+  void PopulateSectionWithHebrewAndEnglish(CPVT_Section& section) {
+    // "H1 H2 H3 " (3 Hebrew words + spaces) + "A B" (2 English words)
+    PopulateSectionWithText(section, {kHebrewAlef, ' ', kHebrewBet, ' ',
+                                      kHebrewGimel, ' ', 'A', ' ', 'B'});
+  }
+
+  void AssertEnglishAndHebrewLayout(const CPVT_Section& section) {
+    ASSERT_GT(section.GetWordArraySize(), 0);
+
+    // Testing PopulateSectionWithEnglishAndHebrew() behavior.
+    //
+    // TODO(crbug.com/534486929): This asserts the legacy buggy behavior to
+    // explicitly document the failure mode. The correct behavior should
+    // position the English characters left-to-right, and the Hebrew characters
+    // right-to-left within the visual run.
+    for (int i = 0; i < section.GetWordArraySize() - 1; ++i) {
+      EXPECT_LT(section.GetWordFromArray(i)->fWordX,
+                section.GetWordFromArray(i + 1)->fWordX);
+    }
+  }
+
+  void AssertHebrewAndEnglishLayout(const CPVT_Section& section) {
+    ASSERT_GT(section.GetWordArraySize(), 0);
+
+    // Testing PopulateSectionWithHebrewAndEnglish() behavior.
+    //
+    // TODO(crbug.com/534486929): This asserts the legacy buggy behavior to
+    // explicitly document the failure mode. The correct behavior should
+    // position the Hebrew characters right-to-left, and the English characters
+    // left-to-right within the visual run.
+    for (int i = 0; i < section.GetWordArraySize() - 1; ++i) {
+      EXPECT_GT(section.GetWordFromArray(i)->fWordX,
+                section.GetWordFromArray(i + 1)->fWordX);
+    }
+  }
+  void SetVariableTextDefaults(CPVT_VariableText& vt) {
+    vt.SetFontSize(10.0f);
+    vt.SetPlateRect(CFX_FloatRect(0, 0, 1000, 1000));
+  }
+
+  enum class TextContent { kEnglishAndHebrew, kHebrewAndEnglish };
+
+  void TestTextLayout(TextContent content,
+                      CFX_BidiResolver::ParagraphDirection direction) {
+    CPVT_VariableText vt(provider_.get());
+    SetVariableTextDefaults(vt);
+    vt.SetTextDirection(direction);
+    vt.Initialize();
+
+    CPVT_Section section(&vt);
+    switch (content) {
+      case TextContent::kEnglishAndHebrew:
+        PopulateSectionWithEnglishAndHebrew(section);
+        section.Rearrange();
+        AssertEnglishAndHebrewLayout(section);
+        return;
+      case TextContent::kHebrewAndEnglish:
+        PopulateSectionWithHebrewAndEnglish(section);
+        section.Rearrange();
+        AssertHebrewAndEnglishLayout(section);
+        return;
+    }
+    NOTREACHED();
+  }
   void PopulateSectionWithHello(CPVT_Section& section) {
     section.SetPlace(CPVT_WordPlace(0, 0, -1));
 
@@ -132,4 +219,70 @@ TEST_F(CPVT_SectionTest, ClearAllWords) {
       CPVT_WordRange(CPVT_WordPlace(-1, 0, -1), CPVT_WordPlace(1, 0, -1)));
 
   EXPECT_EQ(0, section.GetWordArraySize());
+}
+
+TEST_F(CPVT_SectionTest, OutputLines_EnglishAndHebrew_AutoDirection) {
+  TestTextLayout(TextContent::kEnglishAndHebrew,
+                 CFX_BidiResolver::ParagraphDirection::kAuto);
+}
+
+TEST_F(CPVT_SectionTest, OutputLines_EnglishAndHebrew_ExplicitLeftToRight) {
+  TestTextLayout(TextContent::kEnglishAndHebrew,
+                 CFX_BidiResolver::ParagraphDirection::kLeftToRight);
+}
+
+TEST_F(CPVT_SectionTest, OutputLines_EnglishAndHebrew_ExplicitRightToLeft) {
+  TestTextLayout(TextContent::kEnglishAndHebrew,
+                 CFX_BidiResolver::ParagraphDirection::kRightToLeft);
+}
+
+TEST_F(CPVT_SectionTest, OutputLines_HebrewAndEnglish_AutoDirection) {
+  TestTextLayout(TextContent::kHebrewAndEnglish,
+                 CFX_BidiResolver::ParagraphDirection::kAuto);
+}
+
+TEST_F(CPVT_SectionTest, OutputLines_HebrewAndEnglish_ExplicitLeftToRight) {
+  TestTextLayout(TextContent::kHebrewAndEnglish,
+                 CFX_BidiResolver::ParagraphDirection::kLeftToRight);
+}
+
+TEST_F(CPVT_SectionTest, OutputLines_HebrewAndEnglish_ExplicitRightToLeft) {
+  TestTextLayout(TextContent::kHebrewAndEnglish,
+                 CFX_BidiResolver::ParagraphDirection::kRightToLeft);
+}
+
+TEST_F(CPVT_SectionTest, OutputLines_Multiline_EnglishAndHebrew) {
+  CPVT_VariableText vt(provider_.get());
+  vt.SetFontSize(10.0f);
+  // Narrow width to force word wrap (stub font chars are 0.1 wide)
+  vt.SetPlateRect(CFX_FloatRect(0, 0, 0.45f, 1000));
+  vt.SetAutoReturn(true);
+  vt.Initialize();
+
+  CPVT_Section section(&vt);
+  PopulateSectionWithEnglishAndHebrew(section);
+  section.Rearrange();
+
+  // With SetAutoReturn(true) and a constrained plate width, the text wraps
+  // into 3 lines:
+  // Line 1: "A B "
+  // Line 2: "C H1 "
+  // Line 3: "H2"
+  // In the legacy implementation, CFX_BidiString evaluates the overall
+  // direction per physical line rather than per paragraph.
+  // For Line 2 ("C H1 "), the line-level direction incorrectly resolves to RTL.
+  // As a result, the X coordinates for Line 2 progress backwards (X decreases).
+
+  // Line 1: LTR
+  for (int i = 0; i < 3; ++i) {
+    EXPECT_LT(section.GetWordFromArray(i)->fWordX,
+              section.GetWordFromArray(i + 1)->fWordX);
+  }
+
+  // TODO(crbug.com/534486929): Line 2: RTL (BUG). This should resolve to LTR
+  // once paragraph-level Bidi evaluation is implemented.
+  for (int i = 4; i < 7; ++i) {
+    EXPECT_GT(section.GetWordFromArray(i)->fWordX,
+              section.GetWordFromArray(i + 1)->fWordX);
+  }
 }
