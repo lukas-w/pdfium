@@ -9,13 +9,14 @@
 #include <algorithm>
 #include <array>
 #include <memory>
+#include <utility>
 
 #include "core/fpdfdoc/cpvt_variabletext.h"
 #include "core/fpdfdoc/cpvt_wordinfo.h"
+#include "core/fxcrt/cfx_bidi_resolver.h"
 #include "core/fxcrt/check.h"
 #include "core/fxcrt/compiler_specific.h"
 #include "core/fxcrt/containers/adapters.h"
-#include "core/fxcrt/fx_bidi.h"
 #include "core/fxcrt/notreached.h"
 #include "core/fxcrt/stl_util.h"
 
@@ -700,8 +701,20 @@ CPVT_FloatRect CPVT_Section::OutputLines(const CPVT_FloatRect& rect) const {
   float fMinY = 0.0f;
   float fMaxY = rect.Height();
 
+  std::unique_ptr<CFX_BidiResolver> bidi_resolver;
+  if (!word_array_.empty()) {
+    std::u16string paragraph_text;
+    paragraph_text.reserve(word_array_.size());
+    for (const std::unique_ptr<CPVT_WordInfo>& word : word_array_) {
+      paragraph_text.push_back(static_cast<char16_t>(word->Word));
+    }
+
+    bidi_resolver = CFX_BidiResolver::Create(std::move(paragraph_text),
+                                             vt_->GetTextDirection());
+  }
+
   float fPosY = 0.0f;
-  for (const auto& line : line_array_) {
+  for (const std::unique_ptr<CPVT_Section::Line>& line : line_array_) {
     float fPosX =
         get_alignment_offset(line->line_info_.fLineWidth) + fLineIndent;
     fPosY += vt_->GetLineLeading();
@@ -709,6 +722,12 @@ CPVT_FloatRect CPVT_Section::OutputLines(const CPVT_FloatRect& rect) const {
 
     line->line_info_.fLineX = fPosX - fMinX;
     line->line_info_.fLineY = fPosY - fMinY;
+
+    if (!bidi_resolver) {
+      fPosY -= line->line_info_.fLineDescent;
+      continue;
+    }
+
     int32_t line_start = line->line_info_.nBeginWordIndex;
     // `nEndWordIndex` is inclusive. Thus, `line_start == nEndWordIndex` implies
     // a single-word line (length 1), except for the special case where both are
@@ -716,44 +735,29 @@ CPVT_FloatRect CPVT_Section::OutputLines(const CPVT_FloatRect& rect) const {
     // safely yields an empty span due to internal clamping in
     // GetWordRangeIteratorPair().
     int32_t line_length = line->line_info_.nEndWordIndex - line_start + 1;
-    pdfium::span<const std::unique_ptr<CPVT_WordInfo>> words =
-        GetWordRangeSpan(line_start, line_length);
 
-    WideString line_str;
-    line_str.Reserve(words.size());
-    for (const std::unique_ptr<CPVT_WordInfo>& word : words) {
-      line_str += word->Word;
-    }
-
-    CFX_BidiString bidi(line_str);
-    const bool is_overall_direction_right =
-        bidi.OverallDirection() == CFX_BidiChar::Direction::kRight;
-
-    auto position_word = [&fPosX, fMinX, fPosY, fMinY,
-                          this](CPVT_WordInfo& word) {
+    auto position_word = [&fPosX, fMinX, fPosY, fMinY, this](
+                             CPVT_WordInfo& word, bool is_rtl) {
+      word.is_rtl = is_rtl;
       word.fWordX = fPosX - fMinX;
       word.fWordY = fPosY - fMinY;
       fPosX += vt_->GetWordWidth(word);
     };
 
-    for (const CFX_BidiChar::Segment& segment : bidi) {
-      pdfium::span<const std::unique_ptr<CPVT_WordInfo>> segment_words =
-          words.subspan(segment.start, segment.count);
-      const bool is_rtl =
-          (segment.direction == CFX_BidiChar::Direction::kRight ||
-           (segment.direction == CFX_BidiChar::Direction::kNeutral &&
-            is_overall_direction_right));
+    std::vector<CFX_BidiResolver::ResolvedRun> visual_runs =
+        bidi_resolver->GetVisualRunsForLine(line_start, line_length);
 
-      if (is_rtl) {
+    for (const CFX_BidiResolver::ResolvedRun& run : visual_runs) {
+      pdfium::span<const std::unique_ptr<CPVT_WordInfo>> run_words =
+          GetWordRangeSpan(run.start, run.length);
+      if (run.is_rtl) {
         for (const std::unique_ptr<CPVT_WordInfo>& word :
-             pdfium::Reversed(segment_words)) {
-          word->is_rtl = true;
-          position_word(*word);
+             pdfium::Reversed(run_words)) {
+          position_word(*word, true);
         }
       } else {
-        for (const std::unique_ptr<CPVT_WordInfo>& word : segment_words) {
-          word->is_rtl = false;
-          position_word(*word);
+        for (const std::unique_ptr<CPVT_WordInfo>& word : run_words) {
+          position_word(*word, false);
         }
       }
     }

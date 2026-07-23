@@ -65,33 +65,47 @@ class CPVT_SectionTest : public testing::Test {
                                       kHebrewGimel, ' ', 'A', ' ', 'B'});
   }
 
-  void AssertEnglishAndHebrewLayout(const CPVT_Section& section) {
-    ASSERT_GT(section.GetWordArraySize(), 0);
+  void AssertEnglishAndHebrewLayout(const CPVT_Section& section,
+                                    CFX_BidiResolver::ParagraphDirection dir) {
+    std::vector<int> expected_visual_order;
+    if (dir == CFX_BidiResolver::ParagraphDirection::kAuto ||
+        dir == CFX_BidiResolver::ParagraphDirection::kLeftToRight) {
+      // `kAuto` uses the Unicode Bidirectional Algorithm, which resolves to LTR
+      // because the first strong character is English.
+      // The RTL run [w4, sp4, w5] (indices 6, 7, 8) has its words ordered from
+      // right to left.
+      expected_visual_order = {0, 1, 2, 3, 4, 5, 8, 7, 6};
+    } else {
+      expected_visual_order = {8, 7, 6, 5, 0, 1, 2, 3, 4};
+    }
 
-    // Testing PopulateSectionWithEnglishAndHebrew() behavior.
-    //
-    // TODO(crbug.com/534486929): This asserts the legacy buggy behavior to
-    // explicitly document the failure mode. The correct behavior should
-    // position the English characters left-to-right, and the Hebrew characters
-    // right-to-left within the visual run.
-    for (int i = 0; i < section.GetWordArraySize() - 1; ++i) {
-      EXPECT_LT(section.GetWordFromArray(i)->fWordX,
-                section.GetWordFromArray(i + 1)->fWordX);
+    ASSERT_EQ(static_cast<int>(expected_visual_order.size()),
+              section.GetWordArraySize());
+
+    for (size_t i = 0; i < expected_visual_order.size() - 1; ++i) {
+      EXPECT_LT(section.GetWordFromArray(expected_visual_order[i])->fWordX,
+                section.GetWordFromArray(expected_visual_order[i + 1])->fWordX);
     }
   }
 
-  void AssertHebrewAndEnglishLayout(const CPVT_Section& section) {
-    ASSERT_GT(section.GetWordArraySize(), 0);
+  void AssertHebrewAndEnglishLayout(const CPVT_Section& section,
+                                    CFX_BidiResolver::ParagraphDirection dir) {
+    std::vector<int> expected_visual_order;
+    if (dir == CFX_BidiResolver::ParagraphDirection::kLeftToRight) {
+      expected_visual_order = {4, 3, 2, 1, 0, 5, 6, 7, 8};
+    } else if (dir == CFX_BidiResolver::ParagraphDirection::kAuto ||
+               dir == CFX_BidiResolver::ParagraphDirection::kRightToLeft) {
+      // `kAuto` uses the Unicode Bidirectional Algorithm, which resolves to RTL
+      // because the first strong character is Hebrew.
+      expected_visual_order = {6, 7, 8, 5, 4, 3, 2, 1, 0};
+    }
 
-    // Testing PopulateSectionWithHebrewAndEnglish() behavior.
-    //
-    // TODO(crbug.com/534486929): This asserts the legacy buggy behavior to
-    // explicitly document the failure mode. The correct behavior should
-    // position the Hebrew characters right-to-left, and the English characters
-    // left-to-right within the visual run.
-    for (int i = 0; i < section.GetWordArraySize() - 1; ++i) {
-      EXPECT_GT(section.GetWordFromArray(i)->fWordX,
-                section.GetWordFromArray(i + 1)->fWordX);
+    ASSERT_EQ(static_cast<int>(expected_visual_order.size()),
+              section.GetWordArraySize());
+
+    for (size_t i = 0; i < expected_visual_order.size() - 1; ++i) {
+      EXPECT_LT(section.GetWordFromArray(expected_visual_order[i])->fWordX,
+                section.GetWordFromArray(expected_visual_order[i + 1])->fWordX);
     }
   }
   void SetVariableTextDefaults(CPVT_VariableText& vt) {
@@ -113,12 +127,12 @@ class CPVT_SectionTest : public testing::Test {
       case TextContent::kEnglishAndHebrew:
         PopulateSectionWithEnglishAndHebrew(section);
         section.Rearrange();
-        AssertEnglishAndHebrewLayout(section);
+        AssertEnglishAndHebrewLayout(section, direction);
         return;
       case TextContent::kHebrewAndEnglish:
         PopulateSectionWithHebrewAndEnglish(section);
         section.Rearrange();
-        AssertHebrewAndEnglishLayout(section);
+        AssertHebrewAndEnglishLayout(section, direction);
         return;
     }
     NOTREACHED();
@@ -268,10 +282,11 @@ TEST_F(CPVT_SectionTest, OutputLines_Multiline_EnglishAndHebrew) {
   // Line 1: "A B "
   // Line 2: "C H1 "
   // Line 3: "H2"
-  // In the legacy implementation, CFX_BidiString evaluates the overall
-  // direction per physical line rather than per paragraph.
-  // For Line 2 ("C H1 "), the line-level direction incorrectly resolves to RTL.
-  // As a result, the X coordinates for Line 2 progress backwards (X decreases).
+  // The Unicode Bidirectional Algorithm resolves the paragraph direction to LTR
+  // (based on the first strong character 'A').
+  // When resolving visual runs for physical line 2, the algorithm maintains
+  // the paragraph's overall LTR context. The spaces are resolved as LTR, and
+  // the X coordinates correctly progress LTR (X increases).
 
   // Line 1: LTR
   for (int i = 0; i < 3; ++i) {
@@ -279,10 +294,9 @@ TEST_F(CPVT_SectionTest, OutputLines_Multiline_EnglishAndHebrew) {
               section.GetWordFromArray(i + 1)->fWordX);
   }
 
-  // TODO(crbug.com/534486929): Line 2: RTL (BUG). This should resolve to LTR
-  // once paragraph-level Bidi evaluation is implemented.
+  // Line 2: Correctly resolved as LTR using paragraph context
   for (int i = 4; i < 7; ++i) {
-    EXPECT_GT(section.GetWordFromArray(i)->fWordX,
+    EXPECT_LT(section.GetWordFromArray(i)->fWordX,
               section.GetWordFromArray(i + 1)->fWordX);
   }
 }
