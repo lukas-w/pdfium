@@ -31,19 +31,11 @@ namespace fxcodec {
 namespace {
 
 sk_sp<SkColorSpace> GetTargetColorSpace(double gamma) {
-  skcms_ICCProfile profile;
-  skcms_Init(&profile);
-
-  skcms_TransferFunction fn;
-  fn.a = 1.0f;
-  fn.b = fn.c = fn.d = fn.e = fn.f = 0.0f;
-  fn.g = 1.0f / gamma;
-  skcms_SetTransferFunction(&profile, &fn);
-
-  skcms_Matrix3x3 to_xyzd50 = skcms_sRGB_profile()->toXYZD50;
-  skcms_SetXYZD50(&profile, &to_xyzd50);
-
-  return SkColorSpace::Make(profile);
+  const skcms_TransferFunction fn = {
+      .g = static_cast<float>(1.0 / gamma),
+      .a = 1.0f,
+  };
+  return SkColorSpace::MakeRGB(fn, SkNamedGamut::kSRGB);
 }
 
 class SkiaPngContext final : public ProgressiveDecoderContext {

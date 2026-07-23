@@ -50,7 +50,7 @@ BmpDecoder::Status BmpDecoder::ReadHeader(ProgressiveDecoderContext* context,
 }
 
 // static
-BmpDecoder::Status BmpDecoder::LoadImage(ProgressiveDecoderContext* context) {
+BmpDecoder::Status BmpDecoder::DecodeImage(ProgressiveDecoderContext* context) {
   return static_cast<CFX_BmpContext*>(context)->bmp_.DecodeImage();
 }
 

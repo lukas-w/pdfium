@@ -41,7 +41,7 @@ class BmpDecoder {
                            int32_t* components,
                            pdfium::span<const FX_ARGB>* palette,
                            CFX_DIBAttribute* pAttribute);
-  static Status LoadImage(ProgressiveDecoderContext* context);
+  static Status DecodeImage(ProgressiveDecoderContext* context);
   static FX_FILESIZE GetAvailInput(ProgressiveDecoderContext* context);
   static bool Input(ProgressiveDecoderContext* context,
                     RetainPtr<CFX_CodecMemory> codec_memory);
