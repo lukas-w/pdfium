@@ -82,6 +82,10 @@ class CPVT_Section final {
   CPVT_FloatRect RearrangeCharArray() const;
   CPVT_FloatRect RearrangeTypeset();
   CPVT_FloatRect SplitLines(bool bTypeset, float fFontSize);
+  // Iterates through all lines in the section, laying out words according to
+  // the text alignment and bidi rules (reordering words if necessary), and
+  // assigns final (X, Y) coordinates to each word and line. Returns the
+  // bounding box encompassing all the lines.
   CPVT_FloatRect OutputLines(const CPVT_FloatRect& rect) const;
 
   // Clears [0, word_index] from `word_array_`.

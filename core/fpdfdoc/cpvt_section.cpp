@@ -721,7 +721,7 @@ CPVT_FloatRect CPVT_Section::OutputLines(const CPVT_FloatRect& rect) const {
 
     WideString line_str;
     line_str.Reserve(words.size());
-    for (const auto& word : words) {
+    for (const std::unique_ptr<CPVT_WordInfo>& word : words) {
       line_str += word->Word;
     }
 
@@ -729,26 +729,29 @@ CPVT_FloatRect CPVT_Section::OutputLines(const CPVT_FloatRect& rect) const {
     const bool is_overall_direction_right =
         bidi.OverallDirection() == CFX_BidiChar::Direction::kRight;
 
-    auto position_word = [&](CPVT_WordInfo& word) {
+    auto position_word = [&fPosX, fMinX, fPosY, fMinY,
+                          this](CPVT_WordInfo& word) {
       word.fWordX = fPosX - fMinX;
       word.fWordY = fPosY - fMinY;
       fPosX += vt_->GetWordWidth(word);
     };
 
-    for (const auto& segment : bidi) {
-      auto segment_words = words.subspan(segment.start, segment.count);
+    for (const CFX_BidiChar::Segment& segment : bidi) {
+      pdfium::span<const std::unique_ptr<CPVT_WordInfo>> segment_words =
+          words.subspan(segment.start, segment.count);
       const bool is_rtl =
           (segment.direction == CFX_BidiChar::Direction::kRight ||
            (segment.direction == CFX_BidiChar::Direction::kNeutral &&
             is_overall_direction_right));
 
       if (is_rtl) {
-        for (const auto& word : pdfium::Reversed(segment_words)) {
+        for (const std::unique_ptr<CPVT_WordInfo>& word :
+             pdfium::Reversed(segment_words)) {
           word->is_rtl = true;
           position_word(*word);
         }
       } else {
-        for (const auto& word : segment_words) {
+        for (const std::unique_ptr<CPVT_WordInfo>& word : segment_words) {
           word->is_rtl = false;
           position_word(*word);
         }
