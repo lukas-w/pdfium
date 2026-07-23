@@ -17,6 +17,7 @@
 #include "core/fpdfdoc/cpvt_lineinfo.h"
 #include "core/fpdfdoc/cpvt_wordplace.h"
 #include "core/fpdfdoc/cpvt_wordrange.h"
+#include "core/fxcrt/cfx_bidi_resolver.h"
 #include "core/fxcrt/fx_codepage_forward.h"
 #include "core/fxcrt/fx_coordinates.h"
 #include "core/fxcrt/to_underlying.h"
@@ -103,6 +104,12 @@ class CPVT_VariableText {
   void SetFontSize(float fFontSize) { font_size_ = fFontSize; }
   void SetCharArray(int32_t nCharArray) { char_array_ = nCharArray; }
   void SetAutoFontSize(bool bAuto) { auto_font_size_ = bAuto; }
+  void SetTextDirection(CFX_BidiResolver::ParagraphDirection direction) {
+    text_direction_ = direction;
+  }
+  CFX_BidiResolver::ParagraphDirection GetTextDirection() const {
+    return text_direction_;
+  }
   void Initialize();
 
   bool IsValid() const { return initialized_; }
@@ -205,6 +212,8 @@ class CPVT_VariableText {
   bool multi_line_ = false;
   bool limit_width_ = false;
   bool auto_font_size_ = false;
+  CFX_BidiResolver::ParagraphDirection text_direction_ =
+      CFX_BidiResolver::ParagraphDirection::kAuto;
   uint16_t sub_word_ = 0;
   int32_t limit_char_ = 0;
   int32_t char_array_ = 0;
