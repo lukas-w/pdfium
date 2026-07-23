@@ -1117,31 +1117,31 @@ pdfium::span<const uint8_t> CPDF_DIB::GetScanline(int line) const {
   }
 
   uint32_t src_pitch_value = src_pitch.value();
-  // A fallback member buffer is used as the backing store for `pSrcLine`
+  // A fallback member buffer is used as the backing store for `src_line`
   // when the stream is truncated and the remaining bytes count is less
   // than `src_pitch_value`.
-  pdfium::span<const uint8_t> pSrcLine;
+  pdfium::span<const uint8_t> src_line;
 
   if (cached_bitmap_ && src_pitch_value <= cached_bitmap_->GetPitch()) {
     if (line >= cached_bitmap_->GetHeight()) {
       line = cached_bitmap_->GetHeight() - 1;
     }
-    pSrcLine = cached_bitmap_->GetScanline(line);
+    src_line = cached_bitmap_->GetScanline(line);
   } else if (decoder_) {
-    pSrcLine = decoder_->GetScanline(line);
+    src_line = decoder_->GetScanline(line);
   } else if (stream_acc_->GetSize() > line * src_pitch_value) {
     pdfium::span<const uint8_t> remaining_bytes =
         stream_acc_->GetSpan().subspan(line * src_pitch_value);
     if (remaining_bytes.size() >= src_pitch_value) {
-      pSrcLine = remaining_bytes.first(src_pitch_value);
+      src_line = remaining_bytes.first(src_pitch_value);
     } else {
       src_remainder_buf_ = DataVector<uint8_t>(src_pitch_value);
       fxcrt::Copy(remaining_bytes, src_remainder_buf_);
-      pSrcLine = src_remainder_buf_;
+      src_line = src_remainder_buf_;
     }
   }
 
-  if (pSrcLine.empty()) {
+  if (src_line.empty()) {
     pdfium::span<uint8_t> result = !mask_buf_.empty() ? mask_buf_ : line_buf_;
     std::ranges::fill(result, 0);
     return result;
@@ -1150,12 +1150,12 @@ pdfium::span<const uint8_t> CPDF_DIB::GetScanline(int line) const {
     if (image_mask_ && default_decode_) {
       for (uint32_t i = 0; i < src_pitch_value; i++) {
         // TODO(tsepez): Bounds check if cost is acceptable.
-        UNSAFE_TODO(line_buf_[i] = ~pSrcLine.data()[i]);
+        UNSAFE_TODO(line_buf_[i] = ~src_line.data()[i]);
       }
       return pdfium::span(line_buf_).first(src_pitch_value);
     }
     if (!color_key_) {
-      fxcrt::Copy(pSrcLine.first(src_pitch_value), line_buf_);
+      fxcrt::Copy(src_line.first(src_pitch_value), line_buf_);
       return pdfium::span(line_buf_).first(src_pitch_value);
     }
     uint32_t reset_argb = Get1BitResetValue();
@@ -1163,7 +1163,7 @@ pdfium::span<const uint8_t> CPDF_DIB::GetScanline(int line) const {
     auto mask32_span =
         fxcrt::reinterpret_span<uint32_t>(pdfium::span(mask_buf_));
     for (int col = 0; col < GetWidth(); col++) {
-      mask32_span[col] = GetBitValue(pSrcLine, col) ? set_argb : reset_argb;
+      mask32_span[col] = GetBitValue(src_line, col) ? set_argb : reset_argb;
     }
     return fxcrt::reinterpret_span<uint8_t>(
         mask32_span.first(static_cast<size_t>(GetWidth())));
@@ -1171,14 +1171,14 @@ pdfium::span<const uint8_t> CPDF_DIB::GetScanline(int line) const {
   if (bpc_ * components_ <= 8) {
     pdfium::span<uint8_t> result = line_buf_;
     if (bpc_ == 8) {
-      fxcrt::Copy(pSrcLine.first(src_pitch_value), result);
+      fxcrt::Copy(src_line.first(src_pitch_value), result);
       result = result.first(src_pitch_value);
     } else {
       uint64_t src_bit_pos = 0;
       for (int col = 0; col < GetWidth(); col++) {
         unsigned int color_index = 0;
         for (uint32_t color = 0; color < components_; color++) {
-          unsigned int data = GetBits8(pSrcLine, src_bit_pos, bpc_);
+          unsigned int data = GetBits8(src_line, src_bit_pos, bpc_);
           color_index |= data << (color * bpc_);
           src_bit_pos += bpc_;
         }
@@ -1190,26 +1190,26 @@ pdfium::span<const uint8_t> CPDF_DIB::GetScanline(int line) const {
       return result;
     }
 
-    uint8_t* pDestPixel = mask_buf_.data();
-    const uint8_t* pSrcPixel = line_buf_.data();
+    uint8_t* dest_pixel = mask_buf_.data();
+    const uint8_t* src_pixel = line_buf_.data();
     pdfium::span<const uint32_t> palette = GetPaletteSpan();
     UNSAFE_TODO({
       if (HasPalette()) {
         for (int col = 0; col < GetWidth(); col++) {
-          uint8_t index = *pSrcPixel++;
-          *pDestPixel++ = FXARGB_B(palette[index]);
-          *pDestPixel++ = FXARGB_G(palette[index]);
-          *pDestPixel++ = FXARGB_R(palette[index]);
-          *pDestPixel++ =
+          uint8_t index = *src_pixel++;
+          *dest_pixel++ = FXARGB_B(palette[index]);
+          *dest_pixel++ = FXARGB_G(palette[index]);
+          *dest_pixel++ = FXARGB_R(palette[index]);
+          *dest_pixel++ =
               IsColorIndexOutOfBounds(index, comp_data_[0]) ? 0xFF : 0;
         }
       } else {
         for (int col = 0; col < GetWidth(); col++) {
-          uint8_t index = *pSrcPixel++;
-          *pDestPixel++ = index;
-          *pDestPixel++ = index;
-          *pDestPixel++ = index;
-          *pDestPixel++ =
+          uint8_t index = *src_pixel++;
+          *dest_pixel++ = index;
+          *dest_pixel++ = index;
+          *dest_pixel++ = index;
+          *dest_pixel++ =
               IsColorIndexOutOfBounds(index, comp_data_[0]) ? 0xFF : 0;
         }
       }
@@ -1221,10 +1221,9 @@ pdfium::span<const uint8_t> CPDF_DIB::GetScanline(int line) const {
       UNSAFE_TODO({
         uint8_t* alpha_channel = mask_buf_.data() + 3;
         for (int col = 0; col < GetWidth(); col++) {
-          const auto pPixel =
-              pSrcLine.subspan(static_cast<size_t>(col * 3), 3u);
+          const auto pixel = src_line.subspan(static_cast<size_t>(col * 3), 3u);
           alpha_channel[col * 4] =
-              AreColorIndicesOutOfBounds(pPixel, comp_data_) ? 0xFF : 0;
+              AreColorIndicesOutOfBounds(pixel, comp_data_) ? 0xFF : 0;
         }
       });
     } else {
@@ -1232,23 +1231,23 @@ pdfium::span<const uint8_t> CPDF_DIB::GetScanline(int line) const {
     }
   }
   if (color_space_) {
-    TranslateScanline24bpp(line_buf_, pSrcLine);
+    TranslateScanline24bpp(line_buf_, src_line);
     src_pitch_value = 3 * GetWidth();
-    pSrcLine = pdfium::span(line_buf_).first(src_pitch_value);
+    src_line = pdfium::span(line_buf_).first(src_pitch_value);
   }
   if (!color_key_) {
-    return pSrcLine;
+    return src_line;
   }
 
   // TODO(tsepez): Bounds check if cost is acceptable.
-  const uint8_t* pSrcPixel = pSrcLine.data();
-  uint8_t* pDestPixel = mask_buf_.data();
+  const uint8_t* src_pixel = src_line.data();
+  uint8_t* dest_pixel = mask_buf_.data();
   UNSAFE_TODO({
     for (int col = 0; col < GetWidth(); col++) {
-      *pDestPixel++ = *pSrcPixel++;
-      *pDestPixel++ = *pSrcPixel++;
-      *pDestPixel++ = *pSrcPixel++;
-      pDestPixel++;
+      *dest_pixel++ = *src_pixel++;
+      *dest_pixel++ = *src_pixel++;
+      *dest_pixel++ = *src_pixel++;
+      dest_pixel++;
     }
   });
   return pdfium::span(mask_buf_).first(static_cast<size_t>(4 * GetWidth()));
