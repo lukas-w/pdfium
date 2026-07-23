@@ -38,9 +38,6 @@
 #include "core/fxcrt/check_op.h"
 #include "core/fxcrt/compiler_specific.h"
 #include "core/fxcrt/containers/contains.h"
-#include "core/fxcrt/data_vector.h"
-#include "core/fxcrt/fx_2d_size.h"
-#include "core/fxcrt/fx_safe_types.h"
 #include "core/fxcrt/fx_system.h"
 #include "core/fxcrt/maybe_owned.h"
 #include "core/fxcrt/notreached.h"
@@ -246,7 +243,6 @@ class CPDF_ICCBasedCS final : public CPDF_BasedCS {
                                       uint32_t nComponents);
 
   RetainPtr<CPDF_IccProfile> profile_;
-  mutable DataVector<uint8_t> cache_;
   std::vector<float> ranges_;
 };
 
@@ -1012,68 +1008,7 @@ void CPDF_ICCBasedCS::TranslateImageLine(pdfium::span<uint8_t> dest_span,
     return;
   }
 
-  // `max_colors` will not overflow since `components` is limited in size,
-  // but use FX_SAFE_INT32 to ensure this condition holds.
-  const uint32_t components = ComponentCount();
-  DCHECK(fxcodec::IccTransform::IsValidIccComponents(components));
-  FX_SAFE_INT32 max_colors = 1;
-  constexpr int kNumQuantizedLevels = 52;
-  constexpr int kQuantizationDegree = 255 / (kNumQuantizedLevels - 1);
-  for (uint32_t i = 0; i < components; i++) {
-    max_colors *= kNumQuantizedLevels;
-  }
-
-  FX_SAFE_INT32 pixel_count = image_width;
-  pixel_count *= image_height;
-
-  FX_SAFE_INT32 safe_max = max_colors;
-  // Seperated to avoid 3/2 turning into 1 due to integer division.
-  safe_max *= 3;
-  safe_max /= 2;
-  if (pixel_count.IsValid() &&
-      pixel_count.ValueOrDie() < safe_max.ValueOrDie()) {
-    profile_->TranslateScanline(dest_span, src_span, pixels);
-    return;
-  }
-
-  if (cache_.empty()) {
-    cache_.resize(Fx2DSizeOrDie(max_colors, 3));
-    DataVector<uint8_t> temp_src(Fx2DSizeOrDie(max_colors, components));
-    size_t src_index = 0;
-    uint32_t initial_order =
-        static_cast<int>(max_colors.ValueOrDie()) / kNumQuantizedLevels;
-    for (int i = 0; i < max_colors.ValueOrDie(); i++) {
-      uint32_t color = i;
-      uint32_t order = initial_order;
-      for (uint32_t c = 0; c < components; c++) {
-        temp_src[src_index++] =
-            static_cast<uint8_t>(color / order * kQuantizationDegree);
-        color %= order;
-        order /= kNumQuantizedLevels;
-      }
-    }
-    profile_->TranslateScanline(cache_, temp_src, max_colors.ValueOrDie());
-  }
-
-  // Insert cached values into destination buffer.
-  size_t src_span_idx = 0;
-  size_t dest_span_idx = 0;
-  for (int i = 0; i < pixels; i++) {
-    int index = 0;
-    for (uint32_t c = 0; c < components; c++) {
-      // Index is based on a number system of base kNumQuantizedLevels.
-      index = index * kNumQuantizedLevels +
-              src_span[src_span_idx + c] / kQuantizationDegree;
-    }
-    // Max case, there are 3 channels (4 returns early), hence convert color
-    // position to an actual index in the destination buffer.
-    index *= 3;
-    for (uint32_t c = 0; c < 3; c++) {
-      dest_span[dest_span_idx + c] = cache_[index + c];
-    }
-    dest_span_idx += 3;
-    src_span_idx += components;
-  }
+  profile_->TranslateScanline(dest_span, src_span, pixels);
 }
 
 bool CPDF_ICCBasedCS::IsNormal() const {
