@@ -18,6 +18,7 @@ endobj
   /Resources <<
     /Font <<
       /F1 5 0 R
+      /F2 6 0 R
     >>
   >>
 >>
@@ -136,6 +137,16 @@ EMC
 >> BDC
 (RTLf) Tj
 EMC
+% Literal RTL text followed by RTL /ActualText case.
+0 -50 Td
+/F2 12 Tf
+<0105> Tj
+/F1 12 Tf
+/Span <<
+  /ActualText <FEFF05E905DC05D505DD>
+>> BDC
+(RTLh) Tj
+EMC
 ET
 endstream
 endobj
@@ -144,6 +155,46 @@ endobj
   /Subtype /Type1
   /BaseFont /Helvetica
 >>
+endobj
+{{object 6 0}} <<
+  /Type /Font
+  /Subtype /TrueType
+  /BaseFont /BAAAAA+NotoSansHebrew-Regular
+  /FirstChar 0
+  /FontDescriptor 7 0 R
+  /LastChar 5
+  /ToUnicode 9 0 R
+  /Widths [600 294 235 645 397 542]
+>>
+endobj
+{{object 7 0}} <<
+  /Type /FontDescriptor
+  /Ascent 1069
+  /CapHeight 869
+  /Descent -293
+  /Flags 4
+  /FontBBox [-210 -252 716 869]
+  /FontFile2 8 0 R
+  /FontName /BAAAAA+NotoSansHebrew-Regular
+  /ItalicAngle 0
+  /StemV 80
+>>
+endobj
+{{object 8 0}} <<
+  /Filter [/ASCII85Decode /FlateDecode]
+  {{streamlen}}
+  /Length1 6721
+>>
+stream
+{{include hebrew_truetype_font.fragment}}
+endstream
+endobj
+{{object 9 0}} <<
+  {{streamlen}}
+>>
+stream
+{{include hebrew_cmap.fragment}}
+endstream
 endobj
 {{xref}}
 {{trailer}}

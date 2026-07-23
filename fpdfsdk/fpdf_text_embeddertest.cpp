@@ -2538,7 +2538,12 @@ TEST_F(FPDFTextEmbedderTest, ActualTextRtl) {
        // םימ:
        0x05dd, 0x05d9, 0x05de, ' ', 'L', 'T', 'R', ' ', 'N', 'e', ' ',
        // םולש:
-       0x05dd, 0x05d5, 0x05dc, 0x05e9, '\0'});
+       0x05dd, 0x05d5, 0x05dc, 0x05e9, '\r', '\n',
+       // Literal RTL text followed by RTL /ActualText case:
+       // םולש (/ActualText):
+       0x05dd, 0x05d5, 0x05dc, 0x05e9,
+       // בן (literal text):
+       0x05d1, 0x05df, '\0'});
   static constexpr int kExpectedTextSize = std::size(kExpectedText);
 
   unsigned short buffer[256] = {};
