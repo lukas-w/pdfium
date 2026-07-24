@@ -851,8 +851,18 @@ void CPDF_TextPage::CloseTempLine() {
         (segment.direction == CFX_BidiChar::Direction::kNeutral &&
          current_direction == CFX_BidiChar::Direction::kRight)) {
       current_direction = CFX_BidiChar::Direction::kRight;
-      for (size_t i = segment.count; i > 0; --i) {
-        AddCharInfo(str_span[i - 1], char_span[i - 1], /*is_rtl=*/true);
+      const bool is_actual_text =
+          !char_span.empty() && char_span[0].char_type() == CharType::kPiece;
+      if (is_actual_text) {
+        // Since /ActualText strings are already in logical order, pass their
+        // characters in forward order instead of reversing them.
+        for (auto [c, info] : fxcrt::Zip(str_span, char_span)) {
+          AddCharInfo(c, info, /*is_rtl=*/true);
+        }
+      } else {
+        for (size_t i = segment.count; i > 0; --i) {
+          AddCharInfo(str_span[i - 1], char_span[i - 1], /*is_rtl=*/true);
+        }
       }
     } else {
       if (segment.direction != CFX_BidiChar::Direction::kLeftWeak) {

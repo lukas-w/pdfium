@@ -2490,58 +2490,59 @@ TEST_F(FPDFTextEmbedderTest, ActualTextRtl) {
   ScopedFPDFTextPage text_page(FPDFText_LoadPage(page.get()));
   ASSERT_TRUE(text_page);
 
-  // TODO(crbug.com/525087036): `kExpectedText` is wrong. RTL text is backwards.
   static constexpr auto kExpectedText = std::to_array<unsigned short>(
       {'H', 'e', 'l', 'l', 'o', ' ', 'i', 's', ' ',
-       // םולש:
-       0x05dd, 0x05d5, 0x05dc, 0x05e9, '\r', '\n',
+       // שלום (logical order):
+       0x05e9, 0x05dc, 0x05d5, 0x05dd, '\r', '\n',
        // Second line:
        'W', 'a', 't', 'e', 'r', ' ', 'i', 's', ' ', 'w', 'a', 't', 'e', 'r',
        ' ',
-       // םימ:
-       0x05dd, 0x05d9, 0x05de, '\r', '\n',
+       // מים (logical order):
+       0x05de, 0x05d9, 0x05dd, '\r', '\n',
        // Third line:
        'M', 'i', 'r', 'r', 'o', 'r', 'e', 'd', ' ',
        // ם:
-       0x05dd, '(', ']', '\r', '\n',
+       0x05dd, ']', '(', '\r', '\n',
        // Pure RTL case:
-       // םולש:
-       0x05dd, 0x05d5, 0x05dc, 0x05e9, '\r', '\n',
+       // שלום (logical order):
+       0x05e9, 0x05dc, 0x05d5, 0x05dd, '\r', '\n',
        // Predominantly RTL case:
-       // םימ:
-       0x05dd, 0x05d9, 0x05de, ' ', 'H', 'a', ' ',
-       // םולש:
-       0x05dd, 0x05d5, 0x05dc, 0x05e9, '\r', '\n',
+       // TODO(crbug.com/525087036): The two RTL segments should trade places.
+       // מים (logical order):
+       0x05de, 0x05d9, 0x05dd, ' ', 'H', 'a', ' ',
+       // שלום (logical order):
+       0x05e9, 0x05dc, 0x05d5, 0x05dd, '\r', '\n',
        // Tie-Breaker case:
        'H', 'e', ' ',
-       // םולש:
-       0x05dd, 0x05d5, 0x05dc, 0x05e9, '\r', '\n',
+       // שלום (logical order):
+       0x05e9, 0x05dc, 0x05d5, 0x05dd, '\r', '\n',
        // Pure LTR text in /ActualText case:
        'P', 'u', 'r', 'e', ' ', 'p', 'd', 'f', '\r', '\n',
        // RTL followed by LTR in /ActualText case:
        'H', 'i', ' ',
-       // םולש:
-       0x05dd, 0x05d5, 0x05dc, 0x05e9, ' ', 'h', 'i', '\r', '\n',
+       // שלום (logical order):
+       0x05e9, 0x05dc, 0x05d5, 0x05dd, ' ', 'h', 'i', '\r', '\n',
        // LTR followed by RTL in /ActualText case:
        'H', 'o', ' ', 'h', 'o', ' ',
-       // םולש:
-       0x05dd, 0x05d5, 0x05dc, 0x05e9, '\r', '\n',
+       // שלום (logical order):
+       0x05e9, 0x05dc, 0x05d5, 0x05dd, '\r', '\n',
        // RTL, LTR, RTL in /ActualText case:
        'H', 'u', ' ',
-       // םולש:
-       0x05dd, 0x05d5, 0x05dc, 0x05e9, ' ', 'H', 'a', ' ',
-       // םימ:
-       0x05dd, 0x05d9, 0x05de, '\r', '\n',
+       // שלום (logical order):
+       0x05e9, 0x05dc, 0x05d5, 0x05dd, ' ', 'H', 'a', ' ',
+       // מים (logical order):
+       0x05de, 0x05d9, 0x05dd, '\r', '\n',
        // LTR, RTL, LTR in /ActualText case:
        'N', 'a', ' ', 'H', 'i', ' ',
-       // םולש:
-       0x05dd, 0x05d5, 0x05dc, 0x05e9, ' ', 'G', 'o', '\r', '\n',
+       // שלום (logical order):
+       0x05e9, 0x05dc, 0x05d5, 0x05dd, ' ', 'G', 'o', '\r', '\n',
        // Pure LTR /ActualText mixed with surrounding RTL text segments case:
-       // םולש:
-       0x05dd, 0x05d5, 0x05dc, 0x05e9, ' ', 'N', 'e', ' ', 'L', 'T', 'R', ' ',
-       // םימ:
-       0x05dd, 0x05d9, 0x05de, '\r', '\n',
+       // שלום (logical order):
+       0x05e9, 0x05dc, 0x05d5, 0x05dd, ' ', 'N', 'e', ' ', 'L', 'T', 'R', ' ',
+       // מים (logical order):
+       0x05de, 0x05d9, 0x05dd, '\r', '\n',
        // Literal RTL text followed by RTL /ActualText case:
+       // TODO(crbug.com/525087036): Should be in logical order.
        // םולש (/ActualText):
        0x05dd, 0x05d5, 0x05dc, 0x05e9,
        // בן (literal text):
