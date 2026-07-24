@@ -178,7 +178,7 @@ bool IsRightToLeft(const CPDF_TextObject& text_obj) {
       str += wc;
     }
   }
-  return CFX_BidiString(str).OverallDirection() ==
+  return CFX_BidiString(str, /*auto_order=*/true).OverallDirection() ==
          CFX_BidiChar::Direction::kRight;
 }
 
@@ -838,7 +838,7 @@ void CPDF_TextPage::CloseTempLine() {
     }
     prev_char_is_space = true;
   }
-  CFX_BidiString bidi(str);
+  CFX_BidiString bidi(str, /*auto_order=*/true);
   if (rtl_) {
     bidi.SetOverallDirectionRight();
   }

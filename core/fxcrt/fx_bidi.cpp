@@ -60,7 +60,8 @@ void CFX_BidiChar::StartNewSegment(CFX_BidiChar::Direction direction) {
   current_segment_.direction = direction;
 }
 
-CFX_BidiString::CFX_BidiString(const WideString& str) : str_(str) {
+CFX_BidiString::CFX_BidiString(const WideString& str, bool auto_order)
+    : str_(str) {
   CFX_BidiChar bidi;
   for (wchar_t c : str_) {
     if (bidi.AppendChar(c)) {
@@ -69,6 +70,10 @@ CFX_BidiString::CFX_BidiString(const WideString& str) : str_(str) {
   }
   if (bidi.EndChar()) {
     order_.push_back(bidi.GetSegmentInfo());
+  }
+
+  if (!auto_order) {
+    return;
   }
 
   size_t nR2L = std::count_if(
