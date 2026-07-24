@@ -81,7 +81,7 @@ CFX_BidiString::CFX_BidiString(const WideString& str) : str_(str) {
         return seg.direction == CFX_BidiChar::Direction::kLeft;
       });
 
-  if (nR2L > 0 && nR2L >= nL2R) {
+  if (nR2L > nL2R) {
     SetOverallDirectionRight();
   }
 }

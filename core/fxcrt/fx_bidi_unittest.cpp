@@ -489,3 +489,30 @@ TEST(fxcrt, BidiStringReverse) {
   ++it;
   EXPECT_EQ(it, bidi.end());
 }
+
+TEST(fxcrt, BidiStringLeftRightEqual) {
+  constexpr wchar_t kStr[] = {kLeftChar, kRightChar, 0};
+  CFX_BidiString bidi(kStr);
+  EXPECT_EQ(CFX_BidiChar::Direction::kLeft, bidi.OverallDirection());
+
+  auto it = bidi.begin();
+  ASSERT_NE(it, bidi.end());
+  EXPECT_EQ(0u, it->start);
+  EXPECT_EQ(0u, it->count);
+  EXPECT_EQ(CFX_BidiChar::Direction::kNeutral, it->direction);
+
+  ++it;
+  ASSERT_NE(it, bidi.end());
+  EXPECT_EQ(0u, it->start);
+  EXPECT_EQ(1u, it->count);
+  EXPECT_EQ(CFX_BidiChar::Direction::kLeft, it->direction);
+
+  ++it;
+  ASSERT_NE(it, bidi.end());
+  EXPECT_EQ(1u, it->start);
+  EXPECT_EQ(1u, it->count);
+  EXPECT_EQ(CFX_BidiChar::Direction::kRight, it->direction);
+
+  ++it;
+  EXPECT_EQ(it, bidi.end());
+}

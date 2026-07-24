@@ -2501,9 +2501,9 @@ TEST_F(FPDFTextEmbedderTest, ActualTextRtl) {
        // םימ:
        0x05dd, 0x05d9, 0x05de, '\r', '\n',
        // Third line:
-       '(', ']',
+       'M', 'i', 'r', 'r', 'o', 'r', 'e', 'd', ' ',
        // ם:
-       0x05dd, ' ', 'M', 'i', 'r', 'r', 'o', 'r', 'e', 'd', '\r', '\n',
+       0x05dd, '(', ']', '\r', '\n',
        // Pure RTL case:
        // םולש:
        0x05dd, 0x05d5, 0x05dc, 0x05e9, '\r', '\n',
@@ -2513,8 +2513,9 @@ TEST_F(FPDFTextEmbedderTest, ActualTextRtl) {
        // םולש:
        0x05dd, 0x05d5, 0x05dc, 0x05e9, '\r', '\n',
        // Tie-Breaker case:
+       'H', 'e', ' ',
        // םולש:
-       0x05dd, 0x05d5, 0x05dc, 0x05e9, ' ', 'H', 'e', '\r', '\n',
+       0x05dd, 0x05d5, 0x05dc, 0x05e9, '\r', '\n',
        // Pure LTR text in /ActualText case:
        'P', 'u', 'r', 'e', ' ', 'p', 'd', 'f', '\r', '\n',
        // RTL followed by LTR in /ActualText case:
@@ -2526,19 +2527,20 @@ TEST_F(FPDFTextEmbedderTest, ActualTextRtl) {
        // םולש:
        0x05dd, 0x05d5, 0x05dc, 0x05e9, '\r', '\n',
        // RTL, LTR, RTL in /ActualText case:
-       // םימ:
-       0x05dd, 0x05d9, 0x05de, ' ', 'H', 'a', ' ',
+       'H', 'u', ' ',
        // םולש:
-       0x05dd, 0x05d5, 0x05dc, 0x05e9, ' ', 'H', 'u', '\r', '\n',
+       0x05dd, 0x05d5, 0x05dc, 0x05e9, ' ', 'H', 'a', ' ',
+       // םימ:
+       0x05dd, 0x05d9, 0x05de, '\r', '\n',
        // LTR, RTL, LTR in /ActualText case:
        'N', 'a', ' ', 'H', 'i', ' ',
        // םולש:
        0x05dd, 0x05d5, 0x05dc, 0x05e9, ' ', 'G', 'o', '\r', '\n',
        // Pure LTR /ActualText mixed with surrounding RTL text segments case:
-       // םימ:
-       0x05dd, 0x05d9, 0x05de, ' ', 'L', 'T', 'R', ' ', 'N', 'e', ' ',
        // םולש:
-       0x05dd, 0x05d5, 0x05dc, 0x05e9, '\r', '\n',
+       0x05dd, 0x05d5, 0x05dc, 0x05e9, ' ', 'N', 'e', ' ', 'L', 'T', 'R', ' ',
+       // םימ:
+       0x05dd, 0x05d9, 0x05de, '\r', '\n',
        // Literal RTL text followed by RTL /ActualText case:
        // םולש (/ActualText):
        0x05dd, 0x05d5, 0x05dc, 0x05e9,
