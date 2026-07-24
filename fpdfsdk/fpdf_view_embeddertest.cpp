@@ -1379,19 +1379,15 @@ class RecordUnsupportedErrorDelegate final : public EmbedderTest::Delegate {
 };
 
 TEST_F(FPDFViewEmbedderTest, UnSupportedOperationsNotFound) {
-  RecordUnsupportedErrorDelegate delegate;
-  SetDelegate(&delegate);
+  auto& delegate = SetOwnedDelegate<RecordUnsupportedErrorDelegate>();
   ASSERT_TRUE(OpenDocument("hello_world.pdf"));
   EXPECT_EQ(delegate.type_, -1);
-  SetDelegate(nullptr);
 }
 
 TEST_F(FPDFViewEmbedderTest, UnSupportedOperationsLoadCustomDocument) {
-  RecordUnsupportedErrorDelegate delegate;
-  SetDelegate(&delegate);
+  auto& delegate = SetOwnedDelegate<RecordUnsupportedErrorDelegate>();
   ASSERT_TRUE(OpenDocument("unsupported_feature.pdf"));
   EXPECT_EQ(FPDF_UNSP_DOC_PORTABLECOLLECTION, delegate.type_);
-  SetDelegate(nullptr);
 }
 
 TEST_F(FPDFViewEmbedderTest, UnSupportedOperationsLoadDocument) {
@@ -1399,14 +1395,12 @@ TEST_F(FPDFViewEmbedderTest, UnSupportedOperationsLoadDocument) {
       PathService::GetTestFilePath("unsupported_feature.pdf");
   ASSERT_FALSE(file_path.empty());
 
-  RecordUnsupportedErrorDelegate delegate;
-  SetDelegate(&delegate);
+  auto& delegate = SetOwnedDelegate<RecordUnsupportedErrorDelegate>();
   {
     ScopedFPDFDocument doc(FPDF_LoadDocument(file_path.c_str(), ""));
     EXPECT_TRUE(doc);
     EXPECT_EQ(FPDF_UNSP_DOC_PORTABLECOLLECTION, delegate.type_);
   }
-  SetDelegate(nullptr);
 }
 
 TEST_F(FPDFViewEmbedderTest, DocumentHasValidCrossReferenceTable) {

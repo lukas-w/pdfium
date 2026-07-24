@@ -28,7 +28,6 @@ class CFWLEditEmbedderTest : public XFAJSEmbedderTest {
  protected:
   void SetUp() override {
     EmbedderTest::SetUp();
-    SetDelegate(&delegate_);
 
     // Arbitrary, picked nice even number, 2020-09-13 12:26:40.
     FSDK_SetTimeFunction([]() -> time_t { return 1600000000; });
@@ -44,17 +43,13 @@ class CFWLEditEmbedderTest : public XFAJSEmbedderTest {
   void CreateAndInitializeFormPDF(const char* filename) {
     ASSERT_TRUE(OpenDocument(filename));
   }
-
-  EmbedderTestTimerHandlingDelegate delegate() const { return delegate_; }
-
- private:
-  EmbedderTestTimerHandlingDelegate delegate_;
 };
 
 TEST_F(CFWLEditEmbedderTest, Trivial) {
+  auto& delegate = SetOwnedDelegate<EmbedderTestTimerHandlingDelegate>();
   CreateAndInitializeFormPDF("xfa/email_recommended.pdf");
   ScopedPage page = LoadScopedPage(0);
-  ASSERT_EQ(0u, delegate().GetAlerts().size());
+  ASSERT_EQ(0u, delegate.GetAlerts().size());
 }
 
 TEST_F(CFWLEditEmbedderTest, LeftClickMouseSelection) {

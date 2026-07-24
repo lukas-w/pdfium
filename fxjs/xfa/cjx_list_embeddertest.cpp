@@ -19,8 +19,7 @@ TEST_F(CJXListEmbedderTest, Bug1263) {
 
 // Should not crash.
 TEST_F(CJXListEmbedderTest, Bug504416752) {
-  EmbedderTestTimerHandlingDelegate delegate;
-  SetDelegate(&delegate);
+  auto& delegate = SetOwnedDelegate<EmbedderTestTimerHandlingDelegate>();
 
   ASSERT_TRUE(OpenDocument("bug_504416752.pdf"));
   ScopedPage page = LoadScopedPage(0);

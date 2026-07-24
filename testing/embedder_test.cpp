@@ -577,9 +577,15 @@ void EmbedderTest::TearDown() {
   // possible. This can fail when an DCHECK test fails in a test case.
   EXPECT_EQ(0U, page_map_.size());
   EXPECT_EQ(0U, saved_page_map_.size());
+
+  // Document teardown can invoke delegate callbacks, so keep the current
+  // delegate installed until CloseDocument() completes. Point `delegate_` back
+  // to the default delegate before destroying the owned delegate.
   if (document()) {
     CloseDocument();
   }
+  delegate_ = default_delegate_.get();
+  owned_delegate_.reset();
 }
 
 void EmbedderTest::CreateEmptyDocument() {

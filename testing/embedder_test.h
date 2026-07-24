@@ -7,15 +7,18 @@
 
 #include <stdint.h>
 
+#include <concepts>
 #include <fstream>
 #include <map>
 #include <memory>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 #include "build/build_config.h"
 #include "core/fxcrt/bytestring.h"
+#include "core/fxcrt/check.h"
 #include "core/fxcrt/span.h"
 #include "core/fxcrt/unowned_ptr.h"
 #include "public/cpp/fpdf_scopers.h"
@@ -157,8 +160,18 @@ class EmbedderTest : public ::testing::Test,
   void TearDown() override;
 
   Delegate* GetDelegate() { return delegate_; }
-  void SetDelegate(Delegate* delegate) {
-    delegate_ = delegate ? delegate : default_delegate_.get();
+
+  // Creates and installs a delegate owned by this fixture. The delegate stays
+  // alive until TearDown() closes the document and restores the default
+  // delegate. This method may only be called once per fixture.
+  template <std::derived_from<Delegate> T, typename... Args>
+  T& SetOwnedDelegate(Args&&... args) {
+    CHECK(!owned_delegate_);
+    auto delegate = std::make_unique<T>(std::forward<Args>(args)...);
+    T& result = *delegate;
+    owned_delegate_ = std::move(delegate);
+    delegate_ = owned_delegate_.get();
+    return result;
   }
 
   void SetFormFillInfoVersion(int form_fill_info_version) {
@@ -421,8 +434,10 @@ class EmbedderTest : public ::testing::Test,
   ScopedFPDFBitmap VerifySavedRenderingCommon(FPDF_PAGE page);
   ScopedFPDFBitmap VerifySavedDocumentCommon();
 
+  // Keep `delegate_` after both possible pointees so it is destroyed first.
   std::unique_ptr<Delegate> default_delegate_;
-  Delegate* delegate_;
+  std::unique_ptr<Delegate> owned_delegate_;
+  UnownedPtr<Delegate> delegate_;
 
 #ifdef PDF_ENABLE_XFA
   int form_fill_info_version_ = 2;
