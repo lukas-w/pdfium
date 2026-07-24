@@ -2507,11 +2507,10 @@ TEST_F(FPDFTextEmbedderTest, ActualTextRtl) {
        // שלום (logical order):
        0x05e9, 0x05dc, 0x05d5, 0x05dd, '\r', '\n',
        // Predominantly RTL case:
-       // TODO(crbug.com/525087036): The two RTL segments should trade places.
-       // מים (logical order):
-       0x05de, 0x05d9, 0x05dd, ' ', 'H', 'a', ' ',
        // שלום (logical order):
-       0x05e9, 0x05dc, 0x05d5, 0x05dd, '\r', '\n',
+       0x05e9, 0x05dc, 0x05d5, 0x05dd, ' ', 'H', 'a', ' ',
+       // מים (logical order):
+       0x05de, 0x05d9, 0x05dd, '\r', '\n',
        // Tie-Breaker case:
        'H', 'e', ' ',
        // שלום (logical order):

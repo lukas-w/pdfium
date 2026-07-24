@@ -838,7 +838,7 @@ void CPDF_TextPage::CloseTempLine() {
     }
     prev_char_is_space = true;
   }
-  CFX_BidiString bidi(str, /*auto_order=*/true);
+  CFX_BidiString bidi(str, /*auto_order=*/false);
   if (rtl_) {
     bidi.SetOverallDirectionRight();
   }
