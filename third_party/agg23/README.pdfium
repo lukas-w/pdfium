@@ -1,7 +1,7 @@
 Name: Anti-Grain Geometry
 URL: https://sourceforge.net/projects/agg/
 Version: 2.3
-Update Mechanism: Manual
+Update Mechanism: Static.HardFork(https://crbug.com/538320033)
 Security Critical: yes
 License: MIT
 License File: copying
