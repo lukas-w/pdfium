@@ -1,0 +1,6 @@
+specific_include_rules = {
+  "skia_bmp_decoder\.cpp": [
+    '+third_party/skia/experimental/rust_bmp',
+    '+third_party/skia/include',
+  ],
+}

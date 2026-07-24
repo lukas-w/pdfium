@@ -31,7 +31,11 @@
 #include "core/fxge/dib/fx_dib.h"
 
 #ifdef PDF_ENABLE_XFA_BMP
+#if defined(PDF_ENABLE_RUST_BMP)
+#include "core/fxcodec/bmp/skia_bmp_decoder.h"
+#else
 #include "core/fxcodec/bmp/bmp_decoder.h"
+#endif
 #endif  // PDF_ENABLE_XFA_BMP
 
 #ifdef PDF_ENABLE_XFA_GIF
@@ -323,7 +327,7 @@ bool ProgressiveDecoder::BmpDetectImageTypeInBuffer(
 
   uint32_t available_data = pdfium::checked_cast<uint32_t>(
       file_->GetSize() - offset_ + BmpDecoder::GetAvailInput(pBmcontext.get()));
-  if (needed_data.value().size > available_data) {
+  if (needed_data.value().size / src_components_count_ > available_data) {
     status_ = FXCODEC_STATUS::kError;
     return false;
   }

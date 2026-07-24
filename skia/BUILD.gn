@@ -50,7 +50,7 @@ if (pdf_enable_fontations) {
   }
 }
 
-if (pdf_enable_rust_png) {
+if (pdf_enable_rust_bmp || pdf_enable_rust_png) {
   # TODO(https://crbug.com/448663461): Deduplicate `rust_png_ffi` and
   # `rust_png_ffi_cpp` target definitions (the exact same target definitions
   # are present in Chromium's //skia/BUILD.gn` and here in PDFium's
@@ -86,33 +86,65 @@ if (pdf_enable_rust_png) {
     check_includes = false
   }
 
-  rust_static_library("rust_png_ffi") {
-    visibility = [ ":*" ]
-    allow_unsafe = true  # For FFI
-    crate_root = skia_codec_rust_png_ffi_crate_root
-    sources = skia_codec_rust_png_ffi_rs_srcs
-    cxx_bindings = skia_codec_rust_png_ffi_cxx_bridge_srcs
-    public_deps = [ ":rust_png_ffi_cpp" ]
-    deps = [
-      ":rust_common_ffi",
-      "//third_party/rust/png/v0_18:lib",
-    ]
-    edition = "2021"
-    configs -= [ "//build/config/compiler:chromium_code" ]
-    configs += [
-      ":skia_config",
-      "//build/config/compiler:no_chromium_code",
-    ]
+  if (pdf_enable_rust_bmp) {
+    rust_static_library("rust_bmp_ffi") {
+      visibility = [ ":*" ]
+      allow_unsafe = true  # For FFI
+      crate_root = skia_codec_rust_bmp_ffi_crate_root
+      sources = skia_codec_rust_bmp_ffi_rs_srcs
+      cxx_bindings = skia_codec_rust_bmp_ffi_cxx_bridge_srcs
+      public_deps = [ ":rust_bmp_ffi_cpp" ]
+      deps = [
+        ":rust_common_ffi",
+        "//third_party/rust/image/v0_25:lib",
+      ]
+      edition = "2021"
+      configs -= [ "//build/config/compiler:chromium_code" ]
+      configs += [
+        ":skia_config",
+        "//build/config/compiler:no_chromium_code",
+      ]
+    }
+
+    source_set("rust_bmp_ffi_cpp") {
+      visibility = [ ":*" ]
+      configs -= [ "//build/config/compiler:chromium_code" ]
+      configs += [
+        ":skia_config",
+        "//build/config/compiler:no_chromium_code",
+      ]
+    }
   }
 
-  source_set("rust_png_ffi_cpp") {
-    visibility = [ ":*" ]
-    public = skia_codec_rust_png_ffi_cpp_hdrs
-    configs -= [ "//build/config/compiler:chromium_code" ]
-    configs += [
-      ":skia_config",
-      "//build/config/compiler:no_chromium_code",
-    ]
+  if (pdf_enable_rust_png) {
+    rust_static_library("rust_png_ffi") {
+      visibility = [ ":*" ]
+      allow_unsafe = true  # For FFI
+      crate_root = skia_codec_rust_png_ffi_crate_root
+      sources = skia_codec_rust_png_ffi_rs_srcs
+      cxx_bindings = skia_codec_rust_png_ffi_cxx_bridge_srcs
+      public_deps = [ ":rust_png_ffi_cpp" ]
+      deps = [
+        ":rust_common_ffi",
+        "//third_party/rust/png/v0_18:lib",
+      ]
+      edition = "2021"
+      configs -= [ "//build/config/compiler:chromium_code" ]
+      configs += [
+        ":skia_config",
+        "//build/config/compiler:no_chromium_code",
+      ]
+    }
+
+    source_set("rust_png_ffi_cpp") {
+      visibility = [ ":*" ]
+      public = skia_codec_rust_png_ffi_cpp_hdrs
+      configs -= [ "//build/config/compiler:chromium_code" ]
+      configs += [
+        ":skia_config",
+        "//build/config/compiler:no_chromium_code",
+      ]
+    }
   }
 }
 
@@ -164,6 +196,10 @@ config("skia_config") {
 
   if (pdf_enable_fontations || pdf_enable_rust_png) {
     include_dirs += [ "$root_gen_dir/third_party/skia" ]
+  }
+
+  if (pdf_enable_rust_bmp) {
+    defines += [ "SK_CODEC_DECODES_BMP_WITH_RUST" ]
   }
 
   if (pdf_enable_rust_png) {
@@ -264,7 +300,17 @@ component("skia") {
   sources += skia_sksl_core_module_sources
   sources += skia_utils_private
   sources += skia_xps_sources
-  sources += skia_codec_decode_bmp
+
+  if (pdf_enable_rust_bmp) {
+    sources += skia_codec_rust_bmp
+    sources += skia_codec_rust_bmp_public
+    deps += [
+      ":rust_bmp_ffi",
+      ":rust_common_ffi",
+    ]
+  } else {
+    sources += skia_codec_decode_bmp
+  }
 
   sources += skia_ports_sources
   sources += [
