@@ -153,7 +153,12 @@ class CPDF_TextPage {
   bool ProcessGenerateCharacter(GenerateCharacter type,
                                 const CPDF_TextObject* text_object,
                                 const CFX_Matrix& form_matrix);
-  void ProcessTextObjectItems(CPDF_TextObject* text_object,
+  // Processes character items in `text_object` and appends character info and
+  // text to `temp_char_list_` and `temp_text_buf_`.
+  // Returns true if the caller needs to call ReverseTempTextBufs() because the
+  // text is RTL with a mirrored transformation matrix, requiring the newly
+  // appended character order to be reversed.
+  bool ProcessTextObjectItems(CPDF_TextObject* text_object,
                               const CFX_Matrix& form_matrix,
                               const CFX_Matrix& matrix);
   const CharInfo* GetPrevCharInfo() const;

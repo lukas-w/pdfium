@@ -1105,16 +1105,12 @@ void CPDF_TextPage::ProcessTextObject(const TransformedTextObject& obj) {
   prev_text_obj_ = text_obj;
   prev_matrix_ = form_matrix;
 
-  const bool is_rtl = IsRightToLeft(*text_obj);
   const CFX_Matrix matrix = text_obj->GetTextMatrix() * form_matrix;
-  const bool is_bidi_and_mirror_inverse =
-      is_rtl && (matrix.a * matrix.d - matrix.b * matrix.c) < 0;
   // Save these before ProcessTextObjectItems() modifies the containers.
   const size_t orig_char_list_index = temp_char_list_.size();
   const size_t orig_buf_index = temp_text_buf_.GetLength();
 
-  ProcessTextObjectItems(text_obj, form_matrix, matrix);
-  if (is_bidi_and_mirror_inverse) {
+  if (ProcessTextObjectItems(text_obj, form_matrix, matrix)) {
     ReverseTempTextBufs(orig_char_list_index, orig_buf_index);
   }
 }
@@ -1361,7 +1357,7 @@ bool CPDF_TextPage::ProcessGenerateCharacter(GenerateCharacter type,
   NOTREACHED();
 }
 
-void CPDF_TextPage::ProcessTextObjectItems(CPDF_TextObject* text_object,
+bool CPDF_TextPage::ProcessTextObjectItems(CPDF_TextObject* text_object,
                                            const CFX_Matrix& form_matrix,
                                            const CFX_Matrix& matrix) {
   const float base_space = CalculateBaseSpace(text_object, matrix) +
@@ -1462,6 +1458,10 @@ void CPDF_TextPage::ProcessTextObjectItems(CPDF_TextObject* text_object,
       }
     }
   }
+  // Tell the caller to reverse the temporary text buffers if RTL text has a
+  // mirrored matrix (determinant < 0).
+  const bool is_rtl = IsRightToLeft(*text_object);
+  return is_rtl && (matrix.a * matrix.d - matrix.b * matrix.c) < 0;
 }
 
 bool CPDF_TextPage::IsSameTextObject(CPDF_TextObject* text_obj1,
