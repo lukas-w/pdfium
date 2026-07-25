@@ -20,27 +20,20 @@ class CPDFSDKBAAnnotTest : public EmbedderTest {
     ASSERT_TRUE(OpenDocument("links_highlights_annots.pdf"));
   }
 
-  ScopedPage SetUpBAAnnot() {
+  [[nodiscard]] ScopedPage SetUpBAAnnot() {
     ScopedPage page = LoadScopedPage(0);
     if (!page) {
-      ADD_FAILURE();
       return ScopedPage();
     }
     form_fill_env_ =
         CPDFSDKFormFillEnvironmentFromFPDFFormHandle(form_handle());
     if (!form_fill_env_) {
-      ADD_FAILURE();
       return ScopedPage();
     }
 
     page_view_ =
         form_fill_env_->GetOrCreatePageView(IPDFPageFromFPDFPage(page.get()));
-
-    if (!page_view_) {
-      ADD_FAILURE();
-      return ScopedPage();
-    }
-
+    CHECK(page_view_);
     return page;
   }
 
@@ -48,15 +41,15 @@ class CPDFSDKBAAnnotTest : public EmbedderTest {
   CPDFSDK_PageView* GetPageView() const { return page_view_; }
 
   CPDFSDK_Annot* GetNthFocusableAnnot(size_t n) {
-    DCHECK_NE(n, 0);
+    CHECK_NE(n, 0);
     CPDFSDK_AnnotIterator ai(GetPageView(),
                              form_fill_env_->GetFocusableAnnotSubtypes());
     CPDFSDK_Annot* pAnnot = ai.GetFirstAnnot();
-    DCHECK(pAnnot);
+    CHECK(pAnnot);
 
     for (size_t i = 1; i < n; i++) {
       pAnnot = ai.GetNextAnnot(pAnnot);
-      DCHECK(pAnnot);
+      CHECK(pAnnot);
     }
 
     return pAnnot;
