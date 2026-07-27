@@ -38,6 +38,9 @@ class ScanlineDecoder;
 
 constexpr size_t kHugeImageSize = 60000000;
 
+// Represents a device-independent bitmap parsed directly from a PDF image
+// stream. Handles image decoding, color space conversion, and masking (e.g.
+// color key masking).
 class CPDF_DIB final : public CFX_DIBBase {
  public:
   enum class LoadState : uint8_t { kFail, kSuccess, kContinue };
