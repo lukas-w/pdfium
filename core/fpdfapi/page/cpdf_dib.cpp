@@ -41,6 +41,7 @@
 #include "core/fxcrt/data_vector.h"
 #include "core/fxcrt/fx_2d_size.h"
 #include "core/fxcrt/fx_safe_types.h"
+#include "core/fxcrt/numerics/safe_conversions.h"
 #include "core/fxcrt/span_util.h"
 #include "core/fxcrt/stl_util.h"
 #include "core/fxcrt/zip.h"
@@ -92,6 +93,24 @@ bool AreColorIndicesOutOfBounds(pdfium::span<const uint8_t> indices,
     if (IsColorIndexOutOfBounds(idx, datum)) {
       return true;
     }
+  }
+  return false;
+}
+
+// Returns true if any component of the pixel starting at `bit_pos` falls
+// outside the color key mask range (pixel is opaque).
+// Returns false if all components fall within the range (pixel is transparent).
+bool IsPixelColorKeyRangeOutOfBounds(
+    pdfium::span<const uint8_t> src_span,
+    uint64_t bit_pos,
+    uint32_t bpc,
+    pdfium::span<const DIB_COMP_DATA> comp_data) {
+  for (const auto& datum : comp_data) {
+    uint32_t val = GetBits8(src_span, bit_pos, bpc);
+    if (val < datum.color_key_min_ || val > datum.color_key_max_) {
+      return true;
+    }
+    bit_pos += bpc;
   }
   return false;
 }
@@ -386,7 +405,7 @@ bool CPDF_DIB::GetDecodeAndMaskArray() {
   }
 
   comp_data_.resize(components_);
-  int max_data = (1 << bpc_) - 1;
+  const int max_data = (1 << bpc_) - 1;
   RetainPtr<const CPDF_Array> pDecode = dict_->GetArrayFor("Decode");
   if (pDecode) {
     for (uint32_t i = 0; i < components_; i++) {
@@ -428,10 +447,12 @@ bool CPDF_DIB::GetDecodeAndMaskArray() {
   if (const CPDF_Array* pArray = pMask->AsArray()) {
     if (pArray->size() >= components_ * 2) {
       for (uint32_t i = 0; i < components_; i++) {
-        int min_num = pArray->GetIntegerAt(i * 2);
-        int max_num = pArray->GetIntegerAt(i * 2 + 1);
-        comp_data_[i].color_key_min_ = std::max(min_num, 0);
-        comp_data_[i].color_key_max_ = std::min(max_num, max_data);
+        const int min_num = pArray->GetIntegerAt(i * 2);
+        const int max_num = pArray->GetIntegerAt(i * 2 + 1);
+        comp_data_[i].color_key_min_ =
+            static_cast<uint32_t>(std::max(min_num, 0));
+        comp_data_[i].color_key_max_ =
+            static_cast<uint32_t>(std::clamp(max_num, 0, max_data));
       }
     }
     color_key_ = true;
@@ -1227,7 +1248,21 @@ pdfium::span<const uint8_t> CPDF_DIB::GetScanline(int line) const {
         }
       });
     } else {
-      std::ranges::fill(mask_buf_, 0xFF);
+      // General fallback path for color key masking of formats not handled by
+      // optimized paths above (e.g. 16-bit grayscale).
+      const size_t width = pdfium::checked_cast<size_t>(GetWidth());
+      auto mask_span = fxcrt::reinterpret_span<FX_BGRA_STRUCT<uint8_t>>(
+          pdfium::span(mask_buf_));
+      uint64_t bit_pos = 0;
+      const uint64_t step =
+          pdfium::CheckMul(bpc_, comp_data_.size()).ValueOrDie();
+      for (size_t col = 0; col < width; col++) {
+        mask_span[col].alpha =
+            IsPixelColorKeyRangeOutOfBounds(src_line, bit_pos, bpc_, comp_data_)
+                ? 0xFF
+                : 0;
+        bit_pos += step;
+      }
     }
   }
   if (color_space_) {

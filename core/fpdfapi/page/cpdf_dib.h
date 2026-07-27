@@ -27,8 +27,8 @@ class CPDF_StreamAcc;
 struct DIB_COMP_DATA {
   float decode_min_;
   float decode_step_;
-  int color_key_min_;
-  int color_key_max_;
+  uint32_t color_key_min_;
+  uint32_t color_key_max_;
 };
 
 namespace fxcodec {

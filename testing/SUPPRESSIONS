@@ -830,6 +830,3 @@ smask_blend.in * * * gdi
 # than normal pixel value difference.
 bug_1430333.in mac_x86 * * skia
 bug_1746.in mac_x86 * * skia
-
-# TODO(crbug.com/536543461): Remove after associated bug is fixed
-bug_536543461.in * * * *
