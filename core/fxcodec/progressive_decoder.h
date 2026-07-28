@@ -196,20 +196,10 @@ class ProgressiveDecoder final :
   RetainPtr<CFX_CodecMemory> codec_memory_;
   DataVector<uint8_t> decode_buf_;
   DataVector<FX_ARGB> src_palette_;
-  std::unique_ptr<ProgressiveDecoderContext> jpeg_context_;
-#ifdef PDF_ENABLE_XFA_BMP
-  std::unique_ptr<ProgressiveDecoderContext> bmp_context_;
-#endif  // PDF_ENABLE_XFA_BMP
-#ifdef PDF_ENABLE_XFA_GIF
-  std::unique_ptr<ProgressiveDecoderContext> gif_context_;
-#endif  // PDF_ENABLE_XFA_GIF
+  std::unique_ptr<ProgressiveDecoderContext> context_;
 #ifdef PDF_ENABLE_XFA_PNG
-  std::unique_ptr<ProgressiveDecoderContext> png_context_;
   bool got_png_metadata_ = false;
 #endif  // PDF_ENABLE_XFA_PNG
-#ifdef PDF_ENABLE_XFA_TIFF
-  std::unique_ptr<ProgressiveDecoderContext> tiff_context_;
-#endif  // PDF_ENABLE_XFA_TIFF
   uint32_t offset_ = 0;
   WeightTable weight_horz_;
   int src_width_ = 0;
