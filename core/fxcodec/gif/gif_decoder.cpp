@@ -56,17 +56,5 @@ ProgressiveDecoderContext::Status GifDecoder::LoadFrame(
   return static_cast<CFX_GifContext*>(context)->LoadFrame(frame_num);
 }
 
-// static
-FX_FILESIZE GifDecoder::GetAvailInput(ProgressiveDecoderContext* context) {
-  return static_cast<CFX_GifContext*>(context)->GetAvailInput();
-}
-
-// static
-bool GifDecoder::Input(ProgressiveDecoderContext* context,
-                       RetainPtr<CFX_CodecMemory> codec_memory) {
-  auto* ctx = static_cast<CFX_GifContext*>(context);
-  ctx->SetInputBuffer(std::move(codec_memory));
-  return true;
-}
 
 }  // namespace fxcodec

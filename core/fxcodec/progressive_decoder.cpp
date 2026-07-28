@@ -137,8 +137,8 @@ void ProgressiveDecoder::PngFinishedDecoding() {
 
 #ifdef PDF_ENABLE_XFA_GIF
 uint32_t ProgressiveDecoder::GifCurrentPosition() const {
-  uint32_t remain_size = pdfium::checked_cast<uint32_t>(
-      GifDecoder::GetAvailInput(gif_context_.get()));
+  uint32_t remain_size =
+      pdfium::checked_cast<uint32_t>(gif_context_->GetAvailInput());
   return offset_ - remain_size;
 }
 
@@ -274,7 +274,7 @@ bool ProgressiveDecoder::BmpDetectImageTypeInBuffer(
     CFX_DIBAttribute* pAttribute) {
   std::unique_ptr<ProgressiveDecoderContext> pBmcontext =
       BmpDecoder::StartDecode(this);
-  BmpDecoder::Input(pBmcontext.get(), codec_memory_);
+  pBmcontext->Input(codec_memory_);
 
   pdfium::span<const FX_ARGB> palette;
   ProgressiveDecoderContext::Status read_result = BmpDecoder::ReadHeader(
@@ -326,7 +326,7 @@ bool ProgressiveDecoder::BmpDetectImageTypeInBuffer(
   }
 
   uint32_t available_data = pdfium::checked_cast<uint32_t>(
-      file_->GetSize() - offset_ + BmpDecoder::GetAvailInput(pBmcontext.get()));
+      file_->GetSize() - offset_ + pBmcontext->GetAvailInput());
   if (needed_data.value().size / src_components_count_ > available_data) {
     status_ = FXCODEC_STATUS::kError;
     return false;
@@ -349,16 +349,15 @@ bool ProgressiveDecoder::BmpReadMoreData(ProgressiveDecoderContext* bmp_context,
   // `codec_memory_->GetUnconsumedSpan().size()`? (IIUC this is what
   // `GetAvailInput` uses in the end, but I haven't investigated that this is
   // the same instance of `CFX_CodecMemory`.)
-  FX_SAFE_SIZE_T avail_input = BmpDecoder::GetAvailInput(bmp_context);
+  FX_SAFE_SIZE_T avail_input = bmp_context->GetAvailInput();
   if (!avail_input.IsValid()) {
     return false;
   }
-
   if (!ReadMoreData(avail_input.ValueOrDie(), err_status)) {
     return false;
   }
-
-  return BmpDecoder::Input(bmp_context, codec_memory_);
+  bmp_context->Input(codec_memory_);
+  return true;
 }
 
 FXCODEC_STATUS ProgressiveDecoder::BmpStartDecode() {
@@ -401,21 +400,20 @@ bool ProgressiveDecoder::GifReadMoreData(FXCODEC_STATUS* err_status) {
   // `codec_memory_->GetUnconsumedSpan().size()`? (IIUC this is what
   // `GetAvailInput` uses in the end, but I haven't investigated that this is
   // the same instance of `CFX_CodecMemory`.)
-  FX_SAFE_SIZE_T avail_input = GifDecoder::GetAvailInput(gif_context_.get());
+  FX_SAFE_SIZE_T avail_input = gif_context_->GetAvailInput();
   if (!avail_input.IsValid()) {
     return false;
   }
-
   if (!ReadMoreData(avail_input.ValueOrDie(), err_status)) {
     return false;
   }
-
-  return GifDecoder::Input(gif_context_.get(), codec_memory_);
+  gif_context_->Input(codec_memory_);
+  return true;
 }
 
 bool ProgressiveDecoder::GifDetectImageTypeInBuffer() {
   gif_context_ = GifDecoder::StartDecode(this);
-  GifDecoder::Input(gif_context_.get(), codec_memory_);
+  gif_context_->Input(codec_memory_);
   src_components_count_ = 1;
   ProgressiveDecoderContext::Status readResult =
       GifDecoder::ReadHeader(gif_context_.get(), &src_width_, &src_height_,
@@ -482,17 +480,15 @@ FXCODEC_STATUS ProgressiveDecoder::GifContinueDecode() {
 #endif  // PDF_ENABLE_XFA_GIF
 
 bool ProgressiveDecoder::JpegReadMoreData(FXCODEC_STATUS* err_status) {
-  FX_SAFE_SIZE_T avail_input =
-      JpegProgressiveDecoder::GetAvailInput(jpeg_context_.get());
+  FX_SAFE_SIZE_T avail_input = jpeg_context_->GetAvailInput();
   if (!avail_input.IsValid()) {
     return false;
   }
-
   if (!ReadMoreData(avail_input.ValueOrDie(), err_status)) {
     return false;
   }
-
-  return JpegProgressiveDecoder::Input(jpeg_context_.get(), codec_memory_);
+  jpeg_context_->Input(codec_memory_);
+  return true;
 }
 
 bool ProgressiveDecoder::JpegDetectImageTypeInBuffer(
@@ -502,7 +498,7 @@ bool ProgressiveDecoder::JpegDetectImageTypeInBuffer(
     status_ = FXCODEC_STATUS::kError;
     return false;
   }
-  JpegProgressiveDecoder::Input(jpeg_context_.get(), codec_memory_);
+  jpeg_context_->Input(codec_memory_);
 
   while (1) {
     int read_result = JpegProgressiveDecoder::ReadHeader(

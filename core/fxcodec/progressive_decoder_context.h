@@ -9,6 +9,10 @@
 
 #include <stdint.h>
 
+#include "core/fxcodec/cfx_codec_memory.h"
+#include "core/fxcrt/fx_types.h"
+#include "core/fxcrt/retain_ptr.h"
+
 #ifndef PDF_ENABLE_XFA
 #error "XFA Only"
 #endif
@@ -23,7 +27,10 @@ class ProgressiveDecoderContext {
     kContinue,
   };
 
-  virtual ~ProgressiveDecoderContext() = default;
+  virtual ~ProgressiveDecoderContext();
+
+  virtual FX_FILESIZE GetAvailInput() const;
+  virtual void Input(RetainPtr<CFX_CodecMemory> codec_memory);
 };
 
 }  // namespace fxcodec

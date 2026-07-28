@@ -25,6 +25,10 @@ class CJpegContext final : public ProgressiveDecoderContext {
   CJpegContext();
   ~CJpegContext() override;
 
+  // ProgressiveDecoderContext:
+  FX_FILESIZE GetAvailInput() const override;
+  void Input(RetainPtr<CFX_CodecMemory> codec_memory) override;
+
   JpegCommon common_ = {};
 };
 
@@ -55,6 +59,25 @@ CJpegContext::CJpegContext() {
 
 CJpegContext::~CJpegContext() {
   jpeg_destroy_decompress(&common_.cinfo);
+}
+
+FX_FILESIZE CJpegContext::GetAvailInput() const {
+  return static_cast<FX_FILESIZE>(common_.source_mgr.bytes_in_buffer);
+}
+
+void CJpegContext::Input(RetainPtr<CFX_CodecMemory> codec_memory) {
+  pdfium::span<uint8_t> src_buf = codec_memory->GetUnconsumedSpan();
+  if (common_.skip_size) {
+    if (common_.skip_size > src_buf.size()) {
+      common_.source_mgr.bytes_in_buffer = 0;
+      common_.skip_size -= src_buf.size();
+      return;
+    }
+    src_buf = src_buf.subspan(common_.skip_size);
+    common_.skip_size = 0;
+  }
+  common_.source_mgr.next_input_byte = src_buf.data();
+  common_.source_mgr.bytes_in_buffer = src_buf.size();
 }
 
 namespace fxcodec {
@@ -114,30 +137,5 @@ int JpegProgressiveDecoder::ReadScanline(ProgressiveDecoderContext* context,
   return nlines == 1 ? kOk : kError;
 }
 
-// static
-FX_FILESIZE JpegProgressiveDecoder::GetAvailInput(
-    ProgressiveDecoderContext* context) {
-  auto* ctx = static_cast<CJpegContext*>(context);
-  return static_cast<FX_FILESIZE>(ctx->common_.source_mgr.bytes_in_buffer);
-}
-
-// static
-bool JpegProgressiveDecoder::Input(ProgressiveDecoderContext* context,
-                                   RetainPtr<CFX_CodecMemory> codec_memory) {
-  pdfium::span<uint8_t> src_buf = codec_memory->GetUnconsumedSpan();
-  auto* ctx = static_cast<CJpegContext*>(context);
-  if (ctx->common_.skip_size) {
-    if (ctx->common_.skip_size > src_buf.size()) {
-      ctx->common_.source_mgr.bytes_in_buffer = 0;
-      ctx->common_.skip_size -= src_buf.size();
-      return true;
-    }
-    src_buf = src_buf.subspan(ctx->common_.skip_size);
-    ctx->common_.skip_size = 0;
-  }
-  ctx->common_.source_mgr.next_input_byte = src_buf.data();
-  ctx->common_.source_mgr.bytes_in_buffer = src_buf.size();
-  return true;
-}
 
 }  // namespace fxcodec

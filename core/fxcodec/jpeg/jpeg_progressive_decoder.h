@@ -39,9 +39,6 @@ class JpegProgressiveDecoder {
   static int ReadScanline(ProgressiveDecoderContext* context,
                           uint8_t* dest_buf);
 
-  static FX_FILESIZE GetAvailInput(ProgressiveDecoderContext* context);
-  static bool Input(ProgressiveDecoderContext* context,
-                    RetainPtr<CFX_CodecMemory> codec_memory);
 
   // Only `static` methods.
   JpegProgressiveDecoder() = delete;

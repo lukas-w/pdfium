@@ -39,8 +39,12 @@ class CFX_GifContext : public ProgressiveDecoderContext {
   ProgressiveDecoderContext::Status ReadHeader();
   ProgressiveDecoderContext::Status GetFrame();
   ProgressiveDecoderContext::Status LoadFrame(size_t frame_num);
+
+  // ProgressiveDecoderContext:
+  FX_FILESIZE GetAvailInput() const override;
+  void Input(RetainPtr<CFX_CodecMemory> codec_memory) override;
+
   void SetInputBuffer(RetainPtr<CFX_CodecMemory> codec_memory);
-  uint32_t GetAvailInput() const;
   size_t GetFrameNum() const { return images_.size(); }
 
   UnownedPtr<GifDecoder::Delegate> const delegate_;

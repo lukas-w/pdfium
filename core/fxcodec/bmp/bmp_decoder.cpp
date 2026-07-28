@@ -56,17 +56,5 @@ ProgressiveDecoderContext::Status BmpDecoder::DecodeImage(
   return static_cast<CFX_BmpContext*>(context)->bmp_.DecodeImage();
 }
 
-// static
-FX_FILESIZE BmpDecoder::GetAvailInput(ProgressiveDecoderContext* context) {
-  return static_cast<CFX_BmpContext*>(context)->bmp_.GetAvailInput();
-}
-
-// static
-bool BmpDecoder::Input(ProgressiveDecoderContext* context,
-                       RetainPtr<CFX_CodecMemory> codec_memory) {
-  auto* ctx = static_cast<CFX_BmpContext*>(context);
-  ctx->bmp_.SetInputBuffer(std::move(codec_memory));
-  return true;
-}
 
 }  // namespace fxcodec

@@ -20,6 +20,10 @@ class CFX_BmpContext final : public ProgressiveDecoderContext {
   explicit CFX_BmpContext(BmpDecoderDelegate* pDelegate);
   ~CFX_BmpContext() override;
 
+  // ProgressiveDecoderContext:
+  FX_FILESIZE GetAvailInput() const override;
+  void Input(RetainPtr<CFX_CodecMemory> codec_memory) override;
+
   CFX_BmpDecompressor bmp_;
   UnownedPtr<BmpDecoderDelegate> const delegate_;
 };

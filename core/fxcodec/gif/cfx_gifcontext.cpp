@@ -339,13 +339,15 @@ void CFX_GifContext::SetInputBuffer(RetainPtr<CFX_CodecMemory> codec_memory) {
   input_buffer_ = std::move(codec_memory);
 }
 
-uint32_t CFX_GifContext::GetAvailInput() const {
+FX_FILESIZE CFX_GifContext::GetAvailInput() const {
   if (!input_buffer_) {
     return 0;
   }
+  return input_buffer_->GetSize() - input_buffer_->GetPosition();
+}
 
-  return pdfium::checked_cast<uint32_t>(input_buffer_->GetSize() -
-                                        input_buffer_->GetPosition());
+void CFX_GifContext::Input(RetainPtr<CFX_CodecMemory> codec_memory) {
+  SetInputBuffer(std::move(codec_memory));
 }
 
 bool CFX_GifContext::ReadAllOrNone(pdfium::span<uint8_t> dest) {

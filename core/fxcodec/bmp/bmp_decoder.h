@@ -42,9 +42,6 @@ class BmpDecoder {
       CFX_DIBAttribute* pAttribute);
   static ProgressiveDecoderContext::Status DecodeImage(
       ProgressiveDecoderContext* context);
-  static FX_FILESIZE GetAvailInput(ProgressiveDecoderContext* context);
-  static bool Input(ProgressiveDecoderContext* context,
-                    RetainPtr<CFX_CodecMemory> codec_memory);
 
   // Only `static` methods.
   BmpDecoder() = delete;

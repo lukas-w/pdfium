@@ -68,11 +68,16 @@ class SkiaBmpContext final : public ProgressiveDecoderContext {
     codec_memory_ = std::move(codec_memory);
   }
 
-  FX_FILESIZE GetAvailInput() const {
+  // ProgressiveDecoderContext:
+  FX_FILESIZE GetAvailInput() const override {
     if (!codec_memory_) {
       return 0;
     }
     return codec_memory_->GetSize();
+  }
+
+  void Input(RetainPtr<CFX_CodecMemory> codec_memory) override {
+    SetCodecMemory(std::move(codec_memory));
   }
 
   ProgressiveDecoderContext::Status ReadHeader(
@@ -409,18 +414,5 @@ ProgressiveDecoderContext::Status SkiaBmpDecoder::DecodeImage(
   return ctx->DecodeImage();
 }
 
-// static
-FX_FILESIZE SkiaBmpDecoder::GetAvailInput(ProgressiveDecoderContext* context) {
-  auto* ctx = static_cast<SkiaBmpContext*>(context);
-  return ctx->GetAvailInput();
-}
-
-// static
-bool SkiaBmpDecoder::Input(ProgressiveDecoderContext* context,
-                           RetainPtr<CFX_CodecMemory> codec_memory) {
-  auto* ctx = static_cast<SkiaBmpContext*>(context);
-  ctx->SetCodecMemory(std::move(codec_memory));
-  return true;
-}
 
 }  // namespace fxcodec
