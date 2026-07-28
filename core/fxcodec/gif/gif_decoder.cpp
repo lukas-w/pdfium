@@ -19,14 +19,15 @@ std::unique_ptr<ProgressiveDecoderContext> GifDecoder::StartDecode(
 }
 
 // static
-GifDecoder::Status GifDecoder::ReadHeader(ProgressiveDecoderContext* context,
-                                          int* width,
-                                          int* height,
-                                          pdfium::span<CFX_GifPalette>* palette,
-                                          int* bg_index) {
+ProgressiveDecoderContext::Status GifDecoder::ReadHeader(
+    ProgressiveDecoderContext* context,
+    int* width,
+    int* height,
+    pdfium::span<CFX_GifPalette>* palette,
+    int* bg_index) {
   auto* ctx = static_cast<CFX_GifContext*>(context);
-  Status ret = ctx->ReadHeader();
-  if (ret != Status::kSuccess) {
+  ProgressiveDecoderContext::Status ret = ctx->ReadHeader();
+  if (ret != ProgressiveDecoderContext::Status::kSuccess) {
     return ret;
   }
 
@@ -34,23 +35,24 @@ GifDecoder::Status GifDecoder::ReadHeader(ProgressiveDecoderContext* context,
   *height = ctx->height_;
   *palette = ctx->global_palette_;
   *bg_index = ctx->bc_index_;
-  return Status::kSuccess;
+  return ProgressiveDecoderContext::Status::kSuccess;
 }
 
 // static
-std::pair<GifDecoder::Status, size_t> GifDecoder::LoadFrameInfo(
+std::pair<ProgressiveDecoderContext::Status, size_t> GifDecoder::LoadFrameInfo(
     ProgressiveDecoderContext* context) {
   auto* ctx = static_cast<CFX_GifContext*>(context);
-  Status ret = ctx->GetFrame();
-  if (ret != Status::kSuccess) {
+  ProgressiveDecoderContext::Status ret = ctx->GetFrame();
+  if (ret != ProgressiveDecoderContext::Status::kSuccess) {
     return {ret, 0};
   }
-  return {Status::kSuccess, ctx->GetFrameNum()};
+  return {ProgressiveDecoderContext::Status::kSuccess, ctx->GetFrameNum()};
 }
 
 // static
-GifDecoder::Status GifDecoder::LoadFrame(ProgressiveDecoderContext* context,
-                                         size_t frame_num) {
+ProgressiveDecoderContext::Status GifDecoder::LoadFrame(
+    ProgressiveDecoderContext* context,
+    size_t frame_num) {
   return static_cast<CFX_GifContext*>(context)->LoadFrame(frame_num);
 }
 

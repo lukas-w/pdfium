@@ -11,6 +11,7 @@
 
 #include "core/fxcodec/bmp/bmp_decoder_delegate.h"
 #include "core/fxcodec/cfx_codec_memory.h"
+#include "core/fxcodec/progressive_decoder_context.h"
 #include "core/fxcrt/fx_types.h"
 #include "core/fxcrt/retain_ptr.h"
 #include "core/fxcrt/span.h"
@@ -27,23 +28,22 @@
 namespace fxcodec {
 
 class CFX_DIBAttribute;
-class ProgressiveDecoderContext;
 
 // BMP decoder that uses Skia's Rust BMP decoder to decode pixels.
 class SkiaBmpDecoder {
  public:
-  enum class Status : uint8_t { kFail, kSuccess, kContinue };
-
   static std::unique_ptr<ProgressiveDecoderContext> StartDecode(
       BmpDecoderDelegate* delegate);
-  static Status ReadHeader(ProgressiveDecoderContext* context,
-                           int32_t* width,
-                           int32_t* height,
-                           bool* tb_flag,
-                           int32_t* components,
-                           pdfium::span<const FX_ARGB>* palette,
-                           CFX_DIBAttribute* attribute);
-  static Status DecodeImage(ProgressiveDecoderContext* context);
+  static ProgressiveDecoderContext::Status ReadHeader(
+      ProgressiveDecoderContext* context,
+      int32_t* width,
+      int32_t* height,
+      bool* tb_flag,
+      int32_t* components,
+      pdfium::span<const FX_ARGB>* palette,
+      CFX_DIBAttribute* attribute);
+  static ProgressiveDecoderContext::Status DecodeImage(
+      ProgressiveDecoderContext* context);
   static FX_FILESIZE GetAvailInput(ProgressiveDecoderContext* context);
   static bool Input(ProgressiveDecoderContext* context,
                     RetainPtr<CFX_CodecMemory> codec_memory);

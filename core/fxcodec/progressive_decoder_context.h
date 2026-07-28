@@ -7,6 +7,8 @@
 #ifndef CORE_FXCODEC_PROGRESSIVE_DECODER_CONTEXT_H_
 #define CORE_FXCODEC_PROGRESSIVE_DECODER_CONTEXT_H_
 
+#include <stdint.h>
+
 #ifndef PDF_ENABLE_XFA
 #error "XFA Only"
 #endif
@@ -15,6 +17,12 @@ namespace fxcodec {
 
 class ProgressiveDecoderContext {
  public:
+  enum class Status : uint8_t {
+    kError,
+    kSuccess,
+    kContinue,
+  };
+
   virtual ~ProgressiveDecoderContext() = default;
 };
 

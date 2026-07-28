@@ -277,10 +277,10 @@ bool ProgressiveDecoder::BmpDetectImageTypeInBuffer(
   BmpDecoder::Input(pBmcontext.get(), codec_memory_);
 
   pdfium::span<const FX_ARGB> palette;
-  BmpDecoder::Status read_result = BmpDecoder::ReadHeader(
+  ProgressiveDecoderContext::Status read_result = BmpDecoder::ReadHeader(
       pBmcontext.get(), &src_width_, &src_height_, &bmp_is_top_bottom_,
       &src_components_count_, &palette, pAttribute);
-  while (read_result == BmpDecoder::Status::kContinue) {
+  while (read_result == ProgressiveDecoderContext::Status::kContinue) {
     FXCODEC_STATUS error_status = FXCODEC_STATUS::kError;
     if (!BmpReadMoreData(pBmcontext.get(), &error_status)) {
       status_ = error_status;
@@ -291,7 +291,7 @@ bool ProgressiveDecoder::BmpDetectImageTypeInBuffer(
         &src_components_count_, &palette, pAttribute);
   }
 
-  if (read_result != BmpDecoder::Status::kSuccess) {
+  if (read_result != ProgressiveDecoderContext::Status::kSuccess) {
     status_ = FXCODEC_STATUS::kError;
     return false;
   }
@@ -373,8 +373,9 @@ FXCODEC_STATUS ProgressiveDecoder::BmpStartDecode() {
 }
 
 FXCODEC_STATUS ProgressiveDecoder::BmpContinueDecode() {
-  BmpDecoder::Status read_res = BmpDecoder::DecodeImage(bmp_context_.get());
-  while (read_res == BmpDecoder::Status::kContinue) {
+  ProgressiveDecoderContext::Status read_res =
+      BmpDecoder::DecodeImage(bmp_context_.get());
+  while (read_res == ProgressiveDecoderContext::Status::kContinue) {
     FXCODEC_STATUS error_status = FXCODEC_STATUS::kDecodeFinished;
     if (!BmpReadMoreData(bmp_context_.get(), &error_status)) {
       device_bitmap_ = nullptr;
@@ -387,7 +388,7 @@ FXCODEC_STATUS ProgressiveDecoder::BmpContinueDecode() {
 
   device_bitmap_ = nullptr;
   file_ = nullptr;
-  status_ = read_res == BmpDecoder::Status::kSuccess
+  status_ = read_res == ProgressiveDecoderContext::Status::kSuccess
                 ? FXCODEC_STATUS::kDecodeFinished
                 : FXCODEC_STATUS::kError;
   return status_;
@@ -416,10 +417,10 @@ bool ProgressiveDecoder::GifDetectImageTypeInBuffer() {
   gif_context_ = GifDecoder::StartDecode(this);
   GifDecoder::Input(gif_context_.get(), codec_memory_);
   src_components_count_ = 1;
-  GifDecoder::Status readResult =
+  ProgressiveDecoderContext::Status readResult =
       GifDecoder::ReadHeader(gif_context_.get(), &src_width_, &src_height_,
                              &gif_palette_, &gif_bg_index_);
-  while (readResult == GifDecoder::Status::kUnfinished) {
+  while (readResult == ProgressiveDecoderContext::Status::kContinue) {
     FXCODEC_STATUS error_status = FXCODEC_STATUS::kError;
     if (!GifReadMoreData(&error_status)) {
       gif_context_ = nullptr;
@@ -430,7 +431,7 @@ bool ProgressiveDecoder::GifDetectImageTypeInBuffer() {
         GifDecoder::ReadHeader(gif_context_.get(), &src_width_, &src_height_,
                                &gif_palette_, &gif_bg_index_);
   }
-  if (readResult == GifDecoder::Status::kSuccess) {
+  if (readResult == ProgressiveDecoderContext::Status::kSuccess) {
     src_bits_per_component_ = 8;
     return true;
   }
@@ -453,9 +454,9 @@ FXCODEC_STATUS ProgressiveDecoder::GifStartDecode() {
 }
 
 FXCODEC_STATUS ProgressiveDecoder::GifContinueDecode() {
-  GifDecoder::Status readRes =
+  ProgressiveDecoderContext::Status readRes =
       GifDecoder::LoadFrame(gif_context_.get(), frame_cur_);
-  while (readRes == GifDecoder::Status::kUnfinished) {
+  while (readRes == ProgressiveDecoderContext::Status::kContinue) {
     FXCODEC_STATUS error_status = FXCODEC_STATUS::kDecodeFinished;
     if (!GifReadMoreData(&error_status)) {
       device_bitmap_ = nullptr;
@@ -466,7 +467,7 @@ FXCODEC_STATUS ProgressiveDecoder::GifContinueDecode() {
     readRes = GifDecoder::LoadFrame(gif_context_.get(), frame_cur_);
   }
 
-  if (readRes == GifDecoder::Status::kSuccess) {
+  if (readRes == ProgressiveDecoderContext::Status::kSuccess) {
     device_bitmap_ = nullptr;
     file_ = nullptr;
     status_ = FXCODEC_STATUS::kDecodeFinished;
@@ -1136,10 +1137,10 @@ std::pair<FXCODEC_STATUS, size_t> ProgressiveDecoder::GetFrames() {
 #ifdef PDF_ENABLE_XFA_GIF
     case FXCODEC_IMAGE_GIF: {
       while (true) {
-        GifDecoder::Status readResult;
+        ProgressiveDecoderContext::Status readResult;
         std::tie(readResult, frame_number_) =
             GifDecoder::LoadFrameInfo(gif_context_.get());
-        while (readResult == GifDecoder::Status::kUnfinished) {
+        while (readResult == ProgressiveDecoderContext::Status::kContinue) {
           FXCODEC_STATUS error_status = FXCODEC_STATUS::kError;
           if (!GifReadMoreData(&error_status)) {
             return {error_status, 0};
@@ -1148,7 +1149,7 @@ std::pair<FXCODEC_STATUS, size_t> ProgressiveDecoder::GetFrames() {
           std::tie(readResult, frame_number_) =
               GifDecoder::LoadFrameInfo(gif_context_.get());
         }
-        if (readResult == GifDecoder::Status::kSuccess) {
+        if (readResult == ProgressiveDecoderContext::Status::kSuccess) {
           status_ = FXCODEC_STATUS::kDecodeReady;
           return {status_, frame_number_};
         }

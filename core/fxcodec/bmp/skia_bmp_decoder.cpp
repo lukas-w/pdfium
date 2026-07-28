@@ -75,12 +75,13 @@ class SkiaBmpContext final : public ProgressiveDecoderContext {
     return codec_memory_->GetSize();
   }
 
-  SkiaBmpDecoder::Status ReadHeader(int32_t* width,
-                                    int32_t* height,
-                                    bool* tb_flag,
-                                    int32_t* components,
-                                    pdfium::span<const FX_ARGB>* palette,
-                                    CFX_DIBAttribute* pAttribute) {
+  ProgressiveDecoderContext::Status ReadHeader(
+      int32_t* width,
+      int32_t* height,
+      bool* tb_flag,
+      int32_t* components,
+      pdfium::span<const FX_ARGB>* palette,
+      CFX_DIBAttribute* pAttribute) {
     if (header_read_) {
       SkImageInfo info = decoder_->getInfo();
       *width = info.width();
@@ -88,12 +89,12 @@ class SkiaBmpContext final : public ProgressiveDecoderContext {
       *tb_flag = top_down_;
       *components = components_;
       *palette = {};
-      return SkiaBmpDecoder::Status::kSuccess;
+      return ProgressiveDecoderContext::Status::kSuccess;
     }
 
     const auto span = codec_memory_->GetBufferSpan();
     if (span.size() < kMinHeaderBytes) {
-      return SkiaBmpDecoder::Status::kContinue;
+      return ProgressiveDecoderContext::Status::kContinue;
     }
 
     // There are enough bytes to construct and initialize a decoder,
@@ -109,11 +110,11 @@ class SkiaBmpContext final : public ProgressiveDecoderContext {
       if (result == SkCodec::kIncompleteInput) {
         codec_memory_->Seek(0);
         decoder_.reset();
-        return SkiaBmpDecoder::Status::kContinue;
+        return ProgressiveDecoderContext::Status::kContinue;
       }
       if (result != SkCodec::kSuccess || !decoder_) {
         decoder_.reset();
-        return SkiaBmpDecoder::Status::kFail;
+        return ProgressiveDecoderContext::Status::kError;
       }
     }
 
@@ -129,12 +130,12 @@ class SkiaBmpContext final : public ProgressiveDecoderContext {
     uint32_t bi_clr_used = 0;
     if (bi_size == 12) {
       if (span.size() < 26) {
-        return SkiaBmpDecoder::Status::kContinue;
+        return ProgressiveDecoderContext::Status::kContinue;
       }
       bpp = fxcrt::GetUInt16LSBFirst(span.subspan<24, 2>());
     } else if (bi_size >= 40) {
       if (span.size() < 50) {
-        return SkiaBmpDecoder::Status::kContinue;
+        return ProgressiveDecoderContext::Status::kContinue;
       }
       top_down_ = static_cast<int32_t>(
                       fxcrt::GetUInt32LSBFirst(span.subspan<22, 4>())) < 0;
@@ -142,18 +143,18 @@ class SkiaBmpContext final : public ProgressiveDecoderContext {
       bi_compression = fxcrt::GetUInt32LSBFirst(span.subspan<30, 4>());
       bi_clr_used = fxcrt::GetUInt32LSBFirst(span.subspan<46, 4>());
     } else {
-      return SkiaBmpDecoder::Status::kFail;
+      return ProgressiveDecoderContext::Status::kError;
     }
 
     if (bpp != 1 && bpp != 4 && bpp != 8 && bpp != 16 && bpp != 24 &&
         bpp != 32) {
-      return SkiaBmpDecoder::Status::kFail;
+      return ProgressiveDecoderContext::Status::kError;
     }
     if (bpp <= 8 && bi_clr_used > (1u << bpp)) {
-      return SkiaBmpDecoder::Status::kFail;
+      return ProgressiveDecoderContext::Status::kError;
     }
     if (bi_compression > 6) {
-      return SkiaBmpDecoder::Status::kFail;
+      return ProgressiveDecoderContext::Status::kError;
     }
 
     bpp_ = bpp;
@@ -171,19 +172,19 @@ class SkiaBmpContext final : public ProgressiveDecoderContext {
       pAttribute->y_dpi_ = 0;
     }
     header_read_ = true;
-    return SkiaBmpDecoder::Status::kSuccess;
+    return ProgressiveDecoderContext::Status::kSuccess;
   }
 
-  SkiaBmpDecoder::Status DecodeImage() {
+  ProgressiveDecoderContext::Status DecodeImage() {
     if (!header_read_ || !decoder_) {
-      return SkiaBmpDecoder::Status::kFail;
+      return ProgressiveDecoderContext::Status::kError;
     }
     if (!ValidatePaletteIndices()) {
-      return SkiaBmpDecoder::Status::kFail;
+      return ProgressiveDecoderContext::Status::kError;
     }
 
-    SkiaBmpDecoder::Status status = StartIncrementalDecode();
-    if (status != SkiaBmpDecoder::Status::kSuccess) {
+    ProgressiveDecoderContext::Status status = StartIncrementalDecode();
+    if (status != ProgressiveDecoderContext::Status::kSuccess) {
       return status;
     }
 
@@ -201,7 +202,7 @@ class SkiaBmpContext final : public ProgressiveDecoderContext {
           fxge::CalculatePitch32(components_ == 4 ? 32 : 24, width);
       if (!maybe_src_row_bytes.has_value() ||
           !maybe_dst_row_bytes.has_value()) {
-        return SkiaBmpDecoder::Status::kFail;
+        return ProgressiveDecoderContext::Status::kError;
       }
       size_t src_row_bytes = maybe_src_row_bytes.value();
       size_t dst_row_bytes = maybe_dst_row_bytes.value();
@@ -213,7 +214,7 @@ class SkiaBmpContext final : public ProgressiveDecoderContext {
       int start_row = top_down_ ? rows_forwarded_ : (height - rows_decoded);
       int end_row = top_down_ ? rows_decoded : (height - rows_forwarded_);
       if (start_row < 0) {
-        return SkiaBmpDecoder::Status::kFail;
+        return ProgressiveDecoderContext::Status::kError;
       }
       FX_SAFE_SIZE_T safe_src_row_end = static_cast<size_t>(start_row);
       safe_src_row_end *= src_row_bytes;
@@ -222,7 +223,7 @@ class SkiaBmpContext final : public ProgressiveDecoderContext {
         safe_src_row_end += src_row_bytes;
         if (!safe_src_row_end.IsValid() ||
             safe_src_row_end.ValueOrDie() > decoded_image_buf_.size()) {
-          return SkiaBmpDecoder::Status::kFail;
+          return ProgressiveDecoderContext::Status::kError;
         }
         auto src_row = pdfium::span(decoded_image_buf_)
                            .subspan(src_row_start, src_row_bytes);
@@ -237,12 +238,12 @@ class SkiaBmpContext final : public ProgressiveDecoderContext {
     }
 
     if (result == SkCodec::kSuccess) {
-      return SkiaBmpDecoder::Status::kSuccess;
+      return ProgressiveDecoderContext::Status::kSuccess;
     }
     if (result == SkCodec::kIncompleteInput) {
-      return SkiaBmpDecoder::Status::kContinue;
+      return ProgressiveDecoderContext::Status::kContinue;
     }
-    return SkiaBmpDecoder::Status::kFail;
+    return ProgressiveDecoderContext::Status::kError;
   }
 
  private:
@@ -324,10 +325,10 @@ class SkiaBmpContext final : public ProgressiveDecoderContext {
     return true;
   }
 
-  SkiaBmpDecoder::Status StartIncrementalDecode() {
+  ProgressiveDecoderContext::Status StartIncrementalDecode() {
     // Initialize incremental decoding into the destination buffer.
     if (decode_started_) {
-      return SkiaBmpDecoder::Status::kSuccess;
+      return ProgressiveDecoderContext::Status::kSuccess;
     }
     SkImageInfo dst_info = decoder_->getInfo()
                                .makeColorType(kBGRA_8888_SkColorType)
@@ -336,19 +337,19 @@ class SkiaBmpContext final : public ProgressiveDecoderContext {
     FX_SAFE_SIZE_T safe_buf_size = dst_info.height();
     safe_buf_size *= row_bytes;
     if (!safe_buf_size.IsValid()) {
-      return SkiaBmpDecoder::Status::kFail;
+      return ProgressiveDecoderContext::Status::kError;
     }
     decoded_image_buf_.resize(safe_buf_size.ValueOrDie());
     SkCodec::Result result = decoder_->startIncrementalDecode(
         dst_info, decoded_image_buf_.data(), row_bytes);
     if (result == SkCodec::kIncompleteInput) {
-      return SkiaBmpDecoder::Status::kContinue;
+      return ProgressiveDecoderContext::Status::kContinue;
     }
     if (result != SkCodec::kSuccess) {
-      return SkiaBmpDecoder::Status::kFail;
+      return ProgressiveDecoderContext::Status::kError;
     }
     decode_started_ = true;
-    return SkiaBmpDecoder::Status::kSuccess;
+    return ProgressiveDecoderContext::Status::kSuccess;
   }
 
   void Forward3ComponentRow(uint32_t dest_row,
@@ -388,7 +389,7 @@ std::unique_ptr<ProgressiveDecoderContext> SkiaBmpDecoder::StartDecode(
 }
 
 // static
-SkiaBmpDecoder::Status SkiaBmpDecoder::ReadHeader(
+ProgressiveDecoderContext::Status SkiaBmpDecoder::ReadHeader(
     ProgressiveDecoderContext* context,
     int32_t* width,
     int32_t* height,
@@ -402,7 +403,7 @@ SkiaBmpDecoder::Status SkiaBmpDecoder::ReadHeader(
 }
 
 // static
-SkiaBmpDecoder::Status SkiaBmpDecoder::DecodeImage(
+ProgressiveDecoderContext::Status SkiaBmpDecoder::DecodeImage(
     ProgressiveDecoderContext* context) {
   auto* ctx = static_cast<SkiaBmpContext*>(context);
   return ctx->DecodeImage();

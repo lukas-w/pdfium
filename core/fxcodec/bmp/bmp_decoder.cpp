@@ -23,18 +23,19 @@ std::unique_ptr<ProgressiveDecoderContext> BmpDecoder::StartDecode(
 }
 
 // static
-BmpDecoder::Status BmpDecoder::ReadHeader(ProgressiveDecoderContext* context,
-                                          int32_t* width,
-                                          int32_t* height,
-                                          bool* tb_flag,
-                                          int32_t* components,
-                                          pdfium::span<const FX_ARGB>* palette,
-                                          CFX_DIBAttribute* pAttribute) {
+ProgressiveDecoderContext::Status BmpDecoder::ReadHeader(
+    ProgressiveDecoderContext* context,
+    int32_t* width,
+    int32_t* height,
+    bool* tb_flag,
+    int32_t* components,
+    pdfium::span<const FX_ARGB>* palette,
+    CFX_DIBAttribute* pAttribute) {
   DCHECK(pAttribute);
 
   auto* ctx = static_cast<CFX_BmpContext*>(context);
-  Status status = ctx->bmp_.ReadHeader();
-  if (status != Status::kSuccess) {
+  ProgressiveDecoderContext::Status status = ctx->bmp_.ReadHeader();
+  if (status != ProgressiveDecoderContext::Status::kSuccess) {
     return status;
   }
 
@@ -46,11 +47,12 @@ BmpDecoder::Status BmpDecoder::ReadHeader(ProgressiveDecoderContext* context,
   pAttribute->dpi_unit_ = CFX_DIBAttribute::kResUnitMeter;
   pAttribute->x_dpi_ = ctx->bmp_.dpi_x();
   pAttribute->y_dpi_ = ctx->bmp_.dpi_y();
-  return Status::kSuccess;
+  return ProgressiveDecoderContext::Status::kSuccess;
 }
 
 // static
-BmpDecoder::Status BmpDecoder::DecodeImage(ProgressiveDecoderContext* context) {
+ProgressiveDecoderContext::Status BmpDecoder::DecodeImage(
+    ProgressiveDecoderContext* context) {
   return static_cast<CFX_BmpContext*>(context)->bmp_.DecodeImage();
 }
 

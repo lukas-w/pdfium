@@ -36,9 +36,9 @@ class CFX_GifContext : public ProgressiveDecoderContext {
                          int32_t height,
                          pdfium::span<CFX_GifPalette> pal,
                          int32_t trans_index);
-  GifDecoder::Status ReadHeader();
-  GifDecoder::Status GetFrame();
-  GifDecoder::Status LoadFrame(size_t frame_num);
+  ProgressiveDecoderContext::Status ReadHeader();
+  ProgressiveDecoderContext::Status GetFrame();
+  ProgressiveDecoderContext::Status LoadFrame(size_t frame_num);
   void SetInputBuffer(RetainPtr<CFX_CodecMemory> codec_memory);
   uint32_t GetAvailInput() const;
   size_t GetFrameNum() const { return images_.size(); }
@@ -61,15 +61,15 @@ class CFX_GifContext : public ProgressiveDecoderContext {
 
  protected:
   bool ReadAllOrNone(pdfium::span<uint8_t> dest);
-  GifDecoder::Status ReadGifSignature();
-  GifDecoder::Status ReadLogicalScreenDescriptor();
+  ProgressiveDecoderContext::Status ReadGifSignature();
+  ProgressiveDecoderContext::Status ReadLogicalScreenDescriptor();
 
   RetainPtr<CFX_CodecMemory> input_buffer_;
 
  private:
   void SaveDecodingStatus(GifDecoderStatus status);
-  GifDecoder::Status DecodeExtension();
-  GifDecoder::Status DecodeImageInfo();
+  ProgressiveDecoderContext::Status DecodeExtension();
+  ProgressiveDecoderContext::Status DecodeImageInfo();
   void DecodingFailureAtTailCleanup(CFX_GifImage* gif_image);
   bool ScanForTerminalMarker();
   uint8_t GetPaletteExp(CFX_GifImage* gif_image) const;
