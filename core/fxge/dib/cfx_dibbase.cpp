@@ -173,6 +173,7 @@ void ConvertBuffer_8bppPlt2Gray(pdfium::span<uint8_t> dest_buf,
   }
 }
 
+template <typename SrcType>
 void ConvertBuffer_Rgb2Gray(pdfium::span<uint8_t> dest_buf,
                             int dest_pitch,
                             int width,
@@ -180,19 +181,15 @@ void ConvertBuffer_Rgb2Gray(pdfium::span<uint8_t> dest_buf,
                             const RetainPtr<const CFX_DIBBase>& pSrcBitmap,
                             int src_left,
                             int src_top) {
-  const int bytes_per_pixel = pSrcBitmap->GetBPP() / 8;
-  const size_t x_offset = Fx2DSizeOrDie(src_left, bytes_per_pixel);
+  CHECK_EQ(pSrcBitmap->GetBPP(), 8 * sizeof(SrcType));
   for (int row = 0; row < height; ++row) {
-    uint8_t* dest_scan =
-        dest_buf.subspan(Fx2DSizeOrDie(row, dest_pitch)).data();
-    const uint8_t* src_scan =
-        pSrcBitmap->GetScanline(src_top + row).subspan(x_offset).data();
-    UNSAFE_TODO({
-      for (int col = 0; col < width; ++col) {
-        *dest_scan++ = FXRGB2GRAY(src_scan[2], src_scan[1], src_scan[0]);
-        src_scan += bytes_per_pixel;
-      }
-    });
+    auto dest_scan = dest_buf.subspan(Fx2DSizeOrDie(row, dest_pitch));
+    auto src_scan =
+        pSrcBitmap->GetScanlineAs<SrcType>(src_top + row)
+            .subspan(static_cast<size_t>(src_left), static_cast<size_t>(width));
+    for (auto [src_pix, dest_pix] : fxcrt::Zip(src_scan, dest_scan)) {
+      dest_pix = FXRGB2GRAY(src_pix.red, src_pix.green, src_pix.blue);
+    }
   }
 }
 
@@ -450,13 +447,16 @@ void ConvertBuffer_8bppMask(pdfium::span<uint8_t> dest_buf,
       }
       break;
     case 24:
+      ConvertBuffer_Rgb2Gray<FX_BGR_STRUCT<uint8_t>>(
+          dest_buf, dest_pitch, width, height, pSrcBitmap, src_left, src_top);
+      break;
     case 32:
 #if defined(PDF_USE_SKIA)
       // TODO(crbug.com/42271020): Determine if this ever happens.
       CHECK_NE(pSrcBitmap->GetFormat(), FXDIB_Format::kBgraPremul);
 #endif
-      ConvertBuffer_Rgb2Gray(dest_buf, dest_pitch, width, height, pSrcBitmap,
-                             src_left, src_top);
+      ConvertBuffer_Rgb2Gray<FX_BGRA_STRUCT<uint8_t>>(
+          dest_buf, dest_pitch, width, height, pSrcBitmap, src_left, src_top);
       break;
     default:
       NOTREACHED();
