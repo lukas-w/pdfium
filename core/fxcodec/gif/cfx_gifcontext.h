@@ -43,6 +43,7 @@ class CFX_GifContext : public ProgressiveDecoderContext {
   // ProgressiveDecoderContext:
   FX_FILESIZE GetAvailInput() const override;
   void Input(RetainPtr<CFX_CodecMemory> codec_memory) override;
+  Status DecodeImage(size_t frame_index) override;
 
   void SetInputBuffer(RetainPtr<CFX_CodecMemory> codec_memory);
   size_t GetFrameNum() const { return images_.size(); }

@@ -372,8 +372,7 @@ FXCODEC_STATUS ProgressiveDecoder::BmpStartDecode() {
 }
 
 FXCODEC_STATUS ProgressiveDecoder::BmpContinueDecode() {
-  ProgressiveDecoderContext::Status read_res =
-      BmpDecoder::DecodeImage(context_.get());
+  ProgressiveDecoderContext::Status read_res = context_->DecodeImage(0);
   while (read_res == ProgressiveDecoderContext::Status::kContinue) {
     FXCODEC_STATUS error_status = FXCODEC_STATUS::kDecodeFinished;
     if (!BmpReadMoreData(context_.get(), &error_status)) {
@@ -382,7 +381,7 @@ FXCODEC_STATUS ProgressiveDecoder::BmpContinueDecode() {
       status_ = error_status;
       return status_;
     }
-    read_res = BmpDecoder::DecodeImage(context_.get());
+    read_res = context_->DecodeImage(0);
   }
 
   device_bitmap_ = nullptr;
@@ -451,8 +450,7 @@ FXCODEC_STATUS ProgressiveDecoder::GifStartDecode() {
 }
 
 FXCODEC_STATUS ProgressiveDecoder::GifContinueDecode() {
-  ProgressiveDecoderContext::Status readRes =
-      GifDecoder::LoadFrame(context_.get(), frame_cur_);
+  ProgressiveDecoderContext::Status readRes = context_->DecodeImage(frame_cur_);
   while (readRes == ProgressiveDecoderContext::Status::kContinue) {
     FXCODEC_STATUS error_status = FXCODEC_STATUS::kDecodeFinished;
     if (!GifReadMoreData(&error_status)) {
@@ -461,7 +459,7 @@ FXCODEC_STATUS ProgressiveDecoder::GifContinueDecode() {
       status_ = error_status;
       return status_;
     }
-    readRes = GifDecoder::LoadFrame(context_.get(), frame_cur_);
+    readRes = context_->DecodeImage(frame_cur_);
   }
 
   if (readRes == ProgressiveDecoderContext::Status::kSuccess) {

@@ -176,12 +176,13 @@ ProgressiveDecoderContext::Status CFX_GifContext::GetFrame() {
   }
 }
 
-ProgressiveDecoderContext::Status CFX_GifContext::LoadFrame(size_t frame_num) {
-  if (frame_num >= images_.size()) {
+ProgressiveDecoderContext::Status CFX_GifContext::DecodeImage(
+    size_t frame_index) {
+  if (frame_index >= images_.size()) {
     return ProgressiveDecoderContext::Status::kError;
   }
 
-  CFX_GifImage* gif_image = images_[frame_num].get();
+  CFX_GifImage* gif_image = images_[frame_index].get();
   if (gif_image->image_info.height == 0) {
     return ProgressiveDecoderContext::Status::kError;
   }

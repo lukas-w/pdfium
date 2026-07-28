@@ -48,9 +48,6 @@ class GifDecoder {
       int* bg_index);
   static std::pair<ProgressiveDecoderContext::Status, size_t> LoadFrameInfo(
       ProgressiveDecoderContext* context);
-  static ProgressiveDecoderContext::Status LoadFrame(
-      ProgressiveDecoderContext* context,
-      size_t frame_num);
 
   // Only `static` methods.
   GifDecoder() = delete;

@@ -17,4 +17,9 @@ FX_FILESIZE ProgressiveDecoderContext::GetAvailInput() const {
 void ProgressiveDecoderContext::Input(RetainPtr<CFX_CodecMemory> codec_memory) {
 }
 
+ProgressiveDecoderContext::Status ProgressiveDecoderContext::DecodeImage(
+    size_t frame_index) {
+  return Status::kError;
+}
+
 }  // namespace fxcodec

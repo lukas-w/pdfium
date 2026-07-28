@@ -40,8 +40,6 @@ class BmpDecoder {
       int32_t* components,
       pdfium::span<const FX_ARGB>* palette,
       CFX_DIBAttribute* pAttribute);
-  static ProgressiveDecoderContext::Status DecodeImage(
-      ProgressiveDecoderContext* context);
 
   // Only `static` methods.
   BmpDecoder() = delete;

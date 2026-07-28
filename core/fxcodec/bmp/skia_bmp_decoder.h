@@ -42,8 +42,6 @@ class SkiaBmpDecoder {
       int32_t* components,
       pdfium::span<const FX_ARGB>* palette,
       CFX_DIBAttribute* attribute);
-  static ProgressiveDecoderContext::Status DecodeImage(
-      ProgressiveDecoderContext* context);
 
   SkiaBmpDecoder() = delete;
   SkiaBmpDecoder(const SkiaBmpDecoder&) = delete;

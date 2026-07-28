@@ -180,7 +180,7 @@ class SkiaBmpContext final : public ProgressiveDecoderContext {
     return ProgressiveDecoderContext::Status::kSuccess;
   }
 
-  ProgressiveDecoderContext::Status DecodeImage() {
+  ProgressiveDecoderContext::Status DecodeImage(size_t frame_index) override {
     if (!header_read_ || !decoder_) {
       return ProgressiveDecoderContext::Status::kError;
     }
@@ -407,12 +407,6 @@ ProgressiveDecoderContext::Status SkiaBmpDecoder::ReadHeader(
                          pAttribute);
 }
 
-// static
-ProgressiveDecoderContext::Status SkiaBmpDecoder::DecodeImage(
-    ProgressiveDecoderContext* context) {
-  auto* ctx = static_cast<SkiaBmpContext*>(context);
-  return ctx->DecodeImage();
-}
 
 
 }  // namespace fxcodec

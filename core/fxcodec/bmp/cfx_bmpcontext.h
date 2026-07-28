@@ -23,6 +23,7 @@ class CFX_BmpContext final : public ProgressiveDecoderContext {
   // ProgressiveDecoderContext:
   FX_FILESIZE GetAvailInput() const override;
   void Input(RetainPtr<CFX_CodecMemory> codec_memory) override;
+  Status DecodeImage(size_t frame_index) override;
 
   CFX_BmpDecompressor bmp_;
   UnownedPtr<BmpDecoderDelegate> const delegate_;

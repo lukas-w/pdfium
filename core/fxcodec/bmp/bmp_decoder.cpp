@@ -50,11 +50,6 @@ ProgressiveDecoderContext::Status BmpDecoder::ReadHeader(
   return ProgressiveDecoderContext::Status::kSuccess;
 }
 
-// static
-ProgressiveDecoderContext::Status BmpDecoder::DecodeImage(
-    ProgressiveDecoderContext* context) {
-  return static_cast<CFX_BmpContext*>(context)->bmp_.DecodeImage();
-}
 
 
 }  // namespace fxcodec
