@@ -312,7 +312,7 @@ ProgressiveDecoderContext::Status CFX_BmpDecompressor::ReadBmpPalette() {
               pdfium::span<uint8_t>(src_pal));
       for (auto& dest : palette_) {
         const auto& entry = src_pal_data.front();
-        dest = ArgbEncode(0x00, entry.red, entry.green, entry.blue);
+        dest = ArgbEncode(0xff, entry.red, entry.green, entry.blue);
         src_pal_data = src_pal_data.subspan<1u>();
       }
     } else {
@@ -321,7 +321,7 @@ ProgressiveDecoderContext::Status CFX_BmpDecompressor::ReadBmpPalette() {
               pdfium::span<uint8_t>(src_pal));
       for (auto& dest : palette_) {
         const auto& entry = src_pal_data.front();
-        dest = ArgbEncode(entry.alpha, entry.red, entry.green, entry.blue);
+        dest = ArgbEncode(0xff, entry.red, entry.green, entry.blue);
         src_pal_data = src_pal_data.subspan<1u>();
       }
     }

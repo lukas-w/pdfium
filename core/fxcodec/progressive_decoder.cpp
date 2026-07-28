@@ -965,29 +965,6 @@ void ProgressiveDecoder::ResampleScanline(
         });
       }
       case TransformMethod::k8BppRgbToArgb: {
-#ifdef PDF_ENABLE_XFA_BMP
-        if (bmp_context_) {
-          UNSAFE_TODO({
-            uint32_t dest_r = 0;
-            uint32_t dest_g = 0;
-            uint32_t dest_b = 0;
-            for (int j = pPixelWeights->src_start_;
-                 j <= pPixelWeights->src_end_; j++) {
-              uint32_t pixel_weight =
-                  pPixelWeights->weights_[j - pPixelWeights->src_start_];
-              uint32_t argb = src_palette_[src_scan[j]];
-              dest_r += pixel_weight * FXARGB_R(argb);
-              dest_g += pixel_weight * FXARGB_G(argb);
-              dest_b += pixel_weight * FXARGB_B(argb);
-            }
-            *dest_scan++ = CStretchEngine::PixelFromFixed(dest_b);
-            *dest_scan++ = CStretchEngine::PixelFromFixed(dest_g);
-            *dest_scan++ = CStretchEngine::PixelFromFixed(dest_r);
-            *dest_scan++ = 0xFF;
-            break;
-          });
-        }
-#endif  // PDF_ENABLE_XFA_BMP
         UNSAFE_TODO({
           uint32_t dest_a = 0;
           uint32_t dest_r = 0;
