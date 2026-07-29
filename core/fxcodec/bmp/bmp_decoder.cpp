@@ -50,6 +50,4 @@ ProgressiveDecoderContext::Status BmpDecoder::ReadHeader(
   return ProgressiveDecoderContext::Status::kSuccess;
 }
 
-
-
 }  // namespace fxcodec

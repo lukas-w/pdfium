@@ -407,6 +407,4 @@ ProgressiveDecoderContext::Status SkiaBmpDecoder::ReadHeader(
                          pAttribute);
 }
 
-
-
 }  // namespace fxcodec

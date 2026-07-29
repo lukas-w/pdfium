@@ -49,6 +49,4 @@ std::pair<ProgressiveDecoderContext::Status, size_t> GifDecoder::LoadFrameInfo(
   return {ProgressiveDecoderContext::Status::kSuccess, ctx->GetFrameNum()};
 }
 
-
-
 }  // namespace fxcodec
