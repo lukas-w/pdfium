@@ -93,6 +93,8 @@ source_set("fxcodec") {
     sources += [
       "cfx_codec_memory.cpp",
       "cfx_codec_memory.h",
+      "jpeg/cjpegcontext.cpp",
+      "jpeg/cjpegcontext.h",
       "jpeg/jpeg_progressive_decoder.cpp",
       "jpeg/jpeg_progressive_decoder.h",
       "progressive_decoder.cpp",
@@ -104,6 +106,8 @@ source_set("fxcodec") {
       sources += [ "bmp/bmp_decoder_delegate.h" ]
       if (pdf_enable_rust_bmp) {
         sources += [
+          "bmp/skia_bmp_context.cpp",
+          "bmp/skia_bmp_context.h",
           "bmp/skia_bmp_decoder.cpp",
           "bmp/skia_bmp_decoder.h",
         ]
@@ -141,12 +145,16 @@ source_set("fxcodec") {
       # condition avoids affecting the Chromium behavior.)
       if (pdf_use_skia && pdf_enable_rust_png) {
         sources += [
+          "png/skia_png_context.cpp",
+          "png/skia_png_context.h",
           "png/skia_png_decoder.cpp",
           "png/skia_png_decoder.h",
         ]
         deps += [ "//skia" ]
       } else {
         sources += [
+          "png/cpngcontext.cpp",
+          "png/cpngcontext.h",
           "png/libpng_png_decoder.cpp",
           "png/libpng_png_decoder.h",
         ]

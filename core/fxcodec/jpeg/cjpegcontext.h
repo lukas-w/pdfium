@@ -1,0 +1,28 @@
+// Copyright 2026 The PDFium Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+#ifndef CORE_FXCODEC_JPEG_CJPEGCONTEXT_H_
+#define CORE_FXCODEC_JPEG_CJPEGCONTEXT_H_
+
+#include "core/fxcodec/jpeg/jpeg_common.h"
+#include "core/fxcodec/progressive_decoder_context.h"
+#include "core/fxcrt/retain_ptr.h"
+
+namespace fxcodec {
+
+class CJpegContext final : public ProgressiveDecoderContext {
+ public:
+  CJpegContext();
+  ~CJpegContext() override;
+
+  // ProgressiveDecoderContext:
+  FX_FILESIZE GetAvailInput() const override;
+  void Input(RetainPtr<CFX_CodecMemory> codec_memory) override;
+
+  JpegCommon common_ = {};
+};
+
+}  // namespace fxcodec
+
+#endif  // CORE_FXCODEC_JPEG_CJPEGCONTEXT_H_

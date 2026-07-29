@@ -13,6 +13,7 @@
 #include "core/fxcodec/cfx_codec_memory.h"
 #include "core/fxcodec/fx_codec.h"
 #include "core/fxcodec/fx_codec_def.h"
+#include "core/fxcodec/png/cpngcontext.h"
 #include "core/fxcodec/png/png_decoder_delegate.h"
 #include "core/fxcodec/progressive_decoder_context.h"
 #include "core/fxcrt/check.h"
@@ -29,33 +30,14 @@
 #error "If Rust PNG is enabled, then `libpng` should not be used."
 #endif
 
-namespace {
-
-constexpr size_t kPngErrorSize = 256;
-
-}  // namespace
-
 using PngDecoderDelegate = fxcodec::PngDecoderDelegate;
-
-class CPngContext final : public ProgressiveDecoderContext {
- public:
-  explicit CPngContext(PngDecoderDelegate* pDelegate);
-  ~CPngContext() override;
-
-  png_structp png_ = nullptr;
-  png_infop info_ = nullptr;
-  UnownedPtr<PngDecoderDelegate> const delegate_;
-  char last_error_[kPngErrorSize] = {};
-  png_uint_32 height_ = 0;
-  int number_of_passes_ = 0;
-};
 
 extern "C" {
 
 void _png_error_data(png_structp png_ptr, png_const_charp error_msg) {
   if (png_get_error_ptr(png_ptr)) {
     UNSAFE_TODO(strncpy(static_cast<char*>(png_get_error_ptr(png_ptr)),
-                        error_msg, kPngErrorSize - 1));
+                        error_msg, fxcodec::CPngContext::kPngErrorSize - 1));
   }
 
   longjmp(png_jmpbuf(png_ptr), 1);
@@ -65,7 +47,7 @@ void _png_warning_data(png_structp png_ptr, png_const_charp error_msg) {}
 
 void _png_get_header_func(png_structp png_ptr, png_infop info_ptr) {
   auto* context =
-      reinterpret_cast<CPngContext*>(png_get_progressive_ptr(png_ptr));
+      reinterpret_cast<fxcodec::CPngContext*>(png_get_progressive_ptr(png_ptr));
   if (!context) {
     return;
   }
@@ -122,7 +104,7 @@ void _png_get_row_func(png_structp png_ptr,
                        png_uint_32 row_num,
                        int pass) {
   auto* context =
-      reinterpret_cast<CPngContext*>(png_get_progressive_ptr(png_ptr));
+      reinterpret_cast<fxcodec::CPngContext*>(png_get_progressive_ptr(png_ptr));
   if (!context) {
     return;
   }
@@ -162,14 +144,6 @@ int _png_continue_decode(png_structrp png_ptr,
 }
 
 }  // extern "C"
-
-CPngContext::CPngContext(PngDecoderDelegate* pDelegate)
-    : delegate_(pDelegate) {}
-
-CPngContext::~CPngContext() {
-  png_destroy_read_struct(png_ ? &png_ : nullptr, info_ ? &info_ : nullptr,
-                          nullptr);
-}
 
 namespace fxcodec {
 
