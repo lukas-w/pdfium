@@ -85,6 +85,31 @@ TEST(FormCalcContextTest, IsIsoDateFormat) {
   EXPECT_EQ(2023, year);
   EXPECT_EQ(6, month);
   EXPECT_EQ(24, day);
+
+  EXPECT_TRUE(
+      CFXJSE_FormCalcContext::IsIsoDateFormat("2020", &year, &month, &day));
+  EXPECT_EQ(2020, year);
+  EXPECT_EQ(1, month);
+  EXPECT_EQ(1, day);
+
+  EXPECT_TRUE(
+      CFXJSE_FormCalcContext::IsIsoDateFormat("202006", &year, &month, &day));
+  EXPECT_EQ(6, month);
+
+  EXPECT_TRUE(
+      CFXJSE_FormCalcContext::IsIsoDateFormat("20200615", &year, &month, &day));
+  EXPECT_EQ(15, day);
+
+  // Malformed short inputs must be rejected gracefully, without indexing past
+  // the input span (crbug.com/539204640).
+  EXPECT_FALSE(
+      CFXJSE_FormCalcContext::IsIsoDateFormat("20205", &year, &month, &day));
+  EXPECT_FALSE(
+      CFXJSE_FormCalcContext::IsIsoDateFormat("2020-", &year, &month, &day));
+  EXPECT_FALSE(
+      CFXJSE_FormCalcContext::IsIsoDateFormat("2020061", &year, &month, &day));
+  EXPECT_FALSE(
+      CFXJSE_FormCalcContext::IsIsoDateFormat("2020-06-", &year, &month, &day));
 }
 
 TEST(FormCalcContextTest, IsIsoTimeFormat) {

@@ -5282,7 +5282,7 @@ bool CFXJSE_FormCalcContext::IsIsoDateFormat(ByteStringView bsData,
 
   int32_t iStyle = pData[4] == '-' ? 1 : 0;
   size_t iPosOff = iStyle == 0 ? 4 : 5;
-  if (!FXSYS_IsDecimalDigit(pData[iPosOff]) ||
+  if (iPosOff + 1 >= pData.size() || !FXSYS_IsDecimalDigit(pData[iPosOff]) ||
       !FXSYS_IsDecimalDigit(pData[iPosOff + 1])) {
     return false;
   }
@@ -5306,7 +5306,7 @@ bool CFXJSE_FormCalcContext::IsIsoDateFormat(ByteStringView bsData,
       return true;
     }
   }
-  if (!FXSYS_IsDecimalDigit(pData[iPosOff]) ||
+  if (iPosOff + 1 >= pData.size() || !FXSYS_IsDecimalDigit(pData[iPosOff]) ||
       !FXSYS_IsDecimalDigit(pData[iPosOff + 1])) {
     return false;
   }
