@@ -11,6 +11,7 @@
       /Private <<
         /Codename (Potato)
         /InternalRevision 2147483647
+        /ValidBoolKey true
       >>
     >>
   >>
@@ -40,6 +41,7 @@ endobj
       /Private <<
         /Codename (Carrot)
         /InternalRevision -2147483647
+        /ValidBoolKey false
       >>
     >>
   >>
