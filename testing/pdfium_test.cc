@@ -330,11 +330,13 @@ int ExampleAppAlert(IPDF_JSPLATFORM*,
     printf("[icon=%d,type=%d]", icon, type);
   }
   printf(": %ls\n", GetPlatformWString(msg).c_str());
+  fflush(stdout);
   return 0;
 }
 
 void ExampleAppBeep(IPDF_JSPLATFORM*, int type) {
   printf("BEEP!!! %d\n", type);
+  fflush(stdout);
 }
 
 int ExampleAppResponse(IPDF_JSPLATFORM*,
@@ -350,6 +352,7 @@ int ExampleAppResponse(IPDF_JSPLATFORM*,
          GetPlatformWString(question).c_str(),
          GetPlatformWString(default_value).c_str(),
          GetPlatformWString(label).c_str(), is_password, length);
+  fflush(stdout);
 
   // UTF-16, always LE regardless of platform.
   auto* ptr = static_cast<uint8_t*>(response);
@@ -384,6 +387,7 @@ void ExampleDocMail(IPDF_JSPLATFORM*,
          GetPlatformWString(To).c_str(), GetPlatformWString(CC).c_str(),
          GetPlatformWString(BCC).c_str(), GetPlatformWString(Subject).c_str(),
          GetPlatformWString(Msg).c_str());
+  fflush(stdout);
 }
 
 void ExampleDocPrint(IPDF_JSPLATFORM*,
@@ -397,6 +401,7 @@ void ExampleDocPrint(IPDF_JSPLATFORM*,
                      FPDF_BOOL bAnnotations) {
   printf("Doc Print: %d, %d, %d, %d, %d, %d, %d, %d\n", bUI, nStart, nEnd,
          bSilent, bShrinkToFit, bPrintAsImage, bReverse, bAnnotations);
+  fflush(stdout);
 }
 
 void ExampleDocSubmitForm(IPDF_JSPLATFORM*,
@@ -410,10 +415,12 @@ void ExampleDocSubmitForm(IPDF_JSPLATFORM*,
     printf(" %02x", UNSAFE_TODO(ptr[i]));
   }
   printf("\n");
+  fflush(stdout);
 }
 
 void ExampleDocGotoPage(IPDF_JSPLATFORM*, int page_number) {
   printf("Goto Page: %d\n", page_number);
+  fflush(stdout);
 }
 
 int ExampleFieldBrowse(IPDF_JSPLATFORM*, void* file_path, int length) {
@@ -434,12 +441,14 @@ FPDF_BOOL ExamplePopupMenu(FPDF_FORMFILLINFO* pInfo,
                            float x,
                            float y) {
   printf("Popup: x=%2.1f, y=%2.1f, flags=0x%x\n", x, y, flags);
+  fflush(stdout);
   return true;
 }
 #endif  // PDF_ENABLE_XFA
 
 void ExampleNamedAction(FPDF_FORMFILLINFO* pInfo, FPDF_BYTESTRING name) {
   UNSAFE_TODO(printf("Execute named action: %s\n", name));
+  fflush(stdout);
 }
 
 void ExampleUnsupportedHandler(UNSUPPORT_INFO*, int type) {
