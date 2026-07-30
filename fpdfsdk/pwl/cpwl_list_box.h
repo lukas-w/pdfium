@@ -43,6 +43,8 @@ class CPWL_ListBox : public CPWL_Wnd, public CPWL_ListCtrl::NotifyIface {
   CFX_FloatRect GetFocusRect() const override;
   void SetFontSize(float fFontSize) override;
   float GetFontSize() const override;
+  void SetTextDirection(
+      CFX_BidiResolver::ParagraphDirection direction) override;
 
   // CPWL_ListCtrl::NotifyIface:
   void OnSetScrollInfoY(float fPlateMin,

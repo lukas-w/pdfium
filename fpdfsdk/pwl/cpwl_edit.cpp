@@ -497,6 +497,15 @@ float CPWL_Edit::GetFontSize() const {
   return edit_impl_->GetFontSize();
 }
 
+void CPWL_Edit::SetTextDirection(
+    CFX_BidiResolver::ParagraphDirection direction) {
+  edit_impl_->SetTextDirection(direction);
+}
+
+CFX_BidiResolver::ParagraphDirection CPWL_Edit::GetTextDirection() const {
+  return edit_impl_->GetTextDirection();
+}
+
 bool CPWL_Edit::OnKeyDownInternal(FWL_VKEYCODE nKeyCode,
                                   Mask<FWL_EVENTFLAG> nFlag) {
   if (mouse_down_) {

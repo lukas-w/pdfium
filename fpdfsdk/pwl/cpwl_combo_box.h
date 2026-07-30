@@ -38,6 +38,8 @@ class CPWL_ComboBox final : public CPWL_Wnd {
   CFX_FloatRect GetFocusRect() const override;
   void SetFocus() override;
   void KillFocus() override;
+  void SetTextDirection(
+      CFX_BidiResolver::ParagraphDirection direction) override;
   WideString GetText() override;
   WideString GetSelectedText() override;
   void ReplaceAndKeepSelection(const WideString& text) override;

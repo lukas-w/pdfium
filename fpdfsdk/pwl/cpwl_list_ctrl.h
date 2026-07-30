@@ -68,6 +68,9 @@ class CPWL_ListCtrl {
 
   void SetFontMap(IPVT_FontMap* font_map) { font_map_ = font_map; }
   void SetFontSize(float fFontSize) { font_size_ = fFontSize; }
+  void SetTextDirection(CFX_BidiResolver::ParagraphDirection direction) {
+    text_direction_ = direction;
+  }
   CFX_FloatRect GetPlateRect() const { return plate_rect_; }
   void SetPlateRect(const CFX_FloatRect& rect);
 
@@ -94,6 +97,7 @@ class CPWL_ListCtrl {
     void SetSelect(bool bSelected) { selected_ = bSelected; }
     void SetText(const WideString& text);
     void SetFontSize(float fFontSize);
+    void SetTextDirection(CFX_BidiResolver::ParagraphDirection direction);
     WideString GetText() const;
 
     CFX_FloatRect GetRect() const { return list_item_rect_; }
@@ -166,6 +170,8 @@ class CPWL_ListCtrl {
   CFX_FloatRect content_rect_;
   CFX_PointF scroll_pos_point_;
   float font_size_ = 0.0f;
+  CFX_BidiResolver::ParagraphDirection text_direction_ =
+      CFX_BidiResolver::ParagraphDirection::kAuto;
 
   // For single:
   int32_t sel_item_ = -1;

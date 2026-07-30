@@ -10,6 +10,7 @@
 #include <memory>
 #include <vector>
 
+#include "core/fxcrt/cfx_bidi_resolver.h"
 #include "core/fxcrt/cfx_timer.h"
 #include "core/fxcrt/mask.h"
 #include "core/fxcrt/observed_ptr.h"
@@ -159,6 +160,8 @@ class CPWL_Wnd : public Observable {
   [[nodiscard]] virtual bool SetVisible(bool bVisible);
   virtual void SetFontSize(float fFontSize);
   virtual float GetFontSize() const;
+  virtual void SetTextDirection(
+      CFX_BidiResolver::ParagraphDirection direction) {}
 
   virtual WideString GetText();
   virtual WideString GetSelectedText();

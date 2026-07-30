@@ -60,6 +60,8 @@ class CPWL_Edit final : public CPWL_Wnd {
   void CreateChildWnd(const CreateParams& cp) override;
   void SetFontSize(float fFontSize) override;
   float GetFontSize() const override;
+  void SetTextDirection(
+      CFX_BidiResolver::ParagraphDirection direction) override;
   void SetCursor() override;
   WideString GetText() override;
   WideString GetSelectedText() override;
@@ -74,6 +76,7 @@ class CPWL_Edit final : public CPWL_Wnd {
   void SetSelection(int32_t nStartChar, int32_t nEndChar);
   std::pair<int32_t, int32_t> GetSelection() const;
   void ClearSelection();
+  CFX_BidiResolver::ParagraphDirection GetTextDirection() const;
 
   CFX_PointF GetScrollPos() const;
   void SetScrollPos(const CFX_PointF& point);

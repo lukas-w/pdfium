@@ -41,6 +41,11 @@ void CPWL_ListCtrl::Item::SetFontSize(float fFontSize) {
   edit_->Paint();
 }
 
+void CPWL_ListCtrl::Item::SetTextDirection(
+    CFX_BidiResolver::ParagraphDirection direction) {
+  edit_->SetTextDirection(direction);
+}
+
 float CPWL_ListCtrl::Item::GetItemHeight() const {
   return edit_->GetContentRect().Height();
 }
@@ -597,6 +602,7 @@ void CPWL_ListCtrl::AddItem(const WideString& str) {
   auto pListItem = std::make_unique<Item>();
   pListItem->SetFontMap(font_map_);
   pListItem->SetFontSize(font_size_);
+  pListItem->SetTextDirection(text_direction_);
   pListItem->SetText(str);
   list_items_.push_back(std::move(pListItem));
 }

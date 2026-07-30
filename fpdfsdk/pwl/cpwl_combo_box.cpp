@@ -77,6 +77,16 @@ void CPWL_ComboBox::ReplaceSelection(const WideString& text) {
   }
 }
 
+void CPWL_ComboBox::SetTextDirection(
+    CFX_BidiResolver::ParagraphDirection direction) {
+  if (edit_) {
+    edit_->SetTextDirection(direction);
+  }
+  if (list_) {
+    list_->SetTextDirection(direction);
+  }
+}
+
 bool CPWL_ComboBox::SelectAllText() {
   return edit_ && edit_->SelectAllText();
 }
@@ -219,6 +229,9 @@ void CPWL_ComboBox::CreateListBox(const CreateParams& cp) {
   auto pList = std::make_unique<CPWL_CBListBox>(lcp, CloneAttachedData());
   list_ = pList.get();
   AddChild(std::move(pList));
+  if (edit_) {
+    list_->SetTextDirection(edit_->GetTextDirection());
+  }
   list_->Realize();
 }
 

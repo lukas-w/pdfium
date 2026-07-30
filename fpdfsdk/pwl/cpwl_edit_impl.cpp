@@ -749,6 +749,15 @@ void CPWL_EditImpl::SetAlignmentV(int32_t nFormat) {
   alignment_ = nFormat;
 }
 
+void CPWL_EditImpl::SetTextDirection(
+    CFX_BidiResolver::ParagraphDirection direction) {
+  vt_->SetTextDirection(direction);
+}
+
+CFX_BidiResolver::ParagraphDirection CPWL_EditImpl::GetTextDirection() const {
+  return vt_->GetTextDirection();
+}
+
 void CPWL_EditImpl::SetPasswordChar(uint16_t wSubWord) {
   vt_->SetPasswordChar(wSubWord);
 }

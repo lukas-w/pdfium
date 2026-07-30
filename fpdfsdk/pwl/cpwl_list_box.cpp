@@ -250,6 +250,11 @@ float CPWL_ListBox::GetFontSize() const {
   return list_ctrl_->GetFontSize();
 }
 
+void CPWL_ListBox::SetTextDirection(
+    CFX_BidiResolver::ParagraphDirection direction) {
+  list_ctrl_->SetTextDirection(direction);
+}
+
 void CPWL_ListBox::OnSetScrollInfoY(float fPlateMin,
                                     float fPlateMax,
                                     float fContentMin,
