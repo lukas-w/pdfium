@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <array>
 #include <string>
 #include <vector>
 
@@ -12,6 +13,7 @@
 #include "core/fxcrt/fx_coordinates.h"
 #include "core/fxcrt/fx_string.h"
 #include "core/fxcrt/fx_system.h"
+#include "core/fxcrt/span.h"
 #include "core/fxge/cfx_renderdevice.h"
 #include "public/cpp/fpdf_scopers.h"
 #include "public/fpdf_formfill.h"
@@ -98,6 +100,16 @@ class FPDFFormFillInteractiveEmbedderTest : public FPDFFormFillEmbedderTest {
     // Type text starting with 'A' to as many chars as specified by |num_chars|.
     for (int i = 0; i < num_chars; ++i) {
       FORM_OnChar(form_handle(), page_, 'A' + i, 0);
+    }
+  }
+
+  void TypeCharactersIntoTextField(pdfium::span<const uint32_t> characters,
+                                   const CFX_PointF& point) {
+    EXPECT_EQ(GetFormType(), GetFormTypeAtPoint(point));
+    ClickOnFormFieldAtPoint(point);
+
+    for (uint32_t c : characters) {
+      FORM_OnChar(form_handle(), page_, c, 0);
     }
   }
 
@@ -1652,6 +1664,16 @@ TEST_F(FPDFFormFillEmbedderTest, SelectAllText) {
   EXPECT_EQ("Hello", GetPlatformString(buffer));
 }
 
+TEST_F(FPDFFormFillTextFormEmbedderTest, FormTextFieldBiDiLiveEdit) {
+  constexpr auto kInput =
+      std::to_array<uint32_t>({'A', ' ', 0x05E9, ' ', 0x05DE, ' ', 'B'});
+  TypeCharactersIntoTextField(kInput, RegularFormBegin());
+
+  ScopedFPDFBitmap bitmap = RenderLoadedPage(page());
+  // TODO(crbug.com/535730401): Fix the overlapping text issue.
+  CompareBitmapWithExpectationSuffix(bitmap.get(), "bug_535730401");
+}
+
 TEST_F(FPDFFormFillTextFormEmbedderTest, GetSelectedTextEmptyAndBasicKeyboard) {
   // Test empty selection.
   EXPECT_EQ(FocusedFieldText(), "");
@@ -1724,6 +1746,16 @@ TEST_F(FPDFFormFillTextFormEmbedderTest, GetSelectedTextFragmentsMouse) {
   // Test selecting last character in backwards direction.
   SelectTextWithMouse(RegularFormEnd(), RegularFormAtX(186.0));
   EXPECT_EQ(Selection(), "L");
+}
+
+TEST_F(FPDFFormFillComboBoxFormEmbedderTest, FormComboBoxBiDiLiveEdit) {
+  constexpr auto kInput =
+      std::to_array<uint32_t>({'A', ' ', 0x05E9, ' ', 0x05DE, ' ', 'B'});
+  TypeCharactersIntoTextField(kInput, EditableFormBegin());
+
+  ScopedFPDFBitmap bitmap = RenderLoadedPage(page());
+  // TODO(crbug.com/535730401): Fix the overlapping text issue.
+  CompareBitmapWithExpectationSuffix(bitmap.get(), "bug_535730401_combobox");
 }
 
 TEST_F(FPDFFormFillComboBoxFormEmbedderTest,
