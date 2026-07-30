@@ -10,6 +10,7 @@
 
 #include "constants/form_flags.h"
 #include "core/fpdfdoc/cpdf_bafontmap.h"
+#include "core/fxcrt/cfx_bidi_resolver.h"
 #include "core/fxcrt/containers/contains.h"
 #include "fpdfsdk/cpdfsdk_widget.h"
 #include "fpdfsdk/formfiller/cffl_interactiveformfiller.h"
@@ -50,6 +51,8 @@ std::unique_ptr<CPWL_Wnd> CFFL_ListBox::NewPWLWindow(
   for (int32_t i = 0, sz = widget_->CountOptions(); i < sz; i++) {
     pWnd->AddString(widget_->GetOptionLabel(i));
   }
+
+  pWnd->SetTextDirection(widget_->GetTextDirection());
 
   if (pWnd->HasFlag(CPWL_Wnd::Styles::kListboxMultipleSel)) {
     original_selections_.clear();

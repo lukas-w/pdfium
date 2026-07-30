@@ -7,6 +7,7 @@
 #include <utility>
 
 #include "constants/ascii.h"
+#include "core/fxcrt/cfx_bidi_resolver.h"
 #include "fpdfsdk/cpdfsdk_annotiterator.h"
 #include "fpdfsdk/cpdfsdk_formfillenvironment.h"
 #include "fpdfsdk/cpdfsdk_helpers.h"
@@ -801,6 +802,32 @@ TEST_F(CPWLEditEmbedderTest, DeleteSelectionUndoRedo) {
   EXPECT_EQ(L"", GetCPWLEdit()->GetText());
   EXPECT_EQ(L"", GetCPWLEdit()->GetSelectedText());
   EXPECT_FALSE(GetCPWLEdit()->CanRedo());
+}
+
+TEST_F(CPWLEditEmbedderTest, TextDirectionPassedToPWLEdit) {
+  ScopedPage page = CreateAndInitializeFormPDF();
+  ASSERT_TRUE(page);
+
+  CPDFSDK_Widget* annot = GetCPDFSDKAnnot();
+
+  // Set the text direction on the widget before the PWL window is created.
+  annot->SetTextDirection(CFX_BidiResolver::ParagraphDirection::kRightToLeft);
+
+  // Creating the window should seed the internal CPWL_Edit with the RTL
+  // direction.
+  FormFillerAndWindowSetup(annot);
+  CPWL_Edit* edit = GetCPWLEdit();
+  EXPECT_EQ(CFX_BidiResolver::ParagraphDirection::kRightToLeft,
+            edit->GetTextDirection());
+
+  // Change the text direction on the widget after the PWL window already
+  // exists.
+  annot->SetTextDirection(CFX_BidiResolver::ParagraphDirection::kLeftToRight);
+  GetCFFLFormFiller()->UpdatePWLWindowTextDirection();
+
+  // The internal CPWL_Edit should be dynamically updated to the LTR direction.
+  EXPECT_EQ(CFX_BidiResolver::ParagraphDirection::kLeftToRight,
+            edit->GetTextDirection());
 }
 
 TEST_F(CPWLEditMultilineEmbedderTest, ReturnUndoRedo) {

@@ -311,6 +311,7 @@ int CheckPDFiumCApi() {
     CHK(FORM_GetFocusedAnnot);
     CHK(FORM_GetFocusedText);
     CHK(FORM_GetSelectedText);
+    CHK(FORM_GetTextDirection);
     CHK(FORM_IsIndexSelected);
     CHK(FORM_OnAfterLoadPage);
     CHK(FORM_OnBeforeClosePage);
@@ -331,6 +332,7 @@ int CheckPDFiumCApi() {
     CHK(FORM_SelectAllText);
     CHK(FORM_SetFocusedAnnot);
     CHK(FORM_SetIndexSelected);
+    CHK(FORM_SetTextDirection);
     CHK(FORM_Undo);
     CHK(FPDFDOC_ExitFormFillEnvironment);
     CHK(FPDFDOC_InitFormFillEnvironment);

@@ -136,6 +136,7 @@ class CFFL_FormField : public CPWL_Wnd::ProviderIface,
   void SetChangeMark();
 
   CPDFSDK_Widget* GetSDKWidget() const { return widget_; }
+  void UpdatePWLWindowTextDirection();
 
   CFFL_PerWindowData* GetPerPWLWindowData(const CPDFSDK_PageView* pPageView);
   void ResetPWLWindowForValueAge(const CPDFSDK_PageView* pPageView,

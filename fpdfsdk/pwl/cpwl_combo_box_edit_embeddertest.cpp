@@ -10,6 +10,7 @@
 #include "fpdfsdk/formfiller/cffl_formfield.h"
 #include "fpdfsdk/formfiller/cffl_interactiveformfiller.h"
 #include "fpdfsdk/pwl/cpwl_combo_box.h"
+#include "fpdfsdk/pwl/cpwl_edit.h"
 #include "fpdfsdk/pwl/cpwl_wnd.h"
 #include "public/fpdf_fwlevent.h"
 #include "testing/embedder_test.h"
@@ -334,4 +335,30 @@ TEST_F(CPWLComboBoxEditEmbedderTest, ReplaceAndKeepSelection) {
   GetCPWLComboBox()->ReplaceAndKeepSelection(L"12");
   EXPECT_EQ(L"A12DEFGHIJ", GetCPWLComboBox()->GetText());
   EXPECT_EQ(L"12", GetCPWLComboBox()->GetSelectedText());
+}
+
+TEST_F(CPWLComboBoxEditEmbedderTest, TextDirectionPassedToPWLComboBox) {
+  ScopedPage page = CreateAndInitializeFormComboboxPDF();
+  ASSERT_TRUE(page);
+
+  CPDFSDK_Widget* annot = GetCPDFSDKAnnotNormal();
+
+  // Set the text direction on the widget before the PWL window is created.
+  annot->SetTextDirection(CFX_BidiResolver::ParagraphDirection::kRightToLeft);
+
+  // Creating the window should initialize the internal CPWL_Edit with the RTL
+  // direction.
+  FormFillerAndWindowSetup(annot);
+  CPWL_ComboBox* combo_box = GetCPWLComboBox();
+  EXPECT_EQ(CFX_BidiResolver::ParagraphDirection::kRightToLeft,
+            combo_box->GetEdit()->GetTextDirection());
+
+  // Change the text direction on the widget after the PWL window already
+  // exists.
+  annot->SetTextDirection(CFX_BidiResolver::ParagraphDirection::kLeftToRight);
+  GetCFFLFormField()->UpdatePWLWindowTextDirection();
+
+  // The internal CPWL_Edit should be dynamically updated to the LTR direction.
+  EXPECT_EQ(CFX_BidiResolver::ParagraphDirection::kLeftToRight,
+            combo_box->GetEdit()->GetTextDirection());
 }

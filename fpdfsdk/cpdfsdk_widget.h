@@ -13,6 +13,7 @@
 #include "core/fpdfdoc/cpdf_action.h"
 #include "core/fpdfdoc/cpdf_annot.h"
 #include "core/fpdfdoc/cpdf_formfield.h"
+#include "core/fxcrt/cfx_bidi_resolver.h"
 #include "core/fxcrt/fx_coordinates.h"
 #include "core/fxcrt/unowned_ptr.h"
 #include "core/fxcrt/widestring.h"
@@ -148,6 +149,13 @@ class CPDFSDK_Widget final : public CPDFSDK_BAAnnot {
   CFX_Color GetBorderPWLColor() const;
   CFX_Color GetFillPWLColor() const;
 
+  CFX_BidiResolver::ParagraphDirection GetTextDirection() const {
+    return text_direction_;
+  }
+  void SetTextDirection(CFX_BidiResolver::ParagraphDirection direction) {
+    text_direction_ = direction;
+  }
+
  private:
   // CPDFSDK_Annot::UnsafeInputHandlers:
   void OnMouseEnter(Mask<FWL_EVENTFLAG> nFlags) override;
@@ -187,6 +195,8 @@ class CPDFSDK_Widget final : public CPDFSDK_BAAnnot {
   bool appearance_modified_ = false;
   uint32_t appearance_age_ = 0;
   uint32_t value_age_ = 0;
+  CFX_BidiResolver::ParagraphDirection text_direction_ =
+      CFX_BidiResolver::ParagraphDirection::kAuto;
 };
 
 inline CPDFSDK_Widget* ToCPDFSDKWidget(CPDFSDK_Annot* pAnnot) {

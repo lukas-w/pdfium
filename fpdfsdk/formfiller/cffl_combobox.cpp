@@ -10,6 +10,7 @@
 
 #include "constants/form_flags.h"
 #include "core/fpdfdoc/cpdf_bafontmap.h"
+#include "core/fxcrt/cfx_bidi_resolver.h"
 #include "fpdfsdk/cpdfsdk_widget.h"
 #include "fpdfsdk/formfiller/cffl_interactiveformfiller.h"
 #include "fpdfsdk/formfiller/cffl_perwindowdata.h"
@@ -56,6 +57,7 @@ std::unique_ptr<CPWL_Wnd> CFFL_ComboBox::NewPWLWindow(
     pWnd->AddString(widget_->GetOptionLabel(i));
   }
 
+  pWnd->SetTextDirection(widget_->GetTextDirection());
   pWnd->SetSelect(nCurSel);
   pWnd->SetText(swText);
   return pWnd;

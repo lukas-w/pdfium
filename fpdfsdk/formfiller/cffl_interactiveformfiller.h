@@ -11,6 +11,7 @@
 #include <memory>
 #include <utility>
 
+#include "core/fxcrt/cfx_bidi_resolver.h"
 #include "core/fxcrt/cfx_timer.h"
 #include "core/fxcrt/mask.h"
 #include "core/fxcrt/observed_ptr.h"
@@ -160,6 +161,10 @@ class CFFL_InteractiveFormFiller final : public IPWL_FillerNotify {
                         int index,
                         bool selected);
   bool IsIndexSelected(ObservedPtr<CPDFSDK_Widget>& pWidget, int index);
+
+  void UpdateFormFieldTextDirection(
+      CPDFSDK_Widget* widget,
+      CFX_BidiResolver::ParagraphDirection direction);
 
  private:
   using WidgetToFormFillerMap =

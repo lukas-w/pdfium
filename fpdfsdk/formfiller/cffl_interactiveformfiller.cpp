@@ -306,6 +306,25 @@ bool CFFL_InteractiveFormFiller::IsIndexSelected(
   return pFormField && pFormField->IsIndexSelected(index);
 }
 
+void CFFL_InteractiveFormFiller::UpdateFormFieldTextDirection(
+    CPDFSDK_Widget* widget,
+    CFX_BidiResolver::ParagraphDirection direction) {
+  widget->SetTextDirection(direction);
+
+  CFFL_FormField* cffl_form_field = GetFormField(widget);
+  if (cffl_form_field) {
+    cffl_form_field->UpdatePWLWindowTextDirection();
+  }
+
+  CPDFSDK_PageView* page_view = widget->GetPageView();
+  if (page_view) {
+    // Force a redraw by updating appearance and invalidating
+    widget->UpdateField();
+    // Invalidate the region occupied by the widget to cause a repaint.
+    page_view->UpdateRects({widget->GetRect()});
+  }
+}
+
 bool CFFL_InteractiveFormFiller::OnLButtonDblClk(
     CPDFSDK_PageView* pPageView,
     ObservedPtr<CPDFSDK_Widget>& pWidget,

@@ -16,6 +16,7 @@
 #include "core/fxcrt/span.h"
 #include "core/fxge/cfx_renderdevice.h"
 #include "public/cpp/fpdf_scopers.h"
+#include "public/fpdf_annot.h"
 #include "public/fpdf_formfill.h"
 #include "public/fpdf_fwlevent.h"
 #include "public/fpdf_progressive.h"
@@ -1662,6 +1663,55 @@ TEST_F(FPDFFormFillEmbedderTest, SelectAllText) {
   ASSERT_EQ(12u, FORM_GetSelectedText(form_handle(), page.get(), buffer,
                                       sizeof(buffer)));
   EXPECT_EQ("Hello", GetPlatformString(buffer));
+}
+
+TEST_F(FPDFFormFillEmbedderTest,
+       SetTextDirectionUpdatesRenderingOfFocusedTextField) {
+  ASSERT_TRUE(OpenDocument("text_form.pdf"));
+  ScopedPage page = LoadScopedPage(0);
+  ASSERT_TRUE(page);
+
+  ScopedFPDFAnnotation annot(FPDFPage_GetAnnot(page.get(), 0));
+  ASSERT_TRUE(annot);
+
+  // Focus the field and type "ABC"
+  EXPECT_TRUE(FORM_OnFocus(form_handle(), page.get(), 0, 120.0, 120.0));
+  constexpr auto kInput = std::to_array<uint32_t>({'A', 'B', 'C'});
+  for (uint32_t c : kInput) {
+    EXPECT_TRUE(FORM_OnChar(form_handle(), page.get(), c, 0));
+  }
+
+  EXPECT_EQ(FPDF_TEXTDIR_AUTO,
+            FORM_GetTextDirection(form_handle(), annot.get()));
+
+  // Change text direction to Right-to-Left (RTL).
+  EXPECT_TRUE(
+      FORM_SetTextDirection(form_handle(), annot.get(), FPDF_TEXTDIR_RTL));
+  EXPECT_EQ(FPDF_TEXTDIR_RTL,
+            FORM_GetTextDirection(form_handle(), annot.get()));
+
+  // Type 'D' and kill focus. This forces the form filler to flush its
+  // in-memory state and regenerate the PDF appearance stream with the new RTL
+  // layout.
+  EXPECT_TRUE(FORM_OnChar(form_handle(), page.get(), 'D', 0));
+  FORM_ForceToKillFocus(form_handle());
+  ScopedFPDFBitmap bitmap_rtl = RenderLoadedPage(page.get());
+
+  // Refocus the field and change text direction back to Left-to-Right (LTR).
+  EXPECT_TRUE(FORM_OnFocus(form_handle(), page.get(), 0, 120.0, 120.0));
+  EXPECT_TRUE(
+      FORM_SetTextDirection(form_handle(), annot.get(), FPDF_TEXTDIR_LTR));
+  EXPECT_EQ(FPDF_TEXTDIR_LTR,
+            FORM_GetTextDirection(form_handle(), annot.get()));
+
+  // Type 'E' and kill focus to flush the new LTR layout into the appearance
+  // stream.
+  EXPECT_TRUE(FORM_OnChar(form_handle(), page.get(), 'E', 0));
+  FORM_ForceToKillFocus(form_handle());
+  ScopedFPDFBitmap bitmap_ltr = RenderLoadedPage(page.get());
+
+  // Rendering should be visually different when the text direction changes.
+  EXPECT_NE(HashBitmap(bitmap_rtl.get()), HashBitmap(bitmap_ltr.get()));
 }
 
 TEST_F(FPDFFormFillTextFormEmbedderTest, FormTextFieldBiDiLiveEdit) {

@@ -11,6 +11,7 @@
 #include "constants/ascii.h"
 #include "constants/form_flags.h"
 #include "core/fpdfdoc/cpdf_bafontmap.h"
+#include "core/fxcrt/cfx_bidi_resolver.h"
 #include "core/fxcrt/check.h"
 #include "fpdfsdk/cpdfsdk_widget.h"
 #include "fpdfsdk/formfiller/cffl_perwindowdata.h"
@@ -104,6 +105,7 @@ std::unique_ptr<CPWL_Wnd> CFFL_TextField::NewPWLWindow(
       pWnd->SetLimitChar(nMaxLen);
     }
   }
+  pWnd->SetTextDirection(widget_->GetTextDirection());
   pWnd->SetText(swValue);
   return pWnd;
 }

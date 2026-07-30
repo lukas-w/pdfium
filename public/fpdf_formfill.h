@@ -44,6 +44,17 @@
 #define JSPLATFORM_BEEP_STATUS 3          // Status
 #define JSPLATFORM_BEEP_DEFAULT 4         // Default
 
+// Text direction for form fields.
+typedef enum {
+  // Unknown or error state.
+  FPDF_TEXTDIR_UNKNOWN = 0,
+  // Represents the default layout behavior. This means the text direction is
+  // determined by the Unicode Bidi Algorithm.
+  FPDF_TEXTDIR_AUTO = 1,
+  FPDF_TEXTDIR_LTR = 2,
+  FPDF_TEXTDIR_RTL = 3,
+} FPDF_TEXT_DIRECTION;
+
 // Exported Functions
 #ifdef __cplusplus
 extern "C" {
@@ -1812,6 +1823,38 @@ FORM_SetIndexSelected(FPDF_FORMHANDLE hHandle,
 //           Not currently supported for XFA forms - will return false.
 FPDF_EXPORT FPDF_BOOL FPDF_CALLCONV
 FORM_IsIndexSelected(FPDF_FORMHANDLE hHandle, FPDF_PAGE page, int index);
+
+// Experimental API
+// Function: FORM_GetTextDirection
+//           Returns the text direction of the given form field annotation.
+// Parameters:
+//           handle      -   Handle to the form fill module. Returned by
+//                           FPDFDOC_InitFormFillEnvironment.
+//           annot       -   Handle to the form field annotation.
+// Return Value:
+//           The in-memory text direction of the given form field annotation.
+//           If the operation fails (e.g., invalid handle), returns
+//           FPDF_TEXTDIR_UNKNOWN.
+FPDF_EXPORT FPDF_TEXT_DIRECTION FPDF_CALLCONV
+FORM_GetTextDirection(FPDF_FORMHANDLE handle, FPDF_ANNOTATION annot);
+
+// Experimental API
+// Function: FORM_SetTextDirection
+//           Sets the text direction of the given form field annotation.
+// Parameters:
+//           handle      -   Handle to the form fill module. Returned by
+//                           FPDFDOC_InitFormFillEnvironment.
+//           annot       -   Handle to the form field annotation.
+//           direction   -   The new text direction. Passing
+//                           FPDF_TEXTDIR_UNKNOWN will fail and return FALSE.
+//                           Note: This only alters the in-memory state of the
+//                           form field and does not modify the PDF document.
+// Return Value:
+//           TRUE on success, FALSE otherwise.
+FPDF_EXPORT FPDF_BOOL FPDF_CALLCONV
+FORM_SetTextDirection(FPDF_FORMHANDLE handle,
+                      FPDF_ANNOTATION annot,
+                      FPDF_TEXT_DIRECTION direction);
 
 // Function: FPDF_LoadXFA
 //          If the document consists of XFA fields, call this method to

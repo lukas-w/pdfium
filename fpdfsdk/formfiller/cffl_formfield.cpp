@@ -10,6 +10,7 @@
 
 #include "constants/form_flags.h"
 #include "core/fpdfapi/page/cpdf_page.h"
+#include "core/fxcrt/cfx_bidi_resolver.h"
 #include "core/fxcrt/check.h"
 #include "core/fxge/cfx_renderdevice.h"
 #include "fpdfsdk/cpdfsdk_pageview.h"
@@ -580,6 +581,14 @@ void CFFL_FormField::SavePWLWindowState(const CPDFSDK_PageView* pPageView) {}
 
 void CFFL_FormField::RecreatePWLWindowFromSavedState(
     const CPDFSDK_PageView* pPageView) {}
+
+void CFFL_FormField::UpdatePWLWindowTextDirection() {
+  CFX_BidiResolver::ParagraphDirection direction = widget_->GetTextDirection();
+
+  for (const auto& [page_view, wnd] : maps_) {
+    wnd->SetTextDirection(direction);
+  }
+}
 
 CFFL_PerWindowData* CFFL_FormField::GetPerPWLWindowData(
     const CPDFSDK_PageView* pPageView) {
