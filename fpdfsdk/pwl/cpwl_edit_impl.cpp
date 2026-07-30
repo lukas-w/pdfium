@@ -671,7 +671,7 @@ void CPWL_EditImpl::DrawEdit(CFX_RenderDevice* pDevice,
       int32_t font_index = word.font_index();
       if (bContinuous && !word.is_rtl()) {
         if (place.LineCmp(oldplace) != 0 || font_index != nFontIndex ||
-            crOldFill != crCurFill) {
+            crOldFill != crCurFill || sTextBuf.IsEmpty()) {
           if (!sTextBuf.IsEmpty()) {
             DrawTextString(pDevice, ptBT + ptOffset,
                            font_map->GetPDFFont(nFontIndex).Get(), fFontSize,

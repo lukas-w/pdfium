@@ -1670,7 +1670,6 @@ TEST_F(FPDFFormFillTextFormEmbedderTest, FormTextFieldBiDiLiveEdit) {
   TypeCharactersIntoTextField(kInput, RegularFormBegin());
 
   ScopedFPDFBitmap bitmap = RenderLoadedPage(page());
-  // TODO(crbug.com/535730401): Fix the overlapping text issue.
   CompareBitmapWithExpectationSuffix(bitmap.get(), "bug_535730401");
 }
 
@@ -1754,7 +1753,6 @@ TEST_F(FPDFFormFillComboBoxFormEmbedderTest, FormComboBoxBiDiLiveEdit) {
   TypeCharactersIntoTextField(kInput, EditableFormBegin());
 
   ScopedFPDFBitmap bitmap = RenderLoadedPage(page());
-  // TODO(crbug.com/535730401): Fix the overlapping text issue.
   CompareBitmapWithExpectationSuffix(bitmap.get(), "bug_535730401_combobox");
 }
 
