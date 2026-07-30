@@ -13,12 +13,6 @@
 namespace fxcodec {
 
 // static
-std::unique_ptr<ProgressiveDecoderContext> GifDecoder::StartDecode(
-    Delegate* pDelegate) {
-  return std::make_unique<CFX_GifContext>(pDelegate);
-}
-
-// static
 ProgressiveDecoderContext::Status GifDecoder::ReadHeader(
     ProgressiveDecoderContext* context,
     int* width,

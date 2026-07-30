@@ -26,6 +26,12 @@ CJpegContext::CJpegContext() {
   common_.source_mgr.skip_input_data = jpeg_common_src_skip_data_or_record;
   common_.source_mgr.fill_input_buffer = jpeg_common_src_fill_buffer;
   common_.source_mgr.resync_to_restart = jpeg_common_src_resync;
+
+  create_ok_ = jpeg_common_create_decompress(&common_);
+  if (create_ok_) {
+    common_.cinfo.src = &common_.source_mgr;
+    common_.skip_size = 0;
+  }
 }
 
 CJpegContext::~CJpegContext() {

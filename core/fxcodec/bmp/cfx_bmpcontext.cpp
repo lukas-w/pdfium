@@ -8,6 +8,7 @@
 
 #include <utility>
 
+#include "core/fxcodec/bmp/bmp_decoder_delegate.h"
 #include "core/fxcodec/cfx_codec_memory.h"
 
 namespace fxcodec {

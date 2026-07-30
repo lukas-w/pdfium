@@ -9,14 +9,7 @@
 
 #include <stdint.h>
 
-#include <memory>
-
-#include "core/fxcodec/bmp/bmp_decoder_delegate.h"
-#include "core/fxcodec/cfx_codec_memory.h"
 #include "core/fxcodec/progressive_decoder_context.h"
-#include "core/fxcrt/fx_system.h"
-#include "core/fxcrt/fx_types.h"
-#include "core/fxcrt/retain_ptr.h"
 #include "core/fxcrt/span.h"
 #include "core/fxge/dib/fx_dib.h"
 
@@ -30,8 +23,6 @@ class CFX_DIBAttribute;
 
 class BmpDecoder {
  public:
-  static std::unique_ptr<ProgressiveDecoderContext> StartDecode(
-      BmpDecoderDelegate* pDelegate);
   static ProgressiveDecoderContext::Status ReadHeader(
       ProgressiveDecoderContext* context,
       int32_t* width,

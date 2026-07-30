@@ -7,13 +7,16 @@
 #ifndef CORE_FXCODEC_BMP_CFX_BMPCONTEXT_H_
 #define CORE_FXCODEC_BMP_CFX_BMPCONTEXT_H_
 
-#include "core/fxcodec/bmp/bmp_decoder.h"
 #include "core/fxcodec/bmp/cfx_bmpdecompressor.h"
 #include "core/fxcodec/bmp/fx_bmp.h"
+#include "core/fxcodec/cfx_codec_memory.h"
 #include "core/fxcodec/progressive_decoder_context.h"
+#include "core/fxcrt/retain_ptr.h"
 #include "core/fxcrt/unowned_ptr.h"
 
 namespace fxcodec {
+
+class BmpDecoderDelegate;
 
 class CFX_BmpContext final : public ProgressiveDecoderContext {
  public:

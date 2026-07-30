@@ -21,6 +21,7 @@ class CJpegContext final : public ProgressiveDecoderContext {
   void Input(RetainPtr<CFX_CodecMemory> codec_memory) override;
 
   JpegCommon common_ = {};
+  bool create_ok_ = false;
 };
 
 }  // namespace fxcodec

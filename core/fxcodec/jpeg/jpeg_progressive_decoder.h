@@ -9,11 +9,6 @@
 
 #include <stdint.h>
 
-#include <memory>
-
-#include "core/fxcodec/cfx_codec_memory.h"
-#include "core/fxcrt/fx_types.h"
-
 namespace fxcodec {
 
 class CFX_DIBAttribute;
@@ -21,8 +16,6 @@ class ProgressiveDecoderContext;
 
 class JpegProgressiveDecoder {
  public:
-  static std::unique_ptr<ProgressiveDecoderContext> Start();
-
   // Result codes for ReadHeader()/ReadScanline():
   static constexpr int kFatal = -1;
   static constexpr int kOk = 0;
@@ -38,7 +31,6 @@ class JpegProgressiveDecoder {
   static bool StartScanline(ProgressiveDecoderContext* context);
   static int ReadScanline(ProgressiveDecoderContext* context,
                           uint8_t* dest_buf);
-
 
   // Only `static` methods.
   JpegProgressiveDecoder() = delete;

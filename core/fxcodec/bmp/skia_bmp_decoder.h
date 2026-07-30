@@ -7,8 +7,6 @@
 
 #include <stdint.h>
 
-#include <memory>
-
 #include "core/fxcodec/bmp/bmp_decoder_delegate.h"
 #include "core/fxcodec/cfx_codec_memory.h"
 #include "core/fxcodec/progressive_decoder_context.h"
@@ -32,8 +30,6 @@ class CFX_DIBAttribute;
 // BMP decoder that uses Skia's Rust BMP decoder to decode pixels.
 class SkiaBmpDecoder {
  public:
-  static std::unique_ptr<ProgressiveDecoderContext> StartDecode(
-      BmpDecoderDelegate* delegate);
   static ProgressiveDecoderContext::Status ReadHeader(
       ProgressiveDecoderContext* context,
       int32_t* width,

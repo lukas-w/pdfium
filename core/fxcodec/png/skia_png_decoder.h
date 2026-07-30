@@ -5,8 +5,6 @@
 #ifndef CORE_FXCODEC_PNG_SKIA_PNG_DECODER_H_
 #define CORE_FXCODEC_PNG_SKIA_PNG_DECODER_H_
 
-#include <memory>
-
 #include "core/fxcodec/cfx_codec_memory.h"
 #include "core/fxcrt/retain_ptr.h"
 
@@ -20,7 +18,6 @@
 
 namespace fxcodec {
 
-class PngDecoderDelegate;
 class ProgressiveDecoderContext;
 
 // PNG decoder that uses the Skia library to decode pixels.  (Whether
@@ -28,9 +25,6 @@ class ProgressiveDecoderContext;
 // configuration sets certain macro definitions like `PDF_ENABLE_RUST_PNG`).
 class SkiaPngDecoder {
  public:
-  static std::unique_ptr<ProgressiveDecoderContext> StartDecode(
-      PngDecoderDelegate* delegate);
-
   static bool ContinueDecode(ProgressiveDecoderContext* context,
                              RetainPtr<CFX_CodecMemory> codec_memory);
 

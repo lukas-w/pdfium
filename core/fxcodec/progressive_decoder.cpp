@@ -12,6 +12,7 @@
 
 #include "build/build_config.h"
 #include "core/fxcodec/cfx_codec_memory.h"
+#include "core/fxcodec/jpeg/cjpegcontext.h"
 #include "core/fxcodec/jpeg/jpeg_progressive_decoder.h"
 #include "core/fxcodec/progressive_decoder_context.h"
 #include "core/fxcrt/check.h"
@@ -32,13 +33,16 @@
 
 #ifdef PDF_ENABLE_XFA_BMP
 #if defined(PDF_ENABLE_RUST_BMP)
+#include "core/fxcodec/bmp/skia_bmp_context.h"
 #include "core/fxcodec/bmp/skia_bmp_decoder.h"
 #else
 #include "core/fxcodec/bmp/bmp_decoder.h"
+#include "core/fxcodec/bmp/cfx_bmpcontext.h"
 #endif
 #endif  // PDF_ENABLE_XFA_BMP
 
 #ifdef PDF_ENABLE_XFA_GIF
+#include "core/fxcodec/gif/cfx_gifcontext.h"
 #include "core/fxcodec/gif/gif_decoder.h"
 #endif  // PDF_ENABLE_XFA_GIF
 
@@ -49,8 +53,10 @@
 // (Chromium already sets `pdf_use_skia_override = true` so having an extra
 // condition avoids affecting the Chromium behavior.)
 #if defined(PDF_USE_SKIA) && defined(PDF_ENABLE_RUST_PNG)
+#include "core/fxcodec/png/skia_png_context.h"
 #include "core/fxcodec/png/skia_png_decoder.h"
 #else
+#include "core/fxcodec/png/cpngcontext.h"
 #include "core/fxcodec/png/libpng_png_decoder.h"
 #endif
 #endif  // PDF_ENABLE_XFA_PNG
@@ -64,6 +70,48 @@ namespace fxcodec {
 namespace {
 
 constexpr size_t kBlockSize = 4096;
+
+std::unique_ptr<ProgressiveDecoderContext> CreateDecoderContext(
+    FXCODEC_IMAGE_TYPE type,
+    ProgressiveDecoder* delegate) {
+  switch (type) {
+#ifdef PDF_ENABLE_XFA_BMP
+    case FXCODEC_IMAGE_BMP:
+#if defined(PDF_ENABLE_RUST_BMP)
+      return std::make_unique<SkiaBmpContext>(delegate);
+#else
+      return std::make_unique<CFX_BmpContext>(delegate);
+#endif
+#endif  // PDF_ENABLE_XFA_BMP
+#ifdef PDF_ENABLE_XFA_GIF
+    case FXCODEC_IMAGE_GIF:
+      return std::make_unique<CFX_GifContext>(delegate);
+#endif  // PDF_ENABLE_XFA_GIF
+    case FXCODEC_IMAGE_JPG: {
+      auto context = std::make_unique<CJpegContext>();
+      if (!context->create_ok_) {
+        return nullptr;
+      }
+      return context;
+    }
+#ifdef PDF_ENABLE_XFA_PNG
+    case FXCODEC_IMAGE_PNG:
+#if defined(PDF_USE_SKIA) && defined(PDF_ENABLE_RUST_PNG)
+      return std::make_unique<SkiaPngContext>(delegate);
+#else
+    {
+      auto context = std::make_unique<CPngContext>(delegate);
+      if (!context->png_ || !context->info_) {
+        return nullptr;
+      }
+      return context;
+    }
+#endif
+#endif  // PDF_ENABLE_XFA_PNG
+    default:
+      return nullptr;
+  }
+}
 
 #ifdef PDF_ENABLE_XFA_PNG
 #if BUILDFLAG(IS_APPLE)
@@ -273,7 +321,7 @@ void ProgressiveDecoder::BmpReadScanline(uint32_t row_num,
 bool ProgressiveDecoder::BmpDetectImageTypeInBuffer(
     CFX_DIBAttribute* pAttribute) {
   std::unique_ptr<ProgressiveDecoderContext> pBmcontext =
-      BmpDecoder::StartDecode(this);
+      CreateDecoderContext(FXCODEC_IMAGE_BMP, this);
   pBmcontext->Input(codec_memory_);
 
   pdfium::span<const FX_ARGB> palette;
@@ -406,12 +454,13 @@ bool ProgressiveDecoder::GifReadMoreData(FXCODEC_STATUS* err_status) {
   if (!ReadMoreData(avail_input.ValueOrDie(), err_status)) {
     return false;
   }
+
   context_->Input(codec_memory_);
   return true;
 }
 
 bool ProgressiveDecoder::GifDetectImageTypeInBuffer() {
-  context_ = GifDecoder::StartDecode(this);
+  context_ = CreateDecoderContext(FXCODEC_IMAGE_GIF, this);
   context_->Input(codec_memory_);
   src_components_count_ = 1;
   ProgressiveDecoderContext::Status readResult = GifDecoder::ReadHeader(
@@ -490,7 +539,7 @@ bool ProgressiveDecoder::JpegReadMoreData(FXCODEC_STATUS* err_status) {
 
 bool ProgressiveDecoder::JpegDetectImageTypeInBuffer(
     CFX_DIBAttribute* pAttribute) {
-  context_ = JpegProgressiveDecoder::Start();
+  context_ = CreateDecoderContext(FXCODEC_IMAGE_JPG, this);
   if (!context_) {
     status_ = FXCODEC_STATUS::kError;
     return false;
@@ -600,7 +649,7 @@ bool ProgressiveDecoder::PngReadMoreData() {
 }
 
 bool ProgressiveDecoder::PngDetectImageTypeInBuffer() {
-  context_ = PngDecoder::StartDecode(this);
+  context_ = CreateDecoderContext(FXCODEC_IMAGE_PNG, this);
   if (!context_) {
     status_ = FXCODEC_STATUS::kError;
     return false;
@@ -622,7 +671,7 @@ bool ProgressiveDecoder::PngDetectImageTypeInBuffer() {
 }
 
 FXCODEC_STATUS ProgressiveDecoder::PngStartDecode() {
-  context_ = PngDecoder::StartDecode(this);
+  context_ = CreateDecoderContext(FXCODEC_IMAGE_PNG, this);
   if (!context_) {
     device_bitmap_ = nullptr;
     file_ = nullptr;

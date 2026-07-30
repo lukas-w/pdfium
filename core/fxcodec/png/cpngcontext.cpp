@@ -10,10 +10,30 @@
 #include "third_party/libpng/png.h"
 #endif
 
+extern "C" {
+int _png_set_read_and_error_fns(png_structrp png_ptr,
+                                void* user_ctx,
+                                char* error_buf);
+}
+
 namespace fxcodec {
 
-CPngContext::CPngContext(PngDecoderDelegate* pDelegate)
-    : delegate_(pDelegate) {}
+CPngContext::CPngContext(PngDecoderDelegate* pDelegate) : delegate_(pDelegate) {
+  png_ =
+      png_create_read_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
+  if (!png_) {
+    return;
+  }
+  info_ = png_create_info_struct(png_);
+  if (!info_) {
+    return;
+  }
+  if (!_png_set_read_and_error_fns(png_, this, last_error_)) {
+    png_destroy_read_struct(&png_, &info_, nullptr);
+    png_ = nullptr;
+    info_ = nullptr;
+  }
+}
 
 CPngContext::~CPngContext() {
   png_destroy_read_struct(png_ ? &png_ : nullptr, info_ ? &info_ : nullptr,

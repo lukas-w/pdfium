@@ -6,10 +6,6 @@
 
 #include "core/fxcodec/jpeg/jpeg_progressive_decoder.h"
 
-#include <optional>
-#include <utility>
-
-#include "core/fxcodec/cfx_codec_memory.h"
 #include "core/fxcodec/fx_codec.h"
 #include "core/fxcodec/jpeg/cjpegcontext.h"
 #include "core/fxcodec/jpeg/jpeg_common.h"
@@ -30,17 +26,6 @@ static void JpegLoadAttribute(const jpeg_decompress_struct& info,
 }
 
 namespace fxcodec {
-
-// static
-std::unique_ptr<ProgressiveDecoderContext> JpegProgressiveDecoder::Start() {
-  auto context = std::make_unique<CJpegContext>();
-  if (!jpeg_common_create_decompress(&context->common_)) {
-    return nullptr;
-  }
-  context->common_.cinfo.src = &context->common_.source_mgr;
-  context->common_.skip_size = 0;
-  return context;
-}
 
 // static
 int JpegProgressiveDecoder::ReadHeader(ProgressiveDecoderContext* context,
@@ -85,6 +70,5 @@ int JpegProgressiveDecoder::ReadScanline(ProgressiveDecoderContext* context,
   }
   return nlines == 1 ? kOk : kError;
 }
-
 
 }  // namespace fxcodec

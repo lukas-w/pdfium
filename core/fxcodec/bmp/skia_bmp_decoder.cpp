@@ -4,17 +4,9 @@
 
 #include "core/fxcodec/bmp/skia_bmp_decoder.h"
 
-#include <memory>
-
 #include "core/fxcodec/bmp/skia_bmp_context.h"
 
 namespace fxcodec {
-
-// static
-std::unique_ptr<ProgressiveDecoderContext> SkiaBmpDecoder::StartDecode(
-    BmpDecoderDelegate* pDelegate) {
-  return std::make_unique<SkiaBmpContext>(pDelegate);
-}
 
 // static
 ProgressiveDecoderContext::Status SkiaBmpDecoder::ReadHeader(

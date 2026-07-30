@@ -9,7 +9,6 @@
 
 #include <stdint.h>
 
-#include <memory>
 #include <utility>
 
 #include "core/fxcodec/cfx_codec_memory.h"
@@ -38,8 +37,6 @@ class GifDecoder {
                                  pdfium::span<uint8_t> row_buf) = 0;
   };
 
-  static std::unique_ptr<ProgressiveDecoderContext> StartDecode(
-      Delegate* pDelegate);
   static ProgressiveDecoderContext::Status ReadHeader(
       ProgressiveDecoderContext* context,
       int* width,

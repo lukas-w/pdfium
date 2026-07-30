@@ -6,21 +6,11 @@
 
 #include "core/fxcodec/bmp/bmp_decoder.h"
 
-#include <utility>
-
 #include "core/fxcodec/bmp/cfx_bmpcontext.h"
-#include "core/fxcodec/cfx_codec_memory.h"
 #include "core/fxcodec/fx_codec.h"
-#include "core/fxcodec/fx_codec_def.h"
 #include "core/fxcrt/check.h"
 
 namespace fxcodec {
-
-// static
-std::unique_ptr<ProgressiveDecoderContext> BmpDecoder::StartDecode(
-    BmpDecoderDelegate* pDelegate) {
-  return std::make_unique<CFX_BmpContext>(pDelegate);
-}
 
 // static
 ProgressiveDecoderContext::Status BmpDecoder::ReadHeader(

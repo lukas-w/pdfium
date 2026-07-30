@@ -132,39 +132,20 @@ int _png_set_read_and_error_fns(png_structrp png_ptr,
   return 1;
 }
 
-int _png_continue_decode(png_structrp png_ptr,
-                         png_inforp info_ptr,
-                         uint8_t* buffer,
-                         size_t size) {
+bool _png_continue_decode(png_structrp png_ptr,
+                          png_inforp info_ptr,
+                          uint8_t* src_buf,
+                          size_t src_size) {
   if (setjmp(png_jmpbuf(png_ptr))) {
-    return 0;
+    return false;
   }
-  png_process_data(png_ptr, info_ptr, buffer, size);
-  return 1;
+  png_process_data(png_ptr, info_ptr, src_buf, src_size);
+  return true;
 }
 
 }  // extern "C"
 
 namespace fxcodec {
-
-// static
-std::unique_ptr<ProgressiveDecoderContext> LibpngPngDecoder::StartDecode(
-    PngDecoderDelegate* pDelegate) {
-  auto p = std::make_unique<CPngContext>(pDelegate);
-  p->png_ =
-      png_create_read_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
-  if (!p->png_) {
-    return nullptr;
-  }
-  p->info_ = png_create_info_struct(p->png_);
-  if (!p->info_) {
-    return nullptr;
-  }
-  if (!_png_set_read_and_error_fns(p->png_, p.get(), p->last_error_)) {
-    return nullptr;
-  }
-  return p;
-}
 
 // static
 bool LibpngPngDecoder::ContinueDecode(ProgressiveDecoderContext* context,
