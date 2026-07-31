@@ -757,10 +757,7 @@ void CPDF_TextPage::ProcessObject() {
       ProcessFormObject(page_obj->AsForm(), CFX_Matrix());
     }
   }
-  for (const auto& obj : text_objects_) {
-    ProcessTextObject(obj);
-  }
-
+  ProcessTransformedTextObjects();
   text_objects_.clear();
   CloseTempLine();
 }
@@ -884,11 +881,10 @@ void CPDF_TextPage::ProcessTextObject(
     return;
   }
 
-  size_t count = text_objects_.size();
   TransformedTextObject new_obj;
   new_obj.text_obj_ = text_obj;
   new_obj.form_matrix_ = form_matrix;
-  if (count == 0) {
+  if (text_objects_.empty()) {
     text_objects_.push_back(new_obj);
     return;
   }
@@ -896,7 +892,8 @@ void CPDF_TextPage::ProcessTextObject(
     return;
   }
 
-  TransformedTextObject prev_obj = text_objects_[count - 1];
+  // Explicitly copy in case `text_objects_` gets cleared.
+  TransformedTextObject prev_obj = text_objects_.back();
   size_t nItem = prev_obj.text_obj_->CountItems();
   if (nItem == 0) {
     return;
@@ -924,15 +921,13 @@ void CPDF_TextPage::ProcessTextObject(
   CFX_PointF this_pos =
       display_matrix_.Transform(form_matrix.Transform(text_obj->GetPos()));
   if (fabs(this_pos.y - prev_pos.y) > threshold * 2) {
-    for (size_t i = 0; i < count; ++i) {
-      ProcessTextObject(text_objects_[i]);
-    }
+    ProcessTransformedTextObjects();
     text_objects_.clear();
     text_objects_.push_back(new_obj);
     return;
   }
 
-  for (size_t i = count; i > 0; --i) {
+  for (size_t i = text_objects_.size(); i > 0; --i) {
     TransformedTextObject prev_text_obj = text_objects_[i - 1];
     CFX_PointF new_prev_pos =
         display_matrix_.Transform(prev_text_obj.form_matrix_.Transform(
@@ -1074,52 +1069,54 @@ void CPDF_TextPage::ReverseTempTextBufs(size_t char_list_index,
   }
 }
 
-void CPDF_TextPage::ProcessTextObject(const TransformedTextObject& obj) {
-  CPDF_TextObject* const text_obj = obj.text_obj_;
-  if (fabs(text_obj->GetRect().Width()) < kSizeEpsilon) {
-    return;
-  }
+void CPDF_TextPage::ProcessTransformedTextObjects() {
+  for (const TransformedTextObject& obj : text_objects_) {
+    CPDF_TextObject* const text_obj = obj.text_obj_;
+    if (fabs(text_obj->GetRect().Width()) < kSizeEpsilon) {
+      continue;
+    }
 
-  const CFX_Matrix form_matrix = obj.form_matrix_;
-  const MarkedContentState ePreMKC = PreMarkedContent(text_obj);
-  if (ePreMKC == MarkedContentState::kDone) {
-    prev_text_obj_ = text_obj;
-    prev_matrix_ = form_matrix;
-    return;
-  }
+    const CFX_Matrix& form_matrix = obj.form_matrix_;
+    const MarkedContentState ePreMKC = PreMarkedContent(text_obj);
+    if (ePreMKC == MarkedContentState::kDone) {
+      prev_text_obj_ = text_obj;
+      prev_matrix_ = form_matrix;
+      continue;
+    }
 
-  if (prev_text_obj_) {
-    GenerateCharacter type = ProcessInsertObject(text_obj, form_matrix);
-    if (type == GenerateCharacter::kLineBreak) {
-      curline_rect_ = text_obj->GetRect();
+    if (prev_text_obj_) {
+      GenerateCharacter type = ProcessInsertObject(text_obj, form_matrix);
+      if (type == GenerateCharacter::kLineBreak) {
+        curline_rect_ = text_obj->GetRect();
+      } else {
+        curline_rect_.Union(text_obj->GetRect());
+      }
+
+      if (!ProcessGenerateCharacter(type, text_obj, form_matrix)) {
+        continue;
+      }
     } else {
-      curline_rect_.Union(text_obj->GetRect());
+      curline_rect_ = text_obj->GetRect();
     }
 
-    if (!ProcessGenerateCharacter(type, text_obj, form_matrix)) {
-      return;
+    if (ePreMKC == MarkedContentState::kDelay) {
+      ProcessMarkedContent(obj);
+      prev_text_obj_ = text_obj;
+      prev_matrix_ = form_matrix;
+      continue;
     }
-  } else {
-    curline_rect_ = text_obj->GetRect();
-  }
 
-  if (ePreMKC == MarkedContentState::kDelay) {
-    ProcessMarkedContent(obj);
     prev_text_obj_ = text_obj;
     prev_matrix_ = form_matrix;
-    return;
-  }
 
-  prev_text_obj_ = text_obj;
-  prev_matrix_ = form_matrix;
+    const CFX_Matrix matrix = text_obj->GetTextMatrix() * form_matrix;
+    // Save these before ProcessTextObjectItems() modifies the containers.
+    const size_t orig_char_list_index = temp_char_list_.size();
+    const size_t orig_buf_index = temp_text_buf_.GetLength();
 
-  const CFX_Matrix matrix = text_obj->GetTextMatrix() * form_matrix;
-  // Save these before ProcessTextObjectItems() modifies the containers.
-  const size_t orig_char_list_index = temp_char_list_.size();
-  const size_t orig_buf_index = temp_text_buf_.GetLength();
-
-  if (ProcessTextObjectItems(text_obj, form_matrix, matrix)) {
-    ReverseTempTextBufs(orig_char_list_index, orig_buf_index);
+    if (ProcessTextObjectItems(text_obj, form_matrix, matrix)) {
+      ReverseTempTextBufs(orig_char_list_index, orig_buf_index);
+    }
   }
 }
 
