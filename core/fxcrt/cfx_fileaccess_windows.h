@@ -25,7 +25,7 @@ class CFX_FileAccess_Windows final : public FileAccessIface {
   ~CFX_FileAccess_Windows() override;
 
   // FileAccessIface
-  bool Open(ByteStringView fileName) override;
+  bool Open(const ByteString& file_name) override;
   void Close() override;
   FX_FILESIZE GetSize() const override;
   FX_FILESIZE GetPosition() const override;

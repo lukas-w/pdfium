@@ -17,8 +17,8 @@ class FileAccessIface {
   static std::unique_ptr<FileAccessIface> Create();
   virtual ~FileAccessIface() = default;
 
-  // Opens in read-only mode. `fileName` is UTF-8 on all platforms.
-  virtual bool Open(ByteStringView fileName) = 0;
+  // Opens in read-only mode. `file_name` is UTF-8 on all platforms.
+  virtual bool Open(const ByteString& file_name) = 0;
   virtual void Close() = 0;
   virtual FX_FILESIZE GetSize() const = 0;
   virtual FX_FILESIZE GetPosition() const = 0;

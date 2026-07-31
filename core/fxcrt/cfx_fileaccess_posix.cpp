@@ -35,13 +35,12 @@ CFX_FileAccess_Posix::~CFX_FileAccess_Posix() {
   Close();
 }
 
-bool CFX_FileAccess_Posix::Open(ByteStringView fileName) {
+bool CFX_FileAccess_Posix::Open(const ByteString& file_name) {
   if (fd_ > -1) {
     return false;
   }
 
-  // TODO(tsepez): check usage of c_str() below.
-  fd_ = open(fileName.unterminated_c_str(), O_BINARY | O_LARGEFILE | O_RDONLY);
+  fd_ = open(file_name.c_str(), O_BINARY | O_LARGEFILE | O_RDONLY);
   return fd_ > -1;
 }
 

@@ -23,12 +23,12 @@ CFX_FileAccess_Windows::~CFX_FileAccess_Windows() {
   Close();
 }
 
-bool CFX_FileAccess_Windows::Open(ByteStringView fileName) {
+bool CFX_FileAccess_Windows::Open(const ByteString& file_name) {
   if (file_) {
     return false;
   }
 
-  WideString wname = WideString::FromUTF8(fileName);
+  WideString wname = WideString::FromUTF8(ByteStringView(file_name));
   file_ = ::CreateFileW(wname.c_str(), GENERIC_READ,
                         FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr,
                         OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
