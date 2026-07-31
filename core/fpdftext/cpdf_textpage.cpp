@@ -1192,9 +1192,9 @@ CPDF_TextPage::GenerateCharacter CPDF_TextPage::ProcessInsertObject(
     const CPDF_TextObject* text_obj,
     const CFX_Matrix& form_matrix) {
   FindPreviousTextObject();
-  TextOrientation WritingMode = GetTextObjectWritingMode(text_obj);
-  if (WritingMode == TextOrientation::kUnknown) {
-    WritingMode = GetTextObjectWritingMode(prev_text_obj_);
+  TextOrientation writing_mode = GetTextObjectWritingMode(text_obj);
+  if (writing_mode == TextOrientation::kUnknown) {
+    writing_mode = GetTextObjectWritingMode(prev_text_obj_);
   }
 
   size_t nItem = prev_text_obj_->CountItems();
@@ -1202,7 +1202,7 @@ CPDF_TextPage::GenerateCharacter CPDF_TextPage::ProcessInsertObject(
     return GenerateCharacter::kNone;
   }
 
-  CPDF_TextObject::Item PrevItem = prev_text_obj_->GetItemInfo(nItem - 1);
+  CPDF_TextObject::Item prev_item = prev_text_obj_->GetItemInfo(nItem - 1);
   CPDF_TextObject::Item item = text_obj->GetItemInfo(0);
   const CFX_FloatRect& this_rect = text_obj->GetRect();
   const CFX_FloatRect& prev_rect = prev_text_obj_->GetRect();
@@ -1213,12 +1213,12 @@ CPDF_TextPage::GenerateCharacter CPDF_TextPage::ProcessInsertObject(
   }
 
   wchar_t current_char = unicode.Front();
-  if (WritingMode == TextOrientation::kHorizontal) {
+  if (writing_mode == TextOrientation::kHorizontal) {
     if (EndHorizontalLine(this_rect, prev_rect)) {
       return IsHyphen(current_char) ? GenerateCharacter::kHyphen
                                     : GenerateCharacter::kLineBreak;
     }
-  } else if (WritingMode == TextOrientation::kVertical) {
+  } else if (writing_mode == TextOrientation::kVertical) {
     if (EndVerticalLine(this_rect, prev_rect, curline_rect_,
                         text_obj->GetFontSize(),
                         prev_text_obj_->GetFontSize())) {
@@ -1227,9 +1227,9 @@ CPDF_TextPage::GenerateCharacter CPDF_TextPage::ProcessInsertObject(
     }
   }
 
-  float last_pos = PrevItem.origin_.x;
+  float last_pos = prev_item.origin_.x;
   int nLastWidth =
-      GetCharWidth(PrevItem.char_code_, prev_text_obj_->GetFont().Get());
+      GetCharWidth(prev_item.char_code_, prev_text_obj_->GetFont().Get());
   float last_width = nLastWidth * prev_text_obj_->GetFontSize() / 1000;
   last_width = fabs(last_width);
   int nThisWidth = GetCharWidth(item.char_code_, text_obj->GetFont().Get());
@@ -1237,16 +1237,16 @@ CPDF_TextPage::GenerateCharacter CPDF_TextPage::ProcessInsertObject(
   float threshold = std::max(last_width, this_width) / 4;
 
   CFX_Matrix prev_matrix = prev_text_obj_->GetTextMatrix() * prev_matrix_;
-  CFX_Matrix prev_reverse = prev_matrix.GetInverse();
+  CFX_Matrix prev_matrix_inverse = prev_matrix.GetInverse();
 
   CFX_PointF pos =
-      prev_reverse.Transform(form_matrix.Transform(text_obj->GetPos()));
+      prev_matrix_inverse.Transform(form_matrix.Transform(text_obj->GetPos()));
   if (last_width < this_width) {
-    threshold = prev_reverse.TransformDistance(threshold);
+    threshold = prev_matrix_inverse.TransformDistance(threshold);
   }
 
   bool is_newline = false;
-  if (WritingMode == TextOrientation::kHorizontal) {
+  if (writing_mode == TextOrientation::kHorizontal) {
     CFX_FloatRect rect = prev_text_obj_->GetRect();
     float rect_height = rect.Height();
     rect.Normalize();
@@ -1255,9 +1255,9 @@ CPDF_TextPage::GenerateCharacter CPDF_TextPage::ProcessInsertObject(
          (fabs(pos.y) >= 1 || fabs(pos.y) > fabs(pos.x)))) {
       is_newline = true;
       if (nItem > 1) {
-        CPDF_TextObject::Item tempItem = prev_text_obj_->GetItemInfo(0);
+        CPDF_TextObject::Item first_item = prev_text_obj_->GetItemInfo(0);
         CFX_Matrix m = prev_text_obj_->GetTextMatrix();
-        if (PrevItem.origin_.x > tempItem.origin_.x &&
+        if (prev_item.origin_.x > first_item.origin_.x &&
             display_matrix_.a > 0.9 && display_matrix_.b < 0.1 &&
             display_matrix_.c < 0.1 && display_matrix_.d < -0.9 && m.b < 0.1 &&
             m.c < 0.1) {
@@ -1290,10 +1290,9 @@ CPDF_TextPage::GenerateCharacter CPDF_TextPage::ProcessInsertObject(
     return GenerateCharacter::kNone;
   }
 
-  WideString PrevStr =
-      prev_text_obj_->GetFont()->UnicodeFromCharCode(PrevItem.char_code_);
-  wchar_t preChar = PrevStr.Back();
-  if (preChar == L' ') {
+  WideString prev_str =
+      prev_text_obj_->GetFont()->UnicodeFromCharCode(prev_item.char_code_);
+  if (prev_str.Back() == L' ') {
     return GenerateCharacter::kNone;
   }
 
@@ -1305,7 +1304,7 @@ CPDF_TextPage::GenerateCharacter CPDF_TextPage::ProcessInsertObject(
   } else {
     threshold2 *= fabs(text_obj->GetFontSize());
     threshold2 = matrix.TransformDistance(threshold2);
-    threshold2 = prev_reverse.TransformDistance(threshold2);
+    threshold2 = prev_matrix_inverse.TransformDistance(threshold2);
   }
   threshold2 /= 1000;
   if ((threshold2 < 1.4881 && threshold2 > 1.4879) ||
