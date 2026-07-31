@@ -40,6 +40,7 @@ class CPDF_TextPage {
     kNotUnicode,
     kHyphen,
     kPiece,
+    kActualText,
   };
 
   class CharInfo {

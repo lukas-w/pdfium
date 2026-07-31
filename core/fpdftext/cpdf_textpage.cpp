@@ -847,7 +847,8 @@ void CPDF_TextPage::CloseTempLine() {
          current_direction == CFX_BidiChar::Direction::kRight)) {
       current_direction = CFX_BidiChar::Direction::kRight;
       const bool is_actual_text =
-          !char_span.empty() && char_span[0].char_type() == CharType::kPiece;
+          !char_span.empty() &&
+          char_span[0].char_type() == CharType::kActualText;
       if (is_actual_text) {
         // Since /ActualText strings are already in logical order, pass their
         // characters in forward order instead of reversing them.
@@ -1037,7 +1038,7 @@ void CPDF_TextPage::ProcessMarkedContent(const TransformedTextObject& obj) {
     char_box.Translate(k * step, 0);
     temp_text_buf_.AppendChar(wc);
     temp_char_list_.push_back(
-        CharInfo(CharType::kPiece, CPDF_Font::kInvalidCharCode, wc,
+        CharInfo(CharType::kActualText, CPDF_Font::kInvalidCharCode, wc,
                  text_obj->GetPos(), char_box, matrix, text_obj));
   }
 }
@@ -1177,7 +1178,9 @@ bool CPDF_TextPage::IsHyphen(wchar_t current_char) const {
   }
 
   const CharInfo* prev_char_info = GetPrevCharInfo();
-  return prev_char_info && prev_char_info->char_type() == CharType::kPiece &&
+  return prev_char_info &&
+         (prev_char_info->char_type() == CharType::kPiece ||
+          prev_char_info->char_type() == CharType::kActualText) &&
          IsHyphenCode(prev_char_info->unicode());
 }
 
