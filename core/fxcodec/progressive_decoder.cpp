@@ -57,7 +57,7 @@
 #endif  // PDF_ENABLE_XFA_PNG
 
 #ifdef PDF_ENABLE_XFA_TIFF
-#include "core/fxcodec/tiff/tiff_decoder.h"
+#include "core/fxcodec/tiff/libtiff_tiff_context.h"
 #endif  // PDF_ENABLE_XFA_TIFF
 
 namespace fxcodec {

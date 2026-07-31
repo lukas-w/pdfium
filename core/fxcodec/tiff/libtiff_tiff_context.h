@@ -4,8 +4,8 @@
 
 // Original code copyright 2014 Foxit Software Inc. http://www.foxitsoftware.com
 
-#ifndef CORE_FXCODEC_TIFF_TIFF_DECODER_H_
-#define CORE_FXCODEC_TIFF_TIFF_DECODER_H_
+#ifndef CORE_FXCODEC_TIFF_LIBTIFF_TIFF_CONTEXT_H_
+#define CORE_FXCODEC_TIFF_LIBTIFF_TIFF_CONTEXT_H_
 
 #include <memory>
 
@@ -48,4 +48,4 @@ class TiffDecoder {
 
 using TiffDecoder = fxcodec::TiffDecoder;
 
-#endif  // CORE_FXCODEC_TIFF_TIFF_DECODER_H_
+#endif  // CORE_FXCODEC_TIFF_LIBTIFF_TIFF_CONTEXT_H_
