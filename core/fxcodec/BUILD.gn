@@ -108,14 +108,10 @@ source_set("fxcodec") {
         sources += [
           "bmp/skia_bmp_context.cpp",
           "bmp/skia_bmp_context.h",
-          "bmp/skia_bmp_decoder.cpp",
-          "bmp/skia_bmp_decoder.h",
         ]
         deps += [ "//skia" ]
       } else {
         sources += [
-          "bmp/bmp_decoder.cpp",
-          "bmp/bmp_decoder.h",
           "bmp/cfx_bmpcontext.cpp",
           "bmp/cfx_bmpcontext.h",
           "bmp/cfx_bmpdecompressor.cpp",
@@ -130,8 +126,6 @@ source_set("fxcodec") {
         "gif/cfx_gif.h",
         "gif/cfx_gifcontext.cpp",
         "gif/cfx_gifcontext.h",
-        "gif/gif_decoder.cpp",
-        "gif/gif_decoder.h",
         "gif/lzw_decompressor.cpp",
         "gif/lzw_decompressor.h",
       ]

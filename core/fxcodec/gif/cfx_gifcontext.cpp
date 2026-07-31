@@ -42,10 +42,25 @@ std::optional<GifSignature> GifSignatureFromByte(uint8_t signature) {
 
 }  // namespace
 
-CFX_GifContext::CFX_GifContext(GifDecoder::Delegate* delegate)
-    : delegate_(delegate) {}
+CFX_GifContext::CFX_GifContext(Delegate* delegate) : delegate_(delegate) {}
 
 CFX_GifContext::~CFX_GifContext() = default;
+
+ProgressiveDecoderContext::Status CFX_GifContext::ReadHeader(
+    int* width,
+    int* height,
+    pdfium::span<CFX_GifPalette>* pal_pp,
+    int* bg_index) {
+  ProgressiveDecoderContext::Status ret = ReadHeader();
+  if (ret != ProgressiveDecoderContext::Status::kSuccess) {
+    return ret;
+  }
+  *width = width_;
+  *height = height_;
+  *pal_pp = global_palette_;
+  *bg_index = bc_index_;
+  return ProgressiveDecoderContext::Status::kSuccess;
+}
 
 void CFX_GifContext::ReadScanline(int32_t row_num,
                                   pdfium::span<uint8_t> row_buf) {

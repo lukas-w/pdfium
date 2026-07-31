@@ -10,6 +10,9 @@
 
 #include "core/fxcodec/bmp/bmp_decoder_delegate.h"
 #include "core/fxcodec/cfx_codec_memory.h"
+#include "core/fxcodec/fx_codec.h"
+#include "core/fxcodec/fx_codec_def.h"
+#include "core/fxcrt/check.h"
 
 namespace fxcodec {
 
@@ -29,6 +32,31 @@ void CFX_BmpContext::Input(RetainPtr<CFX_CodecMemory> codec_memory) {
 ProgressiveDecoderContext::Status CFX_BmpContext::DecodeImage(
     size_t frame_index) {
   return bmp_.DecodeImage();
+}
+
+ProgressiveDecoderContext::Status CFX_BmpContext::ReadHeader(
+    int32_t* width,
+    int32_t* height,
+    bool* tb_flag,
+    int32_t* components,
+    pdfium::span<const FX_ARGB>* palette,
+    CFX_DIBAttribute* attribute) {
+  DCHECK(attribute);
+
+  ProgressiveDecoderContext::Status status = bmp_.ReadHeader();
+  if (status != ProgressiveDecoderContext::Status::kSuccess) {
+    return status;
+  }
+
+  *width = bmp_.width();
+  *height = bmp_.height();
+  *tb_flag = bmp_.img_tb_flag();
+  *components = bmp_.components();
+  *palette = bmp_.palette();
+  attribute->dpi_unit_ = CFX_DIBAttribute::kResUnitMeter;
+  attribute->x_dpi_ = bmp_.dpi_x();
+  attribute->y_dpi_ = bmp_.dpi_y();
+  return ProgressiveDecoderContext::Status::kSuccess;
 }
 
 }  // namespace fxcodec

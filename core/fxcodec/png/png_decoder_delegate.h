@@ -14,6 +14,8 @@ namespace fxcodec {
 // Abstract interface used by `libpng_png_decoder.h` and `skia_png_decoder.h`.
 class PngDecoderDelegate {
  public:
+  virtual ~PngDecoderDelegate() = default;
+
   // Called by `PngDecoder` after decoding the image header with
   // `width` and `height` that specify image dimensions in pixels
   //

@@ -11,7 +11,6 @@
 
 #include <vector>
 
-#include "core/fxcodec/bmp/bmp_decoder.h"
 #include "core/fxcodec/bmp/fx_bmp.h"
 #include "core/fxcodec/progressive_decoder_context.h"
 #include "core/fxcrt/data_vector.h"

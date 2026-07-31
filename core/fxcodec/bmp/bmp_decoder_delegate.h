@@ -13,6 +13,8 @@ namespace fxcodec {
 
 class BmpDecoderDelegate {
  public:
+  virtual ~BmpDecoderDelegate() = default;
+
   virtual bool BmpInputImagePositionBuf(uint32_t rcd_pos) = 0;
   virtual void BmpReadScanline(uint32_t row_num,
                                pdfium::span<const uint8_t> row_buf) = 0;
