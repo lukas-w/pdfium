@@ -36,6 +36,7 @@ Local Modifications:
 0048-dwt_neon_9-7_idwt.patch: Cherry-pick https://github.com/uclouvain/openjpeg/pull/1629
 0049-dwt_neon_5-3_idwt.patch: Cherry-pick https://github.com/uclouvain/openjpeg/pull/1630
 0050-opj_pi_initialise_encode_overflow.patch: Cherry-pick https://github.com/uclouvain/openjpeg/pull/1619
+0051-opj_j2k_copy_default_double_free.patch: Fix a double free.
 
 Note:
 
