@@ -7,8 +7,8 @@
 #include "core/fxcodec/jpeg/jpeg_progressive_decoder.h"
 
 #include "core/fxcodec/fx_codec.h"
-#include "core/fxcodec/jpeg/cjpegcontext.h"
 #include "core/fxcodec/jpeg/jpeg_common.h"
+#include "core/fxcodec/jpeg/libjpeg_jpeg_context.h"
 #include "core/fxcodec/progressive_decoder_context.h"
 #include "core/fxcodec/scanlinedecoder.h"
 #include "core/fxcrt/check.h"
@@ -35,7 +35,7 @@ int JpegProgressiveDecoder::ReadHeader(ProgressiveDecoderContext* context,
                                        CFX_DIBAttribute* pAttribute) {
   DCHECK(pAttribute);
 
-  auto* ctx = static_cast<CJpegContext*>(context);
+  auto* ctx = static_cast<LibjpegJpegContext*>(context);
   int ret = jpeg_common_read_header(&ctx->common_, TRUE);
   if (ret == -1) {
     return kFatal;
@@ -55,7 +55,7 @@ int JpegProgressiveDecoder::ReadHeader(ProgressiveDecoderContext* context,
 
 // static
 bool JpegProgressiveDecoder::StartScanline(ProgressiveDecoderContext* context) {
-  auto* ctx = static_cast<CJpegContext*>(context);
+  auto* ctx = static_cast<LibjpegJpegContext*>(context);
   ctx->common_.cinfo.scale_denom = 1;
   return !!jpeg_common_start_decompress(&ctx->common_);
 }
@@ -63,7 +63,7 @@ bool JpegProgressiveDecoder::StartScanline(ProgressiveDecoderContext* context) {
 // static
 int JpegProgressiveDecoder::ReadScanline(ProgressiveDecoderContext* context,
                                          unsigned char* dest_buf) {
-  auto* ctx = static_cast<CJpegContext*>(context);
+  auto* ctx = static_cast<LibjpegJpegContext*>(context);
   int nlines = jpeg_common_read_scanlines(&ctx->common_, &dest_buf, 1);
   if (nlines == -1) {
     return kFatal;

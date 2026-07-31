@@ -12,8 +12,8 @@
 
 #include "build/build_config.h"
 #include "core/fxcodec/cfx_codec_memory.h"
-#include "core/fxcodec/jpeg/cjpegcontext.h"
 #include "core/fxcodec/jpeg/jpeg_progressive_decoder.h"
+#include "core/fxcodec/jpeg/libjpeg_jpeg_context.h"
 #include "core/fxcodec/progressive_decoder_context.h"
 #include "core/fxcrt/check.h"
 #include "core/fxcrt/check_op.h"
@@ -83,7 +83,7 @@ std::unique_ptr<ProgressiveDecoderContext> CreateDecoderContext(
       return std::make_unique<CFX_GifContext>(delegate);
 #endif  // PDF_ENABLE_XFA_GIF
     case FXCODEC_IMAGE_JPG: {
-      auto context = std::make_unique<CJpegContext>();
+      auto context = std::make_unique<LibjpegJpegContext>();
       if (!context->create_ok_) {
         return nullptr;
       }

@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef CORE_FXCODEC_JPEG_CJPEGCONTEXT_H_
-#define CORE_FXCODEC_JPEG_CJPEGCONTEXT_H_
+#ifndef CORE_FXCODEC_JPEG_LIBJPEG_JPEG_CONTEXT_H_
+#define CORE_FXCODEC_JPEG_LIBJPEG_JPEG_CONTEXT_H_
 
 #include "core/fxcodec/jpeg/jpeg_common.h"
 #include "core/fxcodec/progressive_decoder_context.h"
@@ -11,10 +11,10 @@
 
 namespace fxcodec {
 
-class CJpegContext final : public ProgressiveDecoderContext {
+class LibjpegJpegContext final : public ProgressiveDecoderContext {
  public:
-  CJpegContext();
-  ~CJpegContext() override;
+  LibjpegJpegContext();
+  ~LibjpegJpegContext() override;
 
   // ProgressiveDecoderContext:
   FX_FILESIZE GetAvailInput() const override;
@@ -26,4 +26,4 @@ class CJpegContext final : public ProgressiveDecoderContext {
 
 }  // namespace fxcodec
 
-#endif  // CORE_FXCODEC_JPEG_CJPEGCONTEXT_H_
+#endif  // CORE_FXCODEC_JPEG_LIBJPEG_JPEG_CONTEXT_H_

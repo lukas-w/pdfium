@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "core/fxcodec/jpeg/cjpegcontext.h"
+#include "core/fxcodec/jpeg/libjpeg_jpeg_context.h"
 
 #include <stdint.h>
 
@@ -11,7 +11,7 @@
 
 namespace fxcodec {
 
-CJpegContext::CJpegContext() {
+LibjpegJpegContext::LibjpegJpegContext() {
   common_.cinfo.client_data = &common_;
   common_.cinfo.err = &common_.error_mgr;
 
@@ -34,15 +34,15 @@ CJpegContext::CJpegContext() {
   }
 }
 
-CJpegContext::~CJpegContext() {
+LibjpegJpegContext::~LibjpegJpegContext() {
   jpeg_destroy_decompress(&common_.cinfo);
 }
 
-FX_FILESIZE CJpegContext::GetAvailInput() const {
+FX_FILESIZE LibjpegJpegContext::GetAvailInput() const {
   return static_cast<FX_FILESIZE>(common_.source_mgr.bytes_in_buffer);
 }
 
-void CJpegContext::Input(RetainPtr<CFX_CodecMemory> codec_memory) {
+void LibjpegJpegContext::Input(RetainPtr<CFX_CodecMemory> codec_memory) {
   pdfium::span<uint8_t> src_buf = codec_memory->GetUnconsumedSpan();
   if (common_.skip_size) {
     if (common_.skip_size > src_buf.size()) {
