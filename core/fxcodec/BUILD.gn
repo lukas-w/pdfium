@@ -147,8 +147,8 @@ source_set("fxcodec") {
         deps += [ "//skia" ]
       } else {
         sources += [
-          "png/cpngcontext.cpp",
-          "png/cpngcontext.h",
+          "png/libpng_png_context.cpp",
+          "png/libpng_png_context.h",
           "png/libpng_png_decoder.cpp",
           "png/libpng_png_decoder.h",
         ]

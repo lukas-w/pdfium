@@ -13,7 +13,7 @@
 #include "core/fxcodec/cfx_codec_memory.h"
 #include "core/fxcodec/fx_codec.h"
 #include "core/fxcodec/fx_codec_def.h"
-#include "core/fxcodec/png/cpngcontext.h"
+#include "core/fxcodec/png/libpng_png_context.h"
 #include "core/fxcodec/png/png_decoder_delegate.h"
 #include "core/fxcodec/progressive_decoder_context.h"
 #include "core/fxcrt/check.h"
@@ -37,7 +37,8 @@ extern "C" {
 void _png_error_data(png_structp png_ptr, png_const_charp error_msg) {
   if (png_get_error_ptr(png_ptr)) {
     UNSAFE_TODO(strncpy(static_cast<char*>(png_get_error_ptr(png_ptr)),
-                        error_msg, fxcodec::CPngContext::kPngErrorSize - 1));
+                        error_msg,
+                        fxcodec::LibpngPngContext::kPngErrorSize - 1));
   }
 
   longjmp(png_jmpbuf(png_ptr), 1);
@@ -46,8 +47,8 @@ void _png_error_data(png_structp png_ptr, png_const_charp error_msg) {
 void _png_warning_data(png_structp png_ptr, png_const_charp error_msg) {}
 
 void _png_get_header_func(png_structp png_ptr, png_infop info_ptr) {
-  auto* context =
-      reinterpret_cast<fxcodec::CPngContext*>(png_get_progressive_ptr(png_ptr));
+  auto* context = reinterpret_cast<fxcodec::LibpngPngContext*>(
+      png_get_progressive_ptr(png_ptr));
   if (!context) {
     return;
   }
@@ -103,8 +104,8 @@ void _png_get_row_func(png_structp png_ptr,
                        png_bytep new_row,
                        png_uint_32 row_num,
                        int pass) {
-  auto* context =
-      reinterpret_cast<fxcodec::CPngContext*>(png_get_progressive_ptr(png_ptr));
+  auto* context = reinterpret_cast<fxcodec::LibpngPngContext*>(
+      png_get_progressive_ptr(png_ptr));
   if (!context) {
     return;
   }
@@ -150,7 +151,7 @@ namespace fxcodec {
 // static
 bool LibpngPngDecoder::ContinueDecode(ProgressiveDecoderContext* context,
                                       RetainPtr<CFX_CodecMemory> codec_memory) {
-  auto* ctx = static_cast<CPngContext*>(context);
+  auto* ctx = static_cast<LibpngPngContext*>(context);
   pdfium::span<uint8_t> src_buf = codec_memory->GetUnconsumedSpan();
   bool result = _png_continue_decode(ctx->png_, ctx->info_, src_buf.data(),
                                      src_buf.size());

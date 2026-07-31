@@ -53,7 +53,7 @@
 #include "core/fxcodec/png/skia_png_context.h"
 #include "core/fxcodec/png/skia_png_decoder.h"
 #else
-#include "core/fxcodec/png/cpngcontext.h"
+#include "core/fxcodec/png/libpng_png_context.h"
 #include "core/fxcodec/png/libpng_png_decoder.h"
 #endif
 #endif  // PDF_ENABLE_XFA_PNG
@@ -97,7 +97,7 @@ std::unique_ptr<ProgressiveDecoderContext> CreateDecoderContext(
       return std::make_unique<SkiaPngContext>(delegate);
 #else
     {
-      auto context = std::make_unique<CPngContext>(delegate);
+      auto context = std::make_unique<LibpngPngContext>(delegate);
       if (!context->png_ || !context->info_) {
         return nullptr;
       }

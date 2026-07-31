@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef CORE_FXCODEC_PNG_CPNGCONTEXT_H_
-#define CORE_FXCODEC_PNG_CPNGCONTEXT_H_
+#ifndef CORE_FXCODEC_PNG_LIBPNG_PNG_CONTEXT_H_
+#define CORE_FXCODEC_PNG_LIBPNG_PNG_CONTEXT_H_
 
 #include <stdint.h>
 
@@ -17,12 +17,12 @@ struct png_struct_def;
 
 namespace fxcodec {
 
-class CPngContext final : public ProgressiveDecoderContext {
+class LibpngPngContext final : public ProgressiveDecoderContext {
  public:
   static constexpr size_t kPngErrorSize = 256;
 
-  explicit CPngContext(PngDecoderDelegate* pDelegate);
-  ~CPngContext() override;
+  explicit LibpngPngContext(PngDecoderDelegate* pDelegate);
+  ~LibpngPngContext() override;
 
   UNOWNED_PTR_EXCLUSION png_struct_def* png_ = nullptr;
   UNOWNED_PTR_EXCLUSION png_info_def* info_ = nullptr;
@@ -34,4 +34,4 @@ class CPngContext final : public ProgressiveDecoderContext {
 
 }  // namespace fxcodec
 
-#endif  // CORE_FXCODEC_PNG_CPNGCONTEXT_H_
+#endif  // CORE_FXCODEC_PNG_LIBPNG_PNG_CONTEXT_H_
