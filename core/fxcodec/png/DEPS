@@ -2,9 +2,6 @@ specific_include_rules = {
   "libpng_png_context\.cpp": [
     '+third_party/libpng/png.h',
   ],
-  "libpng_png_decoder\.cpp": [
-    '+third_party/libpng/png.h',
-  ],
   "skia_png_context\.cpp": [
     '+third_party/skia/include',
   ],

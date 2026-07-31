@@ -51,10 +51,8 @@
 // condition avoids affecting the Chromium behavior.)
 #if defined(PDF_USE_SKIA) && defined(PDF_ENABLE_RUST_PNG)
 #include "core/fxcodec/png/skia_png_context.h"
-#include "core/fxcodec/png/skia_png_decoder.h"
 #else
 #include "core/fxcodec/png/libpng_png_context.h"
-#include "core/fxcodec/png/libpng_png_decoder.h"
 #endif
 #endif  // PDF_ENABLE_XFA_PNG
 
@@ -648,7 +646,12 @@ bool ProgressiveDecoder::PngReadMoreData() {
     return false;
   }
 
-  return PngDecoder::ContinueDecode(context_.get(), codec_memory_);
+#if defined(PDF_USE_SKIA) && defined(PDF_ENABLE_RUST_PNG)
+  auto* ctx = static_cast<SkiaPngContext*>(context_.get());
+#else
+  auto* ctx = static_cast<LibpngPngContext*>(context_.get());
+#endif
+  return ctx->ContinueDecode(codec_memory_);
 }
 
 bool ProgressiveDecoder::PngDetectImageTypeInBuffer() {
@@ -658,9 +661,15 @@ bool ProgressiveDecoder::PngDetectImageTypeInBuffer() {
     return false;
   }
 
+#if defined(PDF_USE_SKIA) && defined(PDF_ENABLE_RUST_PNG)
+  auto* ctx = static_cast<SkiaPngContext*>(context_.get());
+#else
+  auto* ctx = static_cast<LibpngPngContext*>(context_.get());
+#endif
+
   // Keep feeding more input into the decoder until either the decoder 1) fails,
   // or 2) calls `PngReadHeader` to indicate that it `got_png_metadata_`.
-  if (PngDecoder::ContinueDecode(context_.get(), codec_memory_)) {
+  if (ctx->ContinueDecode(codec_memory_)) {
     while (!got_png_metadata_ && PngReadMoreData()) {
     }
   }

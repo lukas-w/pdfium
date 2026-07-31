@@ -7,8 +7,10 @@
 
 #include <stdint.h>
 
+#include "core/fxcodec/cfx_codec_memory.h"
 #include "core/fxcodec/png/png_decoder_delegate.h"
 #include "core/fxcodec/progressive_decoder_context.h"
+#include "core/fxcrt/retain_ptr.h"
 #include "core/fxcrt/unowned_ptr.h"
 #include "core/fxcrt/unowned_ptr_exclusion.h"
 
@@ -23,6 +25,8 @@ class LibpngPngContext final : public ProgressiveDecoderContext {
 
   explicit LibpngPngContext(PngDecoderDelegate* pDelegate);
   ~LibpngPngContext() override;
+
+  bool ContinueDecode(RetainPtr<CFX_CodecMemory> codec_memory);
 
   UNOWNED_PTR_EXCLUSION png_struct_def* png_ = nullptr;
   UNOWNED_PTR_EXCLUSION png_info_def* info_ = nullptr;
