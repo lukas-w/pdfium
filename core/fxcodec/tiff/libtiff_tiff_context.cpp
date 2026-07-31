@@ -37,11 +37,6 @@ extern "C" {
 
 namespace {
 
-// For use with std::unique_ptr<TIFF>.
-struct TiffDeleter {
-  inline void operator()(TIFF* context) { TIFFClose(context); }
-};
-
 // For use with std::unique_ptr<TIFFOpenOptions>.
 struct TIFFOpenOptionsDeleter {
   inline void operator()(TIFFOpenOptions* options) {
@@ -50,30 +45,6 @@ struct TIFFOpenOptionsDeleter {
 };
 
 }  // namespace
-
-class LibtiffTiffContext final : public ProgressiveDecoderContext {
- public:
-  LibtiffTiffContext() = default;
-  ~LibtiffTiffContext() override = default;
-
-  bool InitDecoder(const RetainPtr<IFX_SeekableReadStream>& file_ptr);
-  bool LoadFrameInfo(int32_t frame,
-                     int32_t* width,
-                     int32_t* height,
-                     int32_t* comps,
-                     int32_t* bpc,
-                     CFX_DIBAttribute* pAttribute);
-  bool Decode(RetainPtr<CFX_DIBitmap> bitmap);
-
-  RetainPtr<IFX_SeekableReadStream> io_in() const { return io_in_; }
-  uint32_t offset() const { return offset_; }
-  void set_offset(uint32_t offset) { offset_ = offset; }
-
- private:
-  RetainPtr<IFX_SeekableReadStream> io_in_;
-  uint32_t offset_ = 0;
-  std::unique_ptr<TIFF, TiffDeleter> tif_ctx_;
-};
 
 void* _TIFFcalloc(tmsize_t nmemb, tmsize_t siz) {
   return FXMEM_DefaultCalloc(nmemb, siz);
@@ -108,8 +79,8 @@ int _TIFFmemcmp(const void* ptr1, const void* ptr2, tmsize_t size) {
 namespace {
 
 tsize_t tiff_read(thandle_t context, tdata_t buf, tsize_t length) {
-  LibtiffTiffContext* pTiffContext =
-      reinterpret_cast<LibtiffTiffContext*>(context);
+  fxcodec::LibtiffTiffContext* pTiffContext =
+      reinterpret_cast<fxcodec::LibtiffTiffContext*>(context);
   FX_SAFE_UINT32 increment = pTiffContext->offset();
   increment += length;
   if (!increment.IsValid()) {
@@ -137,8 +108,8 @@ tsize_t tiff_write(thandle_t context, tdata_t buf, tsize_t length) {
 }
 
 toff_t tiff_seek(thandle_t context, toff_t offset, int whence) {
-  LibtiffTiffContext* pTiffContext =
-      reinterpret_cast<LibtiffTiffContext*>(context);
+  fxcodec::LibtiffTiffContext* pTiffContext =
+      reinterpret_cast<fxcodec::LibtiffTiffContext*>(context);
   FX_SAFE_FILESIZE safe_offset = offset;
   if (!safe_offset.IsValid()) {
     return static_cast<toff_t>(-1);
@@ -180,8 +151,8 @@ int tiff_close(thandle_t context) {
 }
 
 toff_t tiff_get_size(thandle_t context) {
-  LibtiffTiffContext* pTiffContext =
-      reinterpret_cast<LibtiffTiffContext*>(context);
+  fxcodec::LibtiffTiffContext* pTiffContext =
+      reinterpret_cast<fxcodec::LibtiffTiffContext*>(context);
   return static_cast<toff_t>(pTiffContext->io_in()->GetSize());
 }
 
@@ -192,6 +163,16 @@ int tiff_map(thandle_t context, tdata_t*, toff_t*) {
 void tiff_unmap(thandle_t context, tdata_t, toff_t) {}
 
 }  // namespace
+
+namespace fxcodec {
+
+LibtiffTiffContext::LibtiffTiffContext() = default;
+
+LibtiffTiffContext::~LibtiffTiffContext() = default;
+
+void TiffDeleter::operator()(TIFF* context) {
+  TIFFClose(context);
+}
 
 bool LibtiffTiffContext::InitDecoder(
     const RetainPtr<IFX_SeekableReadStream>& file_ptr) {
@@ -217,6 +198,8 @@ bool LibtiffTiffContext::LoadFrameInfo(int32_t frame,
                                        int32_t* comps,
                                        int32_t* bpc,
                                        CFX_DIBAttribute* pAttribute) {
+  DCHECK(pAttribute);
+
   if (!TIFFSetDirectory(tif_ctx_.get(), (uint16_t)frame)) {
     return false;
   }
@@ -299,40 +282,6 @@ bool LibtiffTiffContext::Decode(RetainPtr<CFX_DIBitmap> bitmap) {
     }
   }
   return true;
-}
-
-namespace fxcodec {
-
-// static
-std::unique_ptr<ProgressiveDecoderContext> TiffDecoder::CreateDecoder(
-    const RetainPtr<IFX_SeekableReadStream>& file_ptr) {
-  auto pDecoder = std::make_unique<LibtiffTiffContext>();
-  if (!pDecoder->InitDecoder(file_ptr)) {
-    return nullptr;
-  }
-
-  return pDecoder;
-}
-
-// static
-bool TiffDecoder::LoadFrameInfo(ProgressiveDecoderContext* context,
-                                int32_t frame,
-                                int32_t* width,
-                                int32_t* height,
-                                int32_t* comps,
-                                int32_t* bpc,
-                                CFX_DIBAttribute* pAttribute) {
-  DCHECK(pAttribute);
-
-  auto* ctx = static_cast<LibtiffTiffContext*>(context);
-  return ctx->LoadFrameInfo(frame, width, height, comps, bpc, pAttribute);
-}
-
-// static
-bool TiffDecoder::Decode(ProgressiveDecoderContext* context,
-                         RetainPtr<CFX_DIBitmap> bitmap) {
-  auto* ctx = static_cast<LibtiffTiffContext*>(context);
-  return ctx->Decode(std::move(bitmap));
 }
 
 }  // namespace fxcodec

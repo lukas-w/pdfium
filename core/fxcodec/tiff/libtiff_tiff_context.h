@@ -7,13 +7,19 @@
 #ifndef CORE_FXCODEC_TIFF_LIBTIFF_TIFF_CONTEXT_H_
 #define CORE_FXCODEC_TIFF_LIBTIFF_TIFF_CONTEXT_H_
 
+#include <stdint.h>
+
 #include <memory>
 
+#include "core/fxcodec/progressive_decoder_context.h"
 #include "core/fxcrt/retain_ptr.h"
 
 #ifndef PDF_ENABLE_XFA_TIFF
 #error "TIFF must be enabled"
 #endif
+
+struct tiff;
+using TIFF = struct tiff;
 
 class CFX_DIBitmap;
 class IFX_SeekableReadStream;
@@ -21,31 +27,36 @@ class IFX_SeekableReadStream;
 namespace fxcodec {
 
 class CFX_DIBAttribute;
-class ProgressiveDecoderContext;
 
-class TiffDecoder {
+struct TiffDeleter {
+  void operator()(TIFF* context);
+};
+
+class LibtiffTiffContext final : public ProgressiveDecoderContext {
  public:
-  static std::unique_ptr<ProgressiveDecoderContext> CreateDecoder(
-      const RetainPtr<IFX_SeekableReadStream>& file_ptr);
+  LibtiffTiffContext();
+  ~LibtiffTiffContext() override;
 
-  static bool LoadFrameInfo(ProgressiveDecoderContext* ctx,
-                            int32_t frame,
-                            int32_t* width,
-                            int32_t* height,
-                            int32_t* comps,
-                            int32_t* bpc,
-                            CFX_DIBAttribute* pAttribute);
+  bool InitDecoder(const RetainPtr<IFX_SeekableReadStream>& file_ptr);
+  bool LoadFrameInfo(int32_t frame,
+                     int32_t* width,
+                     int32_t* height,
+                     int32_t* comps,
+                     int32_t* bpc,
+                     CFX_DIBAttribute* pAttribute);
   // `bitmap` must be `FXDIB_Format::kBgra`.
-  static bool Decode(ProgressiveDecoderContext* ctx,
-                     RetainPtr<CFX_DIBitmap> bitmap);
+  bool Decode(RetainPtr<CFX_DIBitmap> bitmap);
 
-  TiffDecoder() = delete;
-  TiffDecoder(const TiffDecoder&) = delete;
-  TiffDecoder& operator=(const TiffDecoder&) = delete;
+  RetainPtr<IFX_SeekableReadStream> io_in() const { return io_in_; }
+  uint32_t offset() const { return offset_; }
+  void set_offset(uint32_t offset) { offset_ = offset; }
+
+ private:
+  RetainPtr<IFX_SeekableReadStream> io_in_;
+  uint32_t offset_ = 0;
+  std::unique_ptr<TIFF, TiffDeleter> tif_ctx_;
 };
 
 }  // namespace fxcodec
-
-using TiffDecoder = fxcodec::TiffDecoder;
 
 #endif  // CORE_FXCODEC_TIFF_LIBTIFF_TIFF_CONTEXT_H_

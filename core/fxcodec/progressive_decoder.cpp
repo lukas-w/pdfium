@@ -728,21 +728,20 @@ FXCODEC_STATUS ProgressiveDecoder::PngContinueDecode() {
 #ifdef PDF_ENABLE_XFA_TIFF
 bool ProgressiveDecoder::TiffDetectImageTypeFromFile(
     CFX_DIBAttribute* pAttribute) {
-  context_ = TiffDecoder::CreateDecoder(file_);
-  if (!context_) {
+  auto ctx = std::make_unique<LibtiffTiffContext>();
+  if (!ctx->InitDecoder(file_)) {
     status_ = FXCODEC_STATUS::kError;
     return false;
   }
   int32_t dummy_bpc;
-  bool ret = TiffDecoder::LoadFrameInfo(context_.get(), 0, &src_width_,
-                                        &src_height_, &src_components_count_,
-                                        &dummy_bpc, pAttribute);
+  bool ret = ctx->LoadFrameInfo(0, &src_width_, &src_height_,
+                                &src_components_count_, &dummy_bpc, pAttribute);
   src_components_count_ = 4;
   if (!ret) {
-    context_.reset();
     status_ = FXCODEC_STATUS::kError;
     return false;
   }
+  context_ = std::move(ctx);
   return true;
 }
 
@@ -750,7 +749,8 @@ FXCODEC_STATUS ProgressiveDecoder::TiffContinueDecode() {
   // TODO(crbug.com/355630556): Consider adding support for
   // `FXDIB_Format::kBgraPremul`
   CHECK_EQ(device_bitmap_->GetFormat(), FXDIB_Format::kBgra);
-  status_ = TiffDecoder::Decode(context_.get(), std::move(device_bitmap_))
+  auto* ctx = static_cast<LibtiffTiffContext*>(context_.get());
+  status_ = ctx->Decode(std::move(device_bitmap_))
                 ? FXCODEC_STATUS::kDecodeFinished
                 : FXCODEC_STATUS::kError;
   file_ = nullptr;
