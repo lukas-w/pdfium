@@ -93,8 +93,6 @@ source_set("fxcodec") {
     sources += [
       "cfx_codec_memory.cpp",
       "cfx_codec_memory.h",
-      "jpeg/jpeg_progressive_decoder.cpp",
-      "jpeg/jpeg_progressive_decoder.h",
       "jpeg/libjpeg_jpeg_context.cpp",
       "jpeg/libjpeg_jpeg_context.h",
       "progressive_decoder.cpp",

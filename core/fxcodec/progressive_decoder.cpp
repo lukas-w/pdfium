@@ -12,7 +12,6 @@
 
 #include "build/build_config.h"
 #include "core/fxcodec/cfx_codec_memory.h"
-#include "core/fxcodec/jpeg/jpeg_progressive_decoder.h"
 #include "core/fxcodec/jpeg/libjpeg_jpeg_context.h"
 #include "core/fxcodec/progressive_decoder_context.h"
 #include "core/fxcrt/check.h"
@@ -547,19 +546,19 @@ bool ProgressiveDecoder::JpegDetectImageTypeInBuffer(
   }
   context_->Input(codec_memory_);
 
+  auto* ctx = static_cast<LibjpegJpegContext*>(context_.get());
   while (1) {
-    int read_result = JpegProgressiveDecoder::ReadHeader(
-        context_.get(), &src_width_, &src_height_, &src_components_count_,
-        pAttribute);
+    int read_result = ctx->ReadHeader(&src_width_, &src_height_,
+                                      &src_components_count_, pAttribute);
     switch (read_result) {
-      case JpegProgressiveDecoder::kFatal:
-      case JpegProgressiveDecoder::kError:
+      case LibjpegJpegContext::kFatal:
+      case LibjpegJpegContext::kError:
         status_ = FXCODEC_STATUS::kError;
         return false;
-      case JpegProgressiveDecoder::kOk:
+      case LibjpegJpegContext::kOk:
         src_bits_per_component_ = 8;
         return true;
-      case JpegProgressiveDecoder::kNeedsMoreInput: {
+      case LibjpegJpegContext::kNeedsMoreInput: {
         FXCODEC_STATUS error_status = FXCODEC_STATUS::kError;
         if (!JpegReadMoreData(&error_status)) {
           status_ = error_status;
@@ -574,7 +573,8 @@ bool ProgressiveDecoder::JpegDetectImageTypeInBuffer(
 }
 
 FXCODEC_STATUS ProgressiveDecoder::JpegStartDecode() {
-  while (!JpegProgressiveDecoder::StartScanline(context_.get())) {
+  auto* ctx = static_cast<LibjpegJpegContext*>(context_.get());
+  while (!ctx->StartScanline()) {
     // Maybe it needs more data.
     FXCODEC_STATUS error_status = FXCODEC_STATUS::kError;
     if (!JpegReadMoreData(&error_status)) {
@@ -606,15 +606,15 @@ FXCODEC_STATUS ProgressiveDecoder::JpegStartDecode() {
 }
 
 FXCODEC_STATUS ProgressiveDecoder::JpegContinueDecode() {
+  auto* ctx = static_cast<LibjpegJpegContext*>(context_.get());
   while (true) {
-    int err_code = JpegProgressiveDecoder::ReadScanline(context_.get(),
-                                                        decode_buf_.data());
-    if (err_code == JpegProgressiveDecoder::kFatal) {
+    int err_code = ctx->ReadScanline(decode_buf_.data());
+    if (err_code == LibjpegJpegContext::kFatal) {
       context_.reset();
       status_ = FXCODEC_STATUS::kError;
       return FXCODEC_STATUS::kError;
     }
-    if (err_code != JpegProgressiveDecoder::kOk) {
+    if (err_code != LibjpegJpegContext::kOk) {
       // Maybe it needs more data.
       FXCODEC_STATUS error_status = FXCODEC_STATUS::kDecodeFinished;
       if (JpegReadMoreData(&error_status)) {
