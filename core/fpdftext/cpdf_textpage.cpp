@@ -347,8 +347,6 @@ CPDF_TextPage::TransformedTextObject::TransformedTextObject(
 
 CPDF_TextPage::TransformedTextObject::~TransformedTextObject() = default;
 
-CPDF_TextPage::CharInfo::CharInfo() = default;
-
 CPDF_TextPage::CharInfo::CharInfo(CharType char_type,
                                   uint32_t char_code,
                                   wchar_t unicode,
@@ -1444,12 +1442,17 @@ bool CPDF_TextPage::ProcessTextObjectItems(CPDF_TextObject* text_object,
         kTextCharRatioGapDelta * text_object->GetFontSize());
     for (int n = fxcrt::CollectionSize<int>(temp_char_list_);
          n > fxcrt::CollectionSize<int>(temp_char_list_) - count; --n) {
-      const CharInfo& charinfo1 = temp_char_list_[n - 1];
-      CFX_PointF diff = charinfo1.origin() - charinfo.origin();
-      if (charinfo1.char_code() == charinfo.char_code() &&
-          charinfo1.text_object()->GetFont() ==
-              charinfo.text_object()->GetFont() &&
-          fabs(diff.x) < threshold && fabs(diff.y) < threshold) {
+      const CharInfo& candidate_charinfo = temp_char_list_[n - 1];
+      if (candidate_charinfo.char_code() != charinfo.char_code()) {
+        continue;
+      }
+      if (!candidate_charinfo.text_object() ||
+          candidate_charinfo.text_object()->GetFont() !=
+              charinfo.text_object()->GetFont()) {
+        continue;
+      }
+      CFX_PointF diff = candidate_charinfo.origin() - charinfo.origin();
+      if (fabs(diff.x) < threshold && fabs(diff.y) < threshold) {
         add_unicode = false;
         break;
       }

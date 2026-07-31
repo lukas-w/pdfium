@@ -44,7 +44,6 @@ class CPDF_TextPage {
 
   class CharInfo {
    public:
-    CharInfo();
     CharInfo(CharType char_type,
              uint32_t char_code,
              wchar_t unicode,
