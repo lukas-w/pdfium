@@ -568,6 +568,27 @@ def ChecksCommon(input_api, output_api):
   return results
 
 
+def CheckNoIOStreamInHeaders(input_api, output_api):
+  """Checks to make sure no .h files include <iostream>."""
+  files = []
+  pattern = input_api.re.compile(r'^#include\s*<iostream>',
+                                 input_api.re.MULTILINE)
+  for f in input_api.AffectedSourceFiles(input_api.FilterSourceFile):
+    if not f.LocalPath().endswith('.h'):
+      continue
+    contents = input_api.ReadFile(f)
+    if pattern.search(contents):
+      files.append(f)
+
+  if files:
+    return [
+        output_api.PresubmitError(
+            'Do not #include <iostream> in header files, since it inserts static '
+            'initialization into every file including the header. Instead, '
+            '#include <ostream>. See http://crbug.com/94794', files)
+    ]
+  return []
+
 def CheckChangeOnUpload(input_api, output_api):
   results = []
   results.extend(_CheckNoBannedFunctions(input_api, output_api))
