@@ -723,17 +723,14 @@ CPVT_FloatRect CPVT_Section::OutputLines(const CPVT_FloatRect& rect) const {
     line->line_info_.fLineX = fPosX - fMinX;
     line->line_info_.fLineY = fPosY - fMinY;
 
-    if (!bidi_resolver) {
+    int32_t line_start = line->line_info_.nBeginWordIndex;
+    if (line_start < 0) {
       fPosY -= line->line_info_.fLineDescent;
       continue;
     }
 
-    int32_t line_start = line->line_info_.nBeginWordIndex;
     // `nEndWordIndex` is inclusive. Thus, `line_start == nEndWordIndex` implies
-    // a single-word line (length 1), except for the special case where both are
-    // -1 (representing an empty line), which also computes to length 1 but
-    // safely yields an empty span due to internal clamping in
-    // GetWordRangeIteratorPair().
+    // a single-word line (length 1).
     int32_t line_length = line->line_info_.nEndWordIndex - line_start + 1;
 
     auto position_word = [&fPosX, fMinX, fPosY, fMinY, this](
@@ -744,8 +741,10 @@ CPVT_FloatRect CPVT_Section::OutputLines(const CPVT_FloatRect& rect) const {
       fPosX += vt_->GetWordWidth(word);
     };
 
+    CHECK(bidi_resolver);
     std::vector<CFX_BidiResolver::ResolvedRun> visual_runs =
         bidi_resolver->GetVisualRunsForLine(line_start, line_length);
+    CHECK(!visual_runs.empty());
 
     for (const CFX_BidiResolver::ResolvedRun& run : visual_runs) {
       pdfium::span<const std::unique_ptr<CPVT_WordInfo>> run_words =
