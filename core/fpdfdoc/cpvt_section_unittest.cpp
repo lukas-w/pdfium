@@ -13,15 +13,39 @@
 #include "core/fpdfdoc/cpvt_stub_provider.h"
 #include "core/fpdfdoc/cpvt_variabletext.h"
 #include "core/fxcrt/cfx_bidi_resolver.h"
+#include "core/fxcrt/check_op.h"
 #include "core/fxcrt/fx_codepage.h"
-#include "core/fxcrt/notreached.h"
 #include "core/fxcrt/retain_ptr.h"
 #include "testing/gtest/include/gtest/gtest.h"
 
 namespace {
+
 constexpr uint16_t kHebrewAlef = 0x05D0;
 constexpr uint16_t kHebrewBet = 0x05D1;
 constexpr uint16_t kHebrewGimel = 0x05D2;
+
+enum class TextContent { kEnglishAndHebrew, kHebrewAndEnglish };
+
+struct LayoutTestData {
+  TextContent content;
+  CFX_BidiResolver::ParagraphDirection direction;
+  pdfium::span<const int> expected_visual_order;
+};
+
+// For `TextContent::kEnglishAndHebrew`: `kAuto` uses the Unicode Bidirectional
+// Algorithm, which resolves to LTR because the first strong character is
+// English. The RTL run [w4, sp4, w5] (indices 6, 7, 8) has its words ordered
+// from right to left.
+constexpr int kEnglishAndHebrewLtr[] = {0, 1, 2, 3, 4, 5, 8, 7, 6};
+constexpr int kEnglishAndHebrewRtl[] = {8, 7, 6, 5, 0, 1, 2, 3, 4};
+
+// For `TextContent::kHebrewAndEnglish`: `kAuto` uses the Unicode Bidirectional
+// Algorithm, which resolves to RTL because the first strong character is
+// Hebrew. The RTL runs [w0, sp0, w1] and [w4, sp4, w5] have their words ordered
+// from right to left.
+constexpr int kHebrewAndEnglishRtl[] = {6, 7, 8, 5, 4, 3, 2, 1, 0};
+constexpr int kHebrewAndEnglishLtr[] = {4, 3, 2, 1, 0, 5, 6, 7, 8};
+
 }  // namespace
 
 class CPVT_SectionTest : public testing::Test {
@@ -65,77 +89,9 @@ class CPVT_SectionTest : public testing::Test {
                                       kHebrewGimel, ' ', 'A', ' ', 'B'});
   }
 
-  void AssertEnglishAndHebrewLayout(const CPVT_Section& section,
-                                    CFX_BidiResolver::ParagraphDirection dir) {
-    std::vector<int> expected_visual_order;
-    if (dir == CFX_BidiResolver::ParagraphDirection::kAuto ||
-        dir == CFX_BidiResolver::ParagraphDirection::kLeftToRight) {
-      // `kAuto` uses the Unicode Bidirectional Algorithm, which resolves to LTR
-      // because the first strong character is English.
-      // The RTL run [w4, sp4, w5] (indices 6, 7, 8) has its words ordered from
-      // right to left.
-      expected_visual_order = {0, 1, 2, 3, 4, 5, 8, 7, 6};
-    } else {
-      expected_visual_order = {8, 7, 6, 5, 0, 1, 2, 3, 4};
-    }
-
-    ASSERT_EQ(static_cast<int>(expected_visual_order.size()),
-              section.GetWordArraySize());
-
-    for (size_t i = 0; i < expected_visual_order.size() - 1; ++i) {
-      EXPECT_LT(section.GetWordFromArray(expected_visual_order[i])->fWordX,
-                section.GetWordFromArray(expected_visual_order[i + 1])->fWordX);
-    }
-  }
-
-  void AssertHebrewAndEnglishLayout(const CPVT_Section& section,
-                                    CFX_BidiResolver::ParagraphDirection dir) {
-    std::vector<int> expected_visual_order;
-    if (dir == CFX_BidiResolver::ParagraphDirection::kLeftToRight) {
-      expected_visual_order = {4, 3, 2, 1, 0, 5, 6, 7, 8};
-    } else if (dir == CFX_BidiResolver::ParagraphDirection::kAuto ||
-               dir == CFX_BidiResolver::ParagraphDirection::kRightToLeft) {
-      // `kAuto` uses the Unicode Bidirectional Algorithm, which resolves to RTL
-      // because the first strong character is Hebrew.
-      expected_visual_order = {6, 7, 8, 5, 4, 3, 2, 1, 0};
-    }
-
-    ASSERT_EQ(static_cast<int>(expected_visual_order.size()),
-              section.GetWordArraySize());
-
-    for (size_t i = 0; i < expected_visual_order.size() - 1; ++i) {
-      EXPECT_LT(section.GetWordFromArray(expected_visual_order[i])->fWordX,
-                section.GetWordFromArray(expected_visual_order[i + 1])->fWordX);
-    }
-  }
   void SetVariableTextDefaults(CPVT_VariableText& vt) {
     vt.SetFontSize(10.0f);
     vt.SetPlateRect(CFX_FloatRect(0, 0, 1000, 1000));
-  }
-
-  enum class TextContent { kEnglishAndHebrew, kHebrewAndEnglish };
-
-  void TestTextLayout(TextContent content,
-                      CFX_BidiResolver::ParagraphDirection direction) {
-    CPVT_VariableText vt(provider_.get());
-    SetVariableTextDefaults(vt);
-    vt.SetTextDirection(direction);
-    vt.Initialize();
-
-    CPVT_Section section(&vt);
-    switch (content) {
-      case TextContent::kEnglishAndHebrew:
-        PopulateSectionWithEnglishAndHebrew(section);
-        section.Rearrange();
-        AssertEnglishAndHebrewLayout(section, direction);
-        return;
-      case TextContent::kHebrewAndEnglish:
-        PopulateSectionWithHebrewAndEnglish(section);
-        section.Rearrange();
-        AssertHebrewAndEnglishLayout(section, direction);
-        return;
-    }
-    NOTREACHED();
   }
   void PopulateSectionWithHello(CPVT_Section& section) {
     section.SetPlace(CPVT_WordPlace(0, 0, -1));
@@ -163,6 +119,10 @@ class CPVT_SectionTest : public testing::Test {
   std::unique_ptr<CPVT_FontMap> font_map_;
   std::unique_ptr<CPVT_StubProvider> provider_;
 };
+
+class CPVT_SectionLayoutTest
+    : public CPVT_SectionTest,
+      public testing::WithParamInterface<LayoutTestData> {};
 
 TEST_F(CPVT_SectionTest, ClearLeftWords) {
   CPVT_VariableText vt(provider_.get());
@@ -235,35 +195,53 @@ TEST_F(CPVT_SectionTest, ClearAllWords) {
   EXPECT_EQ(0, section.GetWordArraySize());
 }
 
-TEST_F(CPVT_SectionTest, OutputLines_EnglishAndHebrew_AutoDirection) {
-  TestTextLayout(TextContent::kEnglishAndHebrew,
-                 CFX_BidiResolver::ParagraphDirection::kAuto);
+TEST_P(CPVT_SectionLayoutTest, OutputLines) {
+  const LayoutTestData& data = GetParam();
+  CPVT_VariableText vt(provider_.get());
+  SetVariableTextDefaults(vt);
+  vt.SetTextDirection(data.direction);
+  vt.Initialize();
+
+  CPVT_Section section(&vt);
+  if (data.content == TextContent::kEnglishAndHebrew) {
+    PopulateSectionWithEnglishAndHebrew(section);
+  } else {
+    CHECK_EQ(data.content, TextContent::kHebrewAndEnglish);
+    PopulateSectionWithHebrewAndEnglish(section);
+  }
+  section.Rearrange();
+
+  ASSERT_EQ(static_cast<int>(data.expected_visual_order.size()),
+            section.GetWordArraySize());
+  for (size_t i = 0; i < data.expected_visual_order.size() - 1; ++i) {
+    EXPECT_LT(
+        section.GetWordFromArray(data.expected_visual_order[i])->fWordX,
+        section.GetWordFromArray(data.expected_visual_order[i + 1])->fWordX);
+  }
 }
 
-TEST_F(CPVT_SectionTest, OutputLines_EnglishAndHebrew_ExplicitLeftToRight) {
-  TestTextLayout(TextContent::kEnglishAndHebrew,
-                 CFX_BidiResolver::ParagraphDirection::kLeftToRight);
-}
-
-TEST_F(CPVT_SectionTest, OutputLines_EnglishAndHebrew_ExplicitRightToLeft) {
-  TestTextLayout(TextContent::kEnglishAndHebrew,
-                 CFX_BidiResolver::ParagraphDirection::kRightToLeft);
-}
-
-TEST_F(CPVT_SectionTest, OutputLines_HebrewAndEnglish_AutoDirection) {
-  TestTextLayout(TextContent::kHebrewAndEnglish,
-                 CFX_BidiResolver::ParagraphDirection::kAuto);
-}
-
-TEST_F(CPVT_SectionTest, OutputLines_HebrewAndEnglish_ExplicitLeftToRight) {
-  TestTextLayout(TextContent::kHebrewAndEnglish,
-                 CFX_BidiResolver::ParagraphDirection::kLeftToRight);
-}
-
-TEST_F(CPVT_SectionTest, OutputLines_HebrewAndEnglish_ExplicitRightToLeft) {
-  TestTextLayout(TextContent::kHebrewAndEnglish,
-                 CFX_BidiResolver::ParagraphDirection::kRightToLeft);
-}
+INSTANTIATE_TEST_SUITE_P(
+    CPVT_SectionTest,
+    CPVT_SectionLayoutTest,
+    testing::Values(
+        LayoutTestData{TextContent::kEnglishAndHebrew,
+                       CFX_BidiResolver::ParagraphDirection::kAuto,
+                       kEnglishAndHebrewLtr},
+        LayoutTestData{TextContent::kEnglishAndHebrew,
+                       CFX_BidiResolver::ParagraphDirection::kLeftToRight,
+                       kEnglishAndHebrewLtr},
+        LayoutTestData{TextContent::kEnglishAndHebrew,
+                       CFX_BidiResolver::ParagraphDirection::kRightToLeft,
+                       kEnglishAndHebrewRtl},
+        LayoutTestData{TextContent::kHebrewAndEnglish,
+                       CFX_BidiResolver::ParagraphDirection::kAuto,
+                       kHebrewAndEnglishRtl},
+        LayoutTestData{TextContent::kHebrewAndEnglish,
+                       CFX_BidiResolver::ParagraphDirection::kLeftToRight,
+                       kHebrewAndEnglishLtr},
+        LayoutTestData{TextContent::kHebrewAndEnglish,
+                       CFX_BidiResolver::ParagraphDirection::kRightToLeft,
+                       kHebrewAndEnglishRtl}));
 
 TEST_F(CPVT_SectionTest, OutputLines_Multiline_EnglishAndHebrew) {
   CPVT_VariableText vt(provider_.get());
