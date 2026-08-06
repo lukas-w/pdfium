@@ -105,12 +105,16 @@ float CPVT_VariableText::Iterator::GetLineCaretX(const CPVT_Line& line) {
     SetAt(old_place);
   };
   SetAt(line.lineplace);
-  NextWord();
-  CPVT_Word first_word;
-  bool is_rtl = GetWord(first_word) &&
-                GetWordPlace().nLineIndex == line.lineplace.nLineIndex &&
-                first_word.is_rtl();
-  return is_rtl ? line.ptLine.x + line.fLineWidth : line.ptLine.x;
+
+  if (NextWord()) {
+    CPVT_Word first_word;
+    if (GetWord(first_word) && GetWordPlace().LineCmp(line.lineplace) == 0 &&
+        first_word.is_rtl()) {
+      return line.ptLine.x + line.fLineWidth;
+    }
+  }
+
+  return line.ptLine.x;
 }
 
 bool CPVT_VariableText::Iterator::NextWord() {
