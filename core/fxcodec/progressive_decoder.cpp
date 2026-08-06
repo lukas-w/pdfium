@@ -26,6 +26,7 @@
 #include "core/fxcrt/numerics/safe_conversions.h"
 #include "core/fxcrt/span_util.h"
 #include "core/fxcrt/stl_util.h"
+#include "core/fxcrt/to_underlying.h"
 #include "core/fxge/dib/cfx_cmyk_to_srgb.h"
 #include "core/fxge/dib/cfx_dibitmap.h"
 #include "core/fxge/dib/fx_dib.h"
@@ -146,7 +147,7 @@ bool ProgressiveDecoder::PngReadHeader(int width, int height, double* gamma) {
     // PNG decoder always decodes into BGRA.
     src_bits_per_component_ = 8;
     src_components_count_ = 4;
-    src_format_ = FXCodec_Argb;
+    src_format_ = Format::kArgb;
 
     return false;
   }
@@ -162,13 +163,13 @@ pdfium::span<uint8_t> ProgressiveDecoder::PngAskScanlineBuf(int line) {
   CHECK_GE(line, 0);
   CHECK_LT(line, src_height_);
   CHECK_EQ(device_bitmap_->GetFormat(), FXDIB_Format::kBgra);
-  CHECK_EQ(src_format_, FXCodec_Argb);
+  CHECK_EQ(src_format_, Format::kArgb);
   return device_bitmap_->GetWritableScanline(line);
 }
 
 pdfium::span<uint8_t> ProgressiveDecoder::PngAskImageBuf() {
   CHECK_EQ(device_bitmap_->GetFormat(), FXDIB_Format::kBgra);
-  CHECK_EQ(src_format_, FXCodec_Argb);
+  CHECK_EQ(src_format_, Format::kArgb);
   return device_bitmap_->GetWritableBuffer();
 }
 
@@ -347,15 +348,15 @@ bool ProgressiveDecoder::BmpDetectImageTypeInBuffer(
   FXDIB_Format format = FXDIB_Format::kInvalid;
   switch (src_components_count_) {
     case 1:
-      src_format_ = FXCodec_8bppRgb;
+      src_format_ = Format::k8bppRgb;
       format = FXDIB_Format::k8bppRgb;
       break;
     case 3:
-      src_format_ = FXCodec_Rgb;
+      src_format_ = Format::kRgb;
       format = FXDIB_Format::kBgr;
       break;
     case 4:
-      src_format_ = FXCodec_Rgb32;
+      src_format_ = Format::kRgb32;
       format = FXDIB_Format::kBgrx;
       break;
     default:
@@ -486,7 +487,7 @@ bool ProgressiveDecoder::GifDetectImageTypeInBuffer() {
 }
 
 FXCODEC_STATUS ProgressiveDecoder::GifStartDecode() {
-  src_format_ = FXCodec_8bppRgb;
+  src_format_ = Format::k8bppRgb;
   SetTransMethod();
   decode_buf_.resize(GetScanlineSize());
   FXDIB_ResampleOptions options;
@@ -591,13 +592,13 @@ FXCODEC_STATUS ProgressiveDecoder::JpegStartDecode() {
                                 src_width_, options);
   switch (src_components_count_) {
     case 1:
-      src_format_ = FXCodec_8bppGray;
+      src_format_ = Format::k8bppGray;
       break;
     case 3:
-      src_format_ = FXCodec_Rgb;
+      src_format_ = Format::kRgb;
       break;
     case 4:
-      src_format_ = FXCodec_Cmyk;
+      src_format_ = Format::kCmyk;
       break;
   }
   SetTransMethod();
@@ -625,7 +626,7 @@ FXCODEC_STATUS ProgressiveDecoder::JpegContinueDecode() {
       status_ = error_status;
       return status_;
     }
-    if (src_format_ == FXCodec_Rgb) {
+    if (src_format_ == Format::kRgb) {
       RGB2BGR(UNSAFE_TODO(decode_buf_.data()), src_width_);
     }
     if (src_row_ >= src_height_) {
@@ -693,11 +694,11 @@ FXCODEC_STATUS ProgressiveDecoder::PngStartDecode() {
 
   // No need to resample/transform pixels when decoding PNGs, because 1)
   // `device_bitmap_` for PNGs is always kBgra and 2) the decoder always outputs
-  // `FXCodec_Argb` (the same format).  In other words, PNG code path doesn't
+  // `Format::kArgb` (the same format).  In other words, PNG code path doesn't
   // need to use an intermediate `decode_buf_` to transform the pixels via
   // `SetTransMethod` and `ResampleScanline`.
   CHECK_EQ(device_bitmap_->GetFormat(), FXDIB_Format::kBgra);
-  CHECK_EQ(src_format_, FXCodec_Argb);
+  CHECK_EQ(src_format_, Format::kArgb);
 
   // Discard old/stale data from `codec_memory_` and restart reading the `file_`
   // from `offset_` 0.
@@ -910,21 +911,21 @@ void ProgressiveDecoder::SetTransMethod() {
       NOTREACHED();
     case FXDIB_Format::kBgr: {
       switch (src_format_) {
-        case FXCodec_Invalid:
+        case Format::kInvalid:
           trans_method_ = TransformMethod::kInvalid;
           break;
-        case FXCodec_8bppGray:
+        case Format::k8bppGray:
           trans_method_ = TransformMethod::k8BppGrayToRgbMaybeAlpha;
           break;
-        case FXCodec_8bppRgb:
+        case Format::k8bppRgb:
           trans_method_ = TransformMethod::k8BppRgbToRgbNoAlpha;
           break;
-        case FXCodec_Rgb:
-        case FXCodec_Rgb32:
-        case FXCodec_Argb:
+        case Format::kRgb:
+        case Format::kRgb32:
+        case Format::kArgb:
           trans_method_ = TransformMethod::kRgbMaybeAlphaToRgbMaybeAlpha;
           break;
-        case FXCodec_Cmyk:
+        case Format::kCmyk:
           trans_method_ = TransformMethod::kCmykToRgbMaybeAlpha;
           break;
       }
@@ -933,27 +934,27 @@ void ProgressiveDecoder::SetTransMethod() {
     case FXDIB_Format::kBgrx:
     case FXDIB_Format::kBgra: {
       switch (src_format_) {
-        case FXCodec_Invalid:
+        case Format::kInvalid:
           trans_method_ = TransformMethod::kInvalid;
           break;
-        case FXCodec_8bppGray:
+        case Format::k8bppGray:
           trans_method_ = TransformMethod::k8BppGrayToRgbMaybeAlpha;
           break;
-        case FXCodec_8bppRgb:
+        case Format::k8bppRgb:
           if (device_bitmap_->GetFormat() == FXDIB_Format::kBgra) {
             trans_method_ = TransformMethod::k8BppRgbToArgb;
           } else {
             trans_method_ = TransformMethod::k8BppRgbToRgbNoAlpha;
           }
           break;
-        case FXCodec_Rgb:
-        case FXCodec_Rgb32:
+        case Format::kRgb:
+        case Format::kRgb32:
           trans_method_ = TransformMethod::kRgbMaybeAlphaToRgbMaybeAlpha;
           break;
-        case FXCodec_Cmyk:
+        case Format::kCmyk:
           trans_method_ = TransformMethod::kCmykToRgbMaybeAlpha;
           break;
-        case FXCodec_Argb:
+        case Format::kArgb:
           trans_method_ = TransformMethod::kArgbToArgb;
           break;
       }
@@ -972,10 +973,11 @@ void ProgressiveDecoder::ResampleScanline(
     const RetainPtr<CFX_DIBitmap>& pDeviceBitmap,
     int dest_line,
     pdfium::span<uint8_t> src_span,
-    FXCodec_Format src_format) {
+    Format src_format) {
   uint8_t* src_scan = src_span.data();
   uint8_t* dest_scan = pDeviceBitmap->GetWritableScanline(dest_line).data();
-  const int src_bytes_per_pixel = (src_format & 0xff) / 8;
+  const auto src_bytes_per_pixel =
+      (fxcrt::to_underlying(src_format) & 0xff) / 8;
   const int dest_bytes_per_pixel = pDeviceBitmap->GetBPP() / 8;
   for (int dest_col = 0; dest_col < src_width_; dest_col++) {
     CStretchEngine::PixelWeight* pPixelWeights =
@@ -1117,7 +1119,7 @@ void ProgressiveDecoder::ResampleScanline(
 void ProgressiveDecoder::Resample(const RetainPtr<CFX_DIBitmap>& pDeviceBitmap,
                                   int32_t src_line,
                                   uint8_t* src_scan,
-                                  FXCodec_Format src_format) {
+                                  Format src_format) {
   if (src_line < 0 || src_line >= src_height_) {
     return;
   }

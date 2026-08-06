@@ -99,6 +99,7 @@ source_set("fxcodec") {
       "progressive_decoder.h",
       "progressive_decoder_context.cpp",
       "progressive_decoder_context.h",
+      "progressive_decoder_context_delegate.h",
     ]
     if (pdf_enable_xfa_bmp) {
       sources += [ "bmp/bmp_decoder_delegate.h" ]

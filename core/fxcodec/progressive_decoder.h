@@ -15,6 +15,7 @@
 
 #include "core/fxcodec/fx_codec_def.h"
 #include "core/fxcodec/jpeg/jpegmodule.h"
+#include "core/fxcodec/progressive_decoder_context_delegate.h"
 #include "core/fxcrt/data_vector.h"
 #include "core/fxcrt/retain_ptr.h"
 #include "core/fxcrt/span.h"
@@ -42,8 +43,6 @@ namespace fxcodec {
 class CFX_DIBAttribute;
 class ProgressiveDecoderContext;
 
-class Dummy {};  // Placeholder to work around C++ syntax issues
-
 class ProgressiveDecoder final :
 #ifdef PDF_ENABLE_XFA_BMP
     public BmpDecoderDelegate,
@@ -54,17 +53,9 @@ class ProgressiveDecoder final :
 #ifdef PDF_ENABLE_XFA_PNG
     public PngDecoderDelegate,
 #endif  // PDF_ENABLE_XFA_PNG
-    public Dummy {
+    public ProgressiveDecoderContextDelegate {
  public:
-  enum FXCodec_Format {
-    FXCodec_Invalid = 0,
-    FXCodec_8bppGray = 0x108,
-    FXCodec_8bppRgb = 0x008,
-    FXCodec_Rgb = 0x018,
-    FXCodec_Rgb32 = 0x020,
-    FXCodec_Argb = 0x220,
-    FXCodec_Cmyk = 0x120
-  };
+  using Format = ProgressiveDecoderContextDelegate::Format;
 
   ProgressiveDecoder();
   ~ProgressiveDecoder() override;
@@ -177,11 +168,11 @@ class ProgressiveDecoder final :
   void ResampleScanline(const RetainPtr<CFX_DIBitmap>& pDeviceBitmap,
                         int32_t dest_line,
                         pdfium::span<uint8_t> src_span,
-                        FXCodec_Format src_format);
+                        Format src_format);
   void Resample(const RetainPtr<CFX_DIBitmap>& pDeviceBitmap,
                 int32_t src_line,
                 uint8_t* src_scan,
-                FXCodec_Format src_format);
+                Format src_format);
 
   // Computes the size of a single decoded image row (in bytes).
   //
@@ -208,7 +199,7 @@ class ProgressiveDecoder final :
   int src_bits_per_component_ = 0;  // how many bits per channel
   TransformMethod trans_method_;
   int src_row_ = 0;
-  FXCodec_Format src_format_ = FXCodec_Invalid;
+  Format src_format_ = Format::kInvalid;
   size_t frame_number_ = 0;
   size_t frame_cur_ = 0;
 #ifdef PDF_ENABLE_XFA_GIF
