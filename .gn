@@ -17,6 +17,9 @@ default_args = {
   partition_alloc_is_debug = false
   enable_pkeys = false
 
+  # This security tooling is not needed.
+  v8_enable_generated_code_validator = false
+
   # PDFs only need to run JavaScript.
   v8_enable_webassembly = false
 
