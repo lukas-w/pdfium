@@ -66,6 +66,10 @@ namespace {
 
 constexpr size_t kBlockSize = 4096;
 
+#ifdef PDF_ENABLE_XFA_PNG
+constexpr double kPngGamma = 2.2;
+#endif  // PDF_ENABLE_XFA_PNG
+
 std::unique_ptr<ProgressiveDecoderContext> CreateDecoderContext(
     FXCODEC_IMAGE_TYPE type,
     ProgressiveDecoder* delegate) {
@@ -107,14 +111,6 @@ std::unique_ptr<ProgressiveDecoderContext> CreateDecoderContext(
       return nullptr;
   }
 }
-
-#ifdef PDF_ENABLE_XFA_PNG
-#if BUILDFLAG(IS_APPLE)
-const double kPngGamma = 1.7;
-#else
-const double kPngGamma = 2.2;
-#endif  // BUILDFLAG(IS_APPLE)
-#endif  // PDF_ENABLE_XFA_PNG
 
 void RGB2BGR(uint8_t* buffer, int width = 1) {
   if (buffer && width > 0) {
