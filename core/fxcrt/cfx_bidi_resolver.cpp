@@ -49,8 +49,8 @@ CFX_BidiResolver::CFX_BidiResolver(std::u16string utf16_text,
            std::numeric_limits<int32_t>::max() / kIcuRunSize);
 
   UErrorCode status = U_ZERO_ERROR;
-  ScopedUBiDi bidi(
-      ubidi_openSized(static_cast<int32_t>(utf16_text_.size()), 0, &status));
+  ScopedUBiDi bidi(ubidi_openSized(static_cast<int32_t>(utf16_text_.size()),
+                                   /*maxRunCount=*/0, &status));
   if (U_FAILURE(status)) {
     return;
   }
@@ -63,8 +63,8 @@ CFX_BidiResolver::CFX_BidiResolver(std::u16string utf16_text,
   }
 
   ubidi_setPara(bidi.get(), utf16_text_.data(),
-                static_cast<int32_t>(utf16_text_.size()), para_level, nullptr,
-                &status);
+                static_cast<int32_t>(utf16_text_.size()), para_level,
+                /*embeddingLevels=*/nullptr, &status);
   if (U_FAILURE(status)) {
     return;
   }
@@ -82,7 +82,8 @@ CFX_BidiResolver::GetVisualRunsForLine(int line_start, int line_length) const {
   }
 
   UErrorCode status = U_ZERO_ERROR;
-  ScopedUBiDi line_bidi(ubidi_openSized(line_length, 0, &status));
+  ScopedUBiDi line_bidi(
+      ubidi_openSized(line_length, /*maxRunCount=*/0, &status));
   if (U_FAILURE(status)) {
     return runs;
   }

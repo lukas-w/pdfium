@@ -13,7 +13,7 @@ struct UBiDi;
 
 // Wraps ICU's UBiDi engine to extract visual text runs from a logical
 // paragraph.
-class CFX_BidiResolver {
+class CFX_BidiResolver final {
  public:
   enum class ParagraphDirection { kAuto, kLeftToRight, kRightToLeft };
 
@@ -23,6 +23,7 @@ class CFX_BidiResolver {
     bool is_rtl;
   };
 
+  // Returns a new instance on success, or nullptr if ICU initialization fails.
   static std::unique_ptr<CFX_BidiResolver> Create(std::u16string utf16_text,
                                                   ParagraphDirection direction);
 
