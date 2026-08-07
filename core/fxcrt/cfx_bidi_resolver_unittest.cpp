@@ -4,18 +4,30 @@
 
 #include "core/fxcrt/cfx_bidi_resolver.h"
 
+#include <ostream>
+
 #include "testing/gmock/include/gmock/gmock.h"
 #include "testing/gtest/include/gtest/gtest.h"
+
+using testing::ElementsAre;
+
+bool operator==(const CFX_BidiResolver::ResolvedRun& lhs,
+                const CFX_BidiResolver::ResolvedRun& rhs) {
+  return lhs.start == rhs.start && lhs.length == rhs.length &&
+         lhs.is_rtl == rhs.is_rtl;
+}
+
+void PrintTo(const CFX_BidiResolver::ResolvedRun& run, std::ostream* os) {
+  *os << "ResolvedRun{start=" << run.start << ", length=" << run.length
+      << ", is_rtl=" << (run.is_rtl ? "true" : "false") << "}";
+}
 
 TEST(fxcrt, BidiResolverPureLTR) {
   auto resolver = CFX_BidiResolver::Create(
       u"abc", CFX_BidiResolver::ParagraphDirection::kLeftToRight);
   ASSERT_TRUE(resolver);
-  auto runs = resolver->GetVisualRunsForLine(0, 3);
-  ASSERT_EQ(1u, runs.size());
-  EXPECT_EQ(0, runs[0].start);
-  EXPECT_EQ(3, runs[0].length);
-  EXPECT_FALSE(runs[0].is_rtl);
+  EXPECT_THAT(resolver->GetVisualRunsForLine(0, 3),
+              ElementsAre(CFX_BidiResolver::ResolvedRun{0, 3, false}));
 }
 
 TEST(fxcrt, BidiResolverPureRTL) {
@@ -24,11 +36,8 @@ TEST(fxcrt, BidiResolverPureRTL) {
       u"\x05D0\x05D1\x05D2",
       CFX_BidiResolver::ParagraphDirection::kRightToLeft);
   ASSERT_TRUE(resolver);
-  auto runs = resolver->GetVisualRunsForLine(0, 3);
-  ASSERT_EQ(1u, runs.size());
-  EXPECT_EQ(0, runs[0].start);
-  EXPECT_EQ(3, runs[0].length);
-  EXPECT_TRUE(runs[0].is_rtl);
+  EXPECT_THAT(resolver->GetVisualRunsForLine(0, 3),
+              ElementsAre(CFX_BidiResolver::ResolvedRun{0, 3, true}));
 }
 
 TEST(fxcrt, BidiResolverMixed) {
@@ -36,20 +45,11 @@ TEST(fxcrt, BidiResolverMixed) {
       u"ab \x05D0\x05D1 cd",
       CFX_BidiResolver::ParagraphDirection::kLeftToRight);
   ASSERT_TRUE(resolver);
-  auto runs = resolver->GetVisualRunsForLine(0, 8);
-  ASSERT_EQ(3u, runs.size());
   // "ab " (LTR) -> "Aleph Bet" (RTL) -> " cd" (LTR)
-  EXPECT_EQ(0, runs[0].start);
-  EXPECT_EQ(3, runs[0].length);
-  EXPECT_FALSE(runs[0].is_rtl);
-
-  EXPECT_EQ(3, runs[1].start);
-  EXPECT_EQ(2, runs[1].length);
-  EXPECT_TRUE(runs[1].is_rtl);
-
-  EXPECT_EQ(5, runs[2].start);
-  EXPECT_EQ(3, runs[2].length);
-  EXPECT_FALSE(runs[2].is_rtl);
+  EXPECT_THAT(resolver->GetVisualRunsForLine(0, 8),
+              ElementsAre(CFX_BidiResolver::ResolvedRun{0, 3, false},
+                          CFX_BidiResolver::ResolvedRun{3, 2, true},
+                          CFX_BidiResolver::ResolvedRun{5, 3, false}));
 }
 
 TEST(fxcrt, BidiResolverLineWrap) {
@@ -57,11 +57,8 @@ TEST(fxcrt, BidiResolverLineWrap) {
       u"abc def ghi", CFX_BidiResolver::ParagraphDirection::kLeftToRight);
   ASSERT_TRUE(resolver);
   // Get runs for the middle word "def "
-  auto runs = resolver->GetVisualRunsForLine(4, 4);
-  ASSERT_EQ(1u, runs.size());
-  EXPECT_EQ(4, runs[0].start);
-  EXPECT_EQ(4, runs[0].length);
-  EXPECT_FALSE(runs[0].is_rtl);
+  EXPECT_THAT(resolver->GetVisualRunsForLine(4, 4),
+              ElementsAre(CFX_BidiResolver::ResolvedRun{4, 4, false}));
 }
 
 TEST(fxcrt, BidiResolverEmpty) {
@@ -98,12 +95,9 @@ TEST(fxcrt, BidiResolverInvalidUTF16) {
       u"\xDC00\xDC00", CFX_BidiResolver::ParagraphDirection::kLeftToRight);
 
   ASSERT_TRUE(resolver);
-  auto runs = resolver->GetVisualRunsForLine(0, 2);
   // ICU typically substitutes invalid bytes or treats them as neutral.
   // Because the paragraph direction is LTR, these neutral characters
   // inherit the base direction and resolve to a single LTR run.
-  ASSERT_EQ(1u, runs.size());
-  EXPECT_EQ(0, runs[0].start);
-  EXPECT_EQ(2, runs[0].length);
-  EXPECT_FALSE(runs[0].is_rtl);
+  EXPECT_THAT(resolver->GetVisualRunsForLine(0, 2),
+              ElementsAre(CFX_BidiResolver::ResolvedRun{0, 2, false}));
 }
