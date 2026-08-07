@@ -10,7 +10,12 @@
 #include "core/fxcrt/check_op.h"
 #include "core/fxcrt/fx_safe_types.h"
 #include "core/fxcrt/ptr_util.h"
+
+#if defined(USE_SYSTEM_ICUUC)
+#include <unicode/ubidi.h>
+#else
 #include "third_party/icu/source/common/unicode/ubidi.h"
+#endif
 
 void CFX_BidiResolver::UBiDiDeleter::operator()(UBiDi* bidi) const {
   ubidi_close(bidi);
