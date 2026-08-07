@@ -14,6 +14,7 @@
 #include "core/fpdfapi/font/cpdf_font.h"
 #include "core/fpdfapi/render/cpdf_renderoptions.h"
 #include "core/fpdfapi/render/cpdf_textrenderer.h"
+#include "core/fpdfdoc/cpvt_line.h"
 #include "core/fpdfdoc/cpvt_word.h"
 #include "core/fpdfdoc/ipvt_fontmap.h"
 #include "core/fxcrt/autorestorer.h"
@@ -29,6 +30,11 @@
 #include "fpdfsdk/pwl/ipwl_fillernotify.h"
 
 namespace {
+
+CFX_FloatRect GetWordRect(const CPVT_Word& word, const CPVT_Line& line) {
+  return CFX_FloatRect(word.location().x, line.ptLine.y + line.fLineDescent,
+                       word.CaretX(), line.ptLine.y + line.fLineAscent);
+}
 
 void DrawTextString(CFX_RenderDevice* pDevice,
                     const CFX_PointF& pt,
@@ -653,16 +659,14 @@ void CPWL_EditImpl::DrawEdit(CFX_RenderDevice* pDevice,
       if (bSelect) {
         CPVT_Line line;
         pIterator->GetLine(line);
+        CFX_FloatRect word_rect = GetWordRect(word, line);
         if (pFillerNotify->IsSelectionImplemented()) {
-          CFX_FloatRect rc(word.location().x, line.ptLine.y + line.fLineDescent,
-                           word.CaretX(), line.ptLine.y + line.fLineAscent);
-          rc.Intersect(rcClip);
-          pFillerNotify->OutputSelectedRect(pSystemData, rc);
+          word_rect.Intersect(rcClip);
+          pFillerNotify->OutputSelectedRect(pSystemData, word_rect);
         } else {
           CFX_Path pathSelBK;
-          pathSelBK.AppendRect(word.location().x,
-                               line.ptLine.y + line.fLineDescent, word.CaretX(),
-                               line.ptLine.y + line.fLineAscent);
+          pathSelBK.AppendRect(word_rect.left, word_rect.bottom,
+                               word_rect.right, word_rect.top);
 
           pDevice->DrawPath(pathSelBK, &mtUser2Device, nullptr, crSelBK, 0,
                             CFX_FillRenderOptions::WindingOptions());
@@ -1355,15 +1359,13 @@ void CPWL_EditImpl::RefreshWordRange(const CPVT_WordRange& wr) {
     pIterator->GetLine(lineinfo);
     if (place.LineCmp(wrTemp.BeginPos) == 0 ||
         place.LineCmp(wrTemp.EndPos) == 0) {
-      CFX_FloatRect rcWord(
-          wordinfo.location().x, lineinfo.ptLine.y + lineinfo.fLineDescent,
-          wordinfo.CaretX(), lineinfo.ptLine.y + lineinfo.fLineAscent);
+      CFX_FloatRect word_rect = GetWordRect(wordinfo, lineinfo);
 
       if (notify_) {
         if (!notify_flag_) {
           AutoRestorer<bool> restorer(&notify_flag_);
           notify_flag_ = true;
-          CFX_FloatRect rcRefresh = VTToEdit(rcWord);
+          CFX_FloatRect rcRefresh = VTToEdit(word_rect);
           if (!notify_->InvalidateRect(&rcRefresh)) {
             notify_ = nullptr;  // Gone, dangling even.
           }
