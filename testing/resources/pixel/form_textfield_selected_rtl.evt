@@ -1,8 +1,6 @@
 # This test explicitly tests the interactive UI rendering (CPWL_EditImpl).
 # It simulates double-clicking an RTL text field during live editing to ensure
 # the selection highlight is rendered with the correct dimensions.
-# TODO(crbug.com/543033201): The selection highlight bounding box currently
-# computes to a width of zero for RTL text, making it invisible.
 # Must leave the text field focused at the end of the test. No clicking
 # outside. If the field loses focus, it will fall back to generating a static
 # Appearance Stream.

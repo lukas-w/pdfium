@@ -33,7 +33,8 @@ namespace {
 
 CFX_FloatRect GetWordRect(const CPVT_Word& word, const CPVT_Line& line) {
   return CFX_FloatRect(word.location().x, line.ptLine.y + line.fLineDescent,
-                       word.CaretX(), line.ptLine.y + line.fLineAscent);
+                       word.location().x + word.width(),
+                       line.ptLine.y + line.fLineAscent);
 }
 
 void DrawTextString(CFX_RenderDevice* pDevice,
