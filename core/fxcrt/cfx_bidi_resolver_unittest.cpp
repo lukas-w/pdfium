@@ -4,6 +4,7 @@
 
 #include "core/fxcrt/cfx_bidi_resolver.h"
 
+#include "testing/gmock/include/gmock/gmock.h"
 #include "testing/gtest/include/gtest/gtest.h"
 
 TEST(fxcrt, BidiResolverPureLTR) {
@@ -68,4 +69,41 @@ TEST(fxcrt, BidiResolverEmpty) {
       std::u16string(), CFX_BidiResolver::ParagraphDirection::kAuto);
   // Just proving it doesn't crash or leak memory.
   EXPECT_FALSE(resolver);
+}
+
+TEST(fxcrt, BidiResolverOutOfBounds) {
+  auto resolver = CFX_BidiResolver::Create(
+      u"abc", CFX_BidiResolver::ParagraphDirection::kLeftToRight);
+  ASSERT_TRUE(resolver);
+
+  // Negative start
+  EXPECT_THAT(resolver->GetVisualRunsForLine(-1, 3), testing::IsEmpty());
+
+  // Negative length
+  EXPECT_THAT(resolver->GetVisualRunsForLine(0, -1), testing::IsEmpty());
+
+  // Zero length
+  EXPECT_THAT(resolver->GetVisualRunsForLine(0, 0), testing::IsEmpty());
+
+  // Start + length is past the end
+  EXPECT_THAT(resolver->GetVisualRunsForLine(1, 3), testing::IsEmpty());
+
+  // Start is past the end
+  EXPECT_THAT(resolver->GetVisualRunsForLine(4, 1), testing::IsEmpty());
+}
+
+TEST(fxcrt, BidiResolverInvalidUTF16) {
+  // Pass an isolated trailing surrogate (invalid UTF-16 sequence)
+  auto resolver = CFX_BidiResolver::Create(
+      u"\xDC00\xDC00", CFX_BidiResolver::ParagraphDirection::kLeftToRight);
+
+  ASSERT_TRUE(resolver);
+  auto runs = resolver->GetVisualRunsForLine(0, 2);
+  // ICU typically substitutes invalid bytes or treats them as neutral.
+  // Because the paragraph direction is LTR, these neutral characters
+  // inherit the base direction and resolve to a single LTR run.
+  ASSERT_EQ(1u, runs.size());
+  EXPECT_EQ(0, runs[0].start);
+  EXPECT_EQ(2, runs[0].length);
+  EXPECT_FALSE(runs[0].is_rtl);
 }

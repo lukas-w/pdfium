@@ -77,7 +77,7 @@ CFX_BidiResolver::~CFX_BidiResolver() = default;
 std::vector<CFX_BidiResolver::ResolvedRun>
 CFX_BidiResolver::GetVisualRunsForLine(int line_start, int line_length) const {
   std::vector<ResolvedRun> runs;
-  if (line_length <= 0) {
+  if (line_start < 0 || line_length <= 0) {
     return runs;
   }
 
@@ -89,7 +89,8 @@ CFX_BidiResolver::GetVisualRunsForLine(int line_start, int line_length) const {
   }
 
   FX_SAFE_INT32 safe_line_end = pdfium::CheckAdd(line_start, line_length);
-  if (!safe_line_end.IsValid()) {
+  if (!safe_line_end.IsValid() ||
+      safe_line_end.ValueOrDie() > utf16_text_.size()) {
     return runs;
   }
 
