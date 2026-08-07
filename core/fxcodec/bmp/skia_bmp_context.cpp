@@ -17,7 +17,7 @@
 #include "core/fxcrt/check_op.h"
 #include "core/fxcrt/fx_safe_types.h"
 #include "core/fxge/calculate_pitch.h"
-#include "third_party/skia/experimental/rust_bmp/decoder/SkBmpRustDecoder.h"
+#include "third_party/skia/include/codec/SkBmpRustDecoder.h"
 #include "third_party/skia/include/codec/SkCodec.h"
 #include "third_party/skia/include/core/SkAlphaType.h"
 #include "third_party/skia/include/core/SkColorType.h"
