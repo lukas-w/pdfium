@@ -12,9 +12,10 @@
 #include <limits>
 #include <utility>
 
-#include "core/fxcodec/bmp/bmp_decoder_delegate.h"
 #include "core/fxcodec/bmp/cfx_bmpcontext.h"
 #include "core/fxcodec/cfx_codec_memory.h"
+#include "core/fxcodec/progressive_decoder_context.h"
+#include "core/fxcodec/progressive_decoder_context_delegate.h"
 #include "core/fxcrt/byteorder.h"
 #include "core/fxcrt/compiler_specific.h"
 #include "core/fxcrt/data_vector.h"
@@ -63,12 +64,13 @@ CFX_BmpDecompressor::~CFX_BmpDecompressor() = default;
 
 void CFX_BmpDecompressor::ReadNextScanline() {
   uint32_t row = img_tb_flag_ ? row_num_ : (height_ - 1 - row_num_);
-  context_->delegate_->BmpReadScanline(row, out_row_buffer_);
+  context_->delegate_->ResampleScanline(row, out_row_buffer_);
   ++row_num_;
 }
 
 bool CFX_BmpDecompressor::GetDataPosition(uint32_t rcd_pos) {
-  return context_->delegate_->BmpInputImagePositionBuf(rcd_pos);
+  FXCODEC_STATUS dummy_status = FXCODEC_STATUS::kError;
+  return context_->delegate_->ReadMoreData(rcd_pos, &dummy_status);
 }
 
 ProgressiveDecoderContext::Status CFX_BmpDecompressor::ReadHeader() {

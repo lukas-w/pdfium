@@ -23,10 +23,6 @@
 #include "core/fxge/dib/cstretchengine.h"
 #include "core/fxge/dib/fx_dib.h"
 
-#ifdef PDF_ENABLE_XFA_BMP
-#include "core/fxcodec/bmp/bmp_decoder_delegate.h"
-#endif  // PDF_ENABLE_XFA_BMP
-
 #ifdef PDF_ENABLE_XFA_GIF
 #include "core/fxcodec/gif/cfx_gifcontext.h"
 #endif  // PDF_ENABLE_XFA_GIF
@@ -44,9 +40,6 @@ class CFX_DIBAttribute;
 class ProgressiveDecoderContext;
 
 class ProgressiveDecoder final :
-#ifdef PDF_ENABLE_XFA_BMP
-    public BmpDecoderDelegate,
-#endif  // PDF_ENABLE_XFA_BMP
 #ifdef PDF_ENABLE_XFA_GIF
     public CFX_GifContext::Delegate,
 #endif  // PDF_ENABLE_XFA_GIF
@@ -93,12 +86,19 @@ class ProgressiveDecoder final :
   void GifReadScanline(int32_t row_num, pdfium::span<uint8_t> row_buf) override;
 #endif  // PDF_ENABLE_XFA_GIF
 
-#ifdef PDF_ENABLE_XFA_BMP
-  // BmpDecoder::Delegate
-  bool BmpInputImagePositionBuf(uint32_t rcd_pos) override;
-  void BmpReadScanline(uint32_t row_num,
-                       pdfium::span<const uint8_t> row_buf) override;
-#endif  // PDF_ENABLE_XFA_BMP
+  // ProgressiveDecoderContextDelegate:
+  bool ReadMoreData(std::optional<uint32_t> rcd_pos,
+                    FXCODEC_STATUS* err_status) override;
+  uint32_t GetCurrentInputPosition() const override;
+  bool PrepareScanlineResampling(int src_width,
+                                 int src_height,
+                                 Format src_format,
+                                 pdfium::span<const FX_ARGB> palette,
+                                 std::optional<FX_ARGB> fill_argb) override;
+  void ResampleScanline(int line,
+                        pdfium::span<const uint8_t> src_span) override;
+  pdfium::span<uint8_t> AskScanlineBuf(int line) override;
+  pdfium::span<uint8_t> AskImageBuf() override;
 
  private:
   using WeightTable = CStretchEngine::WeightTable;
@@ -161,7 +161,8 @@ class ProgressiveDecoder final :
   //
   // Reads start at `offset_` inside the file.  The `offset_` will be update as
   // needed.
-  bool ReadMoreData(size_t unconsumed_bytes, FXCODEC_STATUS* err_status);
+  bool ReadMoreDataInternal(size_t unconsumed_bytes,
+                            FXCODEC_STATUS* err_status);
 
   void SetTransMethod();
 
@@ -208,9 +209,6 @@ class ProgressiveDecoder final :
   int gif_trans_index_ = -1;
   FX_RECT gif_frame_rect_;
 #endif  // PDF_ENABLE_XFA_GIF
-#ifdef PDF_ENABLE_XFA_BMP
-  bool bmp_is_top_bottom_ = false;
-#endif  // PDF_ENABLE_XFA_BMP
 };
 
 }  // namespace fxcodec

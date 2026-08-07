@@ -39,7 +39,6 @@ class CFX_BmpDecompressor {
   uint32_t width() const { return width_; }
   uint32_t height() const { return height_; }
   int32_t components() const { return components_; }
-  bool img_tb_flag() const { return img_tb_flag_; }
   int32_t dpi_x() const { return dpi_x_; }
   int32_t dpi_y() const { return dpi_y_; }
 

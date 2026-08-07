@@ -8,7 +8,6 @@
 
 #include <utility>
 
-#include "core/fxcodec/bmp/bmp_decoder_delegate.h"
 #include "core/fxcodec/cfx_codec_memory.h"
 #include "core/fxcodec/fx_codec.h"
 #include "core/fxcodec/fx_codec_def.h"
@@ -16,7 +15,7 @@
 
 namespace fxcodec {
 
-CFX_BmpContext::CFX_BmpContext(BmpDecoderDelegate* pDelegate)
+CFX_BmpContext::CFX_BmpContext(ProgressiveDecoderContextDelegate* pDelegate)
     : bmp_(this), delegate_(pDelegate) {}
 
 CFX_BmpContext::~CFX_BmpContext() = default;
@@ -37,7 +36,6 @@ ProgressiveDecoderContext::Status CFX_BmpContext::DecodeImage(
 ProgressiveDecoderContext::Status CFX_BmpContext::ReadHeader(
     int32_t* width,
     int32_t* height,
-    bool* tb_flag,
     int32_t* components,
     pdfium::span<const FX_ARGB>* palette,
     CFX_DIBAttribute* attribute) {
@@ -50,7 +48,6 @@ ProgressiveDecoderContext::Status CFX_BmpContext::ReadHeader(
 
   *width = bmp_.width();
   *height = bmp_.height();
-  *tb_flag = bmp_.img_tb_flag();
   *components = bmp_.components();
   *palette = bmp_.palette();
   attribute->dpi_unit_ = CFX_DIBAttribute::kResUnitMeter;

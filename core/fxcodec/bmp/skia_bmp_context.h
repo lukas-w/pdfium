@@ -21,12 +21,12 @@ class SkCodec;
 
 namespace fxcodec {
 
-class BmpDecoderDelegate;
 class CFX_DIBAttribute;
+class ProgressiveDecoderContextDelegate;
 
 class SkiaBmpContext final : public ProgressiveDecoderContext {
  public:
-  explicit SkiaBmpContext(BmpDecoderDelegate* delegate);
+  explicit SkiaBmpContext(ProgressiveDecoderContextDelegate* delegate);
   ~SkiaBmpContext() override;
 
   void SetCodecMemory(RetainPtr<CFX_CodecMemory> codec_memory);
@@ -34,26 +34,24 @@ class SkiaBmpContext final : public ProgressiveDecoderContext {
   // ProgressiveDecoderContext:
   FX_FILESIZE GetAvailInput() const override;
   void Input(RetainPtr<CFX_CodecMemory> codec_memory) override;
+  ProgressiveDecoderContext::Status DecodeImage(size_t frame_index) override;
 
   ProgressiveDecoderContext::Status ReadHeader(
       int32_t* width,
       int32_t* height,
-      bool* tb_flag,
       int32_t* components,
       pdfium::span<const FX_ARGB>* palette,
-      CFX_DIBAttribute* pAttribute);
-
-  ProgressiveDecoderContext::Status DecodeImage(size_t frame_index) override;
+      CFX_DIBAttribute* attribute);
 
  private:
   bool ValidatePaletteIndices();
   ProgressiveDecoderContext::Status StartIncrementalDecode();
-  void Forward3ComponentRow(uint32_t dest_row,
+  void Forward3ComponentRow(int dest_row,
                             pdfium::span<const uint8_t> src_row,
                             pdfium::span<uint8_t> row_buffer,
                             int width);
 
-  UnownedPtr<BmpDecoderDelegate> const delegate_;
+  UnownedPtr<ProgressiveDecoderContextDelegate> const delegate_;
   std::unique_ptr<SkCodec> decoder_;
   RetainPtr<CFX_CodecMemory> codec_memory_;
   std::vector<uint8_t> decoded_image_buf_;

@@ -8,10 +8,10 @@
 #include <optional>
 #include <utility>
 
-#include "core/fxcodec/bmp/bmp_decoder_delegate.h"
 #include "core/fxcodec/cfx_codec_memory.h"
 #include "core/fxcodec/codec_memory_sk_stream.h"
 #include "core/fxcodec/fx_codec.h"
+#include "core/fxcodec/progressive_decoder_context_delegate.h"
 #include "core/fxcrt/byteorder.h"
 #include "core/fxcrt/check.h"
 #include "core/fxcrt/check_op.h"
@@ -52,7 +52,7 @@ void ClampBmpHeaderOffset(pdfium::span<uint8_t, kMinHeaderBytes> header,
 
 }  // namespace
 
-SkiaBmpContext::SkiaBmpContext(BmpDecoderDelegate* delegate)
+SkiaBmpContext::SkiaBmpContext(ProgressiveDecoderContextDelegate* delegate)
     : delegate_(delegate) {}
 
 SkiaBmpContext::~SkiaBmpContext() = default;
@@ -75,15 +75,13 @@ void SkiaBmpContext::Input(RetainPtr<CFX_CodecMemory> codec_memory) {
 ProgressiveDecoderContext::Status SkiaBmpContext::ReadHeader(
     int32_t* width,
     int32_t* height,
-    bool* tb_flag,
     int32_t* components,
     pdfium::span<const FX_ARGB>* palette,
-    CFX_DIBAttribute* pAttribute) {
+    CFX_DIBAttribute* attribute) {
   if (header_read_) {
     SkImageInfo info = decoder_->getInfo();
     *width = info.width();
     *height = info.height();
-    *tb_flag = top_down_;
     *components = components_;
     *palette = {};
     return ProgressiveDecoderContext::Status::kSuccess;
@@ -158,14 +156,13 @@ ProgressiveDecoderContext::Status SkiaBmpContext::ReadHeader(
   bi_compression_ = bi_compression;
   bi_clr_used_ = bi_clr_used;
 
-  *tb_flag = top_down_;
   components_ = (bpp == 32) ? 4 : 3;
   *components = components_;
   *palette = {};
-  if (pAttribute) {
-    pAttribute->dpi_unit_ = CFX_DIBAttribute::kResUnitMeter;
-    pAttribute->x_dpi_ = 0;
-    pAttribute->y_dpi_ = 0;
+  if (attribute) {
+    attribute->dpi_unit_ = CFX_DIBAttribute::kResUnitMeter;
+    attribute->x_dpi_ = 0;
+    attribute->y_dpi_ = 0;
   }
   header_read_ = true;
   return ProgressiveDecoderContext::Status::kSuccess;
@@ -223,11 +220,10 @@ ProgressiveDecoderContext::Status SkiaBmpContext::DecodeImage(
       }
       auto src_row = pdfium::span(decoded_image_buf_)
                          .subspan(src_row_start, src_row_bytes);
-      uint32_t dest_row = static_cast<uint32_t>(r);
       if (components_ == 4) {
-        delegate_->BmpReadScanline(dest_row, src_row);
+        delegate_->ResampleScanline(r, src_row);
       } else {
-        Forward3ComponentRow(dest_row, src_row, row_buffer, width);
+        Forward3ComponentRow(r, src_row, row_buffer, width);
       }
     }
     rows_forwarded_ = rows_decoded;
@@ -347,7 +343,7 @@ ProgressiveDecoderContext::Status SkiaBmpContext::StartIncrementalDecode() {
   return ProgressiveDecoderContext::Status::kSuccess;
 }
 
-void SkiaBmpContext::Forward3ComponentRow(uint32_t dest_row,
+void SkiaBmpContext::Forward3ComponentRow(int dest_row,
                                           pdfium::span<const uint8_t> src_row,
                                           pdfium::span<uint8_t> row_buffer,
                                           int width) {
@@ -357,7 +353,7 @@ void SkiaBmpContext::Forward3ComponentRow(uint32_t dest_row,
     row_buffer[x * 3 + 1] = src_row[x * 4 + 1];
     row_buffer[x * 3 + 2] = src_row[x * 4 + 2];
   }
-  delegate_->BmpReadScanline(dest_row, row_buffer);
+  delegate_->ResampleScanline(dest_row, row_buffer);
 }
 
 }  // namespace fxcodec
