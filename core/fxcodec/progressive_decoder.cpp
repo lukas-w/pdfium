@@ -474,7 +474,7 @@ FXCODEC_STATUS ProgressiveDecoder::BmpStartDecode() {
 }
 
 FXCODEC_STATUS ProgressiveDecoder::BmpContinueDecode() {
-  ProgressiveDecoderContext::Status read_res = context_->DecodeImage(0);
+  ProgressiveDecoderContext::Status read_res = context_->DecodeImage();
   while (read_res == ProgressiveDecoderContext::Status::kContinue) {
     FXCODEC_STATUS error_status = FXCODEC_STATUS::kDecodeFinished;
     if (!BmpReadMoreData(context_.get(), &error_status)) {
@@ -483,7 +483,7 @@ FXCODEC_STATUS ProgressiveDecoder::BmpContinueDecode() {
       status_ = error_status;
       return status_;
     }
-    read_res = context_->DecodeImage(0);
+    read_res = context_->DecodeImage();
   }
 
   device_bitmap_ = nullptr;
@@ -547,13 +547,12 @@ FXCODEC_STATUS ProgressiveDecoder::GifStartDecode() {
   options.bInterpolateBilinear = true;
   weight_horz_.CalculateWeights(src_width_, 0, src_width_, src_width_, 0,
                                 src_width_, options);
-  frame_cur_ = 0;
   status_ = FXCODEC_STATUS::kDecodeToBeContinued;
   return status_;
 }
 
 FXCODEC_STATUS ProgressiveDecoder::GifContinueDecode() {
-  ProgressiveDecoderContext::Status readRes = context_->DecodeImage(frame_cur_);
+  ProgressiveDecoderContext::Status readRes = context_->DecodeImage();
   while (readRes == ProgressiveDecoderContext::Status::kContinue) {
     FXCODEC_STATUS error_status = FXCODEC_STATUS::kDecodeFinished;
     if (!GifReadMoreData(&error_status)) {
@@ -562,7 +561,7 @@ FXCODEC_STATUS ProgressiveDecoder::GifContinueDecode() {
       status_ = error_status;
       return status_;
     }
-    readRes = context_->DecodeImage(frame_cur_);
+    readRes = context_->DecodeImage();
   }
 
   if (readRes == ProgressiveDecoderContext::Status::kSuccess) {
@@ -1279,7 +1278,6 @@ FXCODEC_STATUS ProgressiveDecoder::StartDecode(RetainPtr<CFX_DIBitmap> bitmap) {
     return FXCODEC_STATUS::kError;
   }
 
-  frame_cur_ = 0;
   device_bitmap_ = std::move(bitmap);
   switch (image_type_) {
 #ifdef PDF_ENABLE_XFA_BMP

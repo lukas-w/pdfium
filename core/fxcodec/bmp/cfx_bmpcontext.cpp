@@ -28,8 +28,7 @@ void CFX_BmpContext::Input(RetainPtr<CFX_CodecMemory> codec_memory) {
   bmp_.SetInputBuffer(std::move(codec_memory));
 }
 
-ProgressiveDecoderContext::Status CFX_BmpContext::DecodeImage(
-    size_t frame_index) {
+ProgressiveDecoderContext::Status CFX_BmpContext::DecodeImage() {
   return bmp_.DecodeImage();
 }
 

@@ -32,9 +32,7 @@ class ProgressiveDecoderContext {
   virtual FX_FILESIZE GetAvailInput() const;
   virtual void Input(RetainPtr<CFX_CodecMemory> codec_memory);
 
-  // Decoders that do not handle multiple frames will ignore the
-  // `frame_index` argument. Callers should pass 0 in such cases.
-  virtual Status DecodeImage(size_t frame_index);
+  virtual Status DecodeImage();
 };
 
 }  // namespace fxcodec

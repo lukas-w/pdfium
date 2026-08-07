@@ -202,7 +202,6 @@ class ProgressiveDecoder final :
   int src_row_ = 0;
   Format src_format_ = Format::kInvalid;
   size_t frame_number_ = 0;
-  size_t frame_cur_ = 0;
 #ifdef PDF_ENABLE_XFA_GIF
   int gif_bg_index_ = 0;
   pdfium::span<CFX_GifPalette> gif_palette_;

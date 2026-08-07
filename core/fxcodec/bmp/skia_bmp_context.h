@@ -34,7 +34,7 @@ class SkiaBmpContext final : public ProgressiveDecoderContext {
   // ProgressiveDecoderContext:
   FX_FILESIZE GetAvailInput() const override;
   void Input(RetainPtr<CFX_CodecMemory> codec_memory) override;
-  ProgressiveDecoderContext::Status DecodeImage(size_t frame_index) override;
+  ProgressiveDecoderContext::Status DecodeImage() override;
 
   ProgressiveDecoderContext::Status ReadHeader(
       int32_t* width,

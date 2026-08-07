@@ -168,8 +168,7 @@ ProgressiveDecoderContext::Status SkiaBmpContext::ReadHeader(
   return ProgressiveDecoderContext::Status::kSuccess;
 }
 
-ProgressiveDecoderContext::Status SkiaBmpContext::DecodeImage(
-    size_t frame_index) {
+ProgressiveDecoderContext::Status SkiaBmpContext::DecodeImage() {
   if (!header_read_ || !decoder_) {
     return ProgressiveDecoderContext::Status::kError;
   }
