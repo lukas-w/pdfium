@@ -16,10 +16,16 @@
 #include <utility>
 
 #include "core/fxcodec/cfx_codec_memory.h"
+#include "core/fxcodec/progressive_decoder_context_delegate.h"
 #include "core/fxcrt/byteorder.h"
 #include "core/fxcrt/compiler_specific.h"
 #include "core/fxcrt/data_vector.h"
+#include "core/fxcrt/fx_safe_types.h"
+#include "core/fxcrt/stl_util.h"
 #include "core/fxcrt/to_underlying.h"
+#include "core/fxcrt/zip.h"
+#include "core/fxge/dib/cfx_dibitmap.h"
+#include "core/fxge/dib/fx_dib.h"
 
 namespace fxcodec {
 
@@ -42,41 +48,112 @@ std::optional<GifSignature> GifSignatureFromByte(uint8_t signature) {
 
 }  // namespace
 
-CFX_GifContext::CFX_GifContext(Delegate* delegate) : delegate_(delegate) {}
+CFX_GifContext::CFX_GifContext(ProgressiveDecoderContextDelegate* delegate)
+    : delegate_(delegate) {}
 
 CFX_GifContext::~CFX_GifContext() = default;
 
-ProgressiveDecoderContext::Status CFX_GifContext::ReadHeader(
-    int* width,
-    int* height,
-    pdfium::span<CFX_GifPalette>* pal_pp,
-    int* bg_index) {
+ProgressiveDecoderContext::Status CFX_GifContext::ReadHeader(int* width,
+                                                             int* height) {
   ProgressiveDecoderContext::Status ret = ReadHeader();
   if (ret != ProgressiveDecoderContext::Status::kSuccess) {
     return ret;
   }
   *width = width_;
   *height = height_;
-  *pal_pp = global_palette_;
-  *bg_index = bc_index_;
   return ProgressiveDecoderContext::Status::kSuccess;
 }
 
 void CFX_GifContext::ReadScanline(int32_t row_num,
                                   pdfium::span<uint8_t> row_buf) {
-  delegate_->GifReadScanline(row_num, row_buf);
+  int32_t line = row_num + img_top_;
+  if (line < 0 || line >= height_) {
+    return;
+  }
+  const size_t img_width = static_cast<size_t>(img_width_);
+  const pdfium::span<uint8_t> row_span = row_buf.first(img_width);
+  if (!bitmap_->IsAlphaFormat()) {
+    for (auto& byte_ref : row_span) {
+      if (byte_ref == trans_index_) {
+        byte_ref = bc_index_;
+      }
+    }
+  }
+  int32_t pal_index = bc_index_;
+  if (trans_index_ != -1 && bitmap_->IsAlphaFormat()) {
+    pal_index = trans_index_;
+  }
+  std::ranges::fill(scanline_buf_, pal_index);
+  fxcrt::Copy(
+      row_span,
+      pdfium::span(scanline_buf_).subspan(static_cast<size_t>(img_left_)));
+  delegate_->ResampleScanline(line, scanline_buf_);
 }
 
 bool CFX_GifContext::GetRecordPosition(uint32_t cur_pos,
-                                       int32_t left,
-                                       int32_t top,
-                                       int32_t width,
-                                       int32_t height,
+                                       int32_t sub_left,
+                                       int32_t sub_top,
+                                       int32_t sub_width,
                                        pdfium::span<CFX_GifPalette> pal,
                                        int32_t trans_index) {
-  return delegate_->GifInputRecordPositionBuf(
-      cur_pos, FX_RECT(left, top, left + width, top + height), pal,
-      trans_index);
+  img_left_ = sub_left;
+  img_top_ = sub_top;
+  img_width_ = sub_width;
+  trans_index_ = trans_index;
+  FX_SAFE_INT32 safe_size = width_;
+  int aligned_width = FxAlignToBoundary<4>(safe_size).ValueOrDie();
+  scanline_buf_.resize(aligned_width);
+  if (pal.empty()) {
+    pal = global_palette_;
+  }
+  if (pal.empty()) {
+    return false;
+  }
+  std::vector<FX_ARGB> argb_pal(pal.size());
+  for (auto [in, out] : fxcrt::Zip(pal, argb_pal)) {
+    out = ArgbEncode(0xff, in.r, in.g, in.b);
+  }
+  int32_t pal_index = bc_index_;
+  if (trans_index_ >= static_cast<int>(argb_pal.size())) {
+    trans_index_ = -1;
+  }
+  if (trans_index_ != -1) {
+    argb_pal[trans_index_] &= 0x00ffffff;
+    if (bitmap_ && bitmap_->IsAlphaFormat()) {
+      pal_index = trans_index_;
+    }
+  }
+  if (pal_index >= static_cast<int>(argb_pal.size())) {
+    return false;
+  }
+  if (!delegate_->PrepareScanlineResampling(
+          width_, height_, ProgressiveDecoderContextDelegate::Format::k8bppRgb,
+          argb_pal, argb_pal[pal_index])) {
+    return false;
+  }
+  FXCODEC_STATUS dummy_status = FXCODEC_STATUS::kError;
+  return delegate_->ReadMoreData(cur_pos, &dummy_status);
+}
+
+FXCODEC_STATUS CFX_GifContext::StartDecode(RetainPtr<CFX_DIBitmap> bitmap) {
+  bitmap_ = std::move(bitmap);
+  return FXCODEC_STATUS::kDecodeToBeContinued;
+}
+
+FXCODEC_STATUS CFX_GifContext::ContinueDecode() {
+  ProgressiveDecoderContext::Status read_res = DecodeImage();
+  while (read_res == ProgressiveDecoderContext::Status::kContinue) {
+    FXCODEC_STATUS error_status = FXCODEC_STATUS::kDecodeFinished;
+    if (!delegate_->ReadMoreData(std::nullopt, &error_status)) {
+      bitmap_ = nullptr;
+      return error_status;
+    }
+    read_res = DecodeImage();
+  }
+  bitmap_ = nullptr;
+  return read_res == ProgressiveDecoderContext::Status::kSuccess
+             ? FXCODEC_STATUS::kDecodeFinished
+             : FXCODEC_STATUS::kError;
 }
 
 ProgressiveDecoderContext::Status CFX_GifContext::ReadHeader() {
@@ -212,10 +289,10 @@ ProgressiveDecoderContext::Status CFX_GifContext::DecodeImage() {
     CFX_GifGraphicControlExtension* gif_img_gce = gif_image->image_GCE.get();
     pdfium::span<CFX_GifPalette> pLocalPalette = gif_image->local_palettes;
     if (!gif_img_gce) {
-      bool bRes = GetRecordPosition(
-          gif_image->data_pos, gif_image->image_info.left,
-          gif_image->image_info.top, gif_image->image_info.width,
-          gif_image->image_info.height, pLocalPalette, -1);
+      bool bRes =
+          GetRecordPosition(gif_image->data_pos, gif_image->image_info.left,
+                            gif_image->image_info.top,
+                            gif_image->image_info.width, pLocalPalette, -1);
       if (!bRes) {
         gif_image->row_buffer.clear();
         return ProgressiveDecoderContext::Status::kError;
@@ -223,8 +300,7 @@ ProgressiveDecoderContext::Status CFX_GifContext::DecodeImage() {
     } else {
       bool bRes = GetRecordPosition(
           gif_image->data_pos, gif_image->image_info.left,
-          gif_image->image_info.top, gif_image->image_info.width,
-          gif_image->image_info.height, pLocalPalette,
+          gif_image->image_info.top, gif_image->image_info.width, pLocalPalette,
           gif_image->image_GCE->gce_flags.transparency
               ? static_cast<int32_t>(gif_image->image_GCE->trans_index)
               : -1);
@@ -522,7 +598,7 @@ ProgressiveDecoderContext::Status CFX_GifContext::DecodeImageInfo() {
   }
 
   gif_image->code_exp = code_size;
-  gif_image->data_pos = delegate_->GifCurrentPosition();
+  gif_image->data_pos = delegate_->GetCurrentInputPosition();
   gif_image->image_GCE = nullptr;
   if (graphic_control_extension_.get()) {
     if (graphic_control_extension_->gce_flags.transparency) {

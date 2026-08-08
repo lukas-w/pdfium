@@ -23,14 +23,11 @@
 #include "core/fxge/dib/cstretchengine.h"
 #include "core/fxge/dib/fx_dib.h"
 
-#ifdef PDF_ENABLE_XFA_GIF
-#include "core/fxcodec/gif/cfx_gifcontext.h"
-#endif  // PDF_ENABLE_XFA_GIF
-
 #ifdef PDF_ENABLE_XFA_PNG
 #include "core/fxcodec/png/png_decoder_delegate.h"
 #endif  // PDF_ENABLE_XFA_PNG
 
+class CFX_CodecMemory;
 class CFX_DIBitmap;
 class IFX_SeekableReadStream;
 
@@ -40,9 +37,6 @@ class CFX_DIBAttribute;
 class ProgressiveDecoderContext;
 
 class ProgressiveDecoder final :
-#ifdef PDF_ENABLE_XFA_GIF
-    public CFX_GifContext::Delegate,
-#endif  // PDF_ENABLE_XFA_GIF
 #ifdef PDF_ENABLE_XFA_PNG
     public PngDecoderDelegate,
 #endif  // PDF_ENABLE_XFA_PNG
@@ -75,16 +69,6 @@ class ProgressiveDecoder final :
   pdfium::span<uint8_t> PngAskImageBuf() override;
   void PngFinishedDecoding() override;
 #endif  // PDF_ENABLE_XFA_PNG
-
-#ifdef PDF_ENABLE_XFA_GIF
-  // CFX_GifContext::Delegate
-  uint32_t GifCurrentPosition() const override;
-  bool GifInputRecordPositionBuf(uint32_t rcd_pos,
-                                 const FX_RECT& img_rc,
-                                 pdfium::span<CFX_GifPalette> pal_span,
-                                 int32_t trans_index) override;
-  void GifReadScanline(int32_t row_num, pdfium::span<uint8_t> row_buf) override;
-#endif  // PDF_ENABLE_XFA_GIF
 
   // ProgressiveDecoderContextDelegate:
   bool ReadMoreData(std::optional<uint32_t> rcd_pos,
@@ -202,12 +186,6 @@ class ProgressiveDecoder final :
   int src_row_ = 0;
   Format src_format_ = Format::kInvalid;
   size_t frame_number_ = 0;
-#ifdef PDF_ENABLE_XFA_GIF
-  int gif_bg_index_ = 0;
-  pdfium::span<CFX_GifPalette> gif_palette_;
-  int gif_trans_index_ = -1;
-  FX_RECT gif_frame_rect_;
-#endif  // PDF_ENABLE_XFA_GIF
 };
 
 }  // namespace fxcodec

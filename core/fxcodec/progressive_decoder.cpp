@@ -66,10 +66,6 @@ namespace {
 
 constexpr size_t kBlockSize = 4096;
 
-#ifdef PDF_ENABLE_XFA_PNG
-constexpr double kPngGamma = 2.2;
-#endif  // PDF_ENABLE_XFA_PNG
-
 std::unique_ptr<ProgressiveDecoderContext> CreateDecoderContext(
     FXCODEC_IMAGE_TYPE type,
     ProgressiveDecoder* delegate) {
@@ -111,6 +107,14 @@ std::unique_ptr<ProgressiveDecoderContext> CreateDecoderContext(
       return nullptr;
   }
 }
+
+#ifdef PDF_ENABLE_XFA_PNG
+#if BUILDFLAG(IS_APPLE)
+const double kPngGamma = 1.7;
+#else
+const double kPngGamma = 2.2;
+#endif  // BUILDFLAG(IS_APPLE)
+#endif  // PDF_ENABLE_XFA_PNG
 
 void RGB2BGR(uint8_t* buffer, int width = 1) {
   if (buffer && width > 0) {
@@ -174,123 +178,11 @@ void ProgressiveDecoder::PngFinishedDecoding() {
 }
 #endif  // PDF_ENABLE_XFA_PNG
 
-#ifdef PDF_ENABLE_XFA_GIF
-uint32_t ProgressiveDecoder::GifCurrentPosition() const {
-  uint32_t remain_size =
-      pdfium::checked_cast<uint32_t>(context_->GetAvailInput());
-  return offset_ - remain_size;
-}
-
-bool ProgressiveDecoder::GifInputRecordPositionBuf(
-    uint32_t rcd_pos,
-    const FX_RECT& img_rc,
-    pdfium::span<CFX_GifPalette> pal_span,
-    int32_t trans_index) {
-  offset_ = rcd_pos;
-
-  FXCODEC_STATUS error_status = FXCODEC_STATUS::kError;
-  codec_memory_->Seek(codec_memory_->GetSize());
-  if (!GifReadMoreData(&error_status)) {
-    return false;
-  }
-
-  if (pal_span.empty()) {
-    pal_span = gif_palette_;
-  }
-  if (pal_span.empty()) {
-    return false;
-  }
-  src_palette_.resize(pal_span.size());
-  for (size_t i = 0; i < pal_span.size(); i++) {
-    src_palette_[i] =
-        ArgbEncode(0xff, pal_span[i].r, pal_span[i].g, pal_span[i].b);
-  }
-  gif_trans_index_ = trans_index;
-  gif_frame_rect_ = img_rc;
-  int32_t pal_index = gif_bg_index_;
-  RetainPtr<CFX_DIBitmap> pDevice = device_bitmap_;
-  if (trans_index >= static_cast<int>(pal_span.size())) {
-    trans_index = -1;
-  }
-  if (trans_index != -1) {
-    src_palette_[trans_index] &= 0x00ffffff;
-    if (pDevice->IsAlphaFormat()) {
-      pal_index = trans_index;
-    }
-  }
-  if (pal_index >= static_cast<int>(pal_span.size())) {
-    return false;
-  }
-  int startX = 0;
-  int startY = 0;
-  int sizeX = src_width_;
-  int sizeY = src_height_;
-  const int bytes_per_pixel = pDevice->GetBPP() / 8;
-  FX_ARGB argb = src_palette_[pal_index];
-  for (int row = 0; row < sizeY; row++) {
-    pdfium::span<uint8_t> scan_span =
-        pDevice->GetWritableScanline(row + startY)
-            .subspan(static_cast<size_t>(startX * bytes_per_pixel));
-    switch (trans_method_) {
-      case TransformMethod::k8BppRgbToRgbNoAlpha: {
-        uint8_t* pScanline = scan_span.data();
-        UNSAFE_TODO({
-          for (int col = 0; col < sizeX; col++) {
-            *pScanline++ = FXARGB_B(argb);
-            *pScanline++ = FXARGB_G(argb);
-            *pScanline++ = FXARGB_R(argb);
-            pScanline += bytes_per_pixel - 3;
-          }
-        });
-        break;
-      }
-      case TransformMethod::k8BppRgbToArgb: {
-        for (int col = 0; col < sizeX; col++) {
-          FXARGB_SetDIB(scan_span.first<4u>(), argb);
-          scan_span = scan_span.subspan<4u>();
-        }
-        break;
-      }
-      default:
-        break;
-    }
-  }
-  return true;
-}
-
-void ProgressiveDecoder::GifReadScanline(int32_t row_num,
-                                         pdfium::span<uint8_t> row_buf) {
-  RetainPtr<CFX_DIBitmap> pDIBitmap = device_bitmap_;
-  const size_t img_width = static_cast<size_t>(gif_frame_rect_.Width());
-  const pdfium::span<uint8_t> row_span = row_buf.first(img_width);
-  if (!pDIBitmap->IsAlphaFormat()) {
-    for (auto& byte_ref : row_span) {
-      if (byte_ref == gif_trans_index_) {
-        byte_ref = gif_bg_index_;
-      }
-    }
-  }
-  int32_t pal_index = gif_bg_index_;
-  if (gif_trans_index_ != -1 && device_bitmap_->IsAlphaFormat()) {
-    pal_index = gif_trans_index_;
-  }
-  const int32_t left = gif_frame_rect_.left;
-  const pdfium::span<uint8_t> decode_span = decode_buf_;
-  std::ranges::fill(decode_span.first(static_cast<size_t>(src_width_)),
-                    pal_index);
-  fxcrt::Copy(row_span, decode_span.subspan(static_cast<size_t>(left)));
-  int32_t line = row_num + gif_frame_rect_.top;
-  if (line < 0 || line >= src_height_) {
-    return;
-  }
-  ResampleScanline(pDIBitmap, line, decode_span, src_format_);
-}
-#endif  // PDF_ENABLE_XFA_GIF
-
 bool ProgressiveDecoder::ReadMoreData(std::optional<uint32_t> rcd_pos,
                                       FXCODEC_STATUS* err_status) {
   if (rcd_pos.has_value()) {
     offset_ = rcd_pos.value();
+    codec_memory_->Seek(codec_memory_->GetSize());
   }
   size_t unconsumed_bytes = codec_memory_->GetUnconsumedSpan().size();
   if (!ReadMoreDataInternal(unconsumed_bytes, err_status)) {
@@ -303,7 +195,9 @@ bool ProgressiveDecoder::ReadMoreData(std::optional<uint32_t> rcd_pos,
 }
 
 uint32_t ProgressiveDecoder::GetCurrentInputPosition() const {
-  return offset_;
+  uint32_t remain_size =
+      context_ ? pdfium::checked_cast<uint32_t>(context_->GetAvailInput()) : 0;
+  return offset_ - remain_size;
 }
 
 bool ProgressiveDecoder::PrepareScanlineResampling(
@@ -333,6 +227,7 @@ bool ProgressiveDecoder::PrepareScanlineResampling(
 
   if (!palette.empty()) {
     device_bitmap_->SetPalette(palette);
+    src_palette_ = DataVector<FX_ARGB>(palette.begin(), palette.end());
   }
   if (fill_argb.has_value()) {
     device_bitmap_->Clear(fill_argb.value());
@@ -519,7 +414,7 @@ bool ProgressiveDecoder::GifDetectImageTypeInBuffer() {
   src_components_count_ = 1;
   auto* ctx = static_cast<CFX_GifContext*>(context_.get());
   ProgressiveDecoderContext::Status readResult =
-      ctx->ReadHeader(&src_width_, &src_height_, &gif_palette_, &gif_bg_index_);
+      ctx->ReadHeader(&src_width_, &src_height_);
   while (readResult == ProgressiveDecoderContext::Status::kContinue) {
     FXCODEC_STATUS error_status = FXCODEC_STATUS::kError;
     if (!GifReadMoreData(&error_status)) {
@@ -527,8 +422,7 @@ bool ProgressiveDecoder::GifDetectImageTypeInBuffer() {
       status_ = error_status;
       return false;
     }
-    readResult = ctx->ReadHeader(&src_width_, &src_height_, &gif_palette_,
-                                 &gif_bg_index_);
+    readResult = ctx->ReadHeader(&src_width_, &src_height_);
   }
   if (readResult == ProgressiveDecoderContext::Status::kSuccess) {
     src_bits_per_component_ = 8;
@@ -547,33 +441,16 @@ FXCODEC_STATUS ProgressiveDecoder::GifStartDecode() {
   options.bInterpolateBilinear = true;
   weight_horz_.CalculateWeights(src_width_, 0, src_width_, src_width_, 0,
                                 src_width_, options);
-  status_ = FXCODEC_STATUS::kDecodeToBeContinued;
+  auto* ctx = static_cast<CFX_GifContext*>(context_.get());
+  status_ = ctx->StartDecode(device_bitmap_);
   return status_;
 }
 
 FXCODEC_STATUS ProgressiveDecoder::GifContinueDecode() {
-  ProgressiveDecoderContext::Status readRes = context_->DecodeImage();
-  while (readRes == ProgressiveDecoderContext::Status::kContinue) {
-    FXCODEC_STATUS error_status = FXCODEC_STATUS::kDecodeFinished;
-    if (!GifReadMoreData(&error_status)) {
-      device_bitmap_ = nullptr;
-      file_ = nullptr;
-      status_ = error_status;
-      return status_;
-    }
-    readRes = context_->DecodeImage();
-  }
-
-  if (readRes == ProgressiveDecoderContext::Status::kSuccess) {
-    device_bitmap_ = nullptr;
-    file_ = nullptr;
-    status_ = FXCODEC_STATUS::kDecodeFinished;
-    return status_;
-  }
-
+  auto* ctx = static_cast<CFX_GifContext*>(context_.get());
+  status_ = ctx->ContinueDecode();  // Success or error, never continue.
   device_bitmap_ = nullptr;
   file_ = nullptr;
-  status_ = FXCODEC_STATUS::kError;
   return status_;
 }
 #endif  // PDF_ENABLE_XFA_GIF
