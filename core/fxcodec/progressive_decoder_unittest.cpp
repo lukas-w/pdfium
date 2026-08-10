@@ -52,7 +52,6 @@ using ProgressiveDecoderTest = testing::Test;
 
 }  // namespace
 
-#ifdef PDF_ENABLE_XFA_BMP
 TEST_F(ProgressiveDecoderTest, Indexed8Bmp) {
   static constexpr uint8_t kInput[] = {
       0x42, 0x4d, 0x3e, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x3a,
@@ -311,9 +310,7 @@ TEST_F(ProgressiveDecoderTest, LargeBmp) {
     EXPECT_EQ(0, scanline[kScanlineSize - 1]);
   }
 }
-#endif  // PDF_ENABLE_XFA_BMP
 
-#ifdef PDF_ENABLE_XFA_GIF
 TEST_F(ProgressiveDecoderTest, Gif87a) {
   static constexpr uint8_t kInput[] = {
       0x47, 0x49, 0x46, 0x38, 0x37, 0x61, 0x01, 0x00, 0x01, 0x00, 0x80, 0x01,
@@ -492,9 +489,7 @@ TEST_F(ProgressiveDecoderTest, GifDecodeAcrossSubblocks) {
               ElementsAre(0xc0, 0x80, 0x40, 0xff, 0xc0, 0x80, 0x40, 0xff, 0xc0,
                           0x80, 0x40, 0xff, 0xc0, 0x80, 0x40, 0xff));
 }
-#endif  // PDF_ENABLE_XFA_GIF
 
-#ifdef PDF_ENABLE_XFA_PNG
 // `kGreenPng` has been taken from Chromium's
 // `//third_party/blink/renderer/platform/testing/data/green.png`.
 constexpr std::array<const uint8_t, 87> kGreenPng = {
@@ -628,6 +623,5 @@ TEST_F(ProgressiveDecoderTest, BigPng) {
   EXPECT_THAT(bitmap->GetScanline(0).first(4u),
               ElementsAre(0x00, 0xFF, 0x00, 0xFF));
 }
-#endif
 
 }  // namespace fxcodec

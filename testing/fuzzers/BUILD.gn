@@ -42,27 +42,17 @@ if (pdf_enable_v8) {
       "pdf_cfx_barcode_fuzzer",
       "pdf_codec_jpeg_fuzzer",
       "pdf_css_fuzzer",
+      "pdf_codec_bmp_fuzzer",
+      "pdf_codec_gif_fuzzer",
+      "pdf_codec_png_fuzzer",
+      "pdf_codec_tiff_fuzzer",
       "pdf_formcalc_context_fuzzer",
       "pdf_formcalc_fuzzer",
       "pdf_formcalc_translate_fuzzer",
+      "pdf_lzw_fuzzer",
       "pdfium_xfa_fuzzer",
       "pdfium_xfa_lpm_fuzzer",
     ]
-    if (pdf_enable_xfa_bmp) {
-      fuzzer_list += [ "pdf_codec_bmp_fuzzer" ]
-    }
-    if (pdf_enable_xfa_gif) {
-      fuzzer_list += [
-        "pdf_codec_gif_fuzzer",
-        "pdf_lzw_fuzzer",
-      ]
-    }
-    if (pdf_enable_xfa_png) {
-      fuzzer_list += [ "pdf_codec_png_fuzzer" ]
-    }
-    if (pdf_enable_xfa_tiff) {
-      fuzzer_list += [ "pdf_codec_tiff_fuzzer" ]
-    }
   }
 }
 if (is_clang) {
@@ -309,37 +299,33 @@ if (pdf_enable_v8) {
       ]
     }
 
-    if (pdf_enable_xfa_bmp) {
-      pdfium_fuzzer("pdf_codec_bmp_fuzzer") {
-        sources = [
-          "pdf_codec_bmp_fuzzer.cc",
-          "xfa_codec_fuzzer.h",
-        ]
-        deps = [
-          "../../core/fxcodec",
-          "../../core/fxcrt",
-          "../../core/fxge",
-        ]
-      }
+    pdfium_fuzzer("pdf_codec_bmp_fuzzer") {
+      sources = [
+        "pdf_codec_bmp_fuzzer.cc",
+        "xfa_codec_fuzzer.h",
+      ]
+      deps = [
+        "../../core/fxcodec",
+        "../../core/fxcrt",
+        "../../core/fxge",
+      ]
     }
 
-    if (pdf_enable_xfa_gif) {
-      pdfium_fuzzer("pdf_codec_gif_fuzzer") {
-        sources = [
-          "pdf_codec_gif_fuzzer.cc",
-          "xfa_codec_fuzzer.h",
-        ]
-        deps = [
-          "../../core/fxcodec",
-          "../../core/fxcrt",
-          "../../core/fxge",
-        ]
-      }
+    pdfium_fuzzer("pdf_codec_gif_fuzzer") {
+      sources = [
+        "pdf_codec_gif_fuzzer.cc",
+        "xfa_codec_fuzzer.h",
+      ]
+      deps = [
+        "../../core/fxcodec",
+        "../../core/fxcrt",
+        "../../core/fxge",
+      ]
+    }
 
-      pdfium_fuzzer("pdf_lzw_fuzzer") {
-        sources = [ "pdf_lzw_fuzzer.cc" ]
-        deps = [ "../../core/fxcodec" ]
-      }
+    pdfium_fuzzer("pdf_lzw_fuzzer") {
+      sources = [ "pdf_lzw_fuzzer.cc" ]
+      deps = [ "../../core/fxcodec" ]
     }
 
     pdfium_fuzzer("pdf_codec_jpeg_fuzzer") {
@@ -354,32 +340,28 @@ if (pdf_enable_v8) {
       ]
     }
 
-    if (pdf_enable_xfa_png) {
-      pdfium_fuzzer("pdf_codec_png_fuzzer") {
-        sources = [
-          "pdf_codec_png_fuzzer.cc",
-          "xfa_codec_fuzzer.h",
-        ]
-        deps = [
-          "../../core/fxcodec",
-          "../../core/fxcrt",
-          "../../core/fxge",
-        ]
-      }
+    pdfium_fuzzer("pdf_codec_png_fuzzer") {
+      sources = [
+        "pdf_codec_png_fuzzer.cc",
+        "xfa_codec_fuzzer.h",
+      ]
+      deps = [
+        "../../core/fxcodec",
+        "../../core/fxcrt",
+        "../../core/fxge",
+      ]
     }
 
-    if (pdf_enable_xfa_tiff) {
-      pdfium_fuzzer("pdf_codec_tiff_fuzzer") {
-        sources = [
-          "pdf_codec_tiff_fuzzer.cc",
-          "xfa_codec_fuzzer.h",
-        ]
-        deps = [
-          "../../core/fxcodec",
-          "../../core/fxcrt",
-          "../../core/fxge",
-        ]
-      }
+    pdfium_fuzzer("pdf_codec_tiff_fuzzer") {
+      sources = [
+        "pdf_codec_tiff_fuzzer.cc",
+        "xfa_codec_fuzzer.h",
+      ]
+      deps = [
+        "../../core/fxcodec",
+        "../../core/fxcrt",
+        "../../core/fxge",
+      ]
     }
 
     pdfium_fuzzer("pdf_css_fuzzer") {

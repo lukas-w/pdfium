@@ -21,6 +21,10 @@
 #include "core/fxge/dib/cstretchengine.h"
 #include "core/fxge/dib/fx_dib.h"
 
+#ifndef PDF_ENABLE_XFA
+#error "XFA only"
+#endif
+
 class CFX_CodecMemory;
 class CFX_DIBitmap;
 class IFX_SeekableReadStream;
@@ -82,32 +86,23 @@ class ProgressiveDecoder final : public ProgressiveDecoderContextDelegate {
     kArgbToArgb,
   };
 
-#ifdef PDF_ENABLE_XFA_BMP
   bool BmpReadMoreData(ProgressiveDecoderContext* bmp_context,
                        FXCODEC_STATUS* err_status);
   bool BmpDetectImageTypeInBuffer(CFX_DIBAttribute* pAttribute);
   FXCODEC_STATUS BmpStartDecode();
   FXCODEC_STATUS BmpContinueDecode();
-#endif  // PDF_ENABLE_XFA_BMP
 
-#ifdef PDF_ENABLE_XFA_GIF
   bool GifReadMoreData(FXCODEC_STATUS* err_status);
   bool GifDetectImageTypeInBuffer();
   FXCODEC_STATUS GifStartDecode();
   FXCODEC_STATUS GifContinueDecode();
-#endif  // PDF_ENABLE_XFA_GIF
 
-#ifdef PDF_ENABLE_XFA_PNG
-  bool PngReadMoreData();
   bool PngDetectImageTypeInBuffer();
   FXCODEC_STATUS PngStartDecode();
   FXCODEC_STATUS PngContinueDecode();
-#endif  // PDF_ENABLE_XFA_PNG
 
-#ifdef PDF_ENABLE_XFA_TIFF
   bool TiffDetectImageTypeFromFile(CFX_DIBAttribute* pAttribute);
   FXCODEC_STATUS TiffContinueDecode();
-#endif  // PDF_ENABLE_XFA_TIFF
 
   bool JpegReadMoreData(FXCODEC_STATUS* err_status);
   bool JpegDetectImageTypeInBuffer(CFX_DIBAttribute* pAttribute);

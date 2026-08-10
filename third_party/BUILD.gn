@@ -221,7 +221,8 @@ if (pdf_use_agg) {
       "//build/config/compiler:no_chromium_code",
       ":pdfium_third_party_config",
 
-      # Must be after no_chromium_code for warning flags to be ordered correctly.
+      # Must be after no_chromium_code for warning flags to be ordered
+      # correctly.
       ":fx_agg_warnings",
     ]
     sources = [
@@ -331,8 +332,8 @@ if (!build_with_chromium) {
   }
 
   # This is a meta target that forwards to the system's libjpeg,
-  # third_party/libjpeg, or third_party/libjpeg_turbo depending on the build args
-  # declared in this file.
+  # third_party/libjpeg, or third_party/libjpeg_turbo depending on the build
+  # args declared in this file.
   group("jpeg") {
     if (use_system_libjpeg) {
       public_configs = [ ":system_libjpeg_config" ]
@@ -452,7 +453,7 @@ if (!pdf_enable_rust_png) {
   }
 }
 
-if (pdf_enable_xfa_tiff) {
+if (pdf_enable_xfa) {
   if (use_system_libtiff) {
     config("system_tiff_config") {
       libs = [ "tiff" ]

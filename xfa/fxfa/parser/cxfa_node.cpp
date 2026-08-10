@@ -450,31 +450,18 @@ FXCODEC_IMAGE_TYPE XFA_GetImageType(const WideString& wsType) {
   if (wsContentType.EqualsASCIINoCase("image/jpg")) {
     return FXCODEC_IMAGE_JPG;
   }
-
-#ifdef PDF_ENABLE_XFA_BMP
   if (wsContentType.EqualsASCIINoCase("image/bmp")) {
     return FXCODEC_IMAGE_BMP;
   }
-#endif  // PDF_ENABLE_XFA_BMP
-
-#ifdef PDF_ENABLE_XFA_GIF
   if (wsContentType.EqualsASCIINoCase("image/gif")) {
     return FXCODEC_IMAGE_GIF;
   }
-#endif  // PDF_ENABLE_XFA_GIF
-
-#ifdef PDF_ENABLE_XFA_PNG
   if (wsContentType.EqualsASCIINoCase("image/png")) {
     return FXCODEC_IMAGE_PNG;
   }
-#endif  // PDF_ENABLE_XFA_PNG
-
-#ifdef PDF_ENABLE_XFA_TIFF
   if (wsContentType.EqualsASCII("image/tif")) {
     return FXCODEC_IMAGE_TIFF;
   }
-#endif  // PDF_ENABLE_XFA_TIFF
-
   return FXCODEC_IMAGE_UNKNOWN;
 }
 

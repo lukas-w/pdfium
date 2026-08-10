@@ -14,8 +14,8 @@
 #include "core/fxcodec/progressive_decoder_context.h"
 #include "core/fxcrt/retain_ptr.h"
 
-#ifndef PDF_ENABLE_XFA_TIFF
-#error "TIFF must be enabled"
+#ifndef PDF_ENABLE_XFA
+#error "XFA must be enabled"
 #endif
 
 struct tiff;

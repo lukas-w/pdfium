@@ -28,18 +28,6 @@ declare_args() {
   # Build PDFium either with or without XFA Forms support.
   pdf_enable_xfa = pdf_enable_xfa_override
 
-  # If XFA, also support bmp codec. Ignored if not XFA.
-  pdf_enable_xfa_bmp = true
-
-  # If XFA, also support gif codec. Ignored if not XFA.
-  pdf_enable_xfa_gif = true
-
-  # If XFA, also support png codec. Ignored if not XFA.
-  pdf_enable_xfa_png = true
-
-  # If XFA, also support tiff codec. Ignored if not XFA.
-  pdf_enable_xfa_tiff = true
-
   # Build PDFium against PartitionAlloc. When false, PDFium must build without
   # requiring any PartitionAlloc headers or code to be present. When true,
   # PDFium will use PartitionAlloc partitions to separate strings, scalars,

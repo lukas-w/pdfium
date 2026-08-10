@@ -12,8 +12,10 @@
 
 #include "build/build_config.h"
 #include "core/fxcodec/cfx_codec_memory.h"
+#include "core/fxcodec/gif/cfx_gifcontext.h"
 #include "core/fxcodec/jpeg/libjpeg_jpeg_context.h"
 #include "core/fxcodec/progressive_decoder_context.h"
+#include "core/fxcodec/tiff/libtiff_tiff_context.h"
 #include "core/fxcrt/check.h"
 #include "core/fxcrt/check_op.h"
 #include "core/fxcrt/compiler_specific.h"
@@ -31,19 +33,15 @@
 #include "core/fxge/dib/cfx_dibitmap.h"
 #include "core/fxge/dib/fx_dib.h"
 
-#ifdef PDF_ENABLE_XFA_BMP
+#ifndef PDF_ENABLE_XFA
+#error "XFA only"
+#endif
+
 #if defined(PDF_ENABLE_RUST_BMP)
 #include "core/fxcodec/bmp/skia_bmp_context.h"
 #else
 #include "core/fxcodec/bmp/cfx_bmpcontext.h"
 #endif
-#endif  // PDF_ENABLE_XFA_BMP
-
-#ifdef PDF_ENABLE_XFA_GIF
-#include "core/fxcodec/gif/cfx_gifcontext.h"
-#endif  // PDF_ENABLE_XFA_GIF
-
-#ifdef PDF_ENABLE_XFA_PNG
 // TODO(https://crbug.com/444045690): Remove `pdf_enable_rust_png` from the
 // condition below once this build mode has been tested and stabilized.
 // (Chromium already sets `pdf_use_skia_override = true` so having an extra
@@ -53,11 +51,6 @@
 #else
 #include "core/fxcodec/png/libpng_png_context.h"
 #endif
-#endif  // PDF_ENABLE_XFA_PNG
-
-#ifdef PDF_ENABLE_XFA_TIFF
-#include "core/fxcodec/tiff/libtiff_tiff_context.h"
-#endif  // PDF_ENABLE_XFA_TIFF
 
 namespace fxcodec {
 
@@ -69,18 +62,14 @@ std::unique_ptr<ProgressiveDecoderContext> CreateDecoderContext(
     FXCODEC_IMAGE_TYPE type,
     ProgressiveDecoder* delegate) {
   switch (type) {
-#ifdef PDF_ENABLE_XFA_BMP
     case FXCODEC_IMAGE_BMP:
 #if defined(PDF_ENABLE_RUST_BMP)
       return std::make_unique<SkiaBmpContext>(delegate);
 #else
       return std::make_unique<CFX_BmpContext>(delegate);
 #endif
-#endif  // PDF_ENABLE_XFA_BMP
-#ifdef PDF_ENABLE_XFA_GIF
     case FXCODEC_IMAGE_GIF:
       return std::make_unique<CFX_GifContext>(delegate);
-#endif  // PDF_ENABLE_XFA_GIF
     case FXCODEC_IMAGE_JPG: {
       auto context = std::make_unique<LibjpegJpegContext>(delegate);
       if (!context->create_ok_) {
@@ -88,7 +77,6 @@ std::unique_ptr<ProgressiveDecoderContext> CreateDecoderContext(
       }
       return context;
     }
-#ifdef PDF_ENABLE_XFA_PNG
     case FXCODEC_IMAGE_PNG:
 #if defined(PDF_USE_SKIA) && defined(PDF_ENABLE_RUST_PNG)
       return std::make_unique<SkiaPngContext>(delegate);
@@ -101,7 +89,6 @@ std::unique_ptr<ProgressiveDecoderContext> CreateDecoderContext(
       return context;
     }
 #endif
-#endif  // PDF_ENABLE_XFA_PNG
     default:
       return nullptr;
   }
@@ -202,8 +189,6 @@ pdfium::span<uint8_t> ProgressiveDecoder::AskImageBuf() {
   CHECK_EQ(src_format_, Format::kArgb);
   return device_bitmap_->GetWritableBuffer();
 }
-
-#ifdef PDF_ENABLE_XFA_BMP
 
 bool ProgressiveDecoder::BmpDetectImageTypeInBuffer(
     CFX_DIBAttribute* pAttribute) {
@@ -330,9 +315,7 @@ FXCODEC_STATUS ProgressiveDecoder::BmpContinueDecode() {
                 : FXCODEC_STATUS::kError;
   return status_;
 }
-#endif  // PDF_ENABLE_XFA_BMP
 
-#ifdef PDF_ENABLE_XFA_GIF
 bool ProgressiveDecoder::GifReadMoreData(FXCODEC_STATUS* err_status) {
   // TODO(lukasza): Can this just use
   // `codec_memory_->GetUnconsumedSpan().size()`? (IIUC this is what
@@ -395,7 +378,6 @@ FXCODEC_STATUS ProgressiveDecoder::GifContinueDecode() {
   file_ = nullptr;
   return status_;
 }
-#endif  // PDF_ENABLE_XFA_GIF
 
 bool ProgressiveDecoder::JpegReadMoreData(FXCODEC_STATUS* err_status) {
   FX_SAFE_SIZE_T avail_input = context_->GetAvailInput();
@@ -466,7 +448,6 @@ FXCODEC_STATUS ProgressiveDecoder::JpegContinueDecode() {
   return status_;
 }
 
-#ifdef PDF_ENABLE_XFA_PNG
 bool ProgressiveDecoder::PngDetectImageTypeInBuffer() {
   context_ = CreateDecoderContext(FXCODEC_IMAGE_PNG, this);
   if (!context_) {
@@ -527,9 +508,7 @@ FXCODEC_STATUS ProgressiveDecoder::PngContinueDecode() {
   }
   return status_;
 }
-#endif  // PDF_ENABLE_XFA_PNG
 
-#ifdef PDF_ENABLE_XFA_TIFF
 bool ProgressiveDecoder::TiffDetectImageTypeFromFile(
     CFX_DIBAttribute* pAttribute) {
   auto ctx = std::make_unique<LibtiffTiffContext>();
@@ -560,15 +539,12 @@ FXCODEC_STATUS ProgressiveDecoder::TiffContinueDecode() {
   file_ = nullptr;
   return status_;
 }
-#endif  // PDF_ENABLE_XFA_TIFF
 
 bool ProgressiveDecoder::DetectImageType(FXCODEC_IMAGE_TYPE imageType,
                                          CFX_DIBAttribute* pAttribute) {
-#ifdef PDF_ENABLE_XFA_TIFF
   if (imageType == FXCODEC_IMAGE_TIFF) {
     return TiffDetectImageTypeFromFile(pAttribute);
   }
-#endif  // PDF_ENABLE_XFA_TIFF
 
   size_t size = pdfium::checked_cast<size_t>(
       std::min<FX_FILESIZE>(file_->GetSize(), kBlockSize));
@@ -585,23 +561,15 @@ bool ProgressiveDecoder::DetectImageType(FXCODEC_IMAGE_TYPE imageType,
     return JpegDetectImageTypeInBuffer(pAttribute);
   }
 
-#ifdef PDF_ENABLE_XFA_BMP
   if (imageType == FXCODEC_IMAGE_BMP) {
     return BmpDetectImageTypeInBuffer(pAttribute);
   }
-#endif  // PDF_ENABLE_XFA_BMP
-
-#ifdef PDF_ENABLE_XFA_GIF
   if (imageType == FXCODEC_IMAGE_GIF) {
     return GifDetectImageTypeInBuffer();
   }
-#endif  // PDF_ENABLE_XFA_GIF
-
-#ifdef PDF_ENABLE_XFA_PNG
   if (imageType == FXCODEC_IMAGE_PNG) {
     return PngDetectImageTypeInBuffer();
   }
-#endif  // PDF_ENABLE_XFA_PNG
 
   status_ = FXCODEC_STATUS::kError;
   return false;
@@ -933,16 +901,10 @@ void ProgressiveDecoder::Resample(const RetainPtr<CFX_DIBitmap>& pDeviceBitmap,
 FXDIB_Format ProgressiveDecoder::GetBitmapFormat() const {
   switch (image_type_) {
     case FXCODEC_IMAGE_JPG:
-#ifdef PDF_ENABLE_XFA_BMP
     case FXCODEC_IMAGE_BMP:
-#endif  // PDF_ENABLE_XFA_BMP
       return GetBitsPerPixel() <= 24 ? FXDIB_Format::kBgr : FXDIB_Format::kBgrx;
-#ifdef PDF_ENABLE_XFA_PNG
     case FXCODEC_IMAGE_PNG:
-#endif  // PDF_ENABLE_XFA_PNG
-#ifdef PDF_ENABLE_XFA_TIFF
     case FXCODEC_IMAGE_TIFF:
-#endif  // PDF_ENABLE_XFA_TIFF
     default:
       // TODO(crbug.com/355630556): Consider adding support for
       // `FXDIB_Format::kBgraPremul`
@@ -957,20 +919,13 @@ std::pair<FXCODEC_STATUS, size_t> ProgressiveDecoder::GetFrames() {
   }
 
   switch (image_type_) {
-#ifdef PDF_ENABLE_XFA_BMP
-    case FXCODEC_IMAGE_BMP:
-#endif  // PDF_ENABLE_XFA_BMP
     case FXCODEC_IMAGE_JPG:
-#ifdef PDF_ENABLE_XFA_PNG
+    case FXCODEC_IMAGE_BMP:
     case FXCODEC_IMAGE_PNG:
-#endif  // PDF_ENABLE_XFA_PNG
-#ifdef PDF_ENABLE_XFA_TIFF
     case FXCODEC_IMAGE_TIFF:
-#endif  // PDF_ENABLE_XFA_TIFF
       frame_number_ = 1;
       status_ = FXCODEC_STATUS::kDecodeReady;
       return {status_, 1};
-#ifdef PDF_ENABLE_XFA_GIF
     case FXCODEC_IMAGE_GIF: {
       auto* ctx = static_cast<CFX_GifContext*>(context_.get());
       while (true) {
@@ -1000,7 +955,6 @@ std::pair<FXCODEC_STATUS, size_t> ProgressiveDecoder::GetFrames() {
         return {status_, 0};
       }
     }
-#endif  // PDF_ENABLE_XFA_GIF
     default:
       return {FXCODEC_STATUS::kError, 0};
   }
@@ -1031,25 +985,17 @@ FXCODEC_STATUS ProgressiveDecoder::StartDecode(RetainPtr<CFX_DIBitmap> bitmap) {
 
   device_bitmap_ = std::move(bitmap);
   switch (image_type_) {
-#ifdef PDF_ENABLE_XFA_BMP
-    case FXCODEC_IMAGE_BMP:
-      return BmpStartDecode();
-#endif  // PDF_ENABLE_XFA_BMP
-#ifdef PDF_ENABLE_XFA_GIF
-    case FXCODEC_IMAGE_GIF:
-      return GifStartDecode();
-#endif  // PDF_ENABLE_XFA_GIF
     case FXCODEC_IMAGE_JPG:
       return JpegStartDecode();
-#ifdef PDF_ENABLE_XFA_PNG
+    case FXCODEC_IMAGE_BMP:
+      return BmpStartDecode();
+    case FXCODEC_IMAGE_GIF:
+      return GifStartDecode();
     case FXCODEC_IMAGE_PNG:
       return PngStartDecode();
-#endif  // PDF_ENABLE_XFA_PNG
-#ifdef PDF_ENABLE_XFA_TIFF
     case FXCODEC_IMAGE_TIFF:
       status_ = FXCODEC_STATUS::kDecodeToBeContinued;
       return status_;
-#endif  // PDF_ENABLE_XFA_TIFF
     default:
       return FXCODEC_STATUS::kError;
   }
@@ -1063,22 +1009,14 @@ FXCODEC_STATUS ProgressiveDecoder::ContinueDecode() {
   switch (image_type_) {
     case FXCODEC_IMAGE_JPG:
       return JpegContinueDecode();
-#ifdef PDF_ENABLE_XFA_BMP
     case FXCODEC_IMAGE_BMP:
       return BmpContinueDecode();
-#endif  // PDF_ENABLE_XFA_BMP
-#ifdef PDF_ENABLE_XFA_GIF
     case FXCODEC_IMAGE_GIF:
       return GifContinueDecode();
-#endif  // PDF_ENABLE_XFA_GIF
-#ifdef PDF_ENABLE_XFA_PNG
     case FXCODEC_IMAGE_PNG:
       return PngContinueDecode();
-#endif  // PDF_ENABLE_XFA_PNG
-#ifdef PDF_ENABLE_XFA_TIFF
     case FXCODEC_IMAGE_TIFF:
       return TiffContinueDecode();
-#endif  // PDF_ENABLE_XFA_TIFF
     default:
       return FXCODEC_STATUS::kError;
   }
