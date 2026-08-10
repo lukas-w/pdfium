@@ -18,13 +18,8 @@
 #include "core/fxcrt/data_vector.h"
 #include "core/fxcrt/retain_ptr.h"
 #include "core/fxcrt/span.h"
-#include "core/fxcrt/unowned_ptr_exclusion.h"
 #include "core/fxge/dib/cstretchengine.h"
 #include "core/fxge/dib/fx_dib.h"
-
-#ifdef PDF_ENABLE_XFA_PNG
-#include "core/fxcodec/png/png_decoder_delegate.h"
-#endif  // PDF_ENABLE_XFA_PNG
 
 class CFX_CodecMemory;
 class CFX_DIBitmap;
@@ -35,11 +30,7 @@ namespace fxcodec {
 class CFX_DIBAttribute;
 class ProgressiveDecoderContext;
 
-class ProgressiveDecoder final :
-#ifdef PDF_ENABLE_XFA_PNG
-    public PngDecoderDelegate,
-#endif  // PDF_ENABLE_XFA_PNG
-    public ProgressiveDecoderContextDelegate {
+class ProgressiveDecoder final : public ProgressiveDecoderContextDelegate {
  public:
   using Format = ProgressiveDecoderContextDelegate::Format;
 
@@ -61,14 +52,6 @@ class ProgressiveDecoder final :
 
   FXCODEC_STATUS ContinueDecode();
 
-#ifdef PDF_ENABLE_XFA_PNG
-  // PngDecoderDelegate
-  bool PngReadHeader(int width, int height, double* gamma) override;
-  pdfium::span<uint8_t> PngAskScanlineBuf(int line) override;
-  pdfium::span<uint8_t> PngAskImageBuf() override;
-  void PngFinishedDecoding() override;
-#endif  // PDF_ENABLE_XFA_PNG
-
   // ProgressiveDecoderContextDelegate:
   bool ReadMoreData(std::optional<uint32_t> rcd_pos,
                     FXCODEC_STATUS* err_status) override;
@@ -80,6 +63,9 @@ class ProgressiveDecoder final :
                                  std::optional<FX_ARGB> fill_argb) override;
   void ResampleScanline(int line,
                         pdfium::span<const uint8_t> src_span) override;
+  bool PrepareDirectOutput(int src_width,
+                           int src_height,
+                           Format src_format) override;
   pdfium::span<uint8_t> AskScanlineBuf(int line) override;
   pdfium::span<uint8_t> AskImageBuf() override;
 
@@ -172,9 +158,6 @@ class ProgressiveDecoder final :
   DataVector<uint8_t> decode_buf_;
   DataVector<FX_ARGB> src_palette_;
   std::unique_ptr<ProgressiveDecoderContext> context_;
-#ifdef PDF_ENABLE_XFA_PNG
-  bool got_png_metadata_ = false;
-#endif  // PDF_ENABLE_XFA_PNG
   uint32_t offset_ = 0;
   WeightTable weight_horz_;
   int src_width_ = 0;

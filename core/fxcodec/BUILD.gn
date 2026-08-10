@@ -129,8 +129,6 @@ source_set("fxcodec") {
       ]
     }
     if (pdf_enable_xfa_png) {
-      sources += [ "png/png_decoder_delegate.h" ]
-
       # TODO(https://crbug.com/444045690): Remove `pdf_enable_rust_png` from the
       # condition below once this build mode has been tested and stabilized.
       # (Chromium already sets `pdf_use_skia_override = true` so having an extra

@@ -39,24 +39,12 @@ class ProgressiveDecoderContextDelegate {
   // Returns the current reading offset in the underlying input stream.
   virtual uint32_t GetCurrentInputPosition() const = 0;
 
-  // Codec decoders use one of two mutually exclusive output paths:
-  //
-  // A. Scanline Resampling (Methods 1 and 2; e.g., BMP, GIF, JPEG):
-  //    Used by streaming line-by-line decoders or whenever scaling,
-  //    vertical orientation flipping, or color conversion is required.
-  //    Accepts arbitrary source pixel formats (k8bppGray, kRgb, kCmyk,
-  //    etc.) and resamples each scanline into the destination bitmap.
-  //
-  // B. Direct In-Place Output (Methods 3 and 4; e.g., PNG):
-  //    Used by decoders that decompress directly into destination
-  //    memory without intermediate buffers. Strictly requires 1:1
-  //    scaling and an ARGB/BGRA destination format so decompressed
-  //    bytes can be written safely in-place.
-
-  // 1. Scaling: Prepares resampler weights and scanline buffer. Optionally sets
-  // the color palette and fills the destination bitmap with a background color.
-  // Returns true to proceed with decoding, or false to abort (e.g. during image
-  // type detection).
+  // Scanline Resampling Output:
+  // Prepares resampling weights and scanline buffer (for codecs that perform
+  // resampling), and optionally sets the color palette and fills the
+  // destination bitmap with a background color.
+  // Returns true to proceed with decoding, or false to abort (e.g. when
+  // no destination bitmap is available).
   virtual bool PrepareScanlineResampling(
       int src_width,
       int src_height,
@@ -64,15 +52,22 @@ class ProgressiveDecoderContextDelegate {
       pdfium::span<const FX_ARGB> palette = {},
       std::optional<FX_ARGB> fill_argb = std::nullopt) = 0;
 
-  // 2. Scaling: Resamples a single decoded scanline into the device bitmap.
+  // Resamples a single decoded scanline into the device bitmap (e.g., BMP,
+  // GIF, JPEG).
   virtual void ResampleScanline(int line,
                                 pdfium::span<const uint8_t> src_span) = 0;
 
-  // 3. Direct Output: Returns a writable span for a scanline in the device
-  // bitmap.
-  virtual pdfium::span<uint8_t> AskScanlineBuf(int line) = 0;
+  // Direct In-Place Output:
+  // Notifies the delegate of image dimensions and metadata for codecs that
+  // write directly into the device bitmap without scanline resampling (e.g.,
+  // PNG).
+  virtual bool PrepareDirectOutput(int src_width,
+                                   int src_height,
+                                   Format src_format) = 0;
 
-  // 4. Direct Output: Returns a writable span for the entire device bitmap.
+  // Returns a writable span for a scanline or the entire image in the device
+  // bitmap without intermediate scanline resampling (e.g., PNG).
+  virtual pdfium::span<uint8_t> AskScanlineBuf(int line) = 0;
   virtual pdfium::span<uint8_t> AskImageBuf() = 0;
 };
 

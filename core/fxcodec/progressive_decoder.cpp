@@ -44,7 +44,6 @@
 #endif  // PDF_ENABLE_XFA_GIF
 
 #ifdef PDF_ENABLE_XFA_PNG
-#include "core/fxcodec/png/png_decoder_delegate.h"
 // TODO(https://crbug.com/444045690): Remove `pdf_enable_rust_png` from the
 // condition below once this build mode has been tested and stabilized.
 // (Chromium already sets `pdf_use_skia_override = true` so having an extra
@@ -108,60 +107,11 @@ std::unique_ptr<ProgressiveDecoderContext> CreateDecoderContext(
   }
 }
 
-#ifdef PDF_ENABLE_XFA_PNG
-#if BUILDFLAG(IS_APPLE)
-const double kPngGamma = 1.7;
-#else
-const double kPngGamma = 2.2;
-#endif  // BUILDFLAG(IS_APPLE)
-#endif  // PDF_ENABLE_XFA_PNG
-
 }  // namespace
 
 ProgressiveDecoder::ProgressiveDecoder() = default;
 
 ProgressiveDecoder::~ProgressiveDecoder() = default;
-
-#ifdef PDF_ENABLE_XFA_PNG
-bool ProgressiveDecoder::PngReadHeader(int width, int height, double* gamma) {
-  if (!device_bitmap_) {
-    got_png_metadata_ = true;
-    src_width_ = width;
-    src_height_ = height;
-
-    // PNG decoder always decodes into BGRA.
-    src_bits_per_component_ = 8;
-    src_components_count_ = 4;
-    src_format_ = Format::kArgb;
-
-    return false;
-  }
-
-  CHECK_EQ(width, src_width_);
-  CHECK_EQ(height, src_height_);
-  CHECK_EQ(device_bitmap_->GetFormat(), FXDIB_Format::kBgra);
-  *gamma = kPngGamma;
-  return true;
-}
-
-pdfium::span<uint8_t> ProgressiveDecoder::PngAskScanlineBuf(int line) {
-  CHECK_GE(line, 0);
-  CHECK_LT(line, src_height_);
-  CHECK_EQ(device_bitmap_->GetFormat(), FXDIB_Format::kBgra);
-  CHECK_EQ(src_format_, Format::kArgb);
-  return device_bitmap_->GetWritableScanline(line);
-}
-
-pdfium::span<uint8_t> ProgressiveDecoder::PngAskImageBuf() {
-  CHECK_EQ(device_bitmap_->GetFormat(), FXDIB_Format::kBgra);
-  CHECK_EQ(src_format_, Format::kArgb);
-  return device_bitmap_->GetWritableBuffer();
-}
-
-void ProgressiveDecoder::PngFinishedDecoding() {
-  status_ = FXCODEC_STATUS::kDecodeFinished;
-}
-#endif  // PDF_ENABLE_XFA_PNG
 
 bool ProgressiveDecoder::ReadMoreData(std::optional<uint32_t> rcd_pos,
                                       FXCODEC_STATUS* err_status) {
@@ -197,19 +147,12 @@ bool ProgressiveDecoder::PrepareScanlineResampling(
   src_width_ = src_width;
   src_height_ = src_height;
   src_format_ = src_format;
-  // For formats other than kArgb, these values are already reliably set
-  // during the header reading phase.
-  if (src_format_ == Format::kArgb) {
-    src_bits_per_component_ = 8;
-    src_components_count_ = 4;
-  }
   SetTransMethod();
   decode_buf_.resize(GetScanlineSize());
   FXDIB_ResampleOptions options;
   options.bInterpolateBilinear = true;
   weight_horz_.CalculateWeights(src_width_, 0, src_width_, src_width_, 0,
                                 src_width_, options);
-
   if (!palette.empty()) {
     device_bitmap_->SetPalette(palette);
     src_palette_ = DataVector<FX_ARGB>(palette.begin(), palette.end());
@@ -230,6 +173,20 @@ void ProgressiveDecoder::ResampleScanline(
   int scanline_size = GetScanlineSize();
   fxcrt::Copy(src_span.first(static_cast<size_t>(scanline_size)), decode_buf_);
   ResampleScanline(device_bitmap_, line, decode_buf_, src_format_);
+}
+
+bool ProgressiveDecoder::PrepareDirectOutput(int src_width,
+                                             int src_height,
+                                             Format src_format) {
+  if (src_width <= 0 || src_height <= 0 || src_format != Format::kArgb) {
+    return false;
+  }
+  src_width_ = src_width;
+  src_height_ = src_height;
+  src_format_ = src_format;
+  src_bits_per_component_ = 8;
+  src_components_count_ = 4;
+  return true;
 }
 
 pdfium::span<uint8_t> ProgressiveDecoder::AskScanlineBuf(int line) {
@@ -510,20 +467,6 @@ FXCODEC_STATUS ProgressiveDecoder::JpegContinueDecode() {
 }
 
 #ifdef PDF_ENABLE_XFA_PNG
-bool ProgressiveDecoder::PngReadMoreData() {
-  size_t unconsumed_bytes = codec_memory_->GetUnconsumedSpan().size();
-  if (!ReadMoreDataInternal(unconsumed_bytes, &status_)) {
-    return false;
-  }
-
-#if defined(PDF_USE_SKIA) && defined(PDF_ENABLE_RUST_PNG)
-  auto* ctx = static_cast<SkiaPngContext*>(context_.get());
-#else
-  auto* ctx = static_cast<LibpngPngContext*>(context_.get());
-#endif
-  return ctx->ContinueDecode(codec_memory_);
-}
-
 bool ProgressiveDecoder::PngDetectImageTypeInBuffer() {
   context_ = CreateDecoderContext(FXCODEC_IMAGE_PNG, this);
   if (!context_) {
@@ -537,19 +480,20 @@ bool ProgressiveDecoder::PngDetectImageTypeInBuffer() {
   auto* ctx = static_cast<LibpngPngContext*>(context_.get());
 #endif
 
-  // Keep feeding more input into the decoder until either the decoder 1) fails,
-  // or 2) calls `PngReadHeader` to indicate that it `got_png_metadata_`.
-  if (ctx->ContinueDecode(codec_memory_)) {
-    while (!got_png_metadata_ && PngReadMoreData()) {
+  src_width_ = 0;
+  src_height_ = 0;
+  if (ctx->ReadHeader(codec_memory_)) {
+    FXCODEC_STATUS status = FXCODEC_STATUS::kError;
+    while (src_width_ == 0 && ReadMoreData(std::nullopt, &status)) {
+      if (!ctx->ReadHeader(codec_memory_)) {
+        break;
+      }
     }
   }
 
-  // Return `got_png_metadata_` and ignore any failures that the decoder may
-  // have reported.  (In particular ignore the failure that `PngReadHeader`
-  // reports when there is no `device_bitmap_` - e.g. during image type
-  // detection.)
+  bool got_metadata = (src_width_ > 0 && src_height_ > 0);
   context_.reset();
-  return got_png_metadata_;
+  return got_metadata;
 }
 
 FXCODEC_STATUS ProgressiveDecoder::PngStartDecode() {
@@ -560,37 +504,27 @@ FXCODEC_STATUS ProgressiveDecoder::PngStartDecode() {
     status_ = FXCODEC_STATUS::kError;
     return status_;
   }
-
-  // No need to resample/transform pixels when decoding PNGs, because 1)
-  // `device_bitmap_` for PNGs is always kBgra and 2) the decoder always outputs
-  // `Format::kArgb` (the same format).  In other words, PNG code path doesn't
-  // need to use an intermediate `decode_buf_` to transform the pixels via
-  // `SetTransMethod` and `ResampleScanline`.
-  CHECK_EQ(device_bitmap_->GetFormat(), FXDIB_Format::kBgra);
-  CHECK_EQ(src_format_, Format::kArgb);
-
-  // Discard old/stale data from `codec_memory_` and restart reading the `file_`
-  // from `offset_` 0.
-  codec_memory_->Seek(codec_memory_->GetSize());
-  offset_ = 0;
-
-  status_ = FXCODEC_STATUS::kDecodeToBeContinued;
+  context_->Input(codec_memory_);
+#if defined(PDF_USE_SKIA) && defined(PDF_ENABLE_RUST_PNG)
+  auto* ctx = static_cast<SkiaPngContext*>(context_.get());
+#else
+  auto* ctx = static_cast<LibpngPngContext*>(context_.get());
+#endif
+  status_ = ctx->StartDecode(device_bitmap_);
   return status_;
 }
 
 FXCODEC_STATUS ProgressiveDecoder::PngContinueDecode() {
-  while (status_ == FXCODEC_STATUS::kDecodeToBeContinued) {
-    if (!PngReadMoreData()) {
-      status_ = FXCODEC_STATUS::kError;
-      break;
-    }
+#if defined(PDF_USE_SKIA) && defined(PDF_ENABLE_RUST_PNG)
+  auto* ctx = static_cast<SkiaPngContext*>(context_.get());
+#else
+  auto* ctx = static_cast<LibpngPngContext*>(context_.get());
+#endif
+  status_ = ctx->ContinueDecode();
+  if (status_ != FXCODEC_STATUS::kDecodeToBeContinued) {
+    device_bitmap_ = nullptr;
+    file_ = nullptr;
   }
-
-  context_.reset();
-  device_bitmap_ = nullptr;
-  file_ = nullptr;
-  CHECK(status_ == FXCODEC_STATUS::kDecodeFinished ||
-        status_ == FXCODEC_STATUS::kError);
   return status_;
 }
 #endif  // PDF_ENABLE_XFA_PNG

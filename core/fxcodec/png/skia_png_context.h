@@ -8,33 +8,32 @@
 #include <memory>
 
 #include "core/fxcodec/cfx_codec_memory.h"
-#include "core/fxcodec/png/png_decoder_delegate.h"
+#include "core/fxcodec/fx_codec_def.h"
 #include "core/fxcodec/progressive_decoder_context.h"
 #include "core/fxcrt/retain_ptr.h"
 #include "core/fxcrt/unowned_ptr.h"
+#include "core/fxge/dib/cfx_dibitmap.h"
 
 class SkCodec;
 
 namespace fxcodec {
 
+class ProgressiveDecoderContextDelegate;
+
 class SkiaPngContext final : public ProgressiveDecoderContext {
  public:
   // Caller needs to guarantee that `delegate` lives longer than
   // `SkiaPngContext`.
-  explicit SkiaPngContext(PngDecoderDelegate* delegate);
+  explicit SkiaPngContext(ProgressiveDecoderContextDelegate* delegate);
   ~SkiaPngContext() override;
 
-  // Starts or resumes decoding `codec_memory`.
-  //
-  // Returns `false` upon failure.  Returns `true` when either 1) the whole
-  // image has been successfully decoded or 2) the image has been partially
-  // decoded but decoding should be continued/retried when more input data
-  // is available.
-  //
-  // Communicates image metadata (once read/available) via
-  // `PngDecoderDelegate::PngReadHeader`.  Writes decoded BGRA pixels to the
-  // buffer provided via `PngDecoderDelegate::PngAskImageBuf`.
-  bool ContinueDecode(RetainPtr<CFX_CodecMemory> codec_memory);
+  // ProgressiveDecoderContext:
+  void Input(RetainPtr<CFX_CodecMemory> codec_memory) override;
+
+  FXCODEC_STATUS StartDecode(RetainPtr<CFX_DIBitmap> bitmap);
+  FXCODEC_STATUS ContinueDecode();
+
+  bool ReadHeader(RetainPtr<CFX_CodecMemory> codec_memory);
 
  private:
   enum class State {
@@ -42,36 +41,39 @@ class SkiaPngContext final : public ProgressiveDecoderContext {
     //
     // This is the initial state.
     kNoDecoder,
-
-    // `decoder_` is not null and `delegate_->PngReadHeader` succeeded
-    // and provided `target_gamma_`.
-    //
-    // `startIncrementalDecode` didn't run, or returned `kIncompleteInput`.
     kGotDecoder,
-
-    // `decoder_` is not null, got `target_gamma_`, and `startIncrementalDecode`
-    // has already suceeded.
+    // `decoder_` is ready to accept incremental decoding inputs.
     //
-    // `incrementalDecode` didn't run yet, or returned `kIncompleteInput`.
+    // This state is entered via:
+    // * `StartDecode` - initial attempt to configure `decoder_`
+    // * `kError` when `ContinueDecode` retries after receiving more input
+    //   data from `delegate_->ReadMoreData(...)`
+    //
+    // From this state `ContinueDecode` transitions to:
+    // * `kFinishedDecoding` - when all pixels have been decoded
+    // * `kError` - when `decoder_` needs more input or encounters a fatal error
     kStartedDecode,
-
-    // `decoder_` is null.  All pixels have been decoded to
-    // `delegate_->PngAskImageBuf`.
+    // `decoder_` is null.
     //
-    // This is a terminal state.
+    // This state is entered when `ContinueDecode` successfully decodes all
+    // pixels.
     kFinishedDecoding,
-
-    // `decoder_` is null.  A non-recoverable (i.e. non-`kIncompleteInput`-kind)
-    // error has been encountered.
+    // `decoder_` is null.
     //
-    // This is a terminal state.
+    // This state is entered when `ContinueDecode` encounters an error (either a
+    // fatal decoding error, or a recoverable error when `decoder_` runs out of
+    // input data).  From this state `ContinueDecode` attempts to read more data
+    // from `delegate_->ReadMoreData(...)` and transitions to `kStartedDecode`
+    // on success.
     kError,
   };
-  State state_ = State::kNoDecoder;
 
-  UnownedPtr<PngDecoderDelegate> const delegate_;
+  bool ProcessData(RetainPtr<CFX_CodecMemory> codec_memory);
+
+  State state_ = State::kNoDecoder;
+  UnownedPtr<ProgressiveDecoderContextDelegate> const delegate_;
+  RetainPtr<CFX_DIBitmap> bitmap_;
   std::unique_ptr<SkCodec> decoder_;
-  double target_gamma_ = 0.0;
 
   // `CFX_CodecMemory` received in `ContinueDecode` may get wrapped in
   // `CodecMemorySkStream` and become transitively owned by `decoder_`.  This

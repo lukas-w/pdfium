@@ -7,17 +7,27 @@
 #include <setjmp.h>
 #include <string.h>
 
+#include <utility>
+
 #include "core/fxcodec/cfx_codec_memory.h"
+#include "core/fxcodec/progressive_decoder_context_delegate.h"
 #include "core/fxcrt/check.h"
 #include "core/fxcrt/compiler_specific.h"
 #include "core/fxcrt/retain_ptr.h"
 #include "core/fxcrt/span.h"
+#include "core/fxge/dib/cfx_dibitmap.h"
 
 #ifdef USE_SYSTEM_LIBPNG
 #include <png.h>
 #else
 #include "third_party/libpng/png.h"
 #endif
+
+namespace {
+
+constexpr double kPngGamma = 2.2;
+
+}  // namespace
 
 extern "C" {
 
@@ -59,20 +69,22 @@ void _png_get_header_func(png_structp png_ptr, png_infop info_ptr) {
   context->number_of_passes_ = png_set_interlace_handling(png_ptr);
   context->height_ = height;
 
-  double gamma = 1.0;
-  if (!context->delegate_->PngReadHeader(width, height, &gamma)) {
+  // Notifies the delegate of image dimensions and metadata.
+  if (!context->delegate_->PrepareDirectOutput(
+          width, height,
+          fxcodec::ProgressiveDecoderContextDelegate::Format::kArgb)) {
     // Note that `png_error` function is marked as `PNG_NORETURN`.
     png_error(context->png_, "Read Header Callback Error");
   }
   int intent;
   if (png_get_sRGB(png_ptr, info_ptr, &intent)) {
-    png_set_gamma(png_ptr, gamma, 0.45455);
+    png_set_gamma(png_ptr, kPngGamma, 0.45455);
   } else {
     double image_gamma;
     if (png_get_gAMA(png_ptr, info_ptr, &image_gamma)) {
-      png_set_gamma(png_ptr, gamma, image_gamma);
+      png_set_gamma(png_ptr, kPngGamma, image_gamma);
     } else {
-      png_set_gamma(png_ptr, gamma, 0.45455);
+      png_set_gamma(png_ptr, kPngGamma, 0.45455);
     }
   }
   if (!(libpng_color_type & PNG_COLOR_MASK_COLOR)) {
@@ -93,18 +105,17 @@ void _png_get_row_func(png_structp png_ptr,
                        int pass) {
   auto* context = reinterpret_cast<fxcodec::LibpngPngContext*>(
       png_get_progressive_ptr(png_ptr));
-  if (!context) {
+  if (!context || !context->bitmap_) {
     return;
   }
 
-  pdfium::span<uint8_t> dst_buf =
-      context->delegate_->PngAskScanlineBuf(row_num);
+  pdfium::span<uint8_t> dst_buf = context->delegate_->AskScanlineBuf(row_num);
   CHECK(!dst_buf.empty());
   png_progressive_combine_row(png_ptr, dst_buf.data(), new_row);
 
   if ((pass == (context->number_of_passes_ - 1)) &&
       (row_num == (context->height_ - 1))) {
-    context->delegate_->PngFinishedDecoding();
+    context->finished_ = true;
   }
 }
 
@@ -124,8 +135,8 @@ int _png_set_read_and_error_fns(png_structrp png_ptr,
 
 namespace fxcodec {
 
-LibpngPngContext::LibpngPngContext(PngDecoderDelegate* pDelegate)
-    : delegate_(pDelegate) {
+LibpngPngContext::LibpngPngContext(ProgressiveDecoderContextDelegate* delegate)
+    : delegate_(delegate) {
   png_ =
       png_create_read_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
   if (!png_) {
@@ -147,7 +158,44 @@ LibpngPngContext::~LibpngPngContext() {
                           nullptr);
 }
 
-bool LibpngPngContext::ContinueDecode(RetainPtr<CFX_CodecMemory> codec_memory) {
+void LibpngPngContext::Input(RetainPtr<CFX_CodecMemory> codec_memory) {
+  codec_memory_ = std::move(codec_memory);
+}
+
+FXCODEC_STATUS LibpngPngContext::StartDecode(RetainPtr<CFX_DIBitmap> bitmap) {
+  bitmap_ = std::move(bitmap);
+  CHECK_EQ(bitmap_->GetFormat(), FXDIB_Format::kBgra);
+  FXCODEC_STATUS status = FXCODEC_STATUS::kDecodeToBeContinued;
+  if (!delegate_->ReadMoreData(0, &status)) {
+    return status;
+  }
+  return FXCODEC_STATUS::kDecodeToBeContinued;
+}
+
+FXCODEC_STATUS LibpngPngContext::ContinueDecode() {
+  FXCODEC_STATUS status = FXCODEC_STATUS::kDecodeFinished;
+  while (!finished_) {
+    if (!ProcessData(codec_memory_)) {
+      status = FXCODEC_STATUS::kError;
+      break;
+    }
+    if (finished_) {
+      break;
+    }
+    status = FXCODEC_STATUS::kError;
+    if (!delegate_->ReadMoreData(std::nullopt, &status)) {
+      break;
+    }
+  }
+  bitmap_ = nullptr;
+  return finished_ ? FXCODEC_STATUS::kDecodeFinished : status;
+}
+
+bool LibpngPngContext::ReadHeader(RetainPtr<CFX_CodecMemory> codec_memory) {
+  return ProcessData(std::move(codec_memory));
+}
+
+bool LibpngPngContext::ProcessData(RetainPtr<CFX_CodecMemory> codec_memory) {
   if (setjmp(png_jmpbuf(png_))) {
     return false;
   }
