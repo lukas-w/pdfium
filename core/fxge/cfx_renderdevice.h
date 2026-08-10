@@ -19,6 +19,10 @@
 #include "core/fxge/dib/fx_dib.h"
 #include "core/fxge/renderdevicedriver_iface.h"
 
+#if BUILDFLAG(IS_WIN)
+#include <windows.h>
+#endif
+
 class CFX_DIBBase;
 class CFX_DIBitmap;
 class CFX_Font;
