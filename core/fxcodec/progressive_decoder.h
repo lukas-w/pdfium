@@ -14,7 +14,6 @@
 #include <utility>
 
 #include "core/fxcodec/fx_codec_def.h"
-#include "core/fxcodec/jpeg/jpegmodule.h"
 #include "core/fxcodec/progressive_decoder_context_delegate.h"
 #include "core/fxcrt/data_vector.h"
 #include "core/fxcrt/retain_ptr.h"
@@ -183,7 +182,6 @@ class ProgressiveDecoder final :
   int src_components_count_ = 0;    // e.g. 4 for RGBA, or 3 for RGB
   int src_bits_per_component_ = 0;  // how many bits per channel
   TransformMethod trans_method_;
-  int src_row_ = 0;
   Format src_format_ = Format::kInvalid;
   size_t frame_number_ = 0;
 };

@@ -83,7 +83,7 @@ std::unique_ptr<ProgressiveDecoderContext> CreateDecoderContext(
       return std::make_unique<CFX_GifContext>(delegate);
 #endif  // PDF_ENABLE_XFA_GIF
     case FXCODEC_IMAGE_JPG: {
-      auto context = std::make_unique<LibjpegJpegContext>();
+      auto context = std::make_unique<LibjpegJpegContext>(delegate);
       if (!context->create_ok_) {
         return nullptr;
       }
@@ -115,21 +115,6 @@ const double kPngGamma = 1.7;
 const double kPngGamma = 2.2;
 #endif  // BUILDFLAG(IS_APPLE)
 #endif  // PDF_ENABLE_XFA_PNG
-
-void RGB2BGR(uint8_t* buffer, int width = 1) {
-  if (buffer && width > 0) {
-    uint8_t temp;
-    int i = 0;
-    int j = 0;
-    UNSAFE_TODO({
-      for (; i < width; i++, j += 3) {
-        temp = buffer[j];
-        buffer[j] = buffer[j + 2];
-        buffer[j + 2] = temp;
-      }
-    });
-  }
-}
 
 }  // namespace
 
@@ -503,70 +488,25 @@ bool ProgressiveDecoder::JpegDetectImageTypeInBuffer(
 }
 
 FXCODEC_STATUS ProgressiveDecoder::JpegStartDecode() {
-  auto* ctx = static_cast<LibjpegJpegContext*>(context_.get());
-  while (!ctx->StartScanline()) {
-    // Maybe it needs more data.
-    FXCODEC_STATUS error_status = FXCODEC_STATUS::kError;
-    if (!JpegReadMoreData(&error_status)) {
-      device_bitmap_ = nullptr;
-      file_ = nullptr;
-      status_ = error_status;
-      return status_;
-    }
+  status_ = static_cast<LibjpegJpegContext*>(context_.get())->StartDecode();
+  if (status_ == FXCODEC_STATUS::kError) {
+    device_bitmap_ = nullptr;
+    file_ = nullptr;
+    context_.reset();
   }
-  decode_buf_.resize(GetScanlineSize());
-  FXDIB_ResampleOptions options;
-  options.bInterpolateBilinear = true;
-  weight_horz_.CalculateWeights(src_width_, 0, src_width_, src_width_, 0,
-                                src_width_, options);
-  switch (src_components_count_) {
-    case 1:
-      src_format_ = Format::k8bppGray;
-      break;
-    case 3:
-      src_format_ = Format::kRgb;
-      break;
-    case 4:
-      src_format_ = Format::kCmyk;
-      break;
-  }
-  SetTransMethod();
-  status_ = FXCODEC_STATUS::kDecodeToBeContinued;
   return status_;
 }
 
 FXCODEC_STATUS ProgressiveDecoder::JpegContinueDecode() {
-  auto* ctx = static_cast<LibjpegJpegContext*>(context_.get());
-  while (true) {
-    int err_code = ctx->ReadScanline(decode_buf_.data());
-    if (err_code == LibjpegJpegContext::kFatal) {
-      context_.reset();
-      status_ = FXCODEC_STATUS::kError;
-      return FXCODEC_STATUS::kError;
-    }
-    if (err_code != LibjpegJpegContext::kOk) {
-      // Maybe it needs more data.
-      FXCODEC_STATUS error_status = FXCODEC_STATUS::kDecodeFinished;
-      if (JpegReadMoreData(&error_status)) {
-        continue;
-      }
-      device_bitmap_ = nullptr;
-      file_ = nullptr;
-      status_ = error_status;
-      return status_;
-    }
-    if (src_format_ == Format::kRgb) {
-      RGB2BGR(UNSAFE_TODO(decode_buf_.data()), src_width_);
-    }
-    if (src_row_ >= src_height_) {
-      device_bitmap_ = nullptr;
-      file_ = nullptr;
-      status_ = FXCODEC_STATUS::kDecodeFinished;
-      return status_;
-    }
-    Resample(device_bitmap_, src_row_, decode_buf_.data(), src_format_);
-    src_row_++;
+  status_ = static_cast<LibjpegJpegContext*>(context_.get())->ContinueDecode();
+  if (status_ == FXCODEC_STATUS::kError) {
+    context_.reset();
   }
+  if (status_ != FXCODEC_STATUS::kDecodeToBeContinued) {
+    device_bitmap_ = nullptr;
+    file_ = nullptr;
+  }
+  return status_;
 }
 
 #ifdef PDF_ENABLE_XFA_PNG
