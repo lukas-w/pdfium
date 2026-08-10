@@ -31,32 +31,33 @@ ScopedFPDFPageObject CreateBlackTriangle() {
 TEST_F(FPDFEditPathEmbedderTest, VerifyCorrectColoursReturned) {
   static constexpr int kObjectCount = 256;
   CreateEmptyDocument();
-  FPDF_PAGE page = FPDFPage_New(document(), 0, 612, 792);
 
-  for (size_t i = 0; i < kObjectCount; ++i) {
-    FPDF_PAGEOBJECT path = FPDFPageObj_CreateNewPath(400, 100);
-    EXPECT_TRUE(FPDFPageObj_SetFillColor(path, i, i, i, i));
-    EXPECT_TRUE(FPDFPageObj_SetStrokeColor(path, i, i, i, i));
-    EXPECT_TRUE(FPDFPath_SetDrawMode(path, FPDF_FILLMODE_ALTERNATE, 0));
-    EXPECT_TRUE(FPDFPath_LineTo(path, 400, 200));
-    EXPECT_TRUE(FPDFPath_LineTo(path, 300, 100));
-    EXPECT_TRUE(FPDFPath_Close(path));
+  {
+    ScopedFPDFPage page(FPDFPage_New(document(), 0, 612, 792));
 
-    FPDFPage_InsertObject(page, path);
+    for (size_t i = 0; i < kObjectCount; ++i) {
+      FPDF_PAGEOBJECT path = FPDFPageObj_CreateNewPath(400, 100);
+      EXPECT_TRUE(FPDFPageObj_SetFillColor(path, i, i, i, i));
+      EXPECT_TRUE(FPDFPageObj_SetStrokeColor(path, i, i, i, i));
+      EXPECT_TRUE(FPDFPath_SetDrawMode(path, FPDF_FILLMODE_ALTERNATE, 0));
+      EXPECT_TRUE(FPDFPath_LineTo(path, 400, 200));
+      EXPECT_TRUE(FPDFPath_LineTo(path, 300, 100));
+      EXPECT_TRUE(FPDFPath_Close(path));
+
+      FPDFPage_InsertObject(page.get(), path);
+    }
+
+    EXPECT_TRUE(FPDFPage_GenerateContent(page.get()));
+    EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
   }
-
-  EXPECT_TRUE(FPDFPage_GenerateContent(page));
-  EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
-  FPDF_ClosePage(page);
-  page = nullptr;
 
   ScopedSavedDoc saved_document = OpenScopedSavedDocument();
   ASSERT_TRUE(saved_document);
-  page = LoadSavedPage(0);
-  ASSERT_TRUE(page);
+  ScopedSavedPage saved_page = LoadScopedSavedPage(0);
+  ASSERT_TRUE(saved_page);
 
   for (size_t i = 0; i < kObjectCount; ++i) {
-    FPDF_PAGEOBJECT path = FPDFPage_GetObject(page, i);
+    FPDF_PAGEOBJECT path = FPDFPage_GetObject(saved_page.get(), i);
     ASSERT_TRUE(path);
 
     EXPECT_EQ(FPDF_PAGEOBJ_PATH, FPDFPageObj_GetType(path));
@@ -77,8 +78,6 @@ TEST_F(FPDFEditPathEmbedderTest, VerifyCorrectColoursReturned) {
     EXPECT_EQ(i, b);
     EXPECT_EQ(i, a);
   }
-
-  CloseSavedPage(page);
 }
 
 TEST_F(FPDFEditPathEmbedderTest, GetAndSetMatrixForPath) {

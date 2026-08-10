@@ -213,20 +213,20 @@ TEST_F(FPDFPPOEmbedderTest, ImportPageToXObject) {
   ScopedSavedDoc saved_document = OpenScopedSavedDocument();
   ASSERT_TRUE(saved_document);
 
-  std::array<FPDF_PAGE, kExpectedPageCount> saved_pages;
+  std::array<ScopedSavedPage, kExpectedPageCount> saved_pages;
   std::array<FPDF_PAGEOBJECT, kExpectedPageCount> xobjects;
   for (int i = 0; i < kExpectedPageCount; ++i) {
-    saved_pages[i] = LoadSavedPage(i);
+    saved_pages[i] = LoadScopedSavedPage(i);
     ASSERT_TRUE(saved_pages[i]);
 
-    EXPECT_EQ(1, FPDFPage_CountObjects(saved_pages[i]));
-    xobjects[i] = FPDFPage_GetObject(saved_pages[i], 0);
+    EXPECT_EQ(1, FPDFPage_CountObjects(saved_pages[i].get()));
+    xobjects[i] = FPDFPage_GetObject(saved_pages[i].get(), 0);
     ASSERT_TRUE(xobjects[i]);
     ASSERT_EQ(FPDF_PAGEOBJ_FORM, FPDFPageObj_GetType(xobjects[i]));
     EXPECT_EQ(8, FPDFFormObj_CountObjects(xobjects[i]));
 
     {
-      ScopedFPDFBitmap page_bitmap = RenderPage(saved_pages[i]);
+      ScopedFPDFBitmap page_bitmap = RenderPage(saved_pages[i].get());
       CompareBitmapWithExpectationSuffix(page_bitmap.get(),
                                          "import_page_to_xobject");
     }
@@ -258,10 +258,6 @@ TEST_F(FPDFPPOEmbedderTest, ImportPageToXObject) {
   ASSERT_TRUE(obj2->AsForm()->form()->GetStream());
   EXPECT_EQ(obj1->AsForm()->form()->GetStream(),
             obj2->AsForm()->form()->GetStream());
-
-  for (FPDF_PAGE saved_page : saved_pages) {
-    CloseSavedPage(saved_page);
-  }
 }
 
 TEST_F(FPDFPPOEmbedderTest, ImportPageToXObjectWithSameDoc) {
