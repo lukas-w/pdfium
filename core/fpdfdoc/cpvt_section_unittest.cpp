@@ -278,3 +278,29 @@ TEST_F(CPVT_SectionTest, OutputLines_Multiline_EnglishAndHebrew) {
               section.GetWordFromArray(i + 1)->fWordX);
   }
 }
+
+TEST_F(CPVT_SectionTest, OutputLines_EmptySection) {
+  CPVT_VariableText vt(provider_.get());
+  SetVariableTextDefaults(vt);
+  vt.Initialize();
+
+  CPVT_Section section(&vt);
+  EXPECT_EQ(0, section.GetWordArraySize());
+  EXPECT_EQ(0, section.GetLineArraySize());
+
+  CPVT_FloatRect rect = section.Rearrange();
+
+  // OutputLines() computes non-zero line height based on font metrics.
+  EXPECT_GT(rect.Height(), 0.0f);
+
+  // After calling Rearrange(), there is now an empty line, even though there
+  // are no words.
+  EXPECT_EQ(0, section.GetWordArraySize());
+  EXPECT_EQ(1, section.GetLineArraySize());
+
+  const CPVT_Section::Line* line = section.GetLineFromArray(0);
+  ASSERT_TRUE(line);
+  EXPECT_EQ(-1, line->line_info_.nBeginWordIndex);
+  EXPECT_EQ(-1, line->line_info_.nEndWordIndex);
+  EXPECT_FLOAT_EQ(0.0f, line->line_info_.fLineWidth);
+}
