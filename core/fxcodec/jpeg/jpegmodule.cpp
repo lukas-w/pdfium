@@ -27,7 +27,9 @@
 
 static pdfium::span<const uint8_t> JpegScanSOI(
     pdfium::span<const uint8_t> src_span) {
-  DCHECK(!src_span.empty());
+  if (src_span.size() < 2) {
+    return src_span;
+  }
 
   for (size_t offset = 0; offset + 1 < src_span.size(); ++offset) {
     if (src_span[offset] == 0xff && src_span[offset + 1] == 0xd8) {
@@ -413,8 +415,6 @@ std::unique_ptr<ScanlineDecoder> JpegModule::CreateDecoder(
     int nComps,
     bool ColorTransform,
     uint32_t scale_denom) {
-  DCHECK(!src_span.empty());
-
   auto pDecoder = std::make_unique<JpegDecoder>();
   if (!pDecoder->Create(src_span, width, height, nComps, ColorTransform,
                         scale_denom)) {

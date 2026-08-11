@@ -160,6 +160,7 @@ pdfium_unittest_source_set("unittests") {
     "flate/flatemodule_unittest.cpp",
     "jbig2/jbig2_bit_stream_unittest.cpp",
     "jbig2/jbig2_image_unittest.cpp",
+    "jpeg/jpegmodule_unittest.cpp",
     "jpx/jpx_unittest.cpp",
   ]
   deps = [
