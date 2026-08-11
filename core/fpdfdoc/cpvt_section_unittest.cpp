@@ -304,3 +304,22 @@ TEST_F(CPVT_SectionTest, OutputLines_EmptySection) {
   EXPECT_EQ(-1, line->line_info_.nEndWordIndex);
   EXPECT_FLOAT_EQ(0.0f, line->line_info_.fLineWidth);
 }
+
+TEST_F(CPVT_SectionTest, OutputLines_ParagraphSeparator) {
+  CPVT_VariableText vt(provider_.get());
+  SetVariableTextDefaults(vt);
+  vt.Initialize();
+
+  CPVT_Section section(&vt);
+  // 0x001D (Group Separator) has Bidi_Class=Paragraph_Separator in Unicode.
+  // When processed by ICU within a section line, ubidi_countRuns() resolves to
+  // zero visual runs.
+  PopulateSectionWithText(section, {0x001D, 0x1D1D});
+  section.Rearrange();
+
+  ASSERT_EQ(2, section.GetWordArraySize());
+  // Layout should safely fall back to sequential LTR ordering (monotonically
+  // increasing X coordinates) rather than failing BiDi run extraction.
+  EXPECT_LT(section.GetWordFromArray(0)->fWordX,
+            section.GetWordFromArray(1)->fWordX);
+}

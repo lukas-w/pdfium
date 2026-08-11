@@ -744,7 +744,9 @@ CPVT_FloatRect CPVT_Section::OutputLines(const CPVT_FloatRect& rect) const {
     CHECK(bidi_resolver);
     std::vector<CFX_BidiResolver::ResolvedRun> visual_runs =
         bidi_resolver->GetVisualRunsForLine(line_start, line_length);
-    CHECK(!visual_runs.empty());
+    if (visual_runs.empty()) {
+      visual_runs.push_back({line_start, line_length, /*is_rtl=*/false});
+    }
 
     for (const CFX_BidiResolver::ResolvedRun& run : visual_runs) {
       pdfium::span<const std::unique_ptr<CPVT_WordInfo>> run_words =
