@@ -119,5 +119,9 @@ assert(
     "pdf_enable_rust_bmp=true requires enable_rust=true, enable_rust_cxx=true, and pdf_use_skia=true")
 
 assert(
+    !pdf_enable_rust_jpeg || (enable_rust && enable_rust_cxx && pdf_use_skia),
+    "pdf_enable_rust_jpeg=true requires enable_rust=true, enable_rust_cxx=true, and pdf_use_skia=true")
+
+assert(
     !pdf_enable_rust_png || (enable_rust && enable_rust_cxx && pdf_use_skia),
     "pdf_enable_rust_png=true requires enable_rust=true, enable_rust_cxx=true, and pdf_use_skia=true")
