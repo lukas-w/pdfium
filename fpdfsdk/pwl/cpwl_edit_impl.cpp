@@ -756,7 +756,11 @@ void CPWL_EditImpl::SetAlignmentV(int32_t nFormat) {
 
 void CPWL_EditImpl::SetTextDirection(
     CFX_BidiResolver::ParagraphDirection direction) {
+  if (vt_->GetTextDirection() == direction) {
+    return;
+  }
   vt_->SetTextDirection(direction);
+  Paint();
 }
 
 CFX_BidiResolver::ParagraphDirection CPWL_EditImpl::GetTextDirection() const {
