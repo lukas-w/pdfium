@@ -941,21 +941,14 @@ TEST_F(FPDFFormFillEmbedderTest, DoNotHandleShortcutsOnKeyDown) {
   EXPECT_TRUE(FORM_OnKeyDown(form_handle(), page.get(), FWL_VKEY_Up, 0));
   EXPECT_TRUE(FORM_OnKeyDown(form_handle(), page.get(), FWL_VKEY_Right, 0));
 
-  // Edit shortcuts should not be handled by PDFium so that embedders can handle
-  // these shortcuts on platforms like MacOS which don't send OnChar events for
-  // the shortcuts.
-  EXPECT_FALSE(
-      FORM_OnKeyDown(form_handle(), page.get(), FWL_VKEY_A, kModifier));
+  // Clipboard shortcuts (C, V, X) should not be handled by PDFium so that
+  // embedders can handle these shortcuts via platform clipboard handlers.
   EXPECT_FALSE(
       FORM_OnKeyDown(form_handle(), page.get(), FWL_VKEY_C, kModifier));
   EXPECT_FALSE(
       FORM_OnKeyDown(form_handle(), page.get(), FWL_VKEY_V, kModifier));
   EXPECT_FALSE(
       FORM_OnKeyDown(form_handle(), page.get(), FWL_VKEY_X, kModifier));
-  EXPECT_FALSE(
-      FORM_OnKeyDown(form_handle(), page.get(), FWL_VKEY_Z, kModifier));
-  EXPECT_FALSE(FORM_OnKeyDown(form_handle(), page.get(), FWL_VKEY_Z,
-                              kModifier | FWL_EVENTFLAG_ShiftKey));
 }
 
 #ifdef PDF_ENABLE_XFA
@@ -3459,26 +3452,21 @@ TEST_F(FPDFFormFillTextFormEmbedderTest, RedoCutSelection) {
   EXPECT_EQ(Selection(), "");
 }
 
-// TODO(crbug.com/543962942): FORM_OnChar handling for keyboard shortcuts is
-// legacy behavior and will be replaced by FORM_OnKeyDown.
-TEST_F(FPDFFormFillTextFormEmbedderTest, SelectAllWithKeyboardShortcut) {
+TEST_F(FPDFFormFillTextFormEmbedderTest, DoNotHandleSelectAllOnChar) {
   // Start with a couple of letters in the text form.
   TypeTextIntoTextField(2, RegularFormBegin());
   EXPECT_EQ(FocusedFieldText(), "AB");
   EXPECT_EQ(Selection(), "");
 
-  // Select all with the keyboard shortcut.
+  // FORM_OnChar should not handle Select All; this is now handled via
+  // OnKeyDown.
 #if BUILDFLAG(IS_APPLE)
   static constexpr int kCorrectModifier = FWL_EVENTFLAG_MetaKey;
 #else
   static constexpr int kCorrectModifier = FWL_EVENTFLAG_ControlKey;
 #endif
-  FORM_OnChar(form_handle(), page(), pdfium::ascii::kControlA,
-              kCorrectModifier);
-  EXPECT_EQ(Selection(), "AB");
-
-  // Reset the selection again.
-  ClickOnFormFieldAtPoint(RegularFormBegin());
+  EXPECT_FALSE(FORM_OnChar(form_handle(), page(), pdfium::ascii::kControlA,
+                           kCorrectModifier));
   EXPECT_EQ(Selection(), "");
 
   // Select all with the keyboard shortcut using the wrong modifier key.
@@ -3503,10 +3491,12 @@ TEST_F(FPDFFormFillTextFormEmbedderTest, SelectAllWithOnKeyDown) {
 #else
   static constexpr int kCorrectModifier = FWL_EVENTFLAG_ControlKey;
 #endif
-  // TODO(crbug.com/543962942): FORM_OnKeyDown with FWL_VKEY_A should select all
-  // text in the field.
-  EXPECT_FALSE(
+  EXPECT_TRUE(
       FORM_OnKeyDown(form_handle(), page(), FWL_VKEY_A, kCorrectModifier));
+  EXPECT_EQ(Selection(), "AB");
+
+  // Reset the selection again.
+  ClickOnFormFieldAtPoint(RegularFormBegin());
   EXPECT_EQ(Selection(), "");
 
   // Select all with the keyboard shortcut using the wrong modifier key.
@@ -3517,6 +3507,11 @@ TEST_F(FPDFFormFillTextFormEmbedderTest, SelectAllWithOnKeyDown) {
 #endif
   EXPECT_FALSE(
       FORM_OnKeyDown(form_handle(), page(), FWL_VKEY_A, kWrongModifier));
+  EXPECT_EQ(Selection(), "");
+
+  // Select all with Shift key pressed should not be handled.
+  EXPECT_FALSE(FORM_OnKeyDown(form_handle(), page(), FWL_VKEY_A,
+                              kCorrectModifier | FWL_EVENTFLAG_ShiftKey));
   EXPECT_EQ(Selection(), "");
 }
 
@@ -3531,10 +3526,24 @@ TEST_F(FPDFFormFillTextFormEmbedderTest, UndoWithOnKeyDown) {
 #else
   static constexpr int kCorrectModifier = FWL_EVENTFLAG_ControlKey;
 #endif
-  // TODO(crbug.com/543962942): FORM_OnKeyDown with FWL_VKEY_Z should undo
-  // field text.
-  EXPECT_FALSE(
+  // First undo reverts 'B'.
+  EXPECT_TRUE(
       FORM_OnKeyDown(form_handle(), page(), FWL_VKEY_Z, kCorrectModifier));
+  EXPECT_EQ(FocusedFieldText(), "A");
+
+  // Second undo reverts 'A'.
+  EXPECT_TRUE(
+      FORM_OnKeyDown(form_handle(), page(), FWL_VKEY_Z, kCorrectModifier));
+  EXPECT_EQ(FocusedFieldText(), "");
+
+  // First redo restores 'A'.
+  EXPECT_TRUE(FORM_OnKeyDown(form_handle(), page(), FWL_VKEY_Z,
+                             kCorrectModifier | FWL_EVENTFLAG_ShiftKey));
+  EXPECT_EQ(FocusedFieldText(), "A");
+
+  // Second redo restores 'B'.
+  EXPECT_TRUE(FORM_OnKeyDown(form_handle(), page(), FWL_VKEY_Z,
+                             kCorrectModifier | FWL_EVENTFLAG_ShiftKey));
   EXPECT_EQ(FocusedFieldText(), "AB");
 
   // Undo with the keyboard shortcut using the wrong modifier key.

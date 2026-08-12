@@ -540,6 +540,23 @@ bool CPWL_Edit::OnKeyDownInternal(FWL_VKEYCODE nKeyCode,
     case FWL_VKEY_End:
       edit_impl_->OnVK_END(IsSHIFTKeyDown(nFlag), IsCTRLKeyDown(nFlag));
       return true;
+    case FWL_VKEY_A:
+      if (IsPlatformShortcutKey(nFlag) && !IsSHIFTKeyDown(nFlag) &&
+          !IsALTKeyDown(nFlag)) {
+        SelectAllText();
+        return true;
+      }
+      return false;
+    case FWL_VKEY_Z:
+      if (IsPlatformShortcutKey(nFlag) && !IsALTKeyDown(nFlag)) {
+        if (IsSHIFTKeyDown(nFlag)) {
+          Redo();
+        } else {
+          Undo();
+        }
+        return true;
+      }
+      return false;
     case FWL_VKEY_Unknown:
       ClearSelection();
       return true;
@@ -565,36 +582,15 @@ bool CPWL_Edit::OnCharInternal(uint16_t nChar, Mask<FWL_EVENTFLAG> nFlag) {
       break;
   }
 
-  bool bCtrl = IsPlatformShortcutKey(nFlag);
-  bool bAlt = IsALTKeyDown(nFlag);
-  bool bShift = IsSHIFTKeyDown(nFlag);
-
-  uint16_t word = nChar;
-
-  if (bCtrl && !bAlt) {
-    switch (nChar) {
-      case pdfium::ascii::kControlA:
-        SelectAllText();
-        return true;
-      case pdfium::ascii::kControlZ:
-        if (bShift) {
-          Redo();
-        } else {
-          Undo();
-        }
-        return true;
-      default:
-        if (nChar < 32) {
-          return false;
-        }
-    }
+  if (IsPlatformShortcutKey(nFlag) && !IsALTKeyDown(nFlag)) {
+    return false;
   }
 
   if (IsReadOnly()) {
     return true;
   }
 
-  edit_impl_->TypeChar(word, GetCharSet());
+  edit_impl_->TypeChar(nChar, GetCharSet());
   return true;
 }
 
