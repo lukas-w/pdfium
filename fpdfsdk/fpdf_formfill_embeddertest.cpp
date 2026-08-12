@@ -3557,6 +3557,31 @@ TEST_F(FPDFFormFillTextFormEmbedderTest, UndoWithOnKeyDown) {
   EXPECT_EQ(FocusedFieldText(), "AB");
 }
 
+TEST_F(FPDFFormFillTextFormEmbedderTest, RedoWithCtrlYKeyboardShortcut) {
+  // Start with a letter in the text form.
+  TypeTextIntoTextField(1, RegularFormBegin());
+  EXPECT_EQ(FocusedFieldText(), "A");
+
+  // Undo with the keyboard shortcut.
+  EXPECT_TRUE(FORM_OnKeyDown(form_handle(), page(), FWL_VKEY_Z, kModifier));
+  EXPECT_EQ(FocusedFieldText(), "");
+
+  // Shortcut with Shift key pressed should not be handled.
+  EXPECT_FALSE(FORM_OnKeyDown(form_handle(), page(), FWL_VKEY_Y,
+                              kModifier | FWL_EVENTFLAG_ShiftKey));
+  EXPECT_EQ(FocusedFieldText(), "");
+
+#if BUILDFLAG(IS_APPLE)
+  // On Apple platforms, Cmd+Y is not Redo and should not be handled.
+  EXPECT_FALSE(FORM_OnKeyDown(form_handle(), page(), FWL_VKEY_Y, kModifier));
+  EXPECT_EQ(FocusedFieldText(), "");
+#else
+  // On non-Apple platforms, Ctrl+Y is Redo.
+  EXPECT_TRUE(FORM_OnKeyDown(form_handle(), page(), FWL_VKEY_Y, kModifier));
+  EXPECT_EQ(FocusedFieldText(), "A");
+#endif
+}
+
 class FPDFXFAFormBug1055869EmbedderTest
     : public FPDFFormFillInteractiveEmbedderTest {
  protected:

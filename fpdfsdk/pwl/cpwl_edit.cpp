@@ -547,6 +547,16 @@ bool CPWL_Edit::OnKeyDownInternal(FWL_VKEYCODE nKeyCode,
         return true;
       }
       return false;
+#if !BUILDFLAG(IS_APPLE)
+    // Only non-Apple platforms use Ctrl+Y for Redo.
+    case FWL_VKEY_Y:
+      if (IsPlatformShortcutKey(nFlag) && !IsSHIFTKeyDown(nFlag) &&
+          !IsALTKeyDown(nFlag)) {
+        Redo();
+        return true;
+      }
+      return false;
+#endif
     case FWL_VKEY_Z:
       if (IsPlatformShortcutKey(nFlag) && !IsALTKeyDown(nFlag)) {
         if (IsSHIFTKeyDown(nFlag)) {
