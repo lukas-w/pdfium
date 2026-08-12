@@ -66,6 +66,9 @@ declare_args() {
   # `pdf_enable_rust_bmp` requires Skia and Rust support.
   pdf_enable_rust_bmp = pdf_enable_rust_bmp_override
 
+  # Build PDFium with Skia/Rust-based JPEG decoder.
+  pdf_enable_rust_jpeg = pdf_enable_rust_jpeg_override
+
   # Build PDFium with Rust-based PNG decoder and encoder.
   # If enabled, it ensures that PDFium doesn't depend on `libpng`.
   # Note that `pdf_enable_rust_png` requires Skia and Rust support.
@@ -96,6 +99,10 @@ declare_args() {
   # Don't build against bundled zlib.
   use_system_zlib = false
 }
+
+# Temporarily force false to allow recipe rollout without breaking tests.
+# TODO(tsepez): remove this once XFA side supports rust jpeg as well.
+pdf_enable_rust_jpeg = false
 
 assert(!pdf_is_complete_lib || !is_component_build,
        "pdf_is_complete_lib=true requires is_component_build=false")

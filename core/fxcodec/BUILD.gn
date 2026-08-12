@@ -58,12 +58,8 @@ source_set("fxcodec") {
     "jbig2/jbig2_symbol_dict.h",
     "jbig2/jbig2_trd_proc.cpp",
     "jbig2/jbig2_trd_proc.h",
-    "jpeg/jpeg_common.c",
-    "jpeg/jpeg_common.h",
     "jpeg/jpegmodule.cpp",
     "jpeg/jpegmodule.h",
-    "jpeg/libjpeg_scanline_decoder.cpp",
-    "jpeg/libjpeg_scanline_decoder.h",
     "jpx/cjpx_decoder.cpp",
     "jpx/cjpx_decoder.h",
     "jpx/jpx_decode_utils.cpp",
@@ -81,7 +77,6 @@ source_set("fxcodec") {
     "../../third_party:libopenjpeg2",
     "../../third_party:zlib",
     "../fxge",
-    "//third_party:jpeg",
   ]
   defines = []
   if (pdf_enable_brotli) {
@@ -152,12 +147,20 @@ source_set("fxcodec") {
       ]
     }
   }
-  if (pdf_use_skia) {
+  if (pdf_enable_rust_jpeg) {
     sources += [
       "jpeg/skia_scanline_decoder.cpp",
       "jpeg/skia_scanline_decoder.h",
     ]
     deps += [ "//skia" ]
+  } else {
+    sources += [
+      "jpeg/jpeg_common.c",
+      "jpeg/jpeg_common.h",
+      "jpeg/libjpeg_scanline_decoder.cpp",
+      "jpeg/libjpeg_scanline_decoder.h",
+    ]
+    deps += [ "//third_party:jpeg" ]
   }
   visibility = [ "../../*" ]
 }

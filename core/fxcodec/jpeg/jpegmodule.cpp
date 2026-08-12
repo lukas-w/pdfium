@@ -10,9 +10,14 @@
 #include <optional>
 
 #include "build/build_config.h"
-#include "core/fxcodec/jpeg/libjpeg_scanline_decoder.h"
 #include "core/fxcodec/scanlinedecoder.h"
 #include "core/fxcrt/span.h"
+
+#if defined(PDF_USE_SKIA) && defined(PDF_ENABLE_RUST_JPEG)
+#include "core/fxcodec/jpeg/skia_scanline_decoder.h"
+#else
+#include "core/fxcodec/jpeg/libjpeg_scanline_decoder.h"
+#endif
 
 #if BUILDFLAG(IS_WIN)
 #include <type_traits>
@@ -37,14 +42,23 @@ std::unique_ptr<ScanlineDecoder> JpegModule::CreateDecoder(
     int nComps,
     bool ColorTransform,
     uint32_t scale_denom) {
+#if defined(PDF_USE_SKIA) && defined(PDF_ENABLE_RUST_JPEG)
+  return SkiaScanlineDecoder::Create(src_span, width, height, nComps,
+                                     ColorTransform, scale_denom);
+#else
   return LibjpegScanlineDecoder::Create(src_span, width, height, nComps,
                                         ColorTransform, scale_denom);
+#endif
 }
 
 // static
 std::optional<JpegModule::ImageInfo> JpegModule::LoadInfo(
     pdfium::span<const uint8_t> src_span) {
+#if defined(PDF_USE_SKIA) && defined(PDF_ENABLE_RUST_JPEG)
+  return SkiaScanlineDecoder::LoadInfo(src_span);
+#else
   return LibjpegScanlineDecoder::LoadInfo(src_span);
+#endif
 }
 
 #if BUILDFLAG(IS_WIN)

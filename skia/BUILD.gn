@@ -202,6 +202,13 @@ config("skia_config") {
     defines += [ "SK_CODEC_DECODES_BMP_WITH_RUST" ]
   }
 
+  if (pdf_enable_rust_jpeg) {
+    defines += [
+      "SK_CODEC_DECODES_JPEG",
+      "SK_CODEC_DECODES_JPEG_WITH_RUST",
+    ]
+  }
+
   if (pdf_enable_rust_png) {
     defines += [
       "SK_CODEC_DECODES_PNG",
