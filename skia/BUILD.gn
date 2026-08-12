@@ -472,6 +472,16 @@ component("skia") {
   sources += skia_encode_png_base
   sources += skia_encode_public
   sources += skia_encode_srcs
+  sources += [
+    "//third_party/skia/src/codec/SkJpegCodec.cpp",
+    "//third_party/skia/src/codec/SkJpegDecoderMgr.cpp",
+    "//third_party/skia/src/codec/SkJpegMetadataDecoderImpl.cpp",
+    "//third_party/skia/src/codec/SkJpegMultiPicture.cpp",
+    "//third_party/skia/src/codec/SkJpegSegmentScan.cpp",
+    "//third_party/skia/src/codec/SkJpegSourceMgr.cpp",
+    "//third_party/skia/src/codec/SkJpegUtility.cpp",
+  ]
+
   if (pdf_enable_rust_png) {
     sources += skia_codec_rust_png
     sources += skia_codec_rust_png_public
@@ -487,6 +497,7 @@ component("skia") {
     sources += skia_encode_png_public
     deps += [ "../third_party:png" ]
   }
+  deps += [ "../third_party:jpeg" ]
 }
 
 # Template for things that are logically part of :skia, but need to be split out

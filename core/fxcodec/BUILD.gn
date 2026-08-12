@@ -152,6 +152,13 @@ source_set("fxcodec") {
       ]
     }
   }
+  if (pdf_use_skia) {
+    sources += [
+      "jpeg/skia_scanline_decoder.cpp",
+      "jpeg/skia_scanline_decoder.h",
+    ]
+    deps += [ "//skia" ]
+  }
   visibility = [ "../../*" ]
 }
 
