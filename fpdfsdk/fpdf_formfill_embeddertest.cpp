@@ -3459,6 +3459,8 @@ TEST_F(FPDFFormFillTextFormEmbedderTest, RedoCutSelection) {
   EXPECT_EQ(Selection(), "");
 }
 
+// TODO(crbug.com/543962942): FORM_OnChar handling for keyboard shortcuts is
+// legacy behavior and will be replaced by FORM_OnKeyDown.
 TEST_F(FPDFFormFillTextFormEmbedderTest, SelectAllWithKeyboardShortcut) {
   // Start with a couple of letters in the text form.
   TypeTextIntoTextField(2, RegularFormBegin());
@@ -3487,6 +3489,63 @@ TEST_F(FPDFFormFillTextFormEmbedderTest, SelectAllWithKeyboardShortcut) {
 #endif
   FORM_OnChar(form_handle(), page(), pdfium::ascii::kControlA, kWrongModifier);
   EXPECT_EQ(Selection(), "");
+}
+
+TEST_F(FPDFFormFillTextFormEmbedderTest, SelectAllWithOnKeyDown) {
+  // Start with a couple of letters in the text form.
+  TypeTextIntoTextField(2, RegularFormBegin());
+  EXPECT_EQ(FocusedFieldText(), "AB");
+  EXPECT_EQ(Selection(), "");
+
+  // Select all with the keyboard shortcut via OnKeyDown.
+#if BUILDFLAG(IS_APPLE)
+  static constexpr int kCorrectModifier = FWL_EVENTFLAG_MetaKey;
+#else
+  static constexpr int kCorrectModifier = FWL_EVENTFLAG_ControlKey;
+#endif
+  // TODO(crbug.com/543962942): FORM_OnKeyDown with FWL_VKEY_A should select all
+  // text in the field.
+  EXPECT_FALSE(
+      FORM_OnKeyDown(form_handle(), page(), FWL_VKEY_A, kCorrectModifier));
+  EXPECT_EQ(Selection(), "");
+
+  // Select all with the keyboard shortcut using the wrong modifier key.
+#if BUILDFLAG(IS_APPLE)
+  static constexpr int kWrongModifier = FWL_EVENTFLAG_ControlKey;
+#else
+  static constexpr int kWrongModifier = FWL_EVENTFLAG_MetaKey;
+#endif
+  EXPECT_FALSE(
+      FORM_OnKeyDown(form_handle(), page(), FWL_VKEY_A, kWrongModifier));
+  EXPECT_EQ(Selection(), "");
+}
+
+TEST_F(FPDFFormFillTextFormEmbedderTest, UndoWithOnKeyDown) {
+  // Start with a couple of letters in the text form.
+  TypeTextIntoTextField(2, RegularFormBegin());
+  EXPECT_EQ(FocusedFieldText(), "AB");
+
+  // Undo with the keyboard shortcut via OnKeyDown.
+#if BUILDFLAG(IS_APPLE)
+  static constexpr int kCorrectModifier = FWL_EVENTFLAG_MetaKey;
+#else
+  static constexpr int kCorrectModifier = FWL_EVENTFLAG_ControlKey;
+#endif
+  // TODO(crbug.com/543962942): FORM_OnKeyDown with FWL_VKEY_Z should undo
+  // field text.
+  EXPECT_FALSE(
+      FORM_OnKeyDown(form_handle(), page(), FWL_VKEY_Z, kCorrectModifier));
+  EXPECT_EQ(FocusedFieldText(), "AB");
+
+  // Undo with the keyboard shortcut using the wrong modifier key.
+#if BUILDFLAG(IS_APPLE)
+  static constexpr int kWrongModifier = FWL_EVENTFLAG_ControlKey;
+#else
+  static constexpr int kWrongModifier = FWL_EVENTFLAG_MetaKey;
+#endif
+  EXPECT_FALSE(
+      FORM_OnKeyDown(form_handle(), page(), FWL_VKEY_Z, kWrongModifier));
+  EXPECT_EQ(FocusedFieldText(), "AB");
 }
 
 class FPDFXFAFormBug1055869EmbedderTest
