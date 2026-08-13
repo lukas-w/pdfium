@@ -19,6 +19,7 @@
 #include "core/fxcrt/byteorder.h"
 #include "core/fxcrt/cfx_read_only_container_stream.h"
 #include "core/fxcrt/check.h"
+#include "core/fxcrt/check_op.h"
 #include "core/fxcrt/compiler_specific.h"
 #include "core/fxcrt/containers/contains.h"
 #include "core/fxcrt/data_vector.h"
@@ -491,7 +492,7 @@ int32_t CalcPenalty(CFGAS_FontDescriptor* pInstalled,
           ? static_cast<uint16_t>(-1)
           : FX_GetCodePageBit(wCodePage);
   if (wBit != static_cast<uint16_t>(-1)) {
-    DCHECK(wBit < 64);
+    DCHECK_LT(wBit, 64);
     if ((pInstalled->csb_[wBit / 32] & (1 << (wBit % 32))) == 0) {
       nPenalty += 0xFFFF;
     } else {
@@ -501,7 +502,7 @@ int32_t CalcPenalty(CFGAS_FontDescriptor* pInstalled,
   wBit = (wcUnicode == 0 || wcUnicode == 0xFFFE) ? FGAS_FONTUSB::kNoBitField
                                                  : FX_GetUnicodeBit(wcUnicode);
   if (wBit != FGAS_FONTUSB::kNoBitField) {
-    DCHECK(wBit < 128);
+    DCHECK_LT(wBit, 128);
     if ((pInstalled->usb_[wBit / 32] & (1 << (wBit % 32))) == 0) {
       nPenalty += 0xFFFF;
     } else {

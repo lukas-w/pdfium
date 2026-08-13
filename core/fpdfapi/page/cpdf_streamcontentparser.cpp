@@ -39,6 +39,7 @@
 #include "core/fxcrt/autonuller.h"
 #include "core/fxcrt/bytestring.h"
 #include "core/fxcrt/check.h"
+#include "core/fxcrt/check_op.h"
 #include "core/fxcrt/compiler_specific.h"
 #include "core/fxcrt/containers/contains.h"
 #include "core/fxcrt/fx_safe_types.h"
@@ -891,12 +892,12 @@ CPDF_ImageObject* CPDF_StreamContentParser::AddImageObject(
 }
 
 std::vector<float> CPDF_StreamContentParser::GetColors() const {
-  DCHECK(param_count_ > 0);
+  DCHECK_GT(param_count_, 0);
   return GetNumbers(param_count_);
 }
 
 std::vector<float> CPDF_StreamContentParser::GetNamedColors() const {
-  DCHECK(param_count_ > 0);
+  DCHECK_GT(param_count_, 0);
   const uint32_t nvalues = param_count_ - 1;
   std::vector<float> values(nvalues);
   for (size_t i = 0; i < nvalues; ++i) {
@@ -1643,7 +1644,7 @@ uint32_t CPDF_StreamContentParser::Parse(
     uint32_t start_offset,
     uint32_t max_cost,
     const std::vector<uint32_t>& stream_start_offsets) {
-  DCHECK(start_offset < pData.size());
+  DCHECK_LT(start_offset, pData.size());
 
   // Parsing will be done from within |pDataStart|.
   pdfium::span<const uint8_t> pDataStart = pData.subspan(start_offset);

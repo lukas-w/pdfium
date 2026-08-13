@@ -26,6 +26,7 @@
 #include "core/fpdfapi/render/cpdf_renderoptions.h"
 #include "core/fpdfdoc/cpdf_generateap.h"
 #include "core/fxcrt/check.h"
+#include "core/fxcrt/check_op.h"
 #include "core/fxge/cfx_fillrenderoptions.h"
 #include "core/fxge/cfx_graphstatedata.h"
 #include "core/fxge/cfx_path.h"
@@ -252,7 +253,7 @@ std::optional<CFX_FloatRect> CPDF_Annot::GetPopupAnnotRect() const {
 CFX_FloatRect CPDF_Annot::RectFromQuadPointsArray(const CPDF_Array* pArray,
                                                   size_t nIndex) {
   DCHECK(pArray);
-  DCHECK(nIndex < pArray->size() / 8);
+  DCHECK_LT(nIndex, pArray->size() / 8);
 
   // QuadPoints are defined with 4 pairs of numbers
   // ([ pair0, pair1, pair2, pair3 ]), where

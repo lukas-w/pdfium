@@ -6,7 +6,7 @@
 
 #include "xfa/fgas/layout/cfgas_breakline.h"
 
-#include "core/fxcrt/check.h"
+#include "core/fxcrt/check_op.h"
 
 CFGAS_BreakLine::CFGAS_BreakLine() = default;
 
@@ -36,6 +36,6 @@ void CFGAS_BreakLine::IncrementArabicCharCount() {
 }
 
 void CFGAS_BreakLine::DecrementArabicCharCount() {
-  DCHECK(arabic_chars_ > 0);
+  DCHECK_GT(arabic_chars_, 0);
   --arabic_chars_;
 }

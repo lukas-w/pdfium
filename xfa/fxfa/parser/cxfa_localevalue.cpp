@@ -13,6 +13,7 @@
 
 #include "core/fxcrt/cfx_datetime.h"
 #include "core/fxcrt/check.h"
+#include "core/fxcrt/check_op.h"
 #include "core/fxcrt/fx_extension.h"
 #include "core/fxcrt/fx_string.h"
 #include "core/fxcrt/span.h"
@@ -693,8 +694,8 @@ void CXFA_LocaleValue::GetNumericFormat(WideString& wsFormat,
                                         int32_t nIntLen,
                                         int32_t nDecLen) {
   DCHECK(wsFormat.IsEmpty());
-  DCHECK(nIntLen >= -1);
-  DCHECK(nDecLen >= -1);
+  DCHECK_GE(nIntLen, -1);
+  DCHECK_GE(nDecLen, -1);
 
   int32_t nTotalLen = (nIntLen >= 0 ? nIntLen : 2) + 1 +
                       (nDecLen >= 0 ? nDecLen : 2) + (nDecLen == 0 ? 0 : 1);

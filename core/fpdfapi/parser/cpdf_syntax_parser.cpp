@@ -99,7 +99,7 @@ CPDF_SyntaxParser::CPDF_SyntaxParser(RetainPtr<CPDF_ReadValidator> validator,
     : file_access_(std::move(validator)),
       header_offset_(HeaderOffset),
       file_len_(file_access_->GetSize()) {
-  DCHECK(header_offset_ <= file_len_);
+  DCHECK_LE(header_offset_, file_len_);
 }
 
 CPDF_SyntaxParser::~CPDF_SyntaxParser() = default;

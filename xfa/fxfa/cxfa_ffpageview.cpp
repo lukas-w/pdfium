@@ -9,7 +9,7 @@
 #include <algorithm>
 #include <vector>
 
-#include "core/fxcrt/check.h"
+#include "core/fxcrt/check_op.h"
 #include "core/fxcrt/containers/contains.h"
 #include "core/fxcrt/stl_util.h"
 #include "fxjs/gc/container_trace.h"
@@ -31,8 +31,8 @@ namespace {
 CFX_Matrix GetPageMatrix(const CFX_RectF& docPageRect,
                          const FX_RECT& devicePageRect,
                          int32_t rotation) {
-  DCHECK(rotation >= 0);
-  DCHECK(rotation <= 3);
+  DCHECK_GE(rotation, 0);
+  DCHECK_LE(rotation, 3);
 
   CFX_Matrix m;
   if (rotation == 0 || rotation == 2) {

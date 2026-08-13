@@ -8,6 +8,7 @@
 
 #include "build/build_config.h"
 #include "core/fxcrt/check.h"
+#include "core/fxcrt/check_op.h"
 #include "core/fxcrt/fx_extension.h"
 #include "core/fxcrt/fx_system.h"
 #include "core/fxcrt/span.h"
@@ -44,10 +45,10 @@ int64_t DateToDays(int32_t iYear,
                    uint8_t iDay,
                    bool bIncludeThisDay) {
   DCHECK(iYear != 0);
-  DCHECK(iMonth >= 1);
-  DCHECK(iMonth <= 12);
-  DCHECK(iDay >= 1);
-  DCHECK(iDay <= FX_DaysInMonth(iYear, iMonth));
+  DCHECK_GE(iMonth, 1);
+  DCHECK_LE(iMonth, 12);
+  DCHECK_GE(iDay, 1);
+  DCHECK_LE(iDay, FX_DaysInMonth(iYear, iMonth));
 
   int64_t iDays = DaysBeforeMonthInYear(iYear, iMonth);
   iDays += iDay;

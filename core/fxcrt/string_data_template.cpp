@@ -10,7 +10,6 @@
 
 #include <new>
 
-#include "core/fxcrt/check.h"
 #include "core/fxcrt/check_op.h"
 #include "core/fxcrt/fx_memory.h"
 #include "core/fxcrt/fx_safe_types.h"
@@ -39,7 +38,7 @@ RetainPtr<StringDataTemplate<CharType>> StringDataTemplate<CharType>::Create(
   nSize &= ~15;
   size_t totalSize = nSize.ValueOrDie();
   size_t usableLen = (totalSize - overhead) / sizeof(CharType);
-  DCHECK(usableLen >= nLen);
+  DCHECK_GE(usableLen, nLen);
 
   void* pData = FX_StringAlloc(char, totalSize);
   return pdfium::WrapRetain(new (pData) StringDataTemplate(nLen, usableLen));

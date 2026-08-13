@@ -13,6 +13,7 @@
 #include "core/fpdfapi/page/cpdf_pageimagecache.h"
 #include "core/fpdfapi/parser/cpdf_document.h"
 #include "core/fxcrt/check.h"
+#include "core/fxcrt/check_op.h"
 #include "fpdfsdk/cpdfsdk_pageview.h"
 #include "fpdfsdk/fpdfxfa/cpdfxfa_context.h"
 #include "fpdfsdk/fpdfxfa/cpdfxfa_widget.h"
@@ -78,7 +79,7 @@ CXFA_FFWidget::IteratorIface* GCedWidgetIteratorForAnnot(
 CPDFXFA_Page::CPDFXFA_Page(CPDF_Document* document, int page_index)
     : document_(document), page_index_(page_index) {
   DCHECK(document_->GetExtension());
-  DCHECK(page_index_ >= 0);
+  DCHECK_GE(page_index_, 0);
 }
 
 CPDFXFA_Page::~CPDFXFA_Page() = default;

@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "core/fxcrt/check.h"
+#include "core/fxcrt/check_op.h"
 #include "testing/utils/png_encode.h"
 
 // static
@@ -15,7 +16,7 @@ void BitmapSaver::WriteBitmapToPng(FPDF_BITMAP bitmap,
                                    const std::string& filename) {
   std::vector<uint8_t> png = EncodePng(bitmap);
   DCHECK(!png.empty());
-  DCHECK(filename.size() < 256u);
+  DCHECK_LT(filename.size(), 256u);
 
   std::ofstream png_file;
   png_file.open(filename, std::ios_base::out | std::ios_base::binary);

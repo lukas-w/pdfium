@@ -24,6 +24,7 @@
 #include "core/fpdfdoc/cpdf_formcontrol.h"
 #include "core/fpdfdoc/cpdf_interactiveform.h"
 #include "core/fxcrt/check.h"
+#include "core/fxcrt/check_op.h"
 #include "core/fxcrt/compiler_specific.h"
 #include "core/fxcrt/fx_extension.h"
 #include "core/fxcrt/fx_string_wrappers.h"
@@ -657,7 +658,7 @@ CJS_Result CJS_PublicMethods::AFNumber_Format(
       iDec2 = 1;
     }
   }
-  DCHECK(iDec2 >= 0);
+  DCHECK_GE(iDec2, 0);
 
   // Processing separator style
   if (static_cast<size_t>(iDec2) < strValue.GetLength()) {

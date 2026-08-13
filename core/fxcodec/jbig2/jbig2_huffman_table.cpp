@@ -13,6 +13,7 @@
 #include "core/fxcodec/jbig2/jbig2_bit_stream.h"
 #include "core/fxcodec/jbig2/jbig2_context.h"
 #include "core/fxcrt/check.h"
+#include "core/fxcrt/check_op.h"
 #include "core/fxcrt/fx_safe_types.h"
 #include "core/fxcrt/raw_span.h"
 
@@ -246,7 +247,7 @@ void CJBig2_HuffmanTable::ExtendBuffers(bool increment) {
   }
 
   size += 16;
-  DCHECK(NTEMP < size);
+  DCHECK_LT(NTEMP, size);
   CODES.resize(size);
   RANGELEN.resize(size);
   RANGELOW.resize(size);

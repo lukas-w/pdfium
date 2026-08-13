@@ -46,8 +46,8 @@ constexpr std::array<pdfium::span<const uint16_t>, 3>
                                       kUnicodeDataNormalizationMap4}};
 
 float NormalizeThreshold(float threshold, int t1, int t2, int t3) {
-  DCHECK(t1 < t2);
-  DCHECK(t2 < t3);
+  DCHECK_LT(t1, t2);
+  DCHECK_LT(t2, t3);
   if (threshold < t1) {
     return threshold / 2.0f;
   }
@@ -445,7 +445,7 @@ std::vector<CFX_FloatRect> CPDF_TextPage::GetRectArray(int start,
   if (count < 0 || start + count > number_of_chars) {
     count = number_of_chars - start;
   }
-  DCHECK(count > 0);
+  DCHECK_GT(count, 0);
 
   const CPDF_TextObject* text_object = nullptr;
   CFX_FloatRect rect;

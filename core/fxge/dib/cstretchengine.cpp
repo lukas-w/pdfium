@@ -13,6 +13,7 @@
 #include <utility>
 
 #include "core/fxcrt/check.h"
+#include "core/fxcrt/check_op.h"
 #include "core/fxcrt/fx_safe_types.h"
 #include "core/fxcrt/fx_system.h"
 #include "core/fxcrt/pauseindicator_iface.h"
@@ -175,7 +176,7 @@ bool CStretchEngine::WeightTable::CalculateWeights(
 
 const CStretchEngine::PixelWeight* CStretchEngine::WeightTable::GetPixelWeight(
     int pixel) const {
-  DCHECK(pixel >= dest_min_);
+  DCHECK_GE(pixel, dest_min_);
   return reinterpret_cast<const PixelWeight*>(
       &weight_tables_[(pixel - dest_min_) * item_size_bytes_]);
 }

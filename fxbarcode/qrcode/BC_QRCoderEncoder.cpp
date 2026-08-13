@@ -31,7 +31,6 @@
 #include <utility>
 #include <vector>
 
-#include "core/fxcrt/check.h"
 #include "core/fxcrt/check_op.h"
 #include "core/fxcrt/data_vector.h"
 #include "core/fxcrt/fx_extension.h"
@@ -198,7 +197,7 @@ bool InitQRCode(int32_t numInputBytes,
 DataVector<uint8_t> GenerateECBytes(pdfium::span<const uint8_t> dataBytes,
                                     size_t numEcBytesInBlock) {
   // If |numEcBytesInBlock| is 0, the encoder will fail anyway.
-  DCHECK(numEcBytesInBlock > 0);
+  DCHECK_GT(numEcBytesInBlock, 0);
   std::vector<int32_t> toEncode(dataBytes.size() + numEcBytesInBlock);
   std::copy(dataBytes.begin(), dataBytes.end(), toEncode.begin());
 
@@ -323,8 +322,8 @@ bool InterleaveWithECBytes(CBC_QRCoderBitVector* bits,
                            int32_t numDataBytes,
                            int32_t numRSBlocks,
                            CBC_QRCoderBitVector* result) {
-  DCHECK(numTotalBytes >= 0);
-  DCHECK(numDataBytes >= 0);
+  DCHECK_GE(numTotalBytes, 0);
+  DCHECK_GE(numDataBytes, 0);
   if (bits->sizeInBytes() != static_cast<size_t>(numDataBytes)) {
     return false;
   }

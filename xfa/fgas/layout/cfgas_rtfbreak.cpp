@@ -10,6 +10,7 @@
 
 #include "build/build_config.h"
 #include "core/fxcrt/check.h"
+#include "core/fxcrt/check_op.h"
 #include "core/fxcrt/compiler_specific.h"
 #include "core/fxcrt/containers/adapters.h"
 #include "core/fxcrt/fx_extension.h"
@@ -163,7 +164,7 @@ void CFGAS_RTFBreak::AppendChar_Tab(CFGAS_Char* pCurChar) {
     iSafeCharWidth = iCharWidth;
   } else {
     // Tab width is >= 160000, so this part does not need to be checked.
-    DCHECK(tab_width_ >= kMinimumTabWidth);
+    DCHECK_GE(tab_width_, kMinimumTabWidth);
     iSafeCharWidth = iLineWidth / tab_width_ + 1;
     iSafeCharWidth *= tab_width_;
   }

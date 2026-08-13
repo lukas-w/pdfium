@@ -24,8 +24,8 @@ void CFX_BitStream::ByteAlign() {
 }
 
 uint32_t CFX_BitStream::GetBits(uint32_t nBits) {
-  DCHECK(nBits > 0);
-  DCHECK(nBits <= 32);
+  DCHECK_GT(nBits, 0);
+  DCHECK_LE(nBits, 32);
   if (nBits > bit_size_ || bit_pos_ > bit_size_ - nBits) {
     return 0;
   }

@@ -12,7 +12,7 @@
 #include <limits>
 #include <utility>
 
-#include "core/fxcrt/check.h"
+#include "core/fxcrt/check_op.h"
 #include "core/fxcrt/compiler_specific.h"
 #include "core/fxcrt/fx_extension.h"
 
@@ -143,7 +143,7 @@ inline void decimal_helper_raw_mul(uint64_t a[],
                                    uint8_t bl,
                                    uint64_t c[],
                                    uint8_t cl) {
-  DCHECK(al + bl <= cl);
+  DCHECK_LE(al + bl, cl);
   UNSAFE_TODO({
     for (int i = 0; i < cl; i++) {
       c[i] = 0;

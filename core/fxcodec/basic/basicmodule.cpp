@@ -11,7 +11,7 @@
 
 #include "core/fxcodec/scanlinedecoder.h"
 #include "core/fxcrt/byteorder.h"
-#include "core/fxcrt/check.h"
+#include "core/fxcrt/check_op.h"
 #include "core/fxcrt/data_vector.h"
 #include "core/fxcrt/fx_safe_types.h"
 #include "core/fxcrt/numerics/safe_conversions.h"
@@ -187,7 +187,7 @@ void RLScanlineDecoder::UpdateOperator(uint8_t used_bytes) {
     return;
   }
   if (operator_ < 128) {
-    DCHECK((uint32_t)operator_ + 1 >= used_bytes);
+    DCHECK_GE((uint32_t)operator_ + 1, used_bytes);
     if (used_bytes == operator_ + 1) {
       src_offset_ += used_bytes;
       GetNextOperator();
@@ -201,7 +201,7 @@ void RLScanlineDecoder::UpdateOperator(uint8_t used_bytes) {
     return;
   }
   uint8_t count = 257 - operator_;
-  DCHECK((uint32_t)count >= used_bytes);
+  DCHECK_GE((uint32_t)count, used_bytes);
   if (used_bytes == count) {
     src_offset_++;
     GetNextOperator();

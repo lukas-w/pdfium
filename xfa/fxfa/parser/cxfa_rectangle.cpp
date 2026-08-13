@@ -10,7 +10,7 @@
 
 #include <utility>
 
-#include "core/fxcrt/check.h"
+#include "core/fxcrt/check_op.h"
 #include "core/fxcrt/notreached.h"
 #include "fxjs/xfa/cjx_node.h"
 #include "xfa/fgas/graphics/cfgas_gegraphics.h"
@@ -477,8 +477,8 @@ void CXFA_Rectangle::GetPath(const std::vector<CXFA_Stroke*>& strokes,
                              int32_t nIndex,
                              bool bStart,
                              bool bCorner) {
-  DCHECK(nIndex >= 0);
-  DCHECK(nIndex < 8);
+  DCHECK_GE(nIndex, 0);
+  DCHECK_LT(nIndex, 8);
 
   int32_t n = (nIndex & 1) ? nIndex - 1 : nIndex;
   CXFA_Stroke* corner1 = strokes[n];

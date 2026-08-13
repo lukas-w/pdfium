@@ -17,7 +17,6 @@
 #include "build/build_config.h"
 #include "core/fxcodec/scanlinedecoder.h"
 #include "core/fxcrt/binary_buffer.h"
-#include "core/fxcrt/check.h"
 #include "core/fxcrt/check_op.h"
 #include "core/fxcrt/compiler_specific.h"
 #include "core/fxcrt/data_vector.h"
@@ -61,7 +60,7 @@ int FindBit(pdfium::span<const uint8_t> data_buf,
             int max_pos,
             int start_pos,
             bool bit) {
-  DCHECK(start_pos >= 0);
+  DCHECK_GE(start_pos, 0);
   if (start_pos >= max_pos) {
     return max_pos;
   }

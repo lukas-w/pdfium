@@ -11,6 +11,7 @@
 
 #include "build/build_config.h"
 #include "core/fxcrt/check.h"
+#include "core/fxcrt/check_op.h"
 #include "core/fxcrt/compiler_specific.h"
 #include "core/fxcrt/containers/adapters.h"
 #include "core/fxcrt/fx_codepage.h"
@@ -45,12 +46,12 @@ CFGAS_TxtBreak::~CFGAS_TxtBreak() = default;
 
 void CFGAS_TxtBreak::SetLineWidth(float fLineWidth) {
   line_width_ = FXSYS_roundf(fLineWidth * kConversionFactor);
-  DCHECK(line_width_ >= 20000);
+  DCHECK_GE(line_width_, 20000);
 }
 
 void CFGAS_TxtBreak::SetAlignment(int32_t iAlignment) {
-  DCHECK(iAlignment >= CFX_TxtLineAlignment_Left);
-  DCHECK(iAlignment <= CFX_TxtLineAlignment_Justified);
+  DCHECK_GE(iAlignment, CFX_TxtLineAlignment_Left);
+  DCHECK_LE(iAlignment, CFX_TxtLineAlignment_Justified);
   alignment_ = iAlignment;
 }
 

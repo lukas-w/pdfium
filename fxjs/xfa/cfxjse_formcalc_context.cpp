@@ -1084,7 +1084,7 @@ v8::Local<v8::Value> GetExtractedValue(v8::Isolate* pIsolate,
 v8::Local<v8::Value> GetSimpleValue(
     const v8::FunctionCallbackInfo<v8::Value>& info,
     uint32_t index) {
-  DCHECK(index < static_cast<uint32_t>(info.Length()));
+  DCHECK_LT(index, static_cast<uint32_t>(info.Length()));
   return GetExtractedValue(info.GetIsolate(), info[index]);
 }
 

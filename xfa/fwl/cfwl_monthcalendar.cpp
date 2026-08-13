@@ -12,7 +12,7 @@
 #include <utility>
 
 #include "core/fxcrt/cfx_datetime.h"
-#include "core/fxcrt/check.h"
+#include "core/fxcrt/check_op.h"
 #include "core/fxcrt/containers/contains.h"
 #include "core/fxcrt/notreached.h"
 #include "core/fxcrt/stl_util.h"
@@ -542,7 +542,7 @@ void CFWL_MonthCalendar::RemoveSelDay() {
 }
 
 void CFWL_MonthCalendar::AddSelDay(int32_t iDay) {
-  DCHECK(iDay > 0);
+  DCHECK_GT(iDay, 0);
   if (!Contains(sel_day_array_, iDay)) {
     return;
   }

@@ -11,6 +11,7 @@
 #include <iterator>
 
 #include "core/fxcrt/check.h"
+#include "core/fxcrt/check_op.h"
 #include "core/fxcrt/fx_extension.h"
 #include "core/fxcrt/stl_util.h"
 
@@ -272,7 +273,7 @@ void ReverseString(std::vector<CFGAS_Char>* chars,
                    size_t iStart,
                    size_t iCount) {
   DCHECK(fxcrt::IndexInBounds(*chars, iStart));
-  DCHECK(iStart + iCount <= chars->size());
+  DCHECK_LE(iStart + iCount, chars->size());
 
   std::reverse(chars->begin() + iStart, chars->begin() + iStart + iCount);
 }
@@ -281,8 +282,8 @@ void SetDeferredRunClass(std::vector<CFGAS_Char>* chars,
                          size_t iStart,
                          size_t iCount,
                          BidiClass eValue) {
-  DCHECK(iStart <= chars->size());
-  DCHECK(iStart >= iCount);
+  DCHECK_LE(iStart, chars->size());
+  DCHECK_GE(iStart, iCount);
 
   size_t iLast = iStart - iCount;
   for (size_t i = iStart; i > iLast; --i) {
@@ -294,8 +295,8 @@ void SetDeferredRunLevel(std::vector<CFGAS_Char>* chars,
                          size_t iStart,
                          size_t iCount,
                          int32_t iValue) {
-  DCHECK(iStart <= chars->size());
-  DCHECK(iStart >= iCount);
+  DCHECK_LE(iStart, chars->size());
+  DCHECK_GE(iStart, iCount);
 
   size_t iLast = iStart - iCount;
   for (size_t i = iStart; i > iLast; --i) {
@@ -515,9 +516,9 @@ size_t ReorderLevel(std::vector<CFGAS_Char>* chars,
                     int32_t iBaseLevel,
                     size_t iStart,
                     bool bReverse) {
-  DCHECK(iBaseLevel >= 0);
-  DCHECK(iBaseLevel <= kBidiMaxLevel);
-  DCHECK(iStart < iCount);
+  DCHECK_GE(iBaseLevel, 0);
+  DCHECK_LE(iBaseLevel, kBidiMaxLevel);
+  DCHECK_LT(iStart, iCount);
 
   if (iCount < 1) {
     return 0;
@@ -565,7 +566,7 @@ void Position(std::vector<CFGAS_Char>* chars, size_t iCount) {
 
 // static
 void CFGAS_Char::BidiLine(std::vector<CFGAS_Char>* chars, size_t iCount) {
-  DCHECK(iCount <= chars->size());
+  DCHECK_LE(iCount, chars->size());
   if (iCount < 2) {
     return;
   }

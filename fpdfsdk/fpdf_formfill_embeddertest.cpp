@@ -253,14 +253,14 @@ class FPDFFormFillTextFormEmbedderTest
   }
 
   static CFX_PointF CharLimitFormAtX(float x) {
-    DCHECK(x >= kFormBeginX);
-    DCHECK(x <= kFormEndX);
+    DCHECK_GE(x, kFormBeginX);
+    DCHECK_LE(x, kFormEndX);
     return CFX_PointF(x, kCharLimitFormY);
   }
 
   static CFX_PointF RegularFormAtX(float x) {
-    DCHECK(x >= kFormBeginX);
-    DCHECK(x <= kFormEndX);
+    DCHECK_GE(x, kFormBeginX);
+    DCHECK_LE(x, kFormEndX);
     return CFX_PointF(x, kRegularFormY);
   }
 
@@ -297,14 +297,14 @@ class FPDFFormFillComboBoxFormEmbedderTest
   }
 
   void SelectEditableFormOption(int item_index) {
-    DCHECK(item_index >= 0);
-    DCHECK(item_index < 3);
+    DCHECK_GE(item_index, 0);
+    DCHECK_LT(item_index, 3);
     SelectOption(item_index, EditableFormDropDown());
   }
 
   void SelectNonEditableFormOption(int item_index) {
-    DCHECK(item_index >= 0);
-    DCHECK(item_index < 26);
+    DCHECK_GE(item_index, 0);
+    DCHECK_LT(item_index, 26);
     SelectOption(item_index, NonEditableFormDropDown());
   }
 
@@ -347,14 +347,14 @@ class FPDFFormFillComboBoxFormEmbedderTest
   }
 
   static CFX_PointF EditableFormAtX(float x) {
-    DCHECK(x >= kFormBeginX);
-    DCHECK(x <= kFormEndX);
+    DCHECK_GE(x, kFormBeginX);
+    DCHECK_LE(x, kFormEndX);
     return CFX_PointF(x, kEditableFormY);
   }
 
   static CFX_PointF NonEditableFormAtX(float x) {
-    DCHECK(x >= kFormBeginX);
-    DCHECK(x <= kFormEndX);
+    DCHECK_GE(x, kFormBeginX);
+    DCHECK_LE(x, kFormEndX);
     return CFX_PointF(x, kNonEditableFormY);
   }
 
@@ -443,8 +443,8 @@ class FPDFFormFillListBoxFormEmbedderTest
   void ClickOnSingleSelectFormOption(int item_index) {
     // Only the first two indices are visible so can only click on those
     // without scrolling.
-    DCHECK(item_index >= 0);
-    DCHECK(item_index < 2);
+    DCHECK_GE(item_index, 0);
+    DCHECK_LT(item_index, 2);
     if (item_index == 0) {
       ClickOnFormFieldAtPoint(SingleSelectFirstVisibleOption());
     } else {
@@ -455,8 +455,8 @@ class FPDFFormFillListBoxFormEmbedderTest
   void ClickOnMultiSelectFormOption(int item_index) {
     // Only the first two indices are visible so can only click on those
     // without scrolling.
-    DCHECK(item_index >= 0);
-    DCHECK(item_index < 2);
+    DCHECK_GE(item_index, 0);
+    DCHECK_LT(item_index, 2);
     if (item_index == 0) {
       ClickOnFormFieldAtPoint(MultiSelectFirstVisibleOption());
     } else {
@@ -467,8 +467,8 @@ class FPDFFormFillListBoxFormEmbedderTest
   void ClickOnMultiSelectMultipleValuesFormOption(int item_index) {
     // Only two indices are visible so can only click on those
     // without scrolling.
-    DCHECK(item_index >= 0);
-    DCHECK(item_index < 2);
+    DCHECK_GE(item_index, 0);
+    DCHECK_LT(item_index, 2);
     if (item_index == 0) {
       ClickOnFormFieldAtPoint(MultiSelectMultipleValuesFirstVisibleOption());
     } else {
@@ -479,8 +479,8 @@ class FPDFFormFillListBoxFormEmbedderTest
   void ClickOnSingleSelectLastSelectedFormOption(int item_index) {
     // Only two indices are visible so can only click on those
     // without scrolling.
-    DCHECK(item_index >= 0);
-    DCHECK(item_index < 2);
+    DCHECK_GE(item_index, 0);
+    DCHECK_LT(item_index, 2);
     if (item_index == 0) {
       ClickOnFormFieldAtPoint(SingleSelectLastSelectedFirstVisibleOption());
     } else {

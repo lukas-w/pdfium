@@ -338,7 +338,7 @@ bool CPDF_SecurityHandler::LoadDict(const CPDF_Dictionary* pEncryptDict,
 bool CPDF_SecurityHandler::AES256_CheckPassword(const ByteString& password,
                                                 bool bOwner) {
   DCHECK(encrypt_dict_);
-  DCHECK(revision_ >= 5);
+  DCHECK_GE(revision_, 5);
 
   ByteString okey = encrypt_dict_->GetByteStringFor("O");
   if (okey.GetLength() < 48) {

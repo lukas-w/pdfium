@@ -23,6 +23,7 @@
 #include "core/fpdfdoc/cpdf_iconfit.h"
 #include "core/fpdfdoc/cpdf_interactiveform.h"
 #include "core/fxcrt/check.h"
+#include "core/fxcrt/check_op.h"
 #include "core/fxcrt/notreached.h"
 #include "core/fxcrt/retain_ptr.h"
 #include "core/fxge/cfx_fillrenderoptions.h"
@@ -415,8 +416,8 @@ FormFieldType CPDFSDK_Widget::GetFieldType() const {
 }
 
 void CPDFSDK_Widget::SetRect(const CFX_FloatRect& rect) {
-  DCHECK(rect.right - rect.left >= 1.0f);
-  DCHECK(rect.top - rect.bottom >= 1.0f);
+  DCHECK_GE(rect.right - rect.left, 1.0f);
+  DCHECK_GE(rect.top - rect.bottom, 1.0f);
   GetMutableAnnotDict()->SetRectFor(pdfium::annotation::kRect, rect);
 }
 

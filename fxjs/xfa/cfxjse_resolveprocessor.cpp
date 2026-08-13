@@ -10,7 +10,6 @@
 #include <utility>
 #include <vector>
 
-#include "core/fxcrt/check.h"
 #include "core/fxcrt/check_op.h"
 #include "core/fxcrt/containers/contains.h"
 #include "core/fxcrt/fx_extension.h"
@@ -530,7 +529,7 @@ bool CFXJSE_ResolveProcessor::ResolveAsterisk(NodeData& rnd) {
 int32_t CFXJSE_ResolveProcessor::GetFilter(WideStringView wsExpression,
                                            int32_t nStart,
                                            NodeData& rnd) {
-  DCHECK(nStart > -1);
+  DCHECK_GT(nStart, -1);
 
   int32_t iLength = wsExpression.GetLength();
   if (nStart >= iLength) {

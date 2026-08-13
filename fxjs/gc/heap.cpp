@@ -7,6 +7,7 @@
 #include <utility>
 
 #include "core/fxcrt/check.h"
+#include "core/fxcrt/check_op.h"
 #include "core/fxcrt/fx_system.h"
 #include "v8/include/cppgc/heap.h"
 
@@ -99,7 +100,7 @@ void FXGC_ForceGarbageCollection(cppgc::Heap* heap) {
 
 void FXGCHeapDeleter::operator()(cppgc::Heap* heap) {
   DCHECK(heap);
-  DCHECK(g_platform_ref_count > 0);
+  DCHECK_GT(g_platform_ref_count, 0);
   --g_platform_ref_count;
 
   FXGC_ForceGarbageCollection(heap);

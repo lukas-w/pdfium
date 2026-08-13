@@ -10,6 +10,7 @@
 #include <utility>
 
 #include "core/fxcrt/check.h"
+#include "core/fxcrt/check_op.h"
 #include "core/fxcrt/containers/adapters.h"
 #include "core/fxcrt/css/cfx_csscolorvalue.h"
 #include "core/fxcrt/css/cfx_csscomputedstyle.h"
@@ -27,7 +28,7 @@ CFX_CSSStyleSelector::CFX_CSSStyleSelector() = default;
 CFX_CSSStyleSelector::~CFX_CSSStyleSelector() = default;
 
 void CFX_CSSStyleSelector::SetDefaultFontSize(float fFontSize) {
-  DCHECK(fFontSize > 0);
+  DCHECK_GT(fFontSize, 0);
   default_font_size_ = fFontSize;
 }
 

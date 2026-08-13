@@ -24,7 +24,7 @@
 
 #include <iterator>
 
-#include "core/fxcrt/check.h"
+#include "core/fxcrt/check_op.h"
 #include "core/fxcrt/compiler_specific.h"
 #include "core/fxcrt/fx_extension.h"
 #include "fxbarcode/datamatrix/BC_Encoder.h"
@@ -201,7 +201,7 @@ int32_t CBC_C40Encoder::EncodeChar(wchar_t c, WideString* sb) {
 int32_t CBC_C40Encoder::BacktrackOneCharacter(CBC_EncoderContext* context,
                                               WideString* buffer,
                                               int32_t lastCharSize) {
-  DCHECK(lastCharSize >= 0);
+  DCHECK_GE(lastCharSize, 0);
 
   if (context->pos_ < 1) {
     return -1;

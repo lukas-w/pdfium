@@ -156,7 +156,7 @@ wchar_t GetMirrorChar(wchar_t wch) {
 BidiClass GetBidiClass(wchar_t wch) {
   uint16_t prop = GetUnicodeProperties(wch);
   uint16_t result = (prop & kBidiClassBitMask) >> kBidiClassBitPos;
-  DCHECK(result <= static_cast<uint16_t>(BidiClass::kPDF));
+  DCHECK_LE(result, static_cast<uint16_t>(BidiClass::kPDF));
   return static_cast<BidiClass>(result);
 }
 
@@ -164,14 +164,14 @@ BidiClass GetBidiClass(wchar_t wch) {
 CharType GetCharType(wchar_t wch) {
   uint16_t prop = GetExtendedUnicodeProperties(wch);
   uint16_t result = (prop & kCharTypeBitMask) >> kCharTypeBitPos;
-  DCHECK(result <= static_cast<uint16_t>(CharType::kArabic));
+  DCHECK_LE(result, static_cast<uint16_t>(CharType::kArabic));
   return static_cast<CharType>(result);
 }
 
 BreakProperty GetBreakProperty(wchar_t wch) {
   uint16_t prop = GetExtendedUnicodeProperties(wch);
   uint16_t result = (prop & kBreakTypeBitMask) >> kBreakTypeBitPos;
-  DCHECK(result <= static_cast<uint16_t>(BreakProperty::kTB));
+  DCHECK_LE(result, static_cast<uint16_t>(BreakProperty::kTB));
   return static_cast<BreakProperty>(result);
 }
 #endif  // PDF_ENABLE_XFA

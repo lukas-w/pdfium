@@ -1205,8 +1205,8 @@ void CFDE_TextEditEngine::RebuildPieces() {
 
 std::pair<int32_t, CFX_RectF> CFDE_TextEditEngine::GetCharacterInfo(
     int32_t start_idx) {
-  DCHECK(start_idx >= 0);
-  DCHECK(static_cast<size_t>(start_idx) <= text_length_);
+  DCHECK_GE(start_idx, 0);
+  DCHECK_LE(static_cast<size_t>(start_idx), text_length_);
 
   // Make sure the current available data is fresh.
   Layout();

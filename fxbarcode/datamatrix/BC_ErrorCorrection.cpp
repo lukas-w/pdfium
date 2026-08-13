@@ -29,6 +29,7 @@
 #include <vector>
 
 #include "core/fxcrt/check.h"
+#include "core/fxcrt/check_op.h"
 #include "core/fxcrt/fixed_size_data_vector.h"
 #include "core/fxcrt/span.h"
 #include "fxbarcode/datamatrix/BC_Encoder.h"
@@ -150,7 +151,7 @@ constexpr std::array<uint8_t, 256> ALOG = {
      0}};
 
 WideString CreateECCBlock(const WideString& codewords, size_t numECWords) {
-  DCHECK(numECWords > 0);
+  DCHECK_GT(numECWords, 0);
 
   const size_t len = codewords.GetLength();
   static constexpr size_t kFactorTableNum = std::size(FACTORS);

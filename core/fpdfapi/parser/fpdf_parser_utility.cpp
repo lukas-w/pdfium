@@ -19,6 +19,7 @@
 #include "core/fpdfapi/parser/cpdf_string.h"
 #include "core/fpdfapi/parser/fpdf_parser_decode.h"
 #include "core/fxcrt/check.h"
+#include "core/fxcrt/check_op.h"
 #include "core/fxcrt/compiler_specific.h"
 #include "core/fxcrt/fx_extension.h"
 #include "core/fxcrt/fx_stream.h"
@@ -150,7 +151,7 @@ ByteString PDF_NameEncode(const ByteString& orig) {
 std::vector<float> ReadArrayElementsToVector(const CPDF_Array* pArray,
                                              size_t nCount) {
   DCHECK(pArray);
-  DCHECK(pArray->size() >= nCount);
+  DCHECK_GE(pArray->size(), nCount);
   std::vector<float> ret(nCount);
   for (size_t i = 0; i < nCount; ++i) {
     ret[i] = pArray->GetFloatAt(i);

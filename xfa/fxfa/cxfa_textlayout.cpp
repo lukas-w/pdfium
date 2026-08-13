@@ -12,6 +12,7 @@
 #include <utility>
 
 #include "core/fxcrt/check.h"
+#include "core/fxcrt/check_op.h"
 #include "core/fxcrt/compiler_specific.h"
 #include "core/fxcrt/css/cfx_csscomputedstyle.h"
 #include "core/fxcrt/css/cfx_cssstyleselector.h"
@@ -517,7 +518,7 @@ float CXFA_TextLayout::Layout(const CFX_SizeF& size) {
 }
 
 bool CXFA_TextLayout::LayoutInternal(size_t szBlockIndex) {
-  DCHECK(szBlockIndex < CountBlocks());
+  DCHECK_LT(szBlockIndex, CountBlocks());
 
   if (!loader_ || loader_->fWidth < 1) {
     return false;

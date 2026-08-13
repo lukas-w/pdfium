@@ -9,7 +9,7 @@
 #include <array>
 #include <iterator>
 
-#include "core/fxcrt/check.h"
+#include "core/fxcrt/check_op.h"
 #include "core/fxcrt/fx_system.h"
 #include "core/fxcrt/span.h"
 
@@ -2826,7 +2826,7 @@ const std::array<uint8_t, 32768> kCodePointProperties = {{
 
 bool FX_CheckStateChangeForWordBreak(WordBreakProperty from,
                                      WordBreakProperty to) {
-  DCHECK(static_cast<int>(from) < 13);
+  DCHECK_LT(static_cast<int>(from), 13);
   return !!(kWordBreakTable[static_cast<int>(from)] &
             static_cast<uint16_t>(1 << static_cast<int>(to)));
 }

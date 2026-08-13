@@ -21,7 +21,7 @@
 #include "core/fxcodec/jbig2/jbig2_pdd_proc.h"
 #include "core/fxcodec/jbig2/jbig2_sdd_proc.h"
 #include "core/fxcodec/jbig2/jbig2_trd_proc.h"
-#include "core/fxcrt/check.h"
+#include "core/fxcrt/check_op.h"
 #include "core/fxcrt/fixed_size_data_vector.h"
 #include "core/fxcrt/fx_memory_wrappers.h"
 #include "core/fxcrt/fx_safe_types.h"
@@ -1297,8 +1297,8 @@ std::vector<JBig2HuffmanCode> CJBig2_Context::DecodeSymbolIDHuffmanTable(
 }
 
 const CJBig2_HuffmanTable* CJBig2_Context::GetHuffmanTable(size_t idx) {
-  DCHECK(idx > 0);
-  DCHECK(idx < CJBig2_HuffmanTable::kNumHuffmanTables);
+  DCHECK_GT(idx, 0);
+  DCHECK_LT(idx, CJBig2_HuffmanTable::kNumHuffmanTables);
   if (!huffman_tables_[idx].get()) {
     huffman_tables_[idx] = std::make_unique<CJBig2_HuffmanTable>(idx);
   }

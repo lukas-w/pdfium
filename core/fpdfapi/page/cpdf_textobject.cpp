@@ -11,6 +11,7 @@
 #include "core/fpdfapi/font/cpdf_cidfont.h"
 #include "core/fpdfapi/font/cpdf_font.h"
 #include "core/fxcrt/check.h"
+#include "core/fxcrt/check_op.h"
 #include "core/fxcrt/fx_coordinates.h"
 #include "core/fxcrt/span.h"
 #include "core/fxcrt/span_util.h"
@@ -55,7 +56,7 @@ size_t CPDF_TextObject::CountItems() const {
 }
 
 CPDF_TextObject::Item CPDF_TextObject::GetItemInfo(size_t index) const {
-  DCHECK(index < char_codes_.size());
+  DCHECK_LT(index, char_codes_.size());
 
   Item info;
   info.char_code_ = char_codes_[index];
@@ -231,7 +232,7 @@ void CPDF_TextObject::SetSegments(pdfium::span<const ByteString> strings,
     ByteStringView segment = strings[i].AsStringView();
     size_t offset = 0;
     while (offset < segment.GetLength()) {
-      DCHECK(index < char_codes_.size());
+      DCHECK_LT(index, char_codes_.size());
       char_codes_[index++] = font->GetNextChar(segment, &offset);
     }
     if (i != segments_count - 1) {

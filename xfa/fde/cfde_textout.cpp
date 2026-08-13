@@ -138,7 +138,7 @@ void CFDE_TextOut::SetFont(RetainPtr<CFGAS_GEFont> pFont) {
 }
 
 void CFDE_TextOut::SetFontSize(float fFontSize) {
-  DCHECK(fFontSize > 0);
+  DCHECK_GT(fFontSize, 0);
   font_size_ = fFontSize;
   txt_break_->SetFontSize(fFontSize);
 }
@@ -171,7 +171,7 @@ void CFDE_TextOut::SetAlignment(FDE_TextAlignment iAlignment) {
 }
 
 void CFDE_TextOut::SetLineSpace(float fLineSpace) {
-  DCHECK(fLineSpace > 1.0f);
+  DCHECK_GT(fLineSpace, 1.0f);
   line_space_ = fLineSpace;
 }
 
@@ -194,7 +194,7 @@ void CFDE_TextOut::CalcLogicSize(WideStringView str, CFX_RectF* pRect) {
   }
 
   DCHECK(font_);
-  DCHECK(font_size_ >= 1.0f);
+  DCHECK_GE(font_size_, 1.0f);
 
   if (!styles_.single_line_) {
     if (pRect->Width() < 1.0f) {
@@ -278,7 +278,7 @@ void CFDE_TextOut::DrawLogicText(CFX_RenderDevice* device,
                                  const WideString& str,
                                  const CFX_RectF& rect) {
   DCHECK(font_);
-  DCHECK(font_size_ >= 1.0f);
+  DCHECK_GE(font_size_, 1.0f);
 
   if (str.IsEmpty()) {
     return;
