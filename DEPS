@@ -427,9 +427,11 @@ deps = {
         '/chromium/third_party/instrumented_libraries.git@' +
         Var('instrumented_lib_revision'),
 
-  'third_party/jinja2':
-    Var('chromium_git') + '/chromium/src/third_party/jinja2.git@' +
+  'third_party/jinja2': {
+    'url': Var('chromium_git') + '/chromium/src/third_party/jinja2.git@' +
         Var('jinja2_revision'),
+    'condition': 'checkout_v8',
+  },
 
   'third_party/libc++/src':
     Var('chromium_git') +
@@ -622,9 +624,11 @@ deps = {
     Var('chromium_git') + '/external/github.com/llvm/llvm-project/libc.git@' +
         Var('llvm_libc_revision'),
 
-  'third_party/markupsafe':
-    Var('chromium_git') + '/chromium/src/third_party/markupsafe.git@' +
+  'third_party/markupsafe': {
+    'url': Var('chromium_git') + '/chromium/src/third_party/markupsafe.git@' +
         Var('markupsafe_revision'),
+    'condition': 'checkout_v8',
+  },
 
   'third_party/nasm':
     Var('chromium_git') + '/chromium/deps/nasm.git@' +
