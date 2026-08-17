@@ -50,14 +50,14 @@ class CPDF_CrossRefTable {
                      uint32_t trailer_object_number);
   ~CPDF_CrossRefTable();
 
-  void AddCompressed(uint32_t obj_num,
+  bool AddCompressed(uint32_t obj_num,
                      uint32_t archive_obj_num,
                      uint32_t archive_obj_index);
-  void AddNormal(uint32_t obj_num,
+  bool AddNormal(uint32_t obj_num,
                  uint16_t gen_num,
                  bool is_object_stream,
                  FX_FILESIZE pos);
-  void SetFree(uint32_t obj_num, uint16_t gen_num);
+  bool SetFree(uint32_t obj_num, uint16_t gen_num);
 
   void SetTrailer(RetainPtr<CPDF_Dictionary> trailer,
                   uint32_t trailer_object_number);

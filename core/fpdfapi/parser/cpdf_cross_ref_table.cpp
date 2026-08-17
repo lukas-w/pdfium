@@ -8,7 +8,6 @@
 
 #include "core/fpdfapi/parser/cpdf_dictionary.h"
 #include "core/fpdfapi/parser/cpdf_parser.h"
-#include "core/fxcrt/check_op.h"
 #include "core/fxcrt/containers/contains.h"
 
 // static
@@ -36,20 +35,22 @@ CPDF_CrossRefTable::CPDF_CrossRefTable(RetainPtr<CPDF_Dictionary> trailer,
 
 CPDF_CrossRefTable::~CPDF_CrossRefTable() = default;
 
-void CPDF_CrossRefTable::AddCompressed(uint32_t obj_num,
+bool CPDF_CrossRefTable::AddCompressed(uint32_t obj_num,
                                        uint32_t archive_obj_num,
                                        uint32_t archive_obj_index) {
-  CHECK_LE(obj_num, CPDF_Parser::kMaxObjectNumber);
-  CHECK_LE(archive_obj_num, CPDF_Parser::kMaxObjectNumber);
+  if (obj_num > CPDF_Parser::kMaxObjectNumber ||
+      archive_obj_num > CPDF_Parser::kMaxObjectNumber) {
+    return false;
+  }
 
   auto& info = objects_info_[obj_num];
   if (info.gennum > 0) {
-    return;
+    return true;
   }
 
   // Don't add known object streams to object streams.
   if (info.is_object_stream_flag) {
-    return;
+    return true;
   }
 
   info.type = ObjectType::kCompressed;
@@ -58,32 +59,39 @@ void CPDF_CrossRefTable::AddCompressed(uint32_t obj_num,
   info.gennum = 0;
 
   objects_info_[archive_obj_num].is_object_stream_flag = true;
+  return true;
 }
 
-void CPDF_CrossRefTable::AddNormal(uint32_t obj_num,
+bool CPDF_CrossRefTable::AddNormal(uint32_t obj_num,
                                    uint16_t gen_num,
                                    bool is_object_stream,
                                    FX_FILESIZE pos) {
-  CHECK_LE(obj_num, CPDF_Parser::kMaxObjectNumber);
+  if (obj_num > CPDF_Parser::kMaxObjectNumber) {
+    return false;
+  }
 
   auto& info = objects_info_[obj_num];
   if (info.gennum > gen_num) {
-    return;
+    return true;
   }
 
   info.type = ObjectType::kNormal;
   info.is_object_stream_flag |= is_object_stream;
   info.gennum = gen_num;
   info.pos = pos;
+  return true;
 }
 
-void CPDF_CrossRefTable::SetFree(uint32_t obj_num, uint16_t gen_num) {
-  CHECK_LE(obj_num, CPDF_Parser::kMaxObjectNumber);
+bool CPDF_CrossRefTable::SetFree(uint32_t obj_num, uint16_t gen_num) {
+  if (obj_num > CPDF_Parser::kMaxObjectNumber) {
+    return false;
+  }
 
   auto& info = objects_info_[obj_num];
   info.type = ObjectType::kFree;
   info.gennum = gen_num;
   info.pos = 0;
+  return true;
 }
 
 void CPDF_CrossRefTable::SetTrailer(RetainPtr<CPDF_Dictionary> trailer,

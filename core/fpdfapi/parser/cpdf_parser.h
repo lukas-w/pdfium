@@ -182,7 +182,7 @@ class CPDF_Parser {
       uint32_t count,
       std::vector<CrossRefObjData>* out_objects);
   bool ParseCrossRefTable(std::vector<CrossRefObjData>* out_objects);
-  void MergeCrossRefObjectsData(const std::vector<CrossRefObjData>& objects);
+  bool MergeCrossRefObjectsData(const std::vector<CrossRefObjData>& objects);
 
   bool InitSyntaxParser(RetainPtr<CPDF_ReadValidator> validator);
   bool ParseFileVersion();
