@@ -24,7 +24,7 @@
 
 #include <utility>
 
-#include "core/fxcrt/check.h"
+#include "core/fxcrt/check_op.h"
 #include "core/fxcrt/fx_system.h"
 
 CBC_QRCoderMode* CBC_QRCoderMode::sBYTE = nullptr;
@@ -72,6 +72,6 @@ int32_t CBC_QRCoderMode::GetCharacterCountBits(int32_t number) const {
   }
 
   int32_t result = character_count_bits_for_versions_[offset];
-  DCHECK(result != 0);
+  DCHECK_NE(result, 0);
   return result;
 }

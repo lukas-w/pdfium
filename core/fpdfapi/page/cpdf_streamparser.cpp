@@ -26,7 +26,7 @@
 #include "core/fxcodec/jpeg/jpegmodule.h"
 #include "core/fxcodec/scanlinedecoder.h"
 #include "core/fxcrt/autorestorer.h"
-#include "core/fxcrt/check.h"
+#include "core/fxcrt/check_op.h"
 #include "core/fxcrt/data_vector.h"
 #include "core/fxcrt/fx_extension.h"
 #include "core/fxcrt/fx_safe_types.h"
@@ -86,13 +86,13 @@ uint32_t DecodeInlineStream(pdfium::span<const uint8_t> src_span,
                             RetainPtr<const CPDF_Dictionary> pParam,
                             uint32_t orig_size) {
   // |decoder| should not be an abbreviation.
-  DCHECK(decoder != "A85");
-  DCHECK(decoder != "AHx");
-  DCHECK(decoder != "CCF");
-  DCHECK(decoder != "DCT");
-  DCHECK(decoder != "Fl");
-  DCHECK(decoder != "LZW");
-  DCHECK(decoder != "RL");
+  DCHECK_NE(decoder, "A85");
+  DCHECK_NE(decoder, "AHx");
+  DCHECK_NE(decoder, "CCF");
+  DCHECK_NE(decoder, "DCT");
+  DCHECK_NE(decoder, "Fl");
+  DCHECK_NE(decoder, "LZW");
+  DCHECK_NE(decoder, "RL");
 
   if (decoder == "FlateDecode") {
     return FlateOrLZWDecode(/*use_lzw=*/false, src_span, pParam.Get(),
