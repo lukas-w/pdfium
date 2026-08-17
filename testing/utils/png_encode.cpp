@@ -5,6 +5,7 @@
 #include "testing/utils/png_encode.h"
 
 #include "core/fxcrt/check.h"
+#include "core/fxcrt/check_op.h"
 #include "core/fxcrt/compiler_specific.h"
 #include "core/fxcrt/fx_safe_types.h"
 #include "core/fxcrt/notreached.h"
@@ -84,9 +85,9 @@ std::vector<uint8_t> EncodePng(FPDF_BITMAP bitmap) {
   const int stride = FPDFBitmap_GetStride(bitmap);
   const int width = FPDFBitmap_GetWidth(bitmap);
   const int height = FPDFBitmap_GetHeight(bitmap);
-  CHECK(stride >= 0);
-  CHECK(width >= 0);
-  CHECK(height >= 0);
+  CHECK_GE(stride, 0);
+  CHECK_GE(width, 0);
+  CHECK_GE(height, 0);
   FX_SAFE_FILESIZE size = stride;
   size *= height;
   auto input = UNSAFE_TODO(
