@@ -19,6 +19,7 @@
 #include <vector>
 
 #include "core/fxcrt/cfx_datetime.h"
+#include "core/fxcrt/check.h"
 #include "core/fxcrt/check_op.h"
 #include "core/fxcrt/code_point_view.h"
 #include "core/fxcrt/compiler_specific.h"
