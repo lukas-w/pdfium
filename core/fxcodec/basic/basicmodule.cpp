@@ -187,7 +187,7 @@ void RLScanlineDecoder::UpdateOperator(uint8_t used_bytes) {
     return;
   }
   if (operator_ < 128) {
-    DCHECK_GE((uint32_t)operator_ + 1, used_bytes);
+    DCHECK_GE(operator_ + 1, used_bytes);
     if (used_bytes == operator_ + 1) {
       src_offset_ += used_bytes;
       GetNextOperator();
@@ -201,7 +201,7 @@ void RLScanlineDecoder::UpdateOperator(uint8_t used_bytes) {
     return;
   }
   uint8_t count = 257 - operator_;
-  DCHECK_GE((uint32_t)count, used_bytes);
+  DCHECK_GE(count, used_bytes);
   if (used_bytes == count) {
     src_offset_++;
     GetNextOperator();
@@ -361,7 +361,7 @@ DataVector<uint8_t> BasicModule::A85Encode(
     uint32_t val = 0;
     int count = 0;
     while (pos < src_span.size()) {
-      val += (uint32_t)(src_span[pos]) << (8 * (3 - count));
+      val += static_cast<uint32_t>(src_span[pos]) << (8 * (3 - count));
       count++;
       pos++;
     }
