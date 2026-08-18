@@ -331,7 +331,7 @@ def _CheckIncludeOrderInFile(input_api, f, changed_linenums):
   # check.
   uncheckable_includes_pattern = input_api.re.compile(
       r'\s*#include '
-      '("ipc/.*macros\.h"|<windows\.h>|".*gl.*autogen.h")\s*')
+      r'("ipc/.*macros\.h"|<windows\.h>|".*gl.*autogen.h")\s*')
 
   contents = f.NewContents()
   warnings = []
@@ -464,23 +464,23 @@ def _CheckTestDuplicates(input_api, output_api):
 
 
 def _CheckPngNames(input_api, output_api):
-  """Checks that .png files have the right file name format.
+  r"""Checks that .png files have the right file name format.
 
   For most directories, including those used for pixel tests, they must be in
   the form of:
 
-  NAME_expected(_gdi)?(_(agg|skia))?(_(linux|mac|win))?.pdf.\d+.png
+  NAME_expected(_(agg|skia))?(_(linux|mac|win|gdi))?.pdf.\d+.png
 
   This must be the same format as the one in testing/corpus's PRESUBMIT.py.
 
   For testing/resources/embedder_tests, they must be in the form of:
 
-  NAME(_gdi)?(_(agg|skia))?(_(linux|mac|win))?.png
+  NAME(_(agg|skia))?(_(linux|mac|win|gdi))?.png
   """
   expected_pattern = input_api.re.compile(
-      r'.+_expected(_gdi)?(_(agg|skia))?(_(linux|mac|win))?\.pdf\.\d+.png')
+      r'.+_expected(_(agg|skia))?(_(linux|mac|win|gdi))?\.pdf\.\d+.png')
   expected_embedder_tests_pattern = input_api.re.compile(
-      r'.+(_gdi)?(_(agg|skia))?(_(linux|mac|win))?.png')
+      r'.+(_(agg|skia))?(_(linux|mac|win|gdi))?\.png')
   results = []
   for f in input_api.AffectedFiles(include_deletes=False):
     if not f.LocalPath().endswith('.png'):
@@ -583,9 +583,9 @@ def CheckNoIOStreamInHeaders(input_api, output_api):
   if files:
     return [
         output_api.PresubmitError(
-            'Do not #include <iostream> in header files, since it inserts static '
-            'initialization into every file including the header. Instead, '
-            '#include <ostream>. See http://crbug.com/94794', files)
+            'Do not #include <iostream> in header files, since it inserts '
+            'static initialization into every file including the header. '
+            'Instead, #include <ostream>. See http://crbug.com/94794', files)
     ]
   return []
 

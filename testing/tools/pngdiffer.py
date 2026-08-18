@@ -18,18 +18,8 @@ _PNG_OPTIMIZER = 'optipng'
 # most specific, and the root being the least specific.
 _COMMON_SUFFIX_ORDER = ('_{os}', '')
 _AGG_SUFFIX_ORDER = ('_agg_{os}', '_agg') + _COMMON_SUFFIX_ORDER
-_GDI_AGG_SUFFIX_ORDER = (
-    '_gdi_agg_{os}',
-    '_gdi_agg',
-    '_gdi_{os}',
-    '_gdi',
-) + _COMMON_SUFFIX_ORDER
-_GDI_SKIA_SUFFIX_ORDER = (
-    '_gdi_skia_{os}',
-    '_gdi_skia',
-    '_gdi_{os}',
-    '_gdi',
-) + _COMMON_SUFFIX_ORDER
+_GDI_AGG_SUFFIX_ORDER = ('_gdi',) + _COMMON_SUFFIX_ORDER
+_GDI_SKIA_SUFFIX_ORDER = ('_skia_gdi', '_gdi') + _COMMON_SUFFIX_ORDER
 _SKIA_SUFFIX_ORDER = ('_skia_{os}', '_skia') + _COMMON_SUFFIX_ORDER
 
 
