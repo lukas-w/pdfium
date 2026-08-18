@@ -15,6 +15,8 @@ class Suppressor:
                rendering_option):
     self.has_v8 = not js_disabled and 'V8' in features
     self.has_xfa = not js_disabled and not xfa_disabled and 'XFA' in features
+    self.has_rust_decoders = ('RUST_BMP' in features or
+                              'RUST_JPEG' in features or 'RUST_PNG' in features)
     self.rendering_option = rendering_option
     self.suppression_set = self._LoadSuppressedSet('SUPPRESSIONS', finder)
     self.image_suppression_set = self._LoadSuppressedSet(
@@ -86,7 +88,8 @@ class Suppressor:
     return False
 
   def GetImageMatchingAlgorithm(self, input_filename):
-    if input_filename in self.exact_matching_suppression_set:
+    if (self.has_rust_decoders or
+        input_filename in self.exact_matching_suppression_set):
       print(f"{input_filename} image diff comparison is fuzzy")
       return pngdiffer.FUZZY_MATCHING
     return pngdiffer.EXACT_MATCHING

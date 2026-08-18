@@ -1860,6 +1860,15 @@ void ShowConfig() {
 #ifdef _WIN32
   append_config("GDI");
 #endif
+#ifdef PDF_ENABLE_RUST_BMP
+  append_config("RUST_BMP");
+#endif
+#ifdef PDF_ENABLE_RUST_JPEG
+  append_config("RUST_JPEG");
+#endif
+#ifdef PDF_ENABLE_RUST_PNG
+  append_config("RUST_PNG");
+#endif
   printf("%s\n", config.c_str());
 }
 
