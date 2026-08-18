@@ -100,10 +100,6 @@ declare_args() {
   use_system_zlib = false
 }
 
-# Temporarily force false to allow recipe rollout without breaking tests.
-# TODO(tsepez): remove this once XFA side supports rust jpeg as well.
-pdf_enable_rust_jpeg = false
-
 assert(!pdf_is_complete_lib || !is_component_build,
        "pdf_is_complete_lib=true requires is_component_build=false")
 
