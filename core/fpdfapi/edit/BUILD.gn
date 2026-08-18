@@ -56,10 +56,12 @@ source_set("contentstream_write_utils") {
 
 pdfium_unittest_source_set("unittests") {
   sources = [
+    "cpdf_contentstream_write_utils_unittest.cpp",
     "cpdf_npagetooneexporter_unittest.cpp",
     "cpdf_pagecontentgenerator_unittest.cpp",
   ]
   deps = [
+    ":contentstream_write_utils",
     ":edit",
     "../../fxge",
     "../font",
