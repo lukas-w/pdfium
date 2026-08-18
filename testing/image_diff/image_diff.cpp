@@ -152,12 +152,14 @@ void CountImageSizeMismatchAsPixelDifference(const Image& baseline,
 
 int PixelsDifferent(const Image& baseline,
                     const Image& actual,
-                    uint8_t max_pixel_per_channel_delta) {
+                    uint8_t max_pixel_per_channel_delta,
+                    double max_mean_squared_error) {
   int w = std::min(baseline.w(), actual.w());
   int h = std::min(baseline.h(), actual.h());
 
   // Compute pixels different in the overlap.
   int pixels_different = 0;
+  uint64_t total_squared_error = 0;
   for (int y = 0; y < h; ++y) {
     for (int x = 0; x < w; ++x) {
       const uint32_t baseline_pixel = baseline.pixel_at(x, y);
@@ -170,6 +172,14 @@ int PixelsDifferent(const Image& baseline,
           max_pixel_per_channel_delta) {
         ++pixels_different;
       }
+      total_squared_error += PixelSquaredError(baseline_pixel, actual_pixel);
+    }
+  }
+
+  if (w > 0 && h > 0 && max_mean_squared_error > 0.0) {
+    double mse = static_cast<double>(total_squared_error) / (3.0 * w * h);
+    if (mse > max_mean_squared_error) {
+      ++pixels_different;
     }
   }
 
@@ -240,7 +250,8 @@ int CompareImages(const std::string& binary_name,
                   const std::string& file2,
                   bool compare_histograms,
                   bool reverse_byte_order,
-                  uint8_t max_pixel_per_channel_delta) {
+                  uint8_t max_pixel_per_channel_delta,
+                  double max_mean_squared_error) {
   Image actual_image;
   Image baseline_image;
 
@@ -270,8 +281,9 @@ int CompareImages(const std::string& binary_name,
   }
 
   const char* const diff_name = compare_histograms ? "exact diff" : "diff";
-  int pixels_different = PixelsDifferent(actual_image, baseline_image,
-                                         max_pixel_per_channel_delta);
+  int pixels_different =
+      PixelsDifferent(actual_image, baseline_image, max_pixel_per_channel_delta,
+                      max_mean_squared_error);
   float percent = CalculateDifferencePercentage(actual_image, pixels_different);
   const char* const passed = percent > 0.0 ? "failed" : "passed";
   UNSAFE_TODO(printf("%s: %01.2f%% %s (%d pixels differ)\n", diff_name, percent,
@@ -407,6 +419,7 @@ int main(int argc, const char* argv[]) {
   bool produce_image_subtraction = false;
   bool reverse_byte_order = false;
   uint8_t max_pixel_per_channel_delta = 0;
+  double max_mean_squared_error = 0.0;
   std::string filename1;
   std::string filename2;
   std::string diff_filename;
@@ -431,7 +444,8 @@ int main(int argc, const char* argv[]) {
     } else if (UNSAFE_TODO(strcmp(arg, "--reverse-byte-order")) == 0) {
       reverse_byte_order = true;
     } else if (UNSAFE_TODO(strcmp(arg, "--fuzzy")) == 0) {
-      max_pixel_per_channel_delta = 1;
+      max_pixel_per_channel_delta = kMaxFuzzyPixelDelta;
+      max_mean_squared_error = kMaxFuzzyMeanSquaredError;
     }
   }
   if (i < argc) {
@@ -451,7 +465,8 @@ int main(int argc, const char* argv[]) {
     }
   } else if (!filename2.empty()) {
     return CompareImages(binary_name, filename1, filename2, histograms,
-                         reverse_byte_order, max_pixel_per_channel_delta);
+                         reverse_byte_order, max_pixel_per_channel_delta,
+                         max_mean_squared_error);
   }
 
   PrintHelp(binary_name);

@@ -301,7 +301,7 @@ group("pdfium_unittest_deps") {
     "fpdfsdk/*",
     "fxbarcode/*",
     "fxjs/*",
-    "testing/image_diff/*",
+    "testing/*",
     "xfa/*",
   ]
 }
@@ -324,6 +324,7 @@ test("pdfium_unittests") {
     "core/fxge:unittests",
     "fpdfsdk:unittests",
     "testing:unit_test_support",
+    "testing:unittests",
     "testing/image_diff:unittests",
     "//testing/gmock",
     "//testing/gtest",

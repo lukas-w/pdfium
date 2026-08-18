@@ -5,6 +5,7 @@
 import("//build/config/sanitizers/sanitizers.gni")
 import("//build_overrides/build.gni")
 import("../pdfium.gni")
+import("test.gni")
 
 source_set("test_support") {
   testonly = true
@@ -102,6 +103,12 @@ source_set("pixel_diff_utils") {
     "utils/pixel_diff_util.h",
   ]
   configs += [ "../:pdfium_strict_config" ]
+}
+
+pdfium_unittest_source_set("unittests") {
+  sources = [ "utils/pixel_diff_util_unittest.cpp" ]
+  deps = [ ":pixel_diff_utils" ]
+  pdfium_root_dir = "../"
 }
 
 source_set("path_service") {

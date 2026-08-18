@@ -41,3 +41,12 @@ uint8_t MaxPixelPerChannelDelta(uint32_t baseline_pixel,
        ChannelDelta(baseline_unpacked.blue, actual_unpacked.blue),
        ChannelDelta(baseline_unpacked.alpha, actual_unpacked.alpha)});
 }
+
+uint32_t PixelSquaredError(uint32_t baseline_pixel, uint32_t actual_pixel) {
+  UnpackedPixel baseline_unpacked(baseline_pixel);
+  UnpackedPixel actual_unpacked(actual_pixel);
+  int dr = baseline_unpacked.red - actual_unpacked.red;
+  int dg = baseline_unpacked.green - actual_unpacked.green;
+  int db = baseline_unpacked.blue - actual_unpacked.blue;
+  return static_cast<uint32_t>(dr * dr + dg * dg + db * db);
+}
