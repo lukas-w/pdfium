@@ -169,7 +169,7 @@ TEST_F(FPDFSaveEmbedderTest, SaveLinearizedDoc) {
   EXPECT_THAT(GetString(), HasSubstr("36 0 obj"));
   EXPECT_THAT(GetString(), Not(HasSubstr("37 0 obj")));
   EXPECT_THAT(GetString(), Not(HasSubstr("38 0 obj")));
-  EXPECT_EQ(7986u, GetString().size());
+  EXPECT_EQ(7884u, GetString().size());
 
   // Make sure new document renders the same as the old one.
   ScopedSavedDoc saved_document = OpenScopedSavedDocument();

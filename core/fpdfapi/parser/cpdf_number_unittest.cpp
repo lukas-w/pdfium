@@ -65,7 +65,7 @@ TEST(CPDFNumber, WriteToFloat) {
     // `number` cannot be represented as a float without losing precision.
     auto number = pdfium::MakeRetain<CPDF_Number>(-77.037232f);
     ASSERT_TRUE(number->WriteTo(&output_stream, /*encryptor=*/nullptr));
-    EXPECT_EQ(" -77.037231", output_stream.str());
+    EXPECT_EQ(" -77.03723", output_stream.str());
   }
   {
     ByteStringArchiveStream output_stream;
@@ -79,7 +79,7 @@ TEST(CPDFNumber, WriteToFloat) {
     auto number =
         pdfium::MakeRetain<CPDF_Number>(std::numeric_limits<float>::min());
     ASSERT_TRUE(number->WriteTo(&output_stream, /*encryptor=*/nullptr));
-    EXPECT_EQ(" .0000000000000000000000000000000000000117549435",
+    EXPECT_EQ(" .000000000000000000000000000000000000011754944",
               output_stream.str());
   }
 }

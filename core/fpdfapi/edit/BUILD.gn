@@ -51,7 +51,10 @@ source_set("contentstream_write_utils") {
     "../../../:pdfium_strict_config",
     "../../../:pdfium_noshorten_config",
   ]
-  deps = [ "../../fxcrt" ]
+  deps = [
+    "../../fxcrt",
+    "//third_party/dragonbox",
+  ]
 }
 
 pdfium_unittest_source_set("unittests") {

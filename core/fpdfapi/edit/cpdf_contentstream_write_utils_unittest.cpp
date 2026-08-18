@@ -30,18 +30,18 @@ TEST(CPDFContentstreamWriteUtils, WriteFloat) {
   EXPECT_EQ("-1", WriteFloatToString(-1.0f));
   EXPECT_EQ(".5", WriteFloatToString(0.5f));
   EXPECT_EQ("-.5", WriteFloatToString(-0.5f));
-  EXPECT_EQ(".00124999997", WriteFloatToString(0.00125f));
-  EXPECT_EQ("123.449997", WriteFloatToString(123.45f));
+  EXPECT_EQ(".00125", WriteFloatToString(0.00125f));
+  EXPECT_EQ("123.45", WriteFloatToString(123.45f));
   EXPECT_EQ("-7.5", WriteFloatToString(-7.5f));
   EXPECT_EQ("38.895287", WriteFloatToString(38.895285f));
-  EXPECT_EQ("-77.037231", WriteFloatToString(-77.037232f));
+  EXPECT_EQ("-77.03723", WriteFloatToString(-77.037232f));
   EXPECT_EQ("340282350000000000000000000000000000000",
             WriteFloatToString(std::numeric_limits<float>::max()));
   EXPECT_EQ("-340282350000000000000000000000000000000",
             WriteFloatToString(-std::numeric_limits<float>::max()));
-  EXPECT_EQ(".0000000000000000000000000000000000000117549435",
+  EXPECT_EQ(".000000000000000000000000000000000000011754944",
             WriteFloatToString(std::numeric_limits<float>::min()));
-  EXPECT_EQ("-.0000000000000000000000000000000000000117549435",
+  EXPECT_EQ("-.000000000000000000000000000000000000011754944",
             WriteFloatToString(-std::numeric_limits<float>::min()));
   EXPECT_EQ("340282350000000000000000000000000000000",
             WriteFloatToString(INFINITY));

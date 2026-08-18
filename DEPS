@@ -387,11 +387,9 @@ deps = {
     Var('chromium_git') + '/chromium/tools/depot_tools.git@' +
         Var('depot_tools_revision'),
 
-  'third_party/dragonbox/src': {
-    'url': Var('chromium_git') + '/external/github.com/jk-jeon/dragonbox.git@' +
+  'third_party/dragonbox/src':
+    Var('chromium_git') + '/external/github.com/jk-jeon/dragonbox.git@' +
         Var('dragonbox_revision'),
-    'condition': 'checkout_v8',
-  },
 
   'third_party/fast_float/src':
     Var('chromium_git') + '/external/github.com/fastfloat/fast_float.git@' +
