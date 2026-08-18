@@ -11,9 +11,7 @@
 #include <utility>
 
 #include "build/build_config.h"
-#include "core/fxcodec/cfx_codec_memory.h"
 #include "core/fxcodec/gif/cfx_gifcontext.h"
-#include "core/fxcodec/jpeg/libjpeg_jpeg_context.h"
 #include "core/fxcodec/progressive_decoder_context.h"
 #include "core/fxcodec/tiff/libtiff_tiff_context.h"
 #include "core/fxcrt/check.h"
@@ -42,11 +40,14 @@
 #else
 #include "core/fxcodec/bmp/cfx_bmpcontext.h"
 #endif
-// TODO(https://crbug.com/444045690): Remove `pdf_enable_rust_png` from the
-// condition below once this build mode has been tested and stabilized.
-// (Chromium already sets `pdf_use_skia_override = true` so having an extra
-// condition avoids affecting the Chromium behavior.)
-#if defined(PDF_USE_SKIA) && defined(PDF_ENABLE_RUST_PNG)
+
+#if defined(PDF_ENABLE_RUST_JPEG)
+#include "core/fxcodec/jpeg/skia_jpeg_context.h"
+#else
+#include "core/fxcodec/jpeg/libjpeg_jpeg_context.h"
+#endif
+
+#if defined(PDF_ENABLE_RUST_PNG)
 #include "core/fxcodec/png/skia_png_context.h"
 #else
 #include "core/fxcodec/png/libpng_png_context.h"
@@ -71,11 +72,15 @@ std::unique_ptr<ProgressiveDecoderContext> CreateDecoderContext(
     case FXCODEC_IMAGE_GIF:
       return std::make_unique<CFX_GifContext>(delegate);
     case FXCODEC_IMAGE_JPG: {
+#if defined(PDF_ENABLE_RUST_JPEG)
+      return std::make_unique<SkiaJpegContext>(delegate);
+#else
       auto context = std::make_unique<LibjpegJpegContext>(delegate);
       if (!context->create_ok_) {
         return nullptr;
       }
       return context;
+#endif
     }
     case FXCODEC_IMAGE_PNG:
 #if defined(PDF_USE_SKIA) && defined(PDF_ENABLE_RUST_PNG)
@@ -400,6 +405,23 @@ bool ProgressiveDecoder::JpegDetectImageTypeInBuffer(
   }
   context_->Input(codec_memory_);
 
+#if defined(PDF_ENABLE_RUST_JPEG)
+  auto* ctx = static_cast<SkiaJpegContext*>(context_.get());
+  src_width_ = 0;
+  src_height_ = 0;
+  if (ctx->ReadHeader(codec_memory_)) {
+    FXCODEC_STATUS status = FXCODEC_STATUS::kError;
+    while (src_width_ == 0 && ReadMoreData(std::nullopt, &status)) {
+      if (!ctx->ReadHeader(codec_memory_)) {
+        break;
+      }
+    }
+  }
+
+  bool got_metadata = (src_width_ > 0 && src_height_ > 0);
+  context_.reset();
+  return got_metadata;
+#else
   auto* ctx = static_cast<LibjpegJpegContext*>(context_.get());
   while (1) {
     int read_result = ctx->ReadHeader(&src_width_, &src_height_,
@@ -424,9 +446,23 @@ bool ProgressiveDecoder::JpegDetectImageTypeInBuffer(
         NOTREACHED();
     }
   }
+#endif
 }
 
 FXCODEC_STATUS ProgressiveDecoder::JpegStartDecode() {
+#if defined(PDF_ENABLE_RUST_JPEG)
+  context_ = CreateDecoderContext(FXCODEC_IMAGE_JPG, this);
+  if (!context_) {
+    device_bitmap_ = nullptr;
+    file_ = nullptr;
+    status_ = FXCODEC_STATUS::kError;
+    return status_;
+  }
+  context_->Input(codec_memory_);
+  auto* ctx = static_cast<SkiaJpegContext*>(context_.get());
+  status_ = ctx->StartDecode(device_bitmap_);
+  return status_;
+#else
   status_ = static_cast<LibjpegJpegContext*>(context_.get())->StartDecode();
   if (status_ == FXCODEC_STATUS::kError) {
     device_bitmap_ = nullptr;
@@ -434,9 +470,19 @@ FXCODEC_STATUS ProgressiveDecoder::JpegStartDecode() {
     context_.reset();
   }
   return status_;
+#endif
 }
 
 FXCODEC_STATUS ProgressiveDecoder::JpegContinueDecode() {
+#if defined(PDF_ENABLE_RUST_JPEG)
+  auto* ctx = static_cast<SkiaJpegContext*>(context_.get());
+  status_ = ctx->ContinueDecode();
+  if (status_ != FXCODEC_STATUS::kDecodeToBeContinued) {
+    device_bitmap_ = nullptr;
+    file_ = nullptr;
+  }
+  return status_;
+#else
   status_ = static_cast<LibjpegJpegContext*>(context_.get())->ContinueDecode();
   if (status_ == FXCODEC_STATUS::kError) {
     context_.reset();
@@ -446,6 +492,7 @@ FXCODEC_STATUS ProgressiveDecoder::JpegContinueDecode() {
     file_ = nullptr;
   }
   return status_;
+#endif
 }
 
 bool ProgressiveDecoder::PngDetectImageTypeInBuffer() {
@@ -901,6 +948,13 @@ void ProgressiveDecoder::Resample(const RetainPtr<CFX_DIBitmap>& pDeviceBitmap,
 FXDIB_Format ProgressiveDecoder::GetBitmapFormat() const {
   switch (image_type_) {
     case FXCODEC_IMAGE_JPG:
+#if defined(PDF_ENABLE_RUST_JPEG)
+      // When using the Skia/Rust decoder, Skia prefers standard 32-bit BGRA
+      // buffers.
+      return FXDIB_Format::kBgra;
+#else
+      return GetBitsPerPixel() <= 24 ? FXDIB_Format::kBgr : FXDIB_Format::kBgrx;
+#endif
     case FXCODEC_IMAGE_BMP:
       return GetBitsPerPixel() <= 24 ? FXDIB_Format::kBgr : FXDIB_Format::kBgrx;
     case FXCODEC_IMAGE_PNG:

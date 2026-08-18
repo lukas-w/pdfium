@@ -4,6 +4,7 @@
 
 #include "core/fxcodec/jpeg/skia_scanline_decoder.h"
 
+#include <algorithm>
 #include <memory>
 #include <optional>
 #include <utility>
@@ -40,6 +41,63 @@ pdfium::span<const uint8_t> JpegScanSOI(pdfium::span<const uint8_t> src_span) {
 
 uint32_t ScaledJpegSize(uint32_t dim, uint32_t scale_denom) {
   return (dim + scale_denom - 1) / scale_denom;
+}
+
+// Manually parse JPEG markers to find the Start of Frame (SOF) marker
+// to extract the horizontal and vertical sampling factors. This is used
+// to determine the Maximum Coded Unit (MCU) size.
+std::pair<int, int> GetJpegMaxSamplingFactors(
+    pdfium::span<const uint8_t> src_span) {
+  size_t offset = 0;
+  while (offset + 1 < src_span.size()) {
+    if (src_span[offset] != 0xff) {
+      ++offset;
+      continue;
+    }
+    while (offset + 1 < src_span.size() && src_span[offset + 1] == 0xff) {
+      ++offset;
+    }
+    if (offset + 1 >= src_span.size()) {
+      break;
+    }
+    uint8_t marker = src_span[offset + 1];
+    offset += 2;
+    if (marker == 0xd8 || (marker >= 0xd0 && marker <= 0xd7) ||
+        marker == 0x01 || marker == 0x00) {
+      continue;
+    }
+    if (marker >= 0xc0 && marker <= 0xcf && marker != 0xc4 && marker != 0xc8 &&
+        marker != 0xcc) {
+      if (offset + 8 > src_span.size()) {
+        break;
+      }
+      uint8_t num_comps = src_span[offset + 7];
+      if (offset + 8 + static_cast<size_t>(num_comps) * 3 > src_span.size()) {
+        break;
+      }
+      int max_h = 1;
+      int max_v = 1;
+      for (size_t c = 0; c < num_comps; ++c) {
+        uint8_t samp = src_span[offset + 8 + c * 3 + 1];
+        max_h = std::max(max_h, static_cast<int>(samp >> 4));
+        max_v = std::max(max_v, static_cast<int>(samp & 0x0f));
+      }
+      return {std::max(1, max_h), std::max(1, max_v)};
+    }
+    if (marker == 0xd9 || marker == 0xda) {
+      break;
+    }
+    if (offset + 2 > src_span.size()) {
+      break;
+    }
+    size_t length =
+        (static_cast<size_t>(src_span[offset]) << 8) | src_span[offset + 1];
+    if (length < 2) {
+      break;
+    }
+    offset += length;
+  }
+  return {1, 1};
 }
 
 }  // namespace
@@ -99,6 +157,14 @@ bool SkiaScanlineDecoder::CreateImpl(pdfium::span<const uint8_t> src_span,
     return false;
   }
 
+  // Skia's JPEG decoder does not support downscaling if the image dimensions
+  // are not aligned to the Maximum Coded Unit (MCU) boundaries.
+  auto [max_h_samp, max_v_samp] = GetJpegMaxSamplingFactors(src_span);
+  if (orig_width_ % (max_h_samp * 8) != 0 ||
+      orig_height_ % (max_v_samp * 8) != 0) {
+    scale_denom_ = 1;
+  }
+
   comps_ = num_components;
   bpc_ = 8;
   output_width_ = ScaledJpegSize(orig_width_, scale_denom_);
@@ -127,7 +193,7 @@ bool SkiaScanlineDecoder::Rewind() {
       color_type = kGray_8_SkColorType;
       break;
     case 3:
-      color_type = kRGB_888x_SkColorType;
+      color_type = kRGBA_8888_SkColorType;
       break;
     default:
       NOTREACHED();

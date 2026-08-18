@@ -96,8 +96,6 @@ source_set("fxcodec") {
       "gif/cfx_gifcontext.h",
       "gif/lzw_decompressor.cpp",
       "gif/lzw_decompressor.h",
-      "jpeg/libjpeg_jpeg_context.cpp",
-      "jpeg/libjpeg_jpeg_context.h",
       "progressive_decoder.cpp",
       "progressive_decoder.h",
       "progressive_decoder_context.cpp",
@@ -120,6 +118,18 @@ source_set("fxcodec") {
         "bmp/cfx_bmpdecompressor.cpp",
         "bmp/cfx_bmpdecompressor.h",
         "bmp/fx_bmp.h",
+      ]
+    }
+    if (pdf_enable_rust_jpeg) {
+      sources += [
+        "jpeg/skia_jpeg_context.cpp",
+        "jpeg/skia_jpeg_context.h",
+      ]
+      deps += [ "//skia" ]
+    } else {
+      sources += [
+        "jpeg/libjpeg_jpeg_context.cpp",
+        "jpeg/libjpeg_jpeg_context.h",
       ]
     }
 
@@ -147,20 +157,24 @@ source_set("fxcodec") {
       ]
     }
   }
+
+  # Windows requires libjpeg for JpegModule::JpegEncode (used for EMF printing)
+  # regardless of whether Rust JPEG is enabled for decoding. Libjpeg is also
+  # used as fallback for CMYK / 4-component JPEG decoding in JpegModule.
+  sources += [
+    "jpeg/jpeg_common.c",
+    "jpeg/jpeg_common.h",
+    "jpeg/libjpeg_scanline_decoder.cpp",
+    "jpeg/libjpeg_scanline_decoder.h",
+  ]
+  deps += [ "//third_party:jpeg" ]
+
   if (pdf_enable_rust_jpeg) {
     sources += [
       "jpeg/skia_scanline_decoder.cpp",
       "jpeg/skia_scanline_decoder.h",
     ]
     deps += [ "//skia" ]
-  } else {
-    sources += [
-      "jpeg/jpeg_common.c",
-      "jpeg/jpeg_common.h",
-      "jpeg/libjpeg_scanline_decoder.cpp",
-      "jpeg/libjpeg_scanline_decoder.h",
-    ]
-    deps += [ "//third_party:jpeg" ]
   }
   visibility = [ "../../*" ]
 }

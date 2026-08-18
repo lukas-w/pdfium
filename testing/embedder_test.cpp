@@ -450,7 +450,7 @@ int CompareBGRxPremultBitmapToPng(pdfium::span<const uint8_t> bitmap_span,
       bitmap_row[w] = UnPreMultiplyColor(bitmap_row[w]);
     }
   }
-  return CompareBGRxBitmapToPng(bitmap_span, bitmap_stride, decoded_png,
+  return CompareBGRxBitmapToPng(bitmap_data, bitmap_stride, decoded_png,
                                 max_pixel_per_channel_delta,
                                 max_mean_squared_error);
 }
