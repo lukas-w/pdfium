@@ -81,11 +81,9 @@ bool RLScanlineDecoder::CheckDestSize() {
       break;
     }
   }
-  if (((uint32_t)orig_width_ * comps_ * bpc_ * orig_height_ + 7) / 8 >
-      dest_size) {
-    return false;
-  }
-  return true;
+  FX_SAFE_UINT32 bytes = line_bytes_;
+  bytes *= orig_height_;
+  return bytes.IsValid() && bytes.ValueOrDie() <= dest_size;
 }
 
 bool RLScanlineDecoder::Create(pdfium::span<const uint8_t> src_buf,
