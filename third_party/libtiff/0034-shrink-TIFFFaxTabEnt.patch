@@ -1,0 +1,14 @@
+diff --git a/third_party/libtiff/tif_fax3.h b/third_party/libtiff/tif_fax3.h
+index 60d709c7e5..494914f9f3 100644
+--- a/third_party/libtiff/tif_fax3.h
++++ b/third_party/libtiff/tif_fax3.h
+@@ -89,8 +89,7 @@ typedef struct
+ {                        /* state table entry */
+     unsigned char State; /* see above */
+     unsigned char Width; /* width of code in bits */
+-    uint32_t Param;      /* unsigned 32-bit run length in bits (holds on 16 bit
+-                            actually, but cannot be changed. See above warning) */
++    uint16_t Param;      /* unsigned 16-bit run length in bits */
+ } TIFFFaxTabEnt;
+ 
+ extern const TIFFFaxTabEnt TIFFFaxMainTable[];
