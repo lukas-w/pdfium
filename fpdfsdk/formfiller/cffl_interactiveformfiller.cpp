@@ -629,13 +629,8 @@ bool CFFL_InteractiveFormFiller::Redo(CPDFSDK_Widget* pWidget) {
   return pFormField && pFormField->Redo();
 }
 
-void CFFL_InteractiveFormFiller::UnregisterFormField(CPDFSDK_Widget* pWidget) {
-  auto it = map_.find(pWidget);
-  if (it == map_.end()) {
-    return;
-  }
-
-  map_.erase(it);
+void CFFL_InteractiveFormFiller::UnregisterFormField(CPDFSDK_Widget* widget) {
+  map_.erase(widget);
 }
 
 void CFFL_InteractiveFormFiller::InvalidateRect(PerWindowData* pWidgetData,

@@ -213,7 +213,7 @@ class CFFL_InteractiveFormFiller final : public IPWL_FillerNotify {
   bool IsFillingAllowed(CPDFSDK_Widget* pWidget) const;
   CFFL_FormField* GetFormField(CPDFSDK_Widget* pWidget);
   CFFL_FormField* GetOrCreateFormField(CPDFSDK_Widget* pWidget);
-  void UnregisterFormField(CPDFSDK_Widget* pWidget);
+  void UnregisterFormField(CPDFSDK_Widget* widget);
 
   UnownedPtr<CallbackIface> const callback_iface_;
   WidgetToFormFillerMap map_;

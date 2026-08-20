@@ -58,7 +58,7 @@ class CPDF_ContentMarks {
     void AddMarkWithPropertiesHolder(const ByteString& name,
                                      RetainPtr<CPDF_Dictionary> dict,
                                      const ByteString& property_name);
-    bool RemoveMark(CPDF_ContentMarkItem* pMarkItem);
+    bool RemoveMark(CPDF_ContentMarkItem* mark_item);
 
    private:
     MarkData();

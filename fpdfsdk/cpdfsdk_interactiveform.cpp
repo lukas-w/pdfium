@@ -213,11 +213,8 @@ void CPDFSDK_InteractiveForm::AddMap(CPDF_FormControl* pControl,
   map_[pdfium::WrapUnowned(pControl)] = pWidget;
 }
 
-void CPDFSDK_InteractiveForm::RemoveMap(CPDF_FormControl* pControl) {
-  auto it = map_.find(pControl);
-  if (it != map_.end()) {
-    map_.erase(it);
-  }
+void CPDFSDK_InteractiveForm::RemoveMap(CPDF_FormControl* control) {
+  map_.erase(control);
 }
 
 void CPDFSDK_InteractiveForm::EnableCalculate(bool bEnabled) {

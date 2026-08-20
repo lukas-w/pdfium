@@ -163,12 +163,12 @@ void CPDF_ContentMarks::MarkData::AddMarkWithPropertiesHolder(
   marks_.push_back(std::move(pItem));
 }
 
-bool CPDF_ContentMarks::MarkData::RemoveMark(CPDF_ContentMarkItem* pMarkItem) {
-  for (auto it = marks_.begin(); it != marks_.end(); ++it) {
-    if (*it == pMarkItem) {
-      marks_.erase(it);
-      return true;
-    }
+bool CPDF_ContentMarks::MarkData::RemoveMark(CPDF_ContentMarkItem* mark_item) {
+  auto it = std::ranges::find(marks_, mark_item);
+  if (it == marks_.end()) {
+    return false;
   }
-  return false;
+
+  marks_.erase(it);
+  return true;
 }

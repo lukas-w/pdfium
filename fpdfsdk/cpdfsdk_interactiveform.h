@@ -43,7 +43,7 @@ class CPDFSDK_InteractiveForm final
                   std::vector<ObservedPtr<CPDFSDK_Widget>>* widgets) const;
 
   void AddMap(CPDF_FormControl* pControl, CPDFSDK_Widget* pWidget);
-  void RemoveMap(CPDF_FormControl* pControl);
+  void RemoveMap(CPDF_FormControl* control);
 
   void EnableCalculate(bool bEnabled);
   bool IsCalculateEnabled() const;
