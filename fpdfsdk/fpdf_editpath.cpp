@@ -145,6 +145,46 @@ FPDF_EXPORT FPDF_BOOL FPDF_CALLCONV FPDFPath_BezierTo(FPDF_PAGEOBJECT path,
   return true;
 }
 
+FPDF_EXPORT FPDF_BOOL FPDF_CALLCONV
+FPDFPath_GetBezierControlPoints(FPDF_PAGEOBJECT path,
+                                size_t index,
+                                FS_POINTF* first_control_point,
+                                FS_POINTF* second_control_point) {
+  auto* path_object = CPDFPathObjectFromFPDFPageObject(path);
+  if (!path_object || !first_control_point || !second_control_point) {
+    return false;
+  }
+
+  pdfium::span<const CFX_Path::Point> points = path_object->path().GetPoints();
+  if (index >= points.size()) {
+    return false;
+  }
+
+  const CFX_Path::Point& path_point = points[index];
+  if (path_point.type_ != CFX_Path::Point::Type::kBezier) {
+    return false;
+  }
+
+  // Consecutive cubic curves are stored as runs of three Bezier points, with
+  // the endpoint last in each group. Find the start of the run to determine
+  // whether `index` refers to an endpoint.
+  size_t run_start_index = index;
+  while (run_start_index > 0 &&
+         points[run_start_index - 1].type_ == CFX_Path::Point::Type::kBezier) {
+    --run_start_index;
+  }
+
+  if ((index - run_start_index) % 3 != 2u) {
+    return false;
+  }
+
+  first_control_point->x = points[index - 2].point_.x;
+  first_control_point->y = points[index - 2].point_.y;
+  second_control_point->x = points[index - 1].point_.x;
+  second_control_point->y = points[index - 1].point_.y;
+  return true;
+}
+
 FPDF_EXPORT FPDF_BOOL FPDF_CALLCONV FPDFPath_Close(FPDF_PAGEOBJECT path) {
   auto* pPathObj = CPDFPathObjectFromFPDFPageObject(path);
   if (!pPathObj) {

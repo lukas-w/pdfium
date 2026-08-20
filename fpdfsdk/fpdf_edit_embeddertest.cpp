@@ -2730,6 +2730,81 @@ TEST_F(FPDFEditEmbedderTest, PathsPoints) {
   EXPECT_FALSE(FPDFPathSegment_GetClose(nullptr));
 }
 
+TEST_F(FPDFEditEmbedderTest, PathBezierControlPoints) {
+  CreateNewDocument();
+
+  FS_POINTF first_control_point = {11.0f, 12.0f};
+  FS_POINTF second_control_point = {13.0f, 14.0f};
+
+  EXPECT_FALSE(FPDFPath_GetBezierControlPoints(nullptr, 0, &first_control_point,
+                                               &second_control_point));
+  EXPECT_FLOAT_EQ(11.0f, first_control_point.x);
+  EXPECT_FLOAT_EQ(12.0f, first_control_point.y);
+  EXPECT_FLOAT_EQ(13.0f, second_control_point.x);
+  EXPECT_FLOAT_EQ(14.0f, second_control_point.y);
+
+  ScopedFPDFPageObject image(FPDFPageObj_NewImageObj(document()));
+  ASSERT_TRUE(image);
+  EXPECT_FALSE(FPDFPath_GetBezierControlPoints(
+      image.get(), 0, &first_control_point, &second_control_point));
+
+  ScopedFPDFPageObject path(FPDFPageObj_CreateNewPath(1.0f, 2.0f));
+  ASSERT_TRUE(path);
+  ASSERT_TRUE(
+      FPDFPath_BezierTo(path.get(), 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f));
+  ASSERT_TRUE(
+      FPDFPath_BezierTo(path.get(), 9.0f, 10.0f, 11.0f, 12.0f, 13.0f, 14.0f));
+  ASSERT_EQ(7, FPDFPath_CountSegments(path.get()));
+
+  EXPECT_FALSE(FPDFPath_GetBezierControlPoints(
+      path.get(), std::numeric_limits<size_t>::max(), &first_control_point,
+      &second_control_point));
+  EXPECT_FALSE(FPDFPath_GetBezierControlPoints(
+      path.get(), 7, &first_control_point, &second_control_point));
+
+  // Index 0 is the initial move-to point, not a cubic Bezier endpoint.
+  EXPECT_FALSE(FPDFPath_GetBezierControlPoints(
+      path.get(), 0, &first_control_point, &second_control_point));
+  EXPECT_FLOAT_EQ(11.0f, first_control_point.x);
+  EXPECT_FLOAT_EQ(12.0f, first_control_point.y);
+  EXPECT_FLOAT_EQ(13.0f, second_control_point.x);
+  EXPECT_FLOAT_EQ(14.0f, second_control_point.y);
+
+  EXPECT_FALSE(FPDFPath_GetBezierControlPoints(
+      path.get(), 1, &first_control_point, &second_control_point));
+  EXPECT_FALSE(FPDFPath_GetBezierControlPoints(
+      path.get(), 2, &first_control_point, &second_control_point));
+  EXPECT_TRUE(FPDFPath_GetBezierControlPoints(
+      path.get(), 3, &first_control_point, &second_control_point));
+  EXPECT_FLOAT_EQ(3.0f, first_control_point.x);
+  EXPECT_FLOAT_EQ(4.0f, first_control_point.y);
+  EXPECT_FLOAT_EQ(5.0f, second_control_point.x);
+  EXPECT_FLOAT_EQ(6.0f, second_control_point.y);
+
+  EXPECT_FALSE(FPDFPath_GetBezierControlPoints(
+      path.get(), 4, &first_control_point, &second_control_point));
+  EXPECT_FALSE(FPDFPath_GetBezierControlPoints(
+      path.get(), 5, &first_control_point, &second_control_point));
+  EXPECT_TRUE(FPDFPath_GetBezierControlPoints(
+      path.get(), 6, &first_control_point, &second_control_point));
+  EXPECT_FLOAT_EQ(9.0f, first_control_point.x);
+  EXPECT_FLOAT_EQ(10.0f, first_control_point.y);
+  EXPECT_FLOAT_EQ(11.0f, second_control_point.x);
+  EXPECT_FLOAT_EQ(12.0f, second_control_point.y);
+
+  EXPECT_FALSE(FPDFPath_GetBezierControlPoints(path.get(), 3, nullptr,
+                                               &second_control_point));
+
+  first_control_point = {11.0f, 12.0f};
+  second_control_point = {13.0f, 14.0f};
+  EXPECT_FALSE(FPDFPath_GetBezierControlPoints(path.get(), 3,
+                                               &first_control_point, nullptr));
+  EXPECT_FLOAT_EQ(11.0f, first_control_point.x);
+  EXPECT_FLOAT_EQ(12.0f, first_control_point.y);
+  EXPECT_FLOAT_EQ(13.0f, second_control_point.x);
+  EXPECT_FLOAT_EQ(14.0f, second_control_point.y);
+}
+
 TEST_F(FPDFEditEmbedderTest, PathOnTopOfText) {
   // Load document with some text
   ASSERT_TRUE(OpenDocument("hello_world.pdf"));

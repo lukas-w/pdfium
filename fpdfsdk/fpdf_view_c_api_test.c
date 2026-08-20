@@ -268,6 +268,7 @@ int CheckPDFiumCApi() {
     CHK(FPDFPath_BezierTo);
     CHK(FPDFPath_Close);
     CHK(FPDFPath_CountSegments);
+    CHK(FPDFPath_GetBezierControlPoints);
     CHK(FPDFPath_GetDrawMode);
     CHK(FPDFPath_GetPathSegment);
     CHK(FPDFPath_LineTo);

@@ -1281,6 +1281,24 @@ FPDF_EXPORT FPDF_BOOL FPDF_CALLCONV FPDFPath_BezierTo(FPDF_PAGEOBJECT path,
                                                       float x3,
                                                       float y3);
 
+// Experimental API.
+// Get the two control points of a cubic Bezier segment in |path| at |index|.
+//
+//   path                 - handle to a path.
+//   index                - the index of the endpoint of a cubic Bezier segment.
+//   first_control_point  - the first control point.
+//   second_control_point - the second control point.
+//
+// Returns TRUE on success. Returns FALSE when |path| is not a valid path,
+// |index| is out of bounds, the indexed segment is not the endpoint of a cubic
+// Bezier segment, or either output pointer is NULL. On failure, the output
+// parameters are not modified.
+FPDF_EXPORT FPDF_BOOL FPDF_CALLCONV
+FPDFPath_GetBezierControlPoints(FPDF_PAGEOBJECT path,
+                                size_t index,
+                                FS_POINTF* first_control_point,
+                                FS_POINTF* second_control_point);
+
 // Close the current subpath of a given path.
 //
 // path   - the handle to the path object.
