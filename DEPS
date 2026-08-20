@@ -121,6 +121,10 @@ vars = {
   # and whatever else without interference from each other.
   'cpu_features_revision': '81d13c49649f0714dd41fb56bb246398b6584085',
   # Three lines of non-changing comments so that
+  # the commit queue can handle CLs rolling cpython3_version
+  # and whatever else without interference from each other.
+  'cpython3_version': 'version:3@3.11.9.chromium.38',
+  # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling depot_tools
   # and whatever else without interference from each other.
   'depot_tools_revision': '732902ab86f8bd629bee00af102d5aa2d9336166',
@@ -381,6 +385,30 @@ deps = {
         '/external/github.com/google/cpu_features.git@' +
         Var('cpu_features_revision'),
     'condition': 'checkout_android',
+  },
+
+  # Host platform package.
+  'third_party/cpython3/host': {
+    'packages': [
+      {
+        'package': 'infra/3pp/tools/cpython3/${{platform}}',
+        'version': Var('cpython3_version'),
+      },
+    ],
+    'condition': 'non_git_source',
+    'dep_type': 'cipd',
+  },
+
+  # Always download Linux x64 package regardless of host OS for RBE workers.
+  'third_party/cpython3/linux-amd64': {
+    'packages': [
+      {
+        'package': 'infra/3pp/tools/cpython3/linux-amd64',
+        'version': Var('cpython3_version'),
+      },
+    ],
+    'condition': 'non_git_source',
+    'dep_type': 'cipd',
   },
 
   'third_party/depot_tools':
@@ -841,7 +869,7 @@ include_rules = [
 
 specific_include_rules = {
   # Allow embedder tests to use public APIs.
-  '(.*embeddertest\.cpp)': [
+  r'(.*embeddertest\.cpp)': [
     '+public',
   ]
 }

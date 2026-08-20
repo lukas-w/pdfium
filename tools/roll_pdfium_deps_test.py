@@ -205,6 +205,9 @@ vars = {
   # siso CIPD package version.
   'siso_version': 'git_revision:49dcca5d2be985d8ac6d512e59ee59e315264fb8',
 
+  # CPython 3 CIPD package version for Siso hermetic toolchain.
+  'cpython3_version': 'version:3@3.11.9.chromium.38',
+
   # reclient options.
   # download reclient binaries, required for 'use_reclient` gn arg.
   # TODO(crbug.com/448517720): make it false by default.
@@ -1155,6 +1158,30 @@ deps = {
     'dep_type': 'cipd',
   },
 
+  # Always download Linux x64 package regardless of host OS for RBE workers.
+  'src/third_party/cpython3/linux-amd64': {
+      'packages': [
+        {
+          'package': 'infra/3pp/tools/cpython3/linux-amd64',
+          'version': Var('cpython3_version'),
+        },
+      ],
+      'condition': 'non_git_source',
+      'dep_type': 'cipd',
+  },
+
+  # Host platform package.
+  'src/third_party/cpython3/host': {
+      'packages': [
+        {
+          'package': 'infra/3pp/tools/cpython3/${{platform}}',
+          'version': Var('cpython3_version'),
+        },
+      ],
+      'condition': 'non_git_source',
+      'dep_type': 'cipd',
+  },
+
   'src/third_party/pdfium':
     Var('pdfium_git') + '/pdfium.git' + '@' +  Var('pdfium_revision'),
 
@@ -1495,7 +1522,7 @@ recursedeps = [
 ]
 '''
 
-PDFIUM_DEPS = '''
+PDFIUM_DEPS = r'''
 use_relative_paths = True
 
 gclient_gn_args_file = 'build/config/gclient_args.gni'
@@ -1607,6 +1634,10 @@ vars = {
   # the commit queue can handle CLs rolling cpu_features
   # and whatever else without interference from each other.
   'cpu_features_revision': '936b9ab5515dead115606559502e3864958f7f6e',
+  # Three lines of non-changing comments so that
+  # the commit queue can handle CLs rolling cpython3_version
+  # and whatever else without interference from each other.
+  'cpython3_version': 'version:3@3.11.9.chromium.38',
   # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling depot_tools
   # and whatever else without interference from each other.
@@ -1868,6 +1899,30 @@ deps = {
         '/external/github.com/google/cpu_features.git@' +
         Var('cpu_features_revision'),
     'condition': 'checkout_android',
+  },
+
+  # Always download Linux x64 package regardless of host OS for RBE workers.
+  'third_party/cpython3/linux-amd64': {
+    'packages': [
+      {
+        'package': 'infra/3pp/tools/cpython3/linux-amd64',
+        'version': Var('cpython3_version'),
+      },
+    ],
+    'condition': 'non_git_source',
+    'dep_type': 'cipd',
+  },
+
+  # Host platform package.
+  'third_party/cpython3/host': {
+    'packages': [
+      {
+        'package': 'infra/3pp/tools/cpython3/${{platform}}',
+        'version': Var('cpython3_version'),
+      },
+    ],
+    'condition': 'non_git_source',
+    'dep_type': 'cipd',
   },
 
   'third_party/depot_tools':
@@ -2242,7 +2297,7 @@ include_rules = [
 
 specific_include_rules = {
   # Allow embedder tests to use public APIs.
-  '(.*embeddertest\.cpp)': [
+  r'(.*embeddertest\.cpp)': [
     '+public',
   ]
 }
@@ -2407,6 +2462,10 @@ class RollDepTest(unittest.TestCase):
   def testCipdDepsRollsNothingToRoll(self):
     success, message = roll_dep(CHROMIUM_DEPS, PDFIUM_DEPS,
                                 'android_ndk_version')
+    self.assertTrue(success)
+    self.assertEqual('Revisions are the same.', message)
+
+    success, message = roll_dep(CHROMIUM_DEPS, PDFIUM_DEPS, 'cpython3_version')
     self.assertTrue(success)
     self.assertEqual('Revisions are the same.', message)
 

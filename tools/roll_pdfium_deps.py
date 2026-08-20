@@ -17,6 +17,7 @@ ALL_DEPS_ENTRIES = (
     'clang_format_revision',
     'clang_revision',
     'cpu_features_revision',
+    'cpython3_version',
     'dragonbox_revision',
     'fast_float_revision',
     'fp16_revision',
