@@ -423,9 +423,11 @@ deps = {
     Var('chromium_git') + '/external/github.com/fastfloat/fast_float.git@' +
         Var('fast_float_revision'),
 
-  'third_party/fp16/src':
-    Var('chromium_git') + '/external/github.com/Maratyszcza/FP16.git@' +
+  'third_party/fp16/src': {
+    'url': Var('chromium_git') + '/external/github.com/Maratyszcza/FP16.git@' +
         Var('fp16_revision'),
+    'condition': 'checkout_v8',
+  },
 
   'third_party/freetype/src':
     Var('chromium_git') + '/chromium/src/third_party/freetype2.git@' +
