@@ -343,14 +343,13 @@ RetainPtr<CPDF_Object> CPDF_StreamParser::ReadNextObject(
     bool bAllowNestedArray,
     bool bInArray,
     uint32_t dwRecursionLevel) {
-  bool bIsNumber;
   // Must get the next word before returning to avoid infinite loops.
-  GetNextWord(bIsNumber);
+  const bool is_number = GetNextWord();
   if (!word_size_ || dwRecursionLevel > kMaxNestedParsingLevel) {
     return nullptr;
   }
 
-  if (bIsNumber) {
+  if (is_number) {
     word_buffer_[word_size_] = 0;
     return pdfium::MakeRetain<CPDF_Number>(GetWord());
   }
@@ -373,7 +372,7 @@ RetainPtr<CPDF_Object> CPDF_StreamParser::ReadNextObject(
 
     auto dict = pdfium::MakeRetain<CPDF_Dictionary>(pool_);
     while (true) {
-      GetNextWord(bIsNumber);
+      GetNextWord();
       if (word_size_ == 2 && word_buffer_[0] == '>') {
         break;
       }
@@ -427,18 +426,17 @@ RetainPtr<CPDF_Object> CPDF_StreamParser::ReadNextObject(
 }
 
 // TODO(npm): the following methods are almost identical in cpdf_syntaxparser
-void CPDF_StreamParser::GetNextWord(bool& bIsNumber) {
+bool CPDF_StreamParser::GetNextWord() {
   word_size_ = 0;
-  bIsNumber = true;
   if (!PositionIsInBounds()) {
-    return;
+    return true;
   }
 
   uint8_t ch = buf_[pos_++];
   while (true) {
     while (PDFCharIsWhitespace(ch)) {
       if (!PositionIsInBounds()) {
-        return;
+        return true;
       }
       ch = buf_[pos_++];
     }
@@ -449,7 +447,7 @@ void CPDF_StreamParser::GetNextWord(bool& bIsNumber) {
 
     while (true) {
       if (!PositionIsInBounds()) {
-        return;
+        return true;
       }
       ch = buf_[pos_++];
       if (PDFCharIsLineEnding(ch)) {
@@ -459,17 +457,16 @@ void CPDF_StreamParser::GetNextWord(bool& bIsNumber) {
   }
 
   if (PDFCharIsDelimiter(ch)) {
-    bIsNumber = false;
     word_buffer_[word_size_++] = ch;
     if (ch == '/') {
       while (true) {
         if (!PositionIsInBounds()) {
-          return;
+          return false;
         }
         ch = buf_[pos_++];
         if (!PDFCharIsOther(ch) && !PDFCharIsNumeric(ch)) {
           pos_--;
-          return;
+          return false;
         }
         if (word_size_ < kMaxWordLength) {
           word_buffer_[word_size_++] = ch;
@@ -477,7 +474,7 @@ void CPDF_StreamParser::GetNextWord(bool& bIsNumber) {
       }
     } else if (ch == '<') {
       if (!PositionIsInBounds()) {
-        return;
+        return false;
       }
       ch = buf_[pos_++];
       if (ch == '<') {
@@ -487,7 +484,7 @@ void CPDF_StreamParser::GetNextWord(bool& bIsNumber) {
       }
     } else if (ch == '>') {
       if (!PositionIsInBounds()) {
-        return;
+        return false;
       }
       ch = buf_[pos_++];
       if (ch == '>') {
@@ -496,18 +493,19 @@ void CPDF_StreamParser::GetNextWord(bool& bIsNumber) {
         pos_--;
       }
     }
-    return;
+    return false;
   }
 
+  bool is_number = true;
   while (true) {
     if (word_size_ < kMaxWordLength) {
       word_buffer_[word_size_++] = ch;
     }
     if (!PDFCharIsNumeric(ch)) {
-      bIsNumber = false;
+      is_number = false;
     }
     if (!PositionIsInBounds()) {
-      return;
+      return is_number;
     }
 
     ch = buf_[pos_++];
@@ -516,6 +514,7 @@ void CPDF_StreamParser::GetNextWord(bool& bIsNumber) {
       break;
     }
   }
+  return is_number;
 }
 
 ByteString CPDF_StreamParser::ReadString() {

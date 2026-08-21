@@ -50,7 +50,9 @@ class CPDF_StreamParser {
   friend class CPDFStreamParserTest_ReadHexString_Test;
   static constexpr uint32_t kMaxWordLength = 255;
 
-  void GetNextWord(bool& bIsNumber);
+  // Returns true if the word consists entirely of numeric characters, or if no
+  // word was read (e.g. at EOF). Returns false otherwise.
+  bool GetNextWord();
   ByteString ReadString();
   DataVector<uint8_t> ReadHexString();
   bool PositionIsInBounds() const;
