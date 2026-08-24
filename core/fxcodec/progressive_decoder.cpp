@@ -48,7 +48,7 @@
 #endif
 
 #if defined(PDF_ENABLE_RUST_PNG)
-#include "core/fxcodec/png/skia_png_context.h"
+#include "core/fxcodec/png/rust_png_context.h"
 #else
 #include "core/fxcodec/png/libpng_png_context.h"
 #endif
@@ -83,8 +83,8 @@ std::unique_ptr<ProgressiveDecoderContext> CreateDecoderContext(
 #endif
     }
     case FXCODEC_IMAGE_PNG:
-#if defined(PDF_USE_SKIA) && defined(PDF_ENABLE_RUST_PNG)
-      return std::make_unique<SkiaPngContext>(delegate);
+#if defined(PDF_ENABLE_RUST_PNG)
+      return std::make_unique<RustPngContext>(delegate);
 #else
     {
       auto context = std::make_unique<LibpngPngContext>(delegate);
@@ -502,14 +502,23 @@ bool ProgressiveDecoder::PngDetectImageTypeInBuffer() {
     return false;
   }
 
-#if defined(PDF_USE_SKIA) && defined(PDF_ENABLE_RUST_PNG)
-  auto* ctx = static_cast<SkiaPngContext*>(context_.get());
-#else
-  auto* ctx = static_cast<LibpngPngContext*>(context_.get());
-#endif
-
   src_width_ = 0;
   src_height_ = 0;
+
+#if defined(PDF_ENABLE_RUST_PNG)
+  context_->Input(codec_memory_);
+  auto* ctx = static_cast<RustPngContext*>(context_.get());
+  FXCODEC_STATUS status = FXCODEC_STATUS::kError;
+  while (src_width_ == 0) {
+    if (ctx->ReadHeader()) {
+      break;
+    }
+    if (ctx->has_error() || !ReadMoreData(std::nullopt, &status)) {
+      break;
+    }
+  }
+#else
+  auto* ctx = static_cast<LibpngPngContext*>(context_.get());
   if (ctx->ReadHeader(codec_memory_)) {
     FXCODEC_STATUS status = FXCODEC_STATUS::kError;
     while (src_width_ == 0 && ReadMoreData(std::nullopt, &status)) {
@@ -518,6 +527,7 @@ bool ProgressiveDecoder::PngDetectImageTypeInBuffer() {
       }
     }
   }
+#endif
 
   bool got_metadata = (src_width_ > 0 && src_height_ > 0);
   context_.reset();
@@ -533,8 +543,8 @@ FXCODEC_STATUS ProgressiveDecoder::PngStartDecode() {
     return status_;
   }
   context_->Input(codec_memory_);
-#if defined(PDF_USE_SKIA) && defined(PDF_ENABLE_RUST_PNG)
-  auto* ctx = static_cast<SkiaPngContext*>(context_.get());
+#if defined(PDF_ENABLE_RUST_PNG)
+  auto* ctx = static_cast<RustPngContext*>(context_.get());
 #else
   auto* ctx = static_cast<LibpngPngContext*>(context_.get());
 #endif
@@ -543,8 +553,8 @@ FXCODEC_STATUS ProgressiveDecoder::PngStartDecode() {
 }
 
 FXCODEC_STATUS ProgressiveDecoder::PngContinueDecode() {
-#if defined(PDF_USE_SKIA) && defined(PDF_ENABLE_RUST_PNG)
-  auto* ctx = static_cast<SkiaPngContext*>(context_.get());
+#if defined(PDF_ENABLE_RUST_PNG)
+  auto* ctx = static_cast<RustPngContext*>(context_.get());
 #else
   auto* ctx = static_cast<LibpngPngContext*>(context_.get());
 #endif

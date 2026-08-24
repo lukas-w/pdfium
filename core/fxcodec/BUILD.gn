@@ -5,6 +5,22 @@
 import("../../pdfium.gni")
 import("../../testing/test.gni")
 
+if (pdf_enable_rust_png) {
+  import("//build/rust/rust_static_library.gni")
+
+  rust_static_library("pdfium_rust_png_ffi") {
+    crate_name = "pdfium_rust_png_ffi"
+    allow_unsafe = true
+    crate_root = "png/rust_png_ffi.rs"
+    sources = [ crate_root ]
+    cxx_bindings = [ crate_root ]
+    deps = [
+      "//build/rust:cxx_cppdeps",
+      "//third_party/rust/png/v0_18:lib",
+    ]
+  }
+}
+
 source_set("fxcodec") {
   sources = [
     "basic/basicmodule.cpp",
@@ -133,16 +149,15 @@ source_set("fxcodec") {
       ]
     }
 
-    # TODO(https://crbug.com/444045690): Remove `pdf_enable_rust_png` from the
-    # condition below once this build mode has been tested and stabilized.
-    # (Chromium already sets `pdf_use_skia_override = true` so having an extra
-    # condition avoids affecting the Chromium behavior.)
-    if (pdf_use_skia && pdf_enable_rust_png) {
+    if (pdf_enable_rust_png) {
       sources += [
-        "png/skia_png_context.cpp",
-        "png/skia_png_context.h",
+        "png/rust_png_context.cpp",
+        "png/rust_png_context.h",
       ]
-      deps += [ "//skia" ]
+      deps += [
+        ":pdfium_rust_png_ffi",
+        "//build/rust:cxx_cppdeps",
+      ]
     } else {
       sources += [
         "png/libpng_png_context.cpp",
