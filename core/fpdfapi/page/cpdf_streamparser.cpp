@@ -340,12 +340,12 @@ CPDF_StreamParser::ElementType CPDF_StreamParser::ParseNextElement() {
 }
 
 RetainPtr<CPDF_Object> CPDF_StreamParser::ReadNextObject(
-    bool bAllowNestedArray,
-    bool bInArray,
-    uint32_t dwRecursionLevel) {
+    bool allow_nested_array,
+    bool in_array,
+    uint32_t recursion_level) {
   // Must get the next word before returning to avoid infinite loops.
   const bool is_number = GetNextWord();
-  if (!word_size_ || dwRecursionLevel > kMaxNestedParsingLevel) {
+  if (!word_size_ || recursion_level > kMaxNestedParsingLevel) {
     return nullptr;
   }
 
@@ -354,7 +354,7 @@ RetainPtr<CPDF_Object> CPDF_StreamParser::ReadNextObject(
     return pdfium::MakeRetain<CPDF_Number>(GetWord());
   }
 
-  int first_char = word_buffer_[0];
+  const uint8_t first_char = word_buffer_[0];
   if (first_char == '/') {
     ByteString name = PDF_NameDecode(GetWord().Substr(1));
     return pdfium::MakeRetain<CPDF_Name>(pool_, name);
@@ -382,35 +382,35 @@ RetainPtr<CPDF_Object> CPDF_StreamParser::ReadNextObject(
       }
 
       ByteString key = PDF_NameDecode(GetWord().Substr(1));
-      RetainPtr<CPDF_Object> pObj =
-          ReadNextObject(true, bInArray, dwRecursionLevel + 1);
-      if (!pObj) {
+      RetainPtr<CPDF_Object> object = ReadNextObject(
+          /*allow_nested_array=*/true, in_array, recursion_level + 1);
+      if (!object) {
         return nullptr;
       }
 
-      dict->SetFor(key, std::move(pObj));
+      dict->SetFor(key, std::move(object));
     }
     return dict;
   }
 
   if (first_char == '[') {
-    if ((!bAllowNestedArray && bInArray)) {
+    if (!allow_nested_array && in_array) {
       return nullptr;
     }
 
-    auto pArray = pdfium::MakeRetain<CPDF_Array>();
+    auto array = pdfium::MakeRetain<CPDF_Array>();
     while (true) {
-      RetainPtr<CPDF_Object> pObj =
-          ReadNextObject(bAllowNestedArray, true, dwRecursionLevel + 1);
-      if (pObj) {
-        pArray->Append(std::move(pObj));
+      RetainPtr<CPDF_Object> object = ReadNextObject(
+          allow_nested_array, /*in_array=*/true, recursion_level + 1);
+      if (object) {
+        array->Append(std::move(object));
         continue;
       }
       if (!word_size_ || word_buffer_[0] == ']') {
         break;
       }
     }
-    return pArray;
+    return array;
   }
 
   if (GetWord() == kFalse) {
