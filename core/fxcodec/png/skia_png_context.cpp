@@ -35,7 +35,7 @@ constexpr double kPngGamma = 2.2;
 
 sk_sp<SkColorSpace> GetTargetColorSpace() {
   const skcms_TransferFunction fn = {
-      .g = static_cast<float>(1.0 / kPngGamma),
+      .g = static_cast<float>(kPngGamma),
       .a = 1.0f,
   };
   return SkColorSpace::MakeRGB(fn, SkNamedGamut::kSRGB);

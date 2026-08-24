@@ -29,6 +29,7 @@ namespace fxcodec {
 
 namespace {
 
+using ::testing::AnyOf;
 using ::testing::ElementsAre;
 using ::testing::ElementsAreArray;
 
@@ -622,6 +623,55 @@ TEST_F(ProgressiveDecoderTest, BigPng) {
   EXPECT_EQ(FXCODEC_STATUS::kDecodeFinished, status);
   EXPECT_THAT(bitmap->GetScanline(0).first(4u),
               ElementsAre(0x00, 0xFF, 0x00, 0xFF));
+}
+
+// 1x1 8-bit grayscale PNG with a gAMA chunk of 100,000 (gamma 1.0) and pixel
+// value 128 (0x80).
+TEST_F(ProgressiveDecoderTest, PngGammaChunk) {
+  static constexpr uint8_t kInput[] = {
+      // Signature (8 bytes)
+      0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
+      // IHDR chunk (25 bytes): 1x1, 8-bit grayscale
+      0x00, 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52, 0x00, 0x00, 0x00, 0x01,
+      0x00, 0x00, 0x00, 0x01, 0x08, 0x00, 0x00, 0x00, 0x00, 0x3a, 0x7e, 0x9b,
+      0x55,
+      // gAMA chunk (16 bytes): value 100,000 (1.0 in 100k fixed-point)
+      0x00, 0x00, 0x00, 0x04, 0x67, 0x41, 0x4d, 0x41, 0x00, 0x01, 0x86, 0xa0,
+      0x31, 0xe8, 0x96, 0x5f,
+      // IDAT chunk (22 bytes): filter=0, pixel=0x80 (128)
+      0x00, 0x00, 0x00, 0x0a, 0x49, 0x44, 0x41, 0x54, 0x78, 0xda, 0x63, 0x68,
+      0x00, 0x00, 0x00, 0x82, 0x00, 0x81, 0xda, 0x45, 0x08, 0x3b,
+      // IEND chunk (12 bytes)
+      0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4e, 0x44, 0xae, 0x42, 0x60, 0x82};
+
+  ProgressiveDecoder decoder;
+
+  auto source = pdfium::MakeRetain<CFX_ReadOnlySpanStream>(kInput);
+  CFX_DIBAttribute attr;
+  FXCODEC_STATUS status =
+      decoder.LoadImageInfo(std::move(source), FXCODEC_IMAGE_PNG, &attr, true);
+  ASSERT_EQ(FXCODEC_STATUS::kFrameReady, status);
+
+  ASSERT_EQ(1, decoder.GetWidth());
+  ASSERT_EQ(1, decoder.GetHeight());
+  ASSERT_EQ(FXDIB_Format::kBgra, decoder.GetBitmapFormat());
+
+  auto bitmap = pdfium::MakeRetain<CFX_DIBitmap>();
+  ASSERT_TRUE(bitmap->Create(decoder.GetWidth(), decoder.GetHeight(),
+                             decoder.GetBitmapFormat()));
+
+  size_t frames;
+  std::tie(status, frames) = decoder.GetFrames();
+  ASSERT_EQ(FXCODEC_STATUS::kDecodeReady, status);
+  ASSERT_EQ(1u, frames);
+
+  status = DecodeToBitmap(decoder, bitmap);
+  EXPECT_EQ(FXCODEC_STATUS::kDecodeFinished, status);
+  // Input 0x80 with file_gamma=1.0 and display_gamma=2.2 yields 0xBA (186
+  // floor) or 0xBB (187 rounded).
+  EXPECT_THAT(bitmap->GetScanline(0).first(4u),
+              AnyOf(ElementsAre(0xBA, 0xBA, 0xBA, 0xFF),
+                    ElementsAre(0xBB, 0xBB, 0xBB, 0xFF)));
 }
 
 }  // namespace fxcodec
