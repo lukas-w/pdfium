@@ -53,6 +53,8 @@ class CPDF_StreamParser {
   // Returns true if the word consists entirely of numeric characters, or if no
   // word was read (e.g. at EOF). Returns false otherwise.
   bool GetNextWord();
+
+  RetainPtr<CPDF_Object> ReadLeafObject();
   ByteString ReadString();
   DataVector<uint8_t> ReadHexString();
   bool PositionIsInBounds() const;

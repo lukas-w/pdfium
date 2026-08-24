@@ -355,21 +355,7 @@ RetainPtr<CPDF_Object> CPDF_StreamParser::ReadNextObject(
   }
 
   const uint8_t first_char = word_buffer_[0];
-  if (first_char == '/') {
-    ByteString name = PDF_NameDecode(GetWord().Substr(1));
-    return pdfium::MakeRetain<CPDF_Name>(pool_, name);
-  }
-
-  if (first_char == '(') {
-    return pdfium::MakeRetain<CPDF_String>(pool_, ReadString());
-  }
-
-  if (first_char == '<') {
-    if (word_size_ == 1) {
-      return pdfium::MakeRetain<CPDF_String>(pool_, ReadHexString(),
-                                             CPDF_String::DataType::kIsHex);
-    }
-
+  if (first_char == '<' && word_size_ > 1) {
     auto dict = pdfium::MakeRetain<CPDF_Dictionary>(pool_);
     while (true) {
       GetNextWord();
@@ -411,6 +397,26 @@ RetainPtr<CPDF_Object> CPDF_StreamParser::ReadNextObject(
       }
     }
     return array;
+  }
+
+  return ReadLeafObject();
+}
+
+RetainPtr<CPDF_Object> CPDF_StreamParser::ReadLeafObject() {
+  const uint8_t first_char = word_buffer_[0];
+  if (first_char == '/') {
+    ByteString name = PDF_NameDecode(GetWord().Substr(1));
+    return pdfium::MakeRetain<CPDF_Name>(pool_, name);
+  }
+
+  if (first_char == '(') {
+    return pdfium::MakeRetain<CPDF_String>(pool_, ReadString());
+  }
+
+  if (first_char == '<') {
+    CHECK_EQ(word_size_, 1);  // Caller handled all other cases.
+    return pdfium::MakeRetain<CPDF_String>(pool_, ReadHexString(),
+                                           CPDF_String::DataType::kIsHex);
   }
 
   if (GetWord() == kFalse) {
