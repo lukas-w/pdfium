@@ -54,16 +54,10 @@ class CStretchEngine {
 
   struct PixelWeight {
     void SetStartEnd(int src_start, int src_end, size_t weight_count) {
+      CHECK_GE(src_start, 0);
       CHECK_LT(src_end - src_start, static_cast<int>(weight_count));
       src_start_ = src_start;
       src_end_ = src_end;
-    }
-
-    uint32_t GetWeightForPosition(int position) const {
-      CHECK_GE(position, src_start_);
-      CHECK_LE(position, src_end_);
-      // SAFETY: enforced by checks above.
-      return UNSAFE_BUFFERS(weights_[position - src_start_]);
     }
 
     void SetWeightForPosition(int position, uint32_t weight) {
@@ -71,6 +65,23 @@ class CStretchEngine {
       CHECK_LE(position, src_end_);
       // SAFETY: enforced by checks above.
       UNSAFE_BUFFERS(weights_[position - src_start_] = weight);
+    }
+
+    // The first source position this pixel taps. Non-negative, so callers
+    // can index a span with it directly.
+    size_t GetSrcStart() const { return static_cast<size_t>(src_start_); }
+
+    // One weight per source position in [src_start_, src_end_]; empty for an
+    // empty range.
+    pdfium::span<const uint32_t> GetWeights() const {
+      if (src_end_ < src_start_) {
+        return {};
+      }
+      // SAFETY: CalculateWeights() sizes each PixelWeight for exactly
+      // `src_end_ - src_start_ + 1` trailing weights, and SetStartEnd()
+      // CHECKs that the range fits the allocation.
+      return UNSAFE_BUFFERS(pdfium::span(
+          weights_, static_cast<size_t>(src_end_ - src_start_ + 1)));
     }
 
     // NOTE: relies on defined behaviour for unsigned overflow to

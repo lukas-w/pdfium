@@ -14,9 +14,12 @@
 
 #include "core/fxcrt/check.h"
 #include "core/fxcrt/check_op.h"
+#include "core/fxcrt/fx_2d_size.h"
 #include "core/fxcrt/fx_safe_types.h"
 #include "core/fxcrt/fx_system.h"
 #include "core/fxcrt/pauseindicator_iface.h"
+#include "core/fxcrt/span_util.h"
+#include "core/fxcrt/zip.h"
 #include "core/fxge/calculate_pitch.h"
 #include "core/fxge/dib/cfx_dibbase.h"
 #include "core/fxge/dib/cfx_dibitmap.h"
@@ -114,12 +117,12 @@ bool CStretchEngine::WeightTable::CalculateWeights(
           // Always room for one weight per size calculation.
           pixel_weights.weights_[0] = kFixedPointOne;
         } else {
-          UNSAFE_TODO({
-            pixel_weights.weights_[1] =
-                FixedFromDouble(src_pos - pixel_weights.src_start_ - 0.5f);
-            pixel_weights.weights_[0] =
-                kFixedPointOne - pixel_weights.weights_[1];
-          });
+          const uint32_t second_weight =
+              FixedFromDouble(src_pos - pixel_weights.src_start_ - 0.5f);
+          pixel_weights.SetWeightForPosition(pixel_weights.src_start_,
+                                             kFixedPointOne - second_weight);
+          pixel_weights.SetWeightForPosition(pixel_weights.src_start_ + 1,
+                                             second_weight);
         }
       } else {
         int pixel_pos = static_cast<int>(floor(src_pos));
@@ -141,7 +144,10 @@ bool CStretchEngine::WeightTable::CalculateWeights(
     start_i = std::max(start_i, src_min);
     end_i = std::min(end_i, src_max - 1);
     if (start_i > end_i) {
-      start_i = std::min(start_i, src_max - 1);
+      // `start_i` is already at least `src_min`, so the lower bound only
+      // matters when the source range is empty: `src_max` is then 0 and
+      // clamping from above alone would store a negative position.
+      start_i = std::clamp(start_i, 0, std::max(src_max - 1, 0));
       pixel_weights.SetStartEnd(start_i, start_i, weight_count);
       continue;
     }
@@ -325,7 +331,7 @@ bool CStretchEngine::ContinueStretchHorz(PauseIndicatorIface* pPause) {
     return true;
   }
 
-  int Bpp = dest_bpp_ / 8;
+  const int Bpp = dest_bpp_ / 8;
   static const int kStrechPauseRows = 10;
   int rows_to_go = kStrechPauseRows;
   for (; cur_row_ < src_clip_.bottom; ++cur_row_) {
@@ -337,7 +343,7 @@ bool CStretchEngine::ContinueStretchHorz(PauseIndicatorIface* pPause) {
       rows_to_go = kStrechPauseRows;
     }
 
-    const uint8_t* src_scan = source_->GetScanline(cur_row_).data();
+    pdfium::span<const uint8_t> src_row_span = source_->GetScanline(cur_row_);
     pdfium::span<uint8_t> dest_span = inter_buf_.subspan(
         (cur_row_ - src_clip_.top) * inter_pitch_, inter_pitch_);
     size_t dest_span_index = 0;
@@ -347,14 +353,14 @@ bool CStretchEngine::ContinueStretchHorz(PauseIndicatorIface* pPause) {
       case TransformMethod::k1BppToManyBpp: {
         for (int col = dest_clip_.left; col < dest_clip_.right; ++col) {
           const PixelWeight* pWeights = weight_table_.GetPixelWeight(col);
+          const size_t src_start = pWeights->GetSrcStart();
+          pdfium::span<const uint32_t> weights = pWeights->GetWeights();
           uint32_t dest_a = 0;
-          for (int j = pWeights->src_start_; j <= pWeights->src_end_; ++j) {
-            uint32_t pixel_weight = pWeights->GetWeightForPosition(j);
-            UNSAFE_TODO({
-              if (src_scan[j / 8] & (1 << (7 - j % 8))) {
-                dest_a += pixel_weight * 255;
-              }
-            });
+          for (size_t i = 0; i < weights.size(); ++i) {
+            const size_t src_bit = src_start + i;
+            if (src_row_span[src_bit / 8] & (1 << (7 - src_bit % 8))) {
+              dest_a += weights[i] * 255;
+            }
           }
           dest_span[dest_span_index++] = PixelFromFixed(dest_a);
         }
@@ -363,10 +369,27 @@ bool CStretchEngine::ContinueStretchHorz(PauseIndicatorIface* pPause) {
       case TransformMethod::k8BppTo8Bpp: {
         for (int col = dest_clip_.left; col < dest_clip_.right; ++col) {
           const PixelWeight* pWeights = weight_table_.GetPixelWeight(col);
+          pdfium::span<const uint32_t> weights = pWeights->GetWeights();
+          // One validated view of exactly the source bytes this column taps.
+          auto src_window =
+              src_row_span.subspan(pWeights->GetSrcStart(), weights.size());
           uint32_t dest_a = 0;
-          for (int j = pWeights->src_start_; j <= pWeights->src_end_; ++j) {
-            uint32_t pixel_weight = pWeights->GetWeightForPosition(j);
-            UNSAFE_TODO({ dest_a += pixel_weight * src_scan[j]; });
+          // See the matching unrolls in the kManyBpptoManyBpp case below:
+          // one and two taps are the common trip counts and the loop is all
+          // overhead there. Tap order is unchanged.
+          switch (weights.size()) {
+            case 1:
+              dest_a = weights[0] * src_window[0];
+              break;
+            case 2:
+              dest_a = weights[0] * src_window[0] + weights[1] * src_window[1];
+              break;
+            default:
+              for (auto [pixel_weight, src_byte] :
+                   fxcrt::Zip(weights, src_window)) {
+                dest_a += pixel_weight * src_byte;
+              }
+              break;
           }
           dest_span[dest_span_index++] = PixelFromFixed(dest_a);
         }
@@ -375,23 +398,24 @@ bool CStretchEngine::ContinueStretchHorz(PauseIndicatorIface* pPause) {
       case TransformMethod::k8BppToManyBpp: {
         for (int col = dest_clip_.left; col < dest_clip_.right; ++col) {
           const PixelWeight* pWeights = weight_table_.GetPixelWeight(col);
+          pdfium::span<const uint32_t> weights = pWeights->GetWeights();
+          auto src_window =
+              src_row_span.subspan(pWeights->GetSrcStart(), weights.size());
           uint32_t dest_r = 0;
           uint32_t dest_g = 0;
           uint32_t dest_b = 0;
-          for (int j = pWeights->src_start_; j <= pWeights->src_end_; ++j) {
-            uint32_t pixel_weight = pWeights->GetWeightForPosition(j);
-            UNSAFE_TODO({
-              FX_ARGB argb = src_palette_[src_scan[j]];
-              if (dest_format_ == FXDIB_Format::kBgr) {
-                dest_r += pixel_weight * static_cast<uint8_t>(argb >> 16);
-                dest_g += pixel_weight * static_cast<uint8_t>(argb >> 8);
-                dest_b += pixel_weight * static_cast<uint8_t>(argb);
-              } else {
-                dest_b += pixel_weight * static_cast<uint8_t>(argb >> 24);
-                dest_g += pixel_weight * static_cast<uint8_t>(argb >> 16);
-                dest_r += pixel_weight * static_cast<uint8_t>(argb >> 8);
-              }
-            });
+          for (auto [pixel_weight, src_byte] :
+               fxcrt::Zip(weights, src_window)) {
+            FX_ARGB argb = src_palette_[src_byte];
+            if (dest_format_ == FXDIB_Format::kBgr) {
+              dest_r += pixel_weight * static_cast<uint8_t>(argb >> 16);
+              dest_g += pixel_weight * static_cast<uint8_t>(argb >> 8);
+              dest_b += pixel_weight * static_cast<uint8_t>(argb);
+            } else {
+              dest_b += pixel_weight * static_cast<uint8_t>(argb >> 24);
+              dest_g += pixel_weight * static_cast<uint8_t>(argb >> 16);
+              dest_r += pixel_weight * static_cast<uint8_t>(argb >> 8);
+            }
           }
           dest_span[dest_span_index++] = PixelFromFixed(dest_b);
           dest_span[dest_span_index++] = PixelFromFixed(dest_g);
@@ -400,45 +424,93 @@ bool CStretchEngine::ContinueStretchHorz(PauseIndicatorIface* pPause) {
         break;
       }
       case TransformMethod::kManyBpptoManyBpp: {
-        for (int col = dest_clip_.left; col < dest_clip_.right; ++col) {
-          const PixelWeight* pWeights = weight_table_.GetPixelWeight(col);
-          uint32_t dest_r = 0;
-          uint32_t dest_g = 0;
-          uint32_t dest_b = 0;
-          for (int j = pWeights->src_start_; j <= pWeights->src_end_; ++j) {
-            uint32_t pixel_weight = pWeights->GetWeightForPosition(j);
-            UNSAFE_TODO({
-              const uint8_t* src_pixel = src_scan + j * Bpp;
-              dest_b += pixel_weight * (*src_pixel++);
-              dest_g += pixel_weight * (*src_pixel++);
-              dest_r += pixel_weight * (*src_pixel);
-            });
+        // `Bpp` is the source pixel stride as well as the destination's:
+        // this method is only selected for >8bpp sources, and
+        // CFX_ImageStretcher::GetStretchedFormat() maps such sources to the
+        // same format on the destination side, so both are kBgr (3 bytes) or
+        // kBgrx (4 bytes, whose 4th byte this ignores). The generic lambda
+        // below is instantiated once per branch, so each instantiation gets a
+        // compile-time source pixel size.
+        auto stretch_row_from = [this, &dest_span, &dest_span_index,
+                                 Bpp](auto src_pixels) {
+          for (int col = dest_clip_.left; col < dest_clip_.right; ++col) {
+            const PixelWeight* pWeights = weight_table_.GetPixelWeight(col);
+            pdfium::span<const uint32_t> weights = pWeights->GetWeights();
+            auto window =
+                src_pixels.subspan(pWeights->GetSrcStart(), weights.size());
+            uint32_t dest_r = 0;
+            uint32_t dest_g = 0;
+            uint32_t dest_b = 0;
+            // One and two taps are the overwhelmingly common cases -- one is
+            // no scaling in this axis, two is bilinear -- and at that trip
+            // count the loop is all overhead. Unrolled explicitly; the terms
+            // are summed in tap order, so the result is identical.
+            switch (weights.size()) {
+              case 1: {
+                const auto& src0 = window[0];
+                dest_b = weights[0] * src0.blue;
+                dest_g = weights[0] * src0.green;
+                dest_r = weights[0] * src0.red;
+                break;
+              }
+              case 2: {
+                const auto& src0 = window[0];
+                const auto& src1 = window[1];
+                dest_b = weights[0] * src0.blue + weights[1] * src1.blue;
+                dest_g = weights[0] * src0.green + weights[1] * src1.green;
+                dest_r = weights[0] * src0.red + weights[1] * src1.red;
+                break;
+              }
+              default:
+                for (auto [pixel_weight, src] : fxcrt::Zip(weights, window)) {
+                  dest_b += pixel_weight * src.blue;
+                  dest_g += pixel_weight * src.green;
+                  dest_r += pixel_weight * src.red;
+                }
+                break;
+            }
+            dest_span[dest_span_index++] = PixelFromFixed(dest_b);
+            dest_span[dest_span_index++] = PixelFromFixed(dest_g);
+            dest_span[dest_span_index++] = PixelFromFixed(dest_r);
+            dest_span_index += Bpp - 3;
           }
-          dest_span[dest_span_index++] = PixelFromFixed(dest_b);
-          dest_span[dest_span_index++] = PixelFromFixed(dest_g);
-          dest_span[dest_span_index++] = PixelFromFixed(dest_r);
-          dest_span_index += Bpp - 3;
+        };
+        if (Bpp == 3) {
+          stretch_row_from(
+              fxcrt::reinterpret_span<const FX_BGR_STRUCT<uint8_t>>(
+                  src_row_span));
+        } else {
+          CHECK_EQ(Bpp, 4);
+          stretch_row_from(
+              fxcrt::reinterpret_span<const FX_BGRA_STRUCT<uint8_t>>(
+                  src_row_span));
         }
         break;
       }
       case TransformMethod::kManyBpptoManyBppWithAlpha: {
-        DCHECK(has_alpha_);
+        CHECK(has_alpha_);
+        // `has_alpha_` implies both source and destination are kBgra
+        // (asserted in the constructor), so the source pixels are 4-byte
+        // BGRA structs.
+        CHECK_EQ(Bpp, 4);
+        auto src_pixels =
+            fxcrt::reinterpret_span<const FX_BGRA_STRUCT<uint8_t>>(
+                src_row_span);
         for (int col = dest_clip_.left; col < dest_clip_.right; ++col) {
           const PixelWeight* pWeights = weight_table_.GetPixelWeight(col);
+          pdfium::span<const uint32_t> weights = pWeights->GetWeights();
+          auto window =
+              src_pixels.subspan(pWeights->GetSrcStart(), weights.size());
           uint32_t dest_a = 0;
           uint32_t dest_r = 0;
           uint32_t dest_g = 0;
           uint32_t dest_b = 0;
-          for (int j = pWeights->src_start_; j <= pWeights->src_end_; ++j) {
-            UNSAFE_TODO({
-              const uint8_t* src_pixel = src_scan + j * Bpp;
-              uint32_t pixel_weight =
-                  pWeights->GetWeightForPosition(j) * src_pixel[3] / 255;
-              dest_b += pixel_weight * (*src_pixel++);
-              dest_g += pixel_weight * (*src_pixel++);
-              dest_r += pixel_weight * (*src_pixel);
-              dest_a += pixel_weight;
-            });
+          for (auto [weight, src] : fxcrt::Zip(weights, window)) {
+            uint32_t pixel_weight = weight * src.alpha / 255;
+            dest_b += pixel_weight * src.blue;
+            dest_g += pixel_weight * src.green;
+            dest_r += pixel_weight * src.red;
+            dest_a += pixel_weight;
           }
           dest_span[dest_span_index++] = PixelFromFixed(dest_b);
           dest_span[dest_span_index++] = PixelFromFixed(dest_g);
@@ -466,89 +538,129 @@ void CStretchEngine::StretchVert() {
     return;
   }
 
+  const int dest_cols = dest_clip_.right - dest_clip_.left;
+  if (dest_cols <= 0) {
+    return;
+  }
+
   const int DestBpp = dest_bpp_ / 8;
+  const size_t row_bytes = Fx2DSizeOrDie(dest_cols, DestBpp);
+
+  // Taps are the outer loop, so each one reads a contiguous row of the
+  // intermediate buffer into a row-wide accumulator. Per byte the taps are
+  // still summed in tap order, so the output is unchanged.
+  //
+  // Allocated once outside the row loop rather than constructed inside it:
+  // `row_bytes` uint32s is tens of kilobytes for a wide destination, and one
+  // allocate/free pair per destination row is a large fraction of a scanned
+  // page's render time.
+  //
+  // Uninitialised, because the first tap of each row assigns rather than
+  // accumulates and so writes every element before anything reads it. The
+  // one case with no first tap -- an empty weight range -- zeroes the
+  // accumulator explicitly below.
+  auto accum = FixedSizeDataVector<uint32_t>::Uninit(row_bytes);
+  pdfium::span<uint32_t> accum_span = accum.span();
+
   for (int row = dest_clip_.top; row < dest_clip_.bottom; ++row) {
-    unsigned char* dest_scan = dest_scanline_.data();
     const PixelWeight* pWeights = table.GetPixelWeight(row);
+    pdfium::span<const uint32_t> weights = pWeights->GetWeights();
+    if (!weights.empty()) {
+      CHECK_GE(pWeights->src_start_, src_clip_.top);
+      CHECK_LT(pWeights->src_end_, src_clip_.bottom);
+    }
+
+    // No taps for this row, so the tap loop below writes nothing: zero the
+    // accumulator so the conversion switch sees defined values.
+    if (weights.empty()) {
+      std::ranges::fill(accum_span, 0u);
+    }
+    for (size_t i = 0; i < weights.size(); ++i) {
+      // Hoisted deliberately: `weights` and `accum_span` are both spans of
+      // uint32_t, so the compiler cannot prove the accumulation below does
+      // not alias the weight, and would otherwise reload it every iteration
+      // and decline to vectorize.
+      const uint32_t pixel_weight = weights[i];
+      auto src_row = inter_buf_.subspan(
+          (static_cast<size_t>(pWeights->src_start_ - src_clip_.top) + i) *
+              inter_pitch_,
+          row_bytes);
+      // The first tap assigns rather than accumulates. That initialises the
+      // whole accumulator, so no separate zeroing pass over the row is
+      // needed -- one full-width write instead of a write plus a
+      // read-modify-write.
+      if (i == 0) {
+        for (auto [acc, src_byte] : fxcrt::Zip(accum_span, src_row)) {
+          acc = pixel_weight * src_byte;
+        }
+      } else {
+        for (auto [acc, src_byte] : fxcrt::Zip(accum_span, src_row)) {
+          acc += pixel_weight * src_byte;
+        }
+      }
+    }
+
+    auto dest_row = pdfium::span(dest_scanline_).first(row_bytes);
     switch (trans_method_) {
       case TransformMethod::k1BppTo8Bpp:
       case TransformMethod::k1BppToManyBpp:
       case TransformMethod::k8BppTo8Bpp: {
-        for (int col = dest_clip_.left; col < dest_clip_.right; ++col) {
-          pdfium::span<const uint8_t> src_span =
-              inter_buf_.subspan((col - dest_clip_.left) * DestBpp);
-          uint32_t dest_a = 0;
-          for (int j = pWeights->src_start_; j <= pWeights->src_end_; ++j) {
-            uint32_t pixel_weight = pWeights->GetWeightForPosition(j);
-            dest_a +=
-                pixel_weight * src_span[(j - src_clip_.top) * inter_pitch_];
+        // Only the first byte of each destination pixel carries data on
+        // these paths; any remaining bytes are left untouched.
+        if (DestBpp == 1) {
+          for (auto [dest, acc] : fxcrt::Zip(dest_row, accum_span)) {
+            dest = PixelFromFixed(acc);
           }
-          UNSAFE_TODO({
-            *dest_scan = PixelFromFixed(dest_a);
-            dest_scan += DestBpp;
-          });
+        } else {
+          size_t offset = 0;
+          for (int col = 0; col < dest_cols; ++col) {
+            dest_row[offset] = PixelFromFixed(accum_span[offset]);
+            offset += DestBpp;
+          }
         }
         break;
       }
       case TransformMethod::k8BppToManyBpp:
       case TransformMethod::kManyBpptoManyBpp: {
-        for (int col = dest_clip_.left; col < dest_clip_.right; ++col) {
-          pdfium::span<const uint8_t> src_span =
-              inter_buf_.subspan((col - dest_clip_.left) * DestBpp);
-          uint32_t dest_r = 0;
-          uint32_t dest_g = 0;
-          uint32_t dest_b = 0;
-          for (int j = pWeights->src_start_; j <= pWeights->src_end_; ++j) {
-            uint32_t pixel_weight = pWeights->GetWeightForPosition(j);
-            pdfium::span<const uint8_t> src_pixel = src_span.subspan(
-                static_cast<size_t>((j - src_clip_.top) * inter_pitch_), 3u);
-            dest_b += pixel_weight * src_pixel[0];
-            dest_g += pixel_weight * src_pixel[1];
-            dest_r += pixel_weight * src_pixel[2];
+        // The destination is kBgr (3 bytes per pixel, fully written) or
+        // kBgrx (4 bytes per pixel, 4th byte left untouched); see the
+        // matching dispatch in ContinueStretchHorz().
+        if (DestBpp == 3) {
+          for (auto [dest, acc] : fxcrt::Zip(dest_row, accum_span)) {
+            dest = PixelFromFixed(acc);
           }
-          UNSAFE_TODO({
-            dest_scan[0] = PixelFromFixed(dest_b);
-            dest_scan[1] = PixelFromFixed(dest_g);
-            dest_scan[2] = PixelFromFixed(dest_r);
-            dest_scan += DestBpp;
-          });
+        } else {
+          CHECK_EQ(DestBpp, 4);
+          auto dest_pixels =
+              fxcrt::reinterpret_span<FX_BGRA_STRUCT<uint8_t>>(dest_row);
+          auto acc_pixels =
+              fxcrt::reinterpret_span<const FX_BGRA_STRUCT<uint32_t>>(
+                  accum_span);
+          for (auto [dest, acc] : fxcrt::Zip(dest_pixels, acc_pixels)) {
+            dest.blue = PixelFromFixed(acc.blue);
+            dest.green = PixelFromFixed(acc.green);
+            dest.red = PixelFromFixed(acc.red);
+          }
         }
         break;
       }
       case TransformMethod::kManyBpptoManyBppWithAlpha: {
-        DCHECK(has_alpha_);
-        for (int col = dest_clip_.left; col < dest_clip_.right; ++col) {
-          pdfium::span<const uint8_t> src_span =
-              inter_buf_.subspan((col - dest_clip_.left) * DestBpp);
-          uint32_t dest_a = 0;
-          uint32_t dest_r = 0;
-          uint32_t dest_g = 0;
-          uint32_t dest_b = 0;
-          static constexpr size_t kPixelBytes = 4;
-          for (int j = pWeights->src_start_; j <= pWeights->src_end_; ++j) {
-            uint32_t pixel_weight = pWeights->GetWeightForPosition(j);
-            pdfium::span<const uint8_t> src_pixel = src_span.subspan(
-                static_cast<size_t>((j - src_clip_.top) * inter_pitch_),
-                kPixelBytes);
-            dest_b += pixel_weight * src_pixel[0];
-            dest_g += pixel_weight * src_pixel[1];
-            dest_r += pixel_weight * src_pixel[2];
-            dest_a += pixel_weight * src_pixel[3];
+        CHECK(has_alpha_);
+        CHECK_EQ(DestBpp, 4);
+        auto dest_pixels =
+            fxcrt::reinterpret_span<FX_BGRA_STRUCT<uint8_t>>(dest_row);
+        auto acc_pixels =
+            fxcrt::reinterpret_span<const FX_BGRA_STRUCT<uint32_t>>(accum_span);
+        for (auto [dest, acc] : fxcrt::Zip(dest_pixels, acc_pixels)) {
+          if (acc.alpha) {
+            int r = acc.red * 255 / acc.alpha;
+            int g = acc.green * 255 / acc.alpha;
+            int b = acc.blue * 255 / acc.alpha;
+            dest.blue = std::clamp(b, 0, 255);
+            dest.green = std::clamp(g, 0, 255);
+            dest.red = std::clamp(r, 0, 255);
           }
-          if (dest_a) {
-            int r = static_cast<uint32_t>(dest_r) * 255 / dest_a;
-            int g = static_cast<uint32_t>(dest_g) * 255 / dest_a;
-            int b = static_cast<uint32_t>(dest_b) * 255 / dest_a;
-            UNSAFE_TODO({
-              dest_scan[0] = std::clamp(b, 0, 255);
-              dest_scan[1] = std::clamp(g, 0, 255);
-              dest_scan[2] = std::clamp(r, 0, 255);
-            });
-          }
-          UNSAFE_TODO({
-            dest_scan[3] = PixelFromFixed(dest_a);
-            dest_scan += DestBpp;
-          });
+          dest.alpha = PixelFromFixed(acc.alpha);
         }
         break;
       }
