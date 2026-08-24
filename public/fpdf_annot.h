@@ -393,10 +393,7 @@ FPDFAnnot_GetAttachmentPoints(FPDF_ANNOTATION annot,
                               FS_QUADPOINTSF* quad_points);
 
 // Experimental API.
-// Set the annotation rectangle defining the location of the annotation. If the
-// annotation's appearance stream is defined and this annotation is of a type
-// without quadpoints, then update the bounding box too if the new rectangle
-// defines a bigger one.
+// Set the annotation rectangle defining the location of the annotation.
 //
 //   annot  - handle to an annotation.
 //   rect   - the annotation rectangle to be set.

@@ -920,21 +920,6 @@ FPDF_EXPORT FPDF_BOOL FPDF_CALLCONV FPDFAnnot_SetRect(FPDF_ANNOTATION annot,
 
   // Update the "Rect" entry in the annotation dictionary.
   pAnnotDict->SetRectFor(pdfium::annotation::kRect, newRect);
-
-  // If the annotation's appearance stream is defined, the annotation is of a
-  // type that does not have quadpoints, and the new rectangle is bigger than
-  // the current bounding box, then update the "BBox" entry in the AP
-  // dictionary too, since its "BBox" entry comes from annotation dictionary's
-  // "Rect" entry.
-  if (FPDFAnnot_HasAttachmentPoints(annot)) {
-    return true;
-  }
-
-  RetainPtr<CPDF_Stream> pStream =
-      GetAnnotAP(pAnnotDict.Get(), CPDF_Annot::AppearanceMode::kNormal);
-  if (pStream && newRect.Contains(pStream->GetDict()->GetRectFor("BBox"))) {
-    pStream->GetMutableDict()->SetRectFor("BBox", newRect);
-  }
   return true;
 }
 
