@@ -11,10 +11,10 @@ source_set("image_diff") {
   deps = []
 
   if (pdf_use_skia) {
-    sources += [ "image_diff_png_skia.cpp" ]
+    sources += [ "../utils/png_encode_skia.cpp" ]
     deps += [ "//skia" ]
   } else {
-    sources += [ "image_diff_png_libpng.cpp" ]
+    sources += [ "../utils/png_encode_libpng.cpp" ]
     deps += [
       "../../third_party:png",
       "../../third_party:zlib",
@@ -29,7 +29,7 @@ source_set("image_diff") {
 }
 
 pdfium_unittest_source_set("unittests") {
-  sources = [ "image_diff_png_unittests.cpp" ]
+  sources = [ "../utils/png_unittest.cpp" ]
   deps = [ ":image_diff" ]
   pdfium_root_dir = "../../"
 }

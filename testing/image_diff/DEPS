@@ -1,5 +1,0 @@
-include_rules = [
-  '+third_party/libpng',
-  '+third_party/zlib',
-]
-

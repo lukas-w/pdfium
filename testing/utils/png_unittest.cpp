@@ -2,13 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "testing/image_diff/image_diff_png.h"
-
 #include <stdint.h>
 
 #include <vector>
 
 #include "testing/gtest/include/gtest/gtest.h"
+#include "testing/image_diff/image_diff_png.h"
 
 namespace image_diff_png {
 

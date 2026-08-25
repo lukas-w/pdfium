@@ -9,8 +9,6 @@
 // This is a duplicate of ui/gfx/codec/png_codec.cc, after removing code related
 // to Skia, that we can use when running layout tests with minimal dependencies.
 
-#include "testing/image_diff/image_diff_png.h"
-
 #include <stdlib.h>
 #include <string.h>
 
@@ -21,6 +19,7 @@
 #include "core/fxcrt/compiler_specific.h"
 #include "core/fxcrt/fx_memcpy_wrappers.h"
 #include "core/fxcrt/notreached.h"
+#include "testing/image_diff/image_diff_png.h"
 
 #ifdef USE_SYSTEM_ZLIB
 #include <zlib.h>

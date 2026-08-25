@@ -4,8 +4,10 @@ include_rules = [
   '+fxjs',
   '+partition_alloc',
   '+public',
+  '+third_party/libpng',
   '+third_party/simdutf/simdutf.h',
   '+third_party/skia/include',
+  '+third_party/zlib',
   '+v8',
-  '+xfa'
+  '+xfa',
 ]

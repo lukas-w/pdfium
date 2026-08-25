@@ -2,8 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "testing/image_diff/image_diff_png.h"
-
 #include <algorithm>
 #include <memory>
 #include <utility>
@@ -14,6 +12,7 @@
 #include "core/fxcrt/numerics/checked_math.h"
 #include "core/fxcrt/span.h"
 #include "core/fxcrt/span_util.h"
+#include "testing/image_diff/image_diff_png.h"
 #include "third_party/skia/include/core/SkColorSpace.h"
 #include "third_party/skia/include/core/SkColorType.h"
 #include "third_party/skia/include/core/SkImageInfo.h"
