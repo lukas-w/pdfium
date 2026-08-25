@@ -36,7 +36,7 @@
 #endif
 
 #if defined(PDF_ENABLE_RUST_BMP)
-#include "core/fxcodec/bmp/skia_bmp_context.h"
+#include "core/fxcodec/bmp/rust_bmp_context.h"
 #else
 #include "core/fxcodec/bmp/cfx_bmpcontext.h"
 #endif
@@ -65,7 +65,7 @@ std::unique_ptr<ProgressiveDecoderContext> CreateDecoderContext(
   switch (type) {
     case FXCODEC_IMAGE_BMP:
 #if defined(PDF_ENABLE_RUST_BMP)
-      return std::make_unique<SkiaBmpContext>(delegate);
+      return std::make_unique<RustBmpContext>(delegate);
 #else
       return std::make_unique<CFX_BmpContext>(delegate);
 #endif
@@ -202,7 +202,7 @@ bool ProgressiveDecoder::BmpDetectImageTypeInBuffer(
   pBmcontext->Input(codec_memory_);
 
 #if defined(PDF_ENABLE_RUST_BMP)
-  auto* ctx = static_cast<SkiaBmpContext*>(pBmcontext.get());
+  auto* ctx = static_cast<RustBmpContext*>(pBmcontext.get());
 #else
   auto* ctx = static_cast<CFX_BmpContext*>(pBmcontext.get());
 #endif

@@ -110,8 +110,8 @@ assert(
     "pdf_enable_fontations=true requires enable_rust=true, enable_rust_cxx=true, and pdf_use_skia=true")
 
 assert(
-    !pdf_enable_rust_bmp || (enable_rust && enable_rust_cxx && pdf_use_skia),
-    "pdf_enable_rust_bmp=true requires enable_rust=true, enable_rust_cxx=true, and pdf_use_skia=true")
+    !pdf_enable_rust_bmp || (enable_rust && enable_rust_cxx),
+    "pdf_enable_rust_bmp=true requires enable_rust=true and enable_rust_cxx=true")
 
 assert(
     !pdf_enable_rust_jpeg || (enable_rust && enable_rust_cxx && pdf_use_skia),

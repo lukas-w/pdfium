@@ -2,32 +2,27 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef CORE_FXCODEC_BMP_SKIA_BMP_CONTEXT_H_
-#define CORE_FXCODEC_BMP_SKIA_BMP_CONTEXT_H_
+#ifndef CORE_FXCODEC_BMP_RUST_BMP_CONTEXT_H_
+#define CORE_FXCODEC_BMP_RUST_BMP_CONTEXT_H_
 
 #include <stdint.h>
 
-#include <memory>
-#include <vector>
-
-#include "core/fxcodec/cfx_codec_memory.h"
 #include "core/fxcodec/progressive_decoder_context.h"
+#include "core/fxcrt/fx_system.h"
 #include "core/fxcrt/retain_ptr.h"
 #include "core/fxcrt/span.h"
 #include "core/fxcrt/unowned_ptr.h"
 #include "core/fxge/dib/fx_dib.h"
-
-class SkCodec;
 
 namespace fxcodec {
 
 class CFX_DIBAttribute;
 class ProgressiveDecoderContextDelegate;
 
-class SkiaBmpContext final : public ProgressiveDecoderContext {
+class RustBmpContext final : public ProgressiveDecoderContext {
  public:
-  explicit SkiaBmpContext(ProgressiveDecoderContextDelegate* delegate);
-  ~SkiaBmpContext() override;
+  explicit RustBmpContext(ProgressiveDecoderContextDelegate* delegate);
+  ~RustBmpContext() override;
 
   void SetCodecMemory(RetainPtr<CFX_CodecMemory> codec_memory);
 
@@ -43,29 +38,20 @@ class SkiaBmpContext final : public ProgressiveDecoderContext {
       pdfium::span<const FX_ARGB>* palette,
       CFX_DIBAttribute* attribute);
 
- private:
-  bool ValidatePaletteIndices();
-  ProgressiveDecoderContext::Status StartIncrementalDecode();
-  void Forward3ComponentRow(int dest_row,
-                            pdfium::span<const uint8_t> src_row,
-                            pdfium::span<uint8_t> row_buffer,
-                            int width);
+  ProgressiveDecoderContext::Status StartDecode();
+  ProgressiveDecoderContext::Status ContinueDecode();
 
-  UnownedPtr<ProgressiveDecoderContextDelegate> const delegate_;
-  std::unique_ptr<SkCodec> decoder_;
-  RetainPtr<CFX_CodecMemory> codec_memory_;
-  std::vector<uint8_t> decoded_image_buf_;
-  int rows_forwarded_ = 0;
-  int components_ = 3;
-  uint32_t bpp_ = 24;
-  uint32_t bi_size_ = 40;
-  uint32_t bi_compression_ = 0;
-  uint32_t bi_clr_used_ = 0;
-  bool top_down_ = false;
+ private:
   bool header_read_ = false;
-  bool decode_started_ = false;
+  uint32_t width_ = 0;
+  uint32_t height_ = 0;
+  int32_t components_ = 0;
+  int32_t dpi_x_ = 0;
+  int32_t dpi_y_ = 0;
+  UnownedPtr<ProgressiveDecoderContextDelegate> const delegate_;
+  RetainPtr<CFX_CodecMemory> codec_memory_;
 };
 
 }  // namespace fxcodec
 
-#endif  // CORE_FXCODEC_BMP_SKIA_BMP_CONTEXT_H_
+#endif  // CORE_FXCODEC_BMP_RUST_BMP_CONTEXT_H_
