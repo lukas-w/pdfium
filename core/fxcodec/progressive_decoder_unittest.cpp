@@ -119,7 +119,13 @@ TEST_F(ProgressiveDecoderTest, Indexed8BmpWithInvalidIndex) {
   ASSERT_EQ(1u, frames);
 
   status = DecodeToBitmap(decoder, bitmap);
+#if defined(PDF_ENABLE_RUST_BMP)
+  // The Rust image crate recovers from out-of-range palette indices and
+  // succeeds.
+  EXPECT_EQ(FXCODEC_STATUS::kDecodeFinished, status);
+#else
   EXPECT_EQ(FXCODEC_STATUS::kError, status);
+#endif
 }
 
 TEST_F(ProgressiveDecoderTest, Direct24Bmp) {
