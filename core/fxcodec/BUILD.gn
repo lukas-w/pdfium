@@ -9,6 +9,12 @@ if (pdf_enable_rust_bmp || pdf_enable_rust_png) {
   import("//build/rust/rust_static_library.gni")
 }
 
+if (pdf_enable_rust_bmp || pdf_enable_rust_png) {
+  config("pdfium_rust_ffi_config") {
+    include_dirs = [ "$target_gen_dir/../.." ]
+  }
+}
+
 if (pdf_enable_rust_bmp) {
   rust_static_library("rust_bmp_ffi") {
     crate_name = "rust_bmp_ffi"
@@ -16,6 +22,7 @@ if (pdf_enable_rust_bmp) {
     crate_root = "bmp/rust_bmp_ffi.rs"
     sources = [ crate_root ]
     cxx_bindings = [ crate_root ]
+    public_configs = [ ":pdfium_rust_ffi_config" ]
     deps = [
       "//build/rust:cxx_cppdeps",
       "//third_party/rust/image/v0_25:lib",
@@ -30,6 +37,7 @@ if (pdf_enable_rust_png) {
     crate_root = "png/rust_png_ffi.rs"
     sources = [ crate_root ]
     cxx_bindings = [ crate_root ]
+    public_configs = [ ":pdfium_rust_ffi_config" ]
     deps = [
       "//build/rust:cxx_cppdeps",
       "//third_party/rust/png/v0_18:lib",
