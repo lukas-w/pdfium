@@ -20,6 +20,7 @@
 #include "core/fpdfapi/parser/cpdf_number.h"
 #include "core/fpdfapi/parser/cpdf_stream.h"
 #include "core/fpdfapi/parser/cpdf_string.h"
+#include "core/fpdfapi/parser/cpdf_syntax_parser.h"
 #include "core/fpdfapi/parser/fpdf_parser_decode.h"
 #include "core/fpdfapi/parser/fpdf_parser_utility.h"
 #include "core/fxcodec/data_and_bytes_consumed.h"
@@ -39,7 +40,6 @@
 
 namespace {
 
-const uint32_t kMaxNestedParsingLevel = 512;
 const size_t kMaxStringLength = 32767;
 
 const char kTrue[] = "true";
@@ -345,7 +345,8 @@ RetainPtr<CPDF_Object> CPDF_StreamParser::ReadNextObject(
     uint32_t recursion_level) {
   // Must get the next word before returning to avoid infinite loops.
   const bool is_number = GetNextWord();
-  if (!word_size_ || recursion_level > kMaxNestedParsingLevel) {
+  if (!word_size_ ||
+      recursion_level > CPDF_SyntaxParser::kParserMaxRecursionDepth) {
     return nullptr;
   }
 
