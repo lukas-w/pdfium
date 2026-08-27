@@ -67,7 +67,7 @@ fn read_bmp_info(src: &[u8], info: &mut ffi::BmpHeaderInfo) -> ffi::DecodeStatus
     let uncompressed_size = (width as u64)
         .checked_mul(height as u64)
         .and_then(|pixels| pixels.checked_mul(components as u64));
-    if uncompressed_size.map_or(true, |size| size > MAX_UNCOMPRESSED_BYTES) {
+    if uncompressed_size.is_none_or(|size| size > MAX_UNCOMPRESSED_BYTES) {
         return ffi::DecodeStatus::Error;
     }
     info.width = width;

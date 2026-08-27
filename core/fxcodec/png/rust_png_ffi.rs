@@ -18,15 +18,17 @@ mod ffi {
 }
 
 fn read_png_info(src: &[u8], info: &mut ffi::PngHeaderInfo) -> bool {
-    if src.len() >= 24 && &src[0..8] == b"\x89PNG\r\n\x1a\n" && &src[12..16] == b"IHDR" {
-        if let (Ok(w), Ok(h)) = (src[16..20].try_into(), src[20..24].try_into()) {
-            let width = u32::from_be_bytes(w);
-            let height = u32::from_be_bytes(h);
-            if width > 0 && height > 0 {
-                info.width = width;
-                info.height = height;
-                return true;
-            }
+    if src.len() >= 24
+        && &src[0..8] == b"\x89PNG\r\n\x1a\n"
+        && &src[12..16] == b"IHDR"
+        && let (Ok(w), Ok(h)) = (src[16..20].try_into(), src[20..24].try_into())
+    {
+        let width = u32::from_be_bytes(w);
+        let height = u32::from_be_bytes(h);
+        if width > 0 && height > 0 {
+            info.width = width;
+            info.height = height;
+            return true;
         }
     }
 

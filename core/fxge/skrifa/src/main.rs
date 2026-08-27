@@ -160,6 +160,7 @@ use skrifa_ffi::{
     PsEncodingKind, UnicodeRange,
 };
 
+#[allow(clippy::large_enum_variant)]
 pub enum SkrifaFont<'a> {
     Sfnt(Sfnt<'a>),
     Type1(Type1Font),
@@ -226,13 +227,12 @@ pub fn new_font<'a>(data: &'a [u8], index: u32) -> Box<SkrifaFont<'a>> {
         let charset = cff.charset();
         let encoding = cff.encoding();
         let subfonts = (0..cff.num_subfonts()).map(|i| cff.subfont(i, &[]).ok()).collect();
-        let unicode_cmap = if let Some(charset) = charset.as_ref() {
-            Some(PsCharmap::from_glyph_names(charset.iter().filter_map(|(gid, sid)| {
-                Some((gid, core::str::from_utf8(cff.string(sid)?).ok()?))
-            })))
-        } else {
-            None
-        };
+        let unicode_cmap =
+            charset.as_ref().map(|charset| {
+                PsCharmap::from_glyph_names(charset.iter().filter_map(|(gid, sid)| {
+                    Some((gid, core::str::from_utf8(cff.string(sid)?).ok()?))
+                }))
+            });
         let cid_count = if cff.is_cid() {
             charset.as_ref().and_then(|cs| {
                 cs.iter()
