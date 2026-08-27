@@ -396,6 +396,10 @@ bool CStretchEngine::ContinueStretchHorz(PauseIndicatorIface* pPause) {
         break;
       }
       case TransformMethod::k8BppToManyBpp: {
+        // 3 bytes per destination pixel, written contiguously.
+        auto dest_pixels =
+            fxcrt::reinterpret_span<FX_BGR_STRUCT<uint8_t>>(dest_span);
+        size_t dest_index = 0;
         for (int col = dest_clip_.left; col < dest_clip_.right; ++col) {
           const PixelWeight* pWeights = weight_table_.GetPixelWeight(col);
           pdfium::span<const uint32_t> weights = pWeights->GetWeights();
@@ -417,9 +421,10 @@ bool CStretchEngine::ContinueStretchHorz(PauseIndicatorIface* pPause) {
               dest_r += pixel_weight * static_cast<uint8_t>(argb >> 8);
             }
           }
-          dest_span[dest_span_index++] = PixelFromFixed(dest_b);
-          dest_span[dest_span_index++] = PixelFromFixed(dest_g);
-          dest_span[dest_span_index++] = PixelFromFixed(dest_r);
+          FX_BGR_STRUCT<uint8_t>& dest = dest_pixels[dest_index++];
+          dest.blue = PixelFromFixed(dest_b);
+          dest.green = PixelFromFixed(dest_g);
+          dest.red = PixelFromFixed(dest_r);
         }
         break;
       }
@@ -431,8 +436,14 @@ bool CStretchEngine::ContinueStretchHorz(PauseIndicatorIface* pPause) {
         // kBgrx (4 bytes, whose 4th byte this ignores). The generic lambda
         // below is instantiated once per branch, so each instantiation gets a
         // compile-time source pixel size.
-        auto stretch_row_from = [this, &dest_span, &dest_span_index,
-                                 Bpp](auto src_pixels) {
+        auto stretch_row_from = [this, &dest_span](auto src_pixels) {
+          // The destination pixels have the same layout as the source
+          // pixels: 3 bytes fully written, or 4 bytes of which the 4th is
+          // left untouched.
+          using DestPixel =
+              std::remove_const_t<typename decltype(src_pixels)::element_type>;
+          auto dest_pixels = fxcrt::reinterpret_span<DestPixel>(dest_span);
+          size_t dest_index = 0;
           for (int col = dest_clip_.left; col < dest_clip_.right; ++col) {
             const PixelWeight* pWeights = weight_table_.GetPixelWeight(col);
             pdfium::span<const uint32_t> weights = pWeights->GetWeights();
@@ -469,10 +480,10 @@ bool CStretchEngine::ContinueStretchHorz(PauseIndicatorIface* pPause) {
                 }
                 break;
             }
-            dest_span[dest_span_index++] = PixelFromFixed(dest_b);
-            dest_span[dest_span_index++] = PixelFromFixed(dest_g);
-            dest_span[dest_span_index++] = PixelFromFixed(dest_r);
-            dest_span_index += Bpp - 3;
+            DestPixel& dest = dest_pixels[dest_index++];
+            dest.blue = PixelFromFixed(dest_b);
+            dest.green = PixelFromFixed(dest_g);
+            dest.red = PixelFromFixed(dest_r);
           }
         };
         if (Bpp == 3) {
@@ -496,6 +507,9 @@ bool CStretchEngine::ContinueStretchHorz(PauseIndicatorIface* pPause) {
         auto src_pixels =
             fxcrt::reinterpret_span<const FX_BGRA_STRUCT<uint8_t>>(
                 src_row_span);
+        auto dest_pixels =
+            fxcrt::reinterpret_span<FX_BGRA_STRUCT<uint8_t>>(dest_span);
+        size_t dest_index = 0;
         for (int col = dest_clip_.left; col < dest_clip_.right; ++col) {
           const PixelWeight* pWeights = weight_table_.GetPixelWeight(col);
           pdfium::span<const uint32_t> weights = pWeights->GetWeights();
@@ -512,11 +526,11 @@ bool CStretchEngine::ContinueStretchHorz(PauseIndicatorIface* pPause) {
             dest_r += pixel_weight * src.red;
             dest_a += pixel_weight;
           }
-          dest_span[dest_span_index++] = PixelFromFixed(dest_b);
-          dest_span[dest_span_index++] = PixelFromFixed(dest_g);
-          dest_span[dest_span_index++] = PixelFromFixed(dest_r);
-          dest_span[dest_span_index] = PixelFromFixed(255 * dest_a);
-          dest_span_index += Bpp - 3;
+          FX_BGRA_STRUCT<uint8_t>& dest = dest_pixels[dest_index++];
+          dest.blue = PixelFromFixed(dest_b);
+          dest.green = PixelFromFixed(dest_g);
+          dest.red = PixelFromFixed(dest_r);
+          dest.alpha = PixelFromFixed(255 * dest_a);
         }
         break;
       }
@@ -605,18 +619,31 @@ void CStretchEngine::StretchVert() {
       case TransformMethod::k1BppTo8Bpp:
       case TransformMethod::k1BppToManyBpp:
       case TransformMethod::k8BppTo8Bpp: {
-        // Only the first byte of each destination pixel carries data on
-        // these paths; any remaining bytes are left untouched.
+        // Only the first channel of each destination pixel carries data on
+        // these paths; any remaining bytes are left untouched. Typed pixel
+        // views give every width the same loop shape. The generic lambda
+        // below is instantiated once per branch, so each instantiation gets a
+        // compile-time destination pixel size.
+        auto write_first_channel = [](auto dest_pixels, auto acc_pixels) {
+          for (auto [dest, acc] : fxcrt::Zip(dest_pixels, acc_pixels)) {
+            dest.blue = PixelFromFixed(acc.blue);
+          }
+        };
         if (DestBpp == 1) {
           for (auto [dest, acc] : fxcrt::Zip(dest_row, accum_span)) {
             dest = PixelFromFixed(acc);
           }
+        } else if (DestBpp == 3) {
+          write_first_channel(
+              fxcrt::reinterpret_span<FX_BGR_STRUCT<uint8_t>>(dest_row),
+              fxcrt::reinterpret_span<const FX_BGR_STRUCT<uint32_t>>(
+                  accum_span));
         } else {
-          size_t offset = 0;
-          for (int col = 0; col < dest_cols; ++col) {
-            dest_row[offset] = PixelFromFixed(accum_span[offset]);
-            offset += DestBpp;
-          }
+          CHECK_EQ(DestBpp, 4);
+          write_first_channel(
+              fxcrt::reinterpret_span<FX_BGRA_STRUCT<uint8_t>>(dest_row),
+              fxcrt::reinterpret_span<const FX_BGRA_STRUCT<uint32_t>>(
+                  accum_span));
         }
         break;
       }
