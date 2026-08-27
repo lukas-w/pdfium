@@ -10,7 +10,7 @@
 #include "core/fxcrt/fx_safe_types.h"
 #include "core/fxcrt/notreached.h"
 #include "public/fpdfview.h"
-#include "testing/image_diff/image_diff_png.h"
+#include "testing/png_codec/png_codec.h"
 
 #ifdef PDF_ENABLE_SKIA
 #include "third_party/skia/include/core/SkAlphaType.h"  // nogncheck

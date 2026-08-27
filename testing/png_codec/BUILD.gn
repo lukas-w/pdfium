@@ -1,20 +1,20 @@
-# Copyright 2018 The PDFium Authors
+# Copyright 2026 The PDFium Authors
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
 import("../../pdfium.gni")
 import("../../testing/test.gni")
 
-source_set("image_diff") {
+source_set("png_codec") {
   testonly = true
-  sources = [ "image_diff_png.h" ]
+  sources = [ "png_codec.h" ]
   deps = []
 
   if (pdf_use_skia) {
-    sources += [ "../utils/png_encode_skia.cpp" ]
+    sources += [ "png_codec_skia.cpp" ]
     deps += [ "//skia" ]
   } else {
-    sources += [ "../utils/png_encode_libpng.cpp" ]
+    sources += [ "png_codec_libpng.cpp" ]
     deps += [
       "../../third_party:png",
       "../../third_party:zlib",
@@ -29,7 +29,7 @@ source_set("image_diff") {
 }
 
 pdfium_unittest_source_set("unittests") {
-  sources = [ "../utils/png_unittest.cpp" ]
-  deps = [ ":image_diff" ]
+  sources = [ "png_codec_unittest.cpp" ]
+  deps = [ ":png_codec" ]
   pdfium_root_dir = "../../"
 }

@@ -20,7 +20,7 @@
 #include "core/fxcrt/compiler_specific.h"
 #include "core/fxcrt/numerics/safe_conversions.h"
 #include "core/fxcrt/span_io.h"
-#include "testing/image_diff/image_diff_png.h"
+#include "testing/png_codec/png_codec.h"
 #include "testing/utils/path_service.h"
 #include "testing/utils/pixel_diff_util.h"
 

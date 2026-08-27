@@ -7,7 +7,7 @@
 #include <vector>
 
 #include "testing/gtest/include/gtest/gtest.h"
-#include "testing/image_diff/image_diff_png.h"
+#include "testing/png_codec/png_codec.h"
 
 namespace image_diff_png {
 

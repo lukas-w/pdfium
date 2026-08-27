@@ -325,7 +325,7 @@ test("pdfium_unittests") {
     "fpdfsdk:unittests",
     "testing:unit_test_support",
     "testing:unittests",
-    "testing/image_diff:unittests",
+    "testing/png_codec:unittests",
     "//testing/gmock",
     "//testing/gtest",
   ]
@@ -386,7 +386,7 @@ test("pdfium_embeddertests") {
     "fpdfsdk:embeddertests",
     "fpdfsdk/formfiller:embeddertests",
     "fpdfsdk/pwl:embeddertests",
-    "testing/image_diff",
+    "testing/png_codec",
     "//testing/gmock",
     "//testing/gtest",
   ]
@@ -421,28 +421,14 @@ test("pdfium_embeddertests") {
   }
 }
 
-executable("pdfium_diff") {
-  visibility += [ "testing/tools:test_runner_py" ]
-  testonly = true
-  sources = [ "testing/image_diff/image_diff.cpp" ]
-  deps = [
-    "core/fxcrt",
-    "testing:path_service",
-    "testing:pixel_diff_utils",
-    "testing/image_diff",
-    "//build/win:default_exe_manifest",
-  ]
-  configs += [ ":pdfium_strict_config" ]
-}
-
 group("pdfium_all") {
   testonly = true
   deps = [
-    ":pdfium_diff",
     ":pdfium_embeddertests",
     ":pdfium_unittests",
-    "testing:pdfium_test",
+    "testing:pdfium_diff",
     "testing/fuzzers",
+    "testing/pdfium_test",
   ]
 
   if (pdf_is_standalone) {

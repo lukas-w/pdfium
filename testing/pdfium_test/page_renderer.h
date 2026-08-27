@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef TESTING_HELPERS_PAGE_RENDERER_H_
-#define TESTING_HELPERS_PAGE_RENDERER_H_
+#ifndef TESTING_PDFIUM_TEST_PAGE_RENDERER_H_
+#define TESTING_PDFIUM_TEST_PAGE_RENDERER_H_
 
 #include <string>
 
@@ -44,4 +44,4 @@ class PageRenderer {
   int flags_;
 };
 
-#endif  // TESTING_HELPERS_PAGE_RENDERER_H_
+#endif  // TESTING_PDFIUM_TEST_PAGE_RENDERER_H_

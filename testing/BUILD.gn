@@ -50,7 +50,7 @@ source_set("test_support") {
     "../core/fxcrt",
     "../core/fxge",
     "../fpdfsdk",
-    "image_diff",
+    "png_codec",
   ]
   configs += [
     "../:pdfium_strict_config",
@@ -225,7 +225,7 @@ source_set("embedder_test_support") {
     "../core/fdrm",
     "../core/fxge",
     "../fpdfsdk",
-    "image_diff",
+    "png_codec",
     "//testing/gmock",
     "//testing/gtest",
     "//third_party/simdutf",
@@ -292,61 +292,17 @@ config("pdfium_test_config") {
   }
 }
 
-executable("pdfium_test") {
+executable("pdfium_diff") {
   testonly = true
-  sources = [
-    "helpers/dump.cc",
-    "helpers/dump.h",
-    "helpers/event.cc",
-    "helpers/event.h",
-    "helpers/page_renderer.cc",
-    "helpers/page_renderer.h",
-    "helpers/write.cc",
-    "helpers/write.h",
-    "pdfium_test.cc",
-  ]
-
-  # Note: One should write programs that depend on ../:pdfium. Whereas this
-  # test program does not set a good example, and depends on PDFium internals,
-  # as well as test support code, for convenience.
+  sources = [ "image_diff.cpp" ]
   deps = [
-    ":test_support",
-    "../:pdfium_public_headers",
-    "../fpdfsdk",
-    "image_diff",
+    ":path_service",
+    ":pixel_diff_utils",
+    "../core/fxcrt",
+    "png_codec",
     "//build/win:default_exe_manifest",
   ]
-  configs += [
-    ":pdfium_in_chromium_config",
-    ":pdfium_test_config",
-    "../:pdfium_common_config",
-  ]
-
-  if (is_win) {
-    sources += [
-      "helpers/win32/com_factory.cc",
-      "helpers/win32/com_factory.h",
-    ]
-  }
-
-  if (pdf_enable_v8) {
-    deps += [
-      "//v8:v8_headers",
-      "//v8:v8_libplatform",
-    ]
-    include_dirs = [ "//v8" ]
-    configs += [ "//v8:external_startup_data" ]
-  }
-  if (pdf_use_skia) {
-    deps += [ "//skia" ]
-    if (build_with_chromium) {
-      deps += [ ":discardable_memory_allocator" ]
-    }
-  }
-
-  if (!build_with_chromium) {
-    assert_no_deps = [ "//testing/gtest/*" ]
-  }
+  configs += [ "../:pdfium_strict_config" ]
 }
 
 # Dummy group to keep satisfy references from //build.

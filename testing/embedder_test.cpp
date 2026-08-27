@@ -32,7 +32,7 @@
 #include "public/fpdfview.h"
 #include "testing/embedder_test_environment.h"
 #include "testing/gmock/include/gmock/gmock.h"
-#include "testing/image_diff/image_diff_png.h"
+#include "testing/png_codec/png_codec.h"
 #include "testing/test_loader.h"
 #include "testing/utils/bitmap_saver.h"
 #include "testing/utils/file_util.h"

@@ -19,7 +19,7 @@
 #include "core/fxcrt/compiler_specific.h"
 #include "core/fxcrt/fx_memcpy_wrappers.h"
 #include "core/fxcrt/notreached.h"
-#include "testing/image_diff/image_diff_png.h"
+#include "testing/png_codec/png_codec.h"
 
 #ifdef USE_SYSTEM_ZLIB
 #include <zlib.h>

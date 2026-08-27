@@ -1,0 +1,63 @@
+# Copyright 2026 The PDFium Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//build_overrides/build.gni")
+import("../../pdfium.gni")
+
+executable("pdfium_test") {
+  testonly = true
+  sources = [
+    "dump.cc",
+    "dump.h",
+    "event.cc",
+    "event.h",
+    "page_renderer.cc",
+    "page_renderer.h",
+    "pdfium_test.cc",
+    "write.cc",
+    "write.h",
+  ]
+
+  # Note: One should write programs that depend on ../../:pdfium. Whereas this
+  # test program does not set a good example, and depends on PDFium internals,
+  # as well as test support code, for convenience.
+  deps = [
+    "../:test_support",
+    "../../:pdfium_public_headers",
+    "../../fpdfsdk",
+    "../png_codec",
+    "//build/win:default_exe_manifest",
+  ]
+  configs += [
+    "../:pdfium_in_chromium_config",
+    "../:pdfium_test_config",
+    "../../:pdfium_common_config",
+  ]
+
+  if (is_win) {
+    sources += [
+      "win32/com_factory.cc",
+      "win32/com_factory.h",
+    ]
+  }
+
+  if (pdf_enable_v8) {
+    deps += [
+      "//v8:v8_headers",
+      "//v8:v8_libplatform",
+    ]
+    include_dirs = [ "//v8" ]
+    configs += [ "//v8:external_startup_data" ]
+  }
+  if (pdf_use_skia) {
+    deps += [ "//skia" ]
+    if (build_with_chromium) {
+      deps += [ "../:discardable_memory_allocator" ]
+    }
+  }
+
+  if (!build_with_chromium) {
+    assert_no_deps = [ "//testing/gtest/*" ]
+  }
+}

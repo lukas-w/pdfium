@@ -41,10 +41,10 @@
 #include "testing/command_line_helpers.h"
 #include "testing/font_renamer.h"
 #include "testing/fx_string_testhelpers.h"
-#include "testing/helpers/dump.h"
-#include "testing/helpers/event.h"
-#include "testing/helpers/page_renderer.h"
-#include "testing/helpers/write.h"
+#include "testing/pdfium_test/dump.h"
+#include "testing/pdfium_test/event.h"
+#include "testing/pdfium_test/page_renderer.h"
+#include "testing/pdfium_test/write.h"
 #include "testing/test_loader.h"
 #include "testing/utils/file_util.h"
 #include "testing/utils/hash.h"
@@ -56,7 +56,7 @@
 #include <io.h>
 #include <wingdi.h>
 
-#include "testing/helpers/win32/com_factory.h"
+#include "testing/pdfium_test/win32/com_factory.h"
 #else
 #include <unistd.h>
 #endif  // _WIN32

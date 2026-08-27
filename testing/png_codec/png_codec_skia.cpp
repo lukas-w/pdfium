@@ -12,7 +12,7 @@
 #include "core/fxcrt/numerics/checked_math.h"
 #include "core/fxcrt/span.h"
 #include "core/fxcrt/span_util.h"
-#include "testing/image_diff/image_diff_png.h"
+#include "testing/png_codec/png_codec.h"
 #include "third_party/skia/include/core/SkColorSpace.h"
 #include "third_party/skia/include/core/SkColorType.h"
 #include "third_party/skia/include/core/SkImageInfo.h"
