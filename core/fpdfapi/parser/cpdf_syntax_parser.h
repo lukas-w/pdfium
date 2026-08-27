@@ -38,7 +38,7 @@ class CPDF_SyntaxParser {
     bool is_number;
   };
 
-  static constexpr int kParserMaxRecursionDepth = 64;
+  static constexpr uint32_t kParserMaxRecursionDepth = 64;
 
   static std::unique_ptr<CPDF_SyntaxParser> CreateForTesting(
       RetainPtr<IFX_SeekableReadStream> pFileAccess,
@@ -96,7 +96,7 @@ class CPDF_SyntaxParser {
   friend class CPDF_DataAvail;
   friend class cpdf_syntax_parser_ReadHexString_Test;
 
-  static int s_CurrentRecursionDepth;
+  static uint32_t s_CurrentRecursionDepth;
 
   bool ReadBlockAt(FX_FILESIZE read_pos);
   bool GetCharAtBackward(FX_FILESIZE pos, uint8_t* ch);

@@ -76,7 +76,7 @@ class ReadableSubStream final : public IFX_SeekableReadStream {
 }  // namespace
 
 // static
-int CPDF_SyntaxParser::s_CurrentRecursionDepth = 0;
+uint32_t CPDF_SyntaxParser::s_CurrentRecursionDepth = 0;
 
 // static
 std::unique_ptr<CPDF_SyntaxParser> CPDF_SyntaxParser::CreateForTesting(
@@ -537,7 +537,7 @@ RetainPtr<CPDF_Object> CPDF_SyntaxParser::GetObjectBody(
 RetainPtr<CPDF_Object> CPDF_SyntaxParser::GetObjectBodyInternal(
     CPDF_IndirectObjectHolder* pObjList,
     ParseType parse_type) {
-  AutoRestorer<int> depth_restorer(&s_CurrentRecursionDepth);
+  AutoRestorer<uint32_t> depth_restorer(&s_CurrentRecursionDepth);
   if (++s_CurrentRecursionDepth > kParserMaxRecursionDepth) {
     return nullptr;
   }
