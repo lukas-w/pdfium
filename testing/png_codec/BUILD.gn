@@ -5,14 +5,35 @@
 import("../../pdfium.gni")
 import("../../testing/test.gni")
 
+if (pdf_enable_rust_png) {
+  import("//build/rust/rust_static_library.gni")
+
+  rust_static_library("png_codec_rust_ffi") {
+    testonly = true
+    crate_name = "png_codec_rust_ffi"
+    sources = [ "png_codec_rust_ffi.rs" ]
+    crate_root = "png_codec_rust_ffi.rs"
+    cxx_bindings = [ "png_codec_rust_ffi.rs" ]
+    allow_unsafe = true
+    deps = [
+      "//build/rust:cxx_cppdeps",
+      "//third_party/rust/png/v0_18:lib",
+    ]
+  }
+}
+
 source_set("png_codec") {
   testonly = true
   sources = [ "png_codec.h" ]
   deps = []
 
-  if (pdf_use_skia) {
-    sources += [ "png_codec_skia.cpp" ]
-    deps += [ "//skia" ]
+  if (pdf_enable_rust_png) {
+    sources += [ "png_codec_rust.cpp" ]
+    include_dirs = [ "$target_gen_dir/../.." ]
+    deps += [
+      ":png_codec_rust_ffi",
+      "//build/rust:cxx_cppdeps",
+    ]
   } else {
     sources += [ "png_codec_libpng.cpp" ]
     deps += [
