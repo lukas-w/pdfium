@@ -5,6 +5,7 @@ gclient_gn_args = [
   'android_ndk_version',
   'build_with_chromium',
   'checkout_android',
+  'checkout_libpng',
   'checkout_skia',
 ]
 
@@ -46,6 +47,8 @@ vars = {
   'checkout_android_native_support': 'checkout_android',
 
   'checkout_instrumented_libraries': 'checkout_linux and checkout_configuration != "small" and checkout_configuration != "minimal"',
+
+  'checkout_libpng': True,
 
   # Fetch the rust toolchain.
   #
@@ -482,9 +485,11 @@ deps = {
     Var('chromium_git') + '/chromium/deps/libjpeg_turbo.git@' +
         Var('jpeg_turbo_revision'),
 
-  'third_party/libpng':
-    Var('chromium_git') + '/chromium/src/third_party/libpng.git@' +
+  'third_party/libpng': {
+    'url': Var('chromium_git') + '/chromium/src/third_party/libpng.git@' +
         Var('libpng_revision'),
+    'condition': 'checkout_libpng',
+  },
 
   'third_party/llvm-build/Release+Asserts': {
     'dep_type': 'gcs',

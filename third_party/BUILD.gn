@@ -3,6 +3,7 @@
 # found in the LICENSE file.
 
 import("//build/config/arm.gni")
+import("//build/config/gclient_args.gni")
 import("//build/config/linux/pkg_config.gni")
 import("//build/config/mips.gni")
 import("//build_overrides/build.gni")
@@ -439,6 +440,10 @@ source_set("fx_libopenjpeg") {
 }
 
 if (!pdf_enable_rust_png) {
+  assert(
+      use_system_libpng || checkout_libpng,
+      "Cannot use bundled libpng without checkout_libpng. Enable pdf_enable_rust_png or use_system_libpng.")
+
   config("system_libpng_config") {
     libs = [ "png" ]
     defines = [ "USE_SYSTEM_LIBPNG" ]
