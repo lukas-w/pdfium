@@ -659,6 +659,38 @@ TEST_F(FPDFDocEmbedderTest, FindBookmarksWithColor) {
   EXPECT_FLOAT_EQ(blue, 0.3);
 }
 
+TEST_F(FPDFDocEmbedderTest, BookmarkStyle) {
+  ASSERT_TRUE(OpenDocument("bookmarks_style.pdf"));
+
+  ScopedFPDFWideString title = GetFPDFWideString(L"No Style");
+  FPDF_BOOKMARK bookmark = FPDFBookmark_Find(document(), title.get());
+  ASSERT_TRUE(bookmark);
+  EXPECT_EQ(0, FPDFBookmark_GetStyle(bookmark));
+
+  title = GetFPDFWideString(L"Style Is Not An Int");
+  bookmark = FPDFBookmark_Find(document(), title.get());
+  ASSERT_TRUE(bookmark);
+  EXPECT_EQ(0, FPDFBookmark_GetStyle(bookmark));
+
+  title = GetFPDFWideString(L"Style Is 15");
+  bookmark = FPDFBookmark_Find(document(), title.get());
+  ASSERT_TRUE(bookmark);
+  // Value is passed on to the caller as is.
+  EXPECT_EQ(15, FPDFBookmark_GetStyle(bookmark));
+
+  title = GetFPDFWideString(L"Style is Normal");
+  bookmark = FPDFBookmark_Find(document(), title.get());
+  ASSERT_TRUE(bookmark);
+  // 0 = 00 in binary, no styling.
+  EXPECT_EQ(0, FPDFBookmark_GetStyle(bookmark));
+
+  title = GetFPDFWideString(L"Style is Bold and Italic");
+  bookmark = FPDFBookmark_Find(document(), title.get());
+  ASSERT_TRUE(bookmark);
+  // 3 = 11 in binary, bold and italic.
+  EXPECT_EQ(3, FPDFBookmark_GetStyle(bookmark));
+}
+
 // Check circular bookmarks will not cause infinite loop.
 TEST_F(FPDFDocEmbedderTest, FindBookmarksBug420) {
   // Open a file with circular bookmarks.

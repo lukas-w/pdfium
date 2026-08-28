@@ -150,6 +150,18 @@ FPDFBookmark_GetAction(FPDF_BOOKMARK bookmark);
 FPDF_EXPORT FPDF_BOOL FPDF_CALLCONV
 FPDFBookmark_GetColor(FPDF_BOOKMARK bookmark, float* R, float* G, float* B);
 
+// Experimental API.
+// Get the text style of a bookmark.
+//
+// bookmark - handle to a bookmark.
+//
+// Returns the style as an integer, in line with ISO 32000-1:2008 Table 154.
+// The first bit is used to represent if the text is italic and the second
+// bit is used to represent if the text is bold. Returns 0 if the bookmark
+// doesn't have styling or if the handle is invalid. Parsing this value to
+// apply styles remains the responsibility of the embedder.
+FPDF_EXPORT int FPDF_CALLCONV FPDFBookmark_GetStyle(FPDF_BOOKMARK bookmark);
+
 // Get the type of |action|.
 //
 //   action - handle to the action.

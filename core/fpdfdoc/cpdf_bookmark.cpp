@@ -68,6 +68,10 @@ std::optional<FX_RGB_STRUCT<float>> CPDF_Bookmark::GetColor() const {
   return {{red, green, blue}};
 }
 
+int CPDF_Bookmark::GetStyle() const {
+  return dict_ ? dict_->GetIntegerFor("F") : 0;
+}
+
 int CPDF_Bookmark::GetCount() const {
   return dict_->GetIntegerFor("Count");
 }

@@ -216,6 +216,15 @@ FPDFBookmark_GetColor(FPDF_BOOKMARK bookmark, float* R, float* G, float* B) {
   return true;
 }
 
+FPDF_EXPORT int FPDF_CALLCONV FPDFBookmark_GetStyle(FPDF_BOOKMARK bookmark) {
+  if (!bookmark) {
+    return 0;
+  }
+  CPDF_Bookmark cpdf_bookmark(
+      pdfium::WrapRetain(CPDFDictionaryFromFPDFBookmark(bookmark)));
+  return cpdf_bookmark.GetStyle();
+}
+
 FPDF_EXPORT unsigned long FPDF_CALLCONV FPDFAction_GetType(FPDF_ACTION action) {
   if (!action) {
     return PDFACTION_UNSUPPORTED;

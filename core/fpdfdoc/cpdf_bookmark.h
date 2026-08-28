@@ -31,6 +31,7 @@ class CPDF_Bookmark {
   CPDF_Dest GetDest(CPDF_Document* document) const;
   CPDF_Action GetAction() const;
   std::optional<FX_RGB_STRUCT<float>> GetColor() const;
+  int GetStyle() const;
   int GetCount() const;
 
  private:

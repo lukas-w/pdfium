@@ -150,6 +150,7 @@ int CheckPDFiumCApi() {
     CHK(FPDFBookmark_GetDest);
     CHK(FPDFBookmark_GetFirstChild);
     CHK(FPDFBookmark_GetNextSibling);
+    CHK(FPDFBookmark_GetStyle);
     CHK(FPDFBookmark_GetTitle);
     CHK(FPDFDest_GetDestPageIndex);
     CHK(FPDFDest_GetLocationInPage);
