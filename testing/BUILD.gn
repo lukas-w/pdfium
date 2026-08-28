@@ -34,8 +34,6 @@ source_set("test_support") {
     "utils/file_util.h",
     "utils/hash.cpp",
     "utils/hash.h",
-    "utils/png_encode.cpp",
-    "utils/png_encode.h",
     "utils/scoped_time_overrides.cpp",
     "utils/scoped_time_overrides.h",
   ]

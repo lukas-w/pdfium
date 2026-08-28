@@ -21,8 +21,9 @@
 #include "public/fpdf_edit.h"
 #include "public/fpdf_thumbnail.h"
 #include "testing/fx_string_testhelpers.h"
+#include "testing/png_codec/png_codec.h"
+#include "testing/utils/bitmap_saver.h"
 #include "testing/utils/file_util.h"
-#include "testing/utils/png_encode.h"
 
 #ifdef PDF_ENABLE_SKIA
 #include "third_party/skia/include/core/SkData.h"         // nogncheck
@@ -249,16 +250,20 @@ std::string WritePng(const char* pdf_name,
       UNSAFE_TODO(pdfium::span(static_cast<uint8_t*>(buffer),
                                static_cast<size_t>(bitmap_attributes.stride) *
                                    bitmap_attributes.height));
-  int format;
-  if (bitmap_attributes.has_alpha) {
-    format = buffer_has_premultiplied_alpha ? FPDFBitmap_BGRA_Premul
-                                            : FPDFBitmap_BGRA;
-  } else {
-    format = FPDFBitmap_BGRx;
+#ifdef PDF_ENABLE_SKIA
+  std::vector<uint8_t> straight_alpha_input;
+  if (bitmap_attributes.has_alpha && buffer_has_premultiplied_alpha) {
+    straight_alpha_input = BitmapSaver::ConvertToStraightAlpha(
+        input, bitmap_attributes.width, bitmap_attributes.height,
+        bitmap_attributes.stride);
+    input = straight_alpha_input;
   }
-  std::vector<uint8_t> png_encoding =
-      EncodePng(input, bitmap_attributes.width, bitmap_attributes.height,
-                bitmap_attributes.stride, format);
+#endif
+
+  std::vector<uint8_t> png_encoding = png_codec::EncodeBGRA(
+      input, bitmap_attributes.width, bitmap_attributes.height,
+      bitmap_attributes.stride,
+      /*discard_transparency=*/!bitmap_attributes.has_alpha);
   if (png_encoding.empty()) {
     fprintf(stderr, "Failed to convert bitmap to PNG\n");
     return "";
@@ -714,28 +719,6 @@ void WriteBufferToFile(const void* buf,
   }
 }
 
-std::vector<uint8_t> EncodeBitmapToPng(ScopedFPDFBitmap bitmap) {
-  std::vector<uint8_t> png_encoding;
-  int format = FPDFBitmap_GetFormat(bitmap.get());
-  if (format == FPDFBitmap_Unknown) {
-    return png_encoding;
-  }
-
-  int width = FPDFBitmap_GetWidth(bitmap.get());
-  int height = FPDFBitmap_GetHeight(bitmap.get());
-  int stride = FPDFBitmap_GetStride(bitmap.get());
-  if (!CheckDimensions(stride, width, height)) {
-    return png_encoding;
-  }
-
-  auto input = UNSAFE_TODO(pdfium::span(
-      static_cast<const uint8_t*>(FPDFBitmap_GetBuffer(bitmap.get())),
-      static_cast<size_t>(stride) * height));
-
-  png_encoding = EncodePng(input, width, height, stride, format);
-  return png_encoding;
-}
-
 void WriteAttachments(FPDF_DOCUMENT doc, const std::string& name) {
   for (int i = 0; i < FPDFDoc_GetAttachmentCount(doc); ++i) {
     FPDF_ATTACHMENT attachment = FPDFDoc_GetAttachment(doc, i);
@@ -811,7 +794,8 @@ void WriteImages(FPDF_PAGE page, const char* pdf_name, int page_num) {
       continue;
     }
 
-    std::vector<uint8_t> png_encoding = EncodeBitmapToPng(std::move(bitmap));
+    std::vector<uint8_t> png_encoding =
+        BitmapSaver::EncodeBitmapToPng(bitmap.get());
     if (png_encoding.empty()) {
       fprintf(stderr,
               "Failed to convert image object #%d, on page #%d to png.\n",
@@ -847,7 +831,8 @@ void WriteRenderedImages(FPDF_DOCUMENT doc,
       continue;
     }
 
-    std::vector<uint8_t> png_encoding = EncodeBitmapToPng(std::move(bitmap));
+    std::vector<uint8_t> png_encoding =
+        BitmapSaver::EncodeBitmapToPng(bitmap.get());
     if (png_encoding.empty()) {
       fprintf(stderr,
               "Failed to convert image object #%d, on page #%d to png.\n",
@@ -935,7 +920,7 @@ void WriteThumbnail(FPDF_PAGE page, const char* pdf_name, int page_num) {
   }
 
   std::vector<uint8_t> png_encoding =
-      EncodeBitmapToPng(std::move(thumb_bitmap));
+      BitmapSaver::EncodeBitmapToPng(thumb_bitmap.get());
   if (png_encoding.empty()) {
     fprintf(stderr, "Failed to convert thumbnail of page #%d to png.\n",
             page_num + 1);

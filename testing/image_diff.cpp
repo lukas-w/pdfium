@@ -102,7 +102,7 @@ class Image {
 
     fclose(f);
 
-    data_ = image_diff_png::DecodePNG(compressed, reverse_byte_order, &w_, &h_);
+    data_ = png_codec::Decode(compressed, reverse_byte_order, &w_, &h_);
     if (data_.empty()) {
       Clear();
       return false;
@@ -395,7 +395,7 @@ int DiffImages(const std::string& binary_name,
     return kStatusSame;
   }
 
-  std::vector<uint8_t> png_encoding = image_diff_png::EncodeRGBAPNG(
+  std::vector<uint8_t> png_encoding = png_codec::EncodeRGBA(
       diff_image.span(), diff_image.w(), diff_image.h(), diff_image.w() * 4);
   if (png_encoding.empty()) {
     return kStatusError;

@@ -26,16 +26,16 @@
 #include "third_party/skia/include/encode/SkPngEncoder.h"
 #endif
 
-namespace image_diff_png {
+namespace png_codec {
 
 namespace {
 
-std::vector<uint8_t> EncodePNG(pdfium::span<const uint8_t> input,
-                               SkColorType color,
-                               SkAlphaType alpha,
-                               int width,
-                               int height,
-                               size_t row_byte_width) {
+std::vector<uint8_t> EncodeHelper(pdfium::span<const uint8_t> input,
+                                  SkColorType color,
+                                  SkAlphaType alpha,
+                                  int width,
+                                  int height,
+                                  size_t row_byte_width) {
   SkImageInfo info =
       SkImageInfo::Make(width, height, color, alpha, SkColorSpace::MakeSRGB());
   CHECK_NE(info.minRowBytes(), 0);  // 0 means conversion problems.
@@ -58,10 +58,10 @@ std::vector<uint8_t> EncodePNG(pdfium::span<const uint8_t> input,
 
 }  // namespace
 
-std::vector<uint8_t> DecodePNG(pdfium::span<const uint8_t> input,
-                               bool reverse_byte_order,
-                               int* width,
-                               int* height) {
+std::vector<uint8_t> Decode(pdfium::span<const uint8_t> input,
+                            bool reverse_byte_order,
+                            int* width,
+                            int* height) {
   CHECK(width);
   CHECK(height);
 
@@ -98,10 +98,10 @@ std::vector<uint8_t> DecodePNG(pdfium::span<const uint8_t> input,
   return output;
 }
 
-std::vector<uint8_t> EncodeBGRPNG(pdfium::span<const uint8_t> bgr_input,
-                                  int width,
-                                  int height,
-                                  int row_byte_width) {
+std::vector<uint8_t> EncodeBGR(pdfium::span<const uint8_t> bgr_input,
+                               int width,
+                               int height,
+                               int row_byte_width) {
   // Check inputs.  Expected values are manually calculated (instead of using
   // `SkImageInfo`'s `computeMinByteSize` and/or `minRowBytes`), because
   // `SkColorType` doesn't cover a format with 3 bytes per pixel (bpp) - e.g.
@@ -150,36 +150,37 @@ std::vector<uint8_t> EncodeBGRPNG(pdfium::span<const uint8_t> bgr_input,
     }
   }
 
-  return EncodePNG(intermediate_bgra_buf, kBGRA_8888_SkColorType,
-                   kOpaque_SkAlphaType, width, height,
-                   intermediate_bgra_row_byte_width);
+  return EncodeHelper(intermediate_bgra_buf, kBGRA_8888_SkColorType,
+                      kOpaque_SkAlphaType, width, height,
+                      intermediate_bgra_row_byte_width);
 }
 
-std::vector<uint8_t> EncodeRGBAPNG(pdfium::span<const uint8_t> input,
-                                   int width,
-                                   int height,
-                                   int row_byte_width) {
-  return EncodePNG(input, kRGBA_8888_SkColorType, kUnpremul_SkAlphaType, width,
-                   height, pdfium::checked_cast<size_t>(row_byte_width));
+std::vector<uint8_t> EncodeRGBA(pdfium::span<const uint8_t> input,
+                                int width,
+                                int height,
+                                int row_byte_width) {
+  return EncodeHelper(input, kRGBA_8888_SkColorType, kUnpremul_SkAlphaType,
+                      width, height,
+                      pdfium::checked_cast<size_t>(row_byte_width));
 }
 
-std::vector<uint8_t> EncodeBGRAPNG(pdfium::span<const uint8_t> input,
-                                   int width,
-                                   int height,
-                                   int row_byte_width,
-                                   bool discard_transparency) {
-  return EncodePNG(
+std::vector<uint8_t> EncodeBGRA(pdfium::span<const uint8_t> input,
+                                int width,
+                                int height,
+                                int row_byte_width,
+                                bool discard_transparency) {
+  return EncodeHelper(
       input, kBGRA_8888_SkColorType,
       discard_transparency ? kOpaque_SkAlphaType : kUnpremul_SkAlphaType, width,
       height, pdfium::checked_cast<size_t>(row_byte_width));
 }
 
-std::vector<uint8_t> EncodeGrayPNG(pdfium::span<const uint8_t> input,
-                                   int width,
-                                   int height,
-                                   int row_byte_width) {
-  return EncodePNG(input, kGray_8_SkColorType, kOpaque_SkAlphaType, width,
-                   height, pdfium::checked_cast<size_t>(row_byte_width));
+std::vector<uint8_t> EncodeGray(pdfium::span<const uint8_t> input,
+                                int width,
+                                int height,
+                                int row_byte_width) {
+  return EncodeHelper(input, kGray_8_SkColorType, kOpaque_SkAlphaType, width,
+                      height, pdfium::checked_cast<size_t>(row_byte_width));
 }
 
-}  // namespace image_diff_png
+}  // namespace png_codec

@@ -39,7 +39,6 @@
 #include "testing/utils/hash.h"
 #include "testing/utils/path_service.h"
 #include "testing/utils/pixel_diff_util.h"
-#include "testing/utils/png_encode.h"
 #include "third_party/simdutf/simdutf.h"
 
 namespace {
@@ -355,8 +354,8 @@ DecodedPng DecodePngData(pdfium::span<const uint8_t> png_data) {
 
   int width = -1;
   int height = -1;
-  std::vector<uint8_t> decoded_png = image_diff_png::DecodePNG(
-      png_data, /*reverse_byte_order=*/true, &width, &height);
+  std::vector<uint8_t> decoded_png =
+      png_codec::Decode(png_data, /*reverse_byte_order=*/true, &width, &height);
   if (width > 0 && height > 0 && !decoded_png.empty()) {
     results.width = width;
     results.height = height;
@@ -492,7 +491,7 @@ std::string EncodeBase64(pdfium::span<const uint8_t> png) {
 }
 
 std::string EncodeBase64Png(FPDF_BITMAP bitmap) {
-  return EncodeBase64(EncodePng(bitmap));
+  return EncodeBase64(BitmapSaver::EncodeBitmapToPng(bitmap));
 }
 
 void ReportMissingExpectation(FPDF_BITMAP bitmap) {

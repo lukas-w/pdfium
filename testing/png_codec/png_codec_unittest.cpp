@@ -9,7 +9,7 @@
 #include "testing/gtest/include/gtest/gtest.h"
 #include "testing/png_codec/png_codec.h"
 
-namespace image_diff_png {
+namespace png_codec {
 
 namespace {
 
@@ -23,7 +23,7 @@ std::vector<uint8_t> Decode1x1PNGToRGBA(pdfium::span<const uint8_t> input) {
   int output_width = -1;
   int output_height = -1;
   std::vector<uint8_t> rgba_output =
-      DecodePNG(input, kReverseByteOrder, &output_width, &output_height);
+      Decode(input, kReverseByteOrder, &output_width, &output_height);
   EXPECT_EQ(output_height, 1);
   EXPECT_EQ(output_width, 1);
   return rgba_output;
@@ -31,13 +31,13 @@ std::vector<uint8_t> Decode1x1PNGToRGBA(pdfium::span<const uint8_t> input) {
 
 }  // namespace
 
-TEST(ImageDiffPng, EncodeBGRAPNGAndDiscardTransparency) {
+TEST(PngCodec, EncodeBGRAAndDiscardTransparency) {
   const std::vector<uint8_t> bgrx_input = {1, 2, 3, /*ignored_alpha=*/4};
-  std::vector<uint8_t> png = EncodeBGRAPNG(bgrx_input,
-                                           /*width=*/1,
-                                           /*height=*/1,
-                                           /*row_byte_width=*/4,
-                                           /*discard_transparency=*/true);
+  std::vector<uint8_t> png = EncodeBGRA(bgrx_input,
+                                        /*width=*/1,
+                                        /*height=*/1,
+                                        /*row_byte_width=*/4,
+                                        /*discard_transparency=*/true);
   ASSERT_FALSE(png.empty());
 
   std::vector<uint8_t> rgba_output = Decode1x1PNGToRGBA(png);
@@ -53,13 +53,13 @@ TEST(ImageDiffPng, EncodeBGRAPNGAndDiscardTransparency) {
   EXPECT_EQ(rgba_output[3], 255);
 }
 
-TEST(ImageDiffPng, EncodeBGRAPNGAndPreserveTransparency) {
+TEST(PngCodec, EncodeBGRAAndPreserveTransparency) {
   const std::vector<uint8_t> bgra_input = {1, 2, 3, 4};
-  std::vector<uint8_t> png = EncodeBGRAPNG(bgra_input,
-                                           /*width=*/1,
-                                           /*height=*/1,
-                                           /*row_byte_width=*/4,
-                                           /*discard_transparency=*/false);
+  std::vector<uint8_t> png = EncodeBGRA(bgra_input,
+                                        /*width=*/1,
+                                        /*height=*/1,
+                                        /*row_byte_width=*/4,
+                                        /*discard_transparency=*/false);
   ASSERT_FALSE(png.empty());
 
   std::vector<uint8_t> rgba_output = Decode1x1PNGToRGBA(png);
@@ -72,12 +72,12 @@ TEST(ImageDiffPng, EncodeBGRAPNGAndPreserveTransparency) {
   EXPECT_EQ(rgba_output[3], bgra_input[3]);
 }
 
-TEST(ImageDiffPng, EncodeBGRPNG) {
+TEST(PngCodec, EncodeBGR) {
   std::vector<uint8_t> bgr_input = {1, 2, 3};
-  std::vector<uint8_t> png = EncodeBGRPNG(bgr_input,
-                                          /*width=*/1,
-                                          /*height=*/1,
-                                          /*row_byte_width=*/3);
+  std::vector<uint8_t> png = EncodeBGR(bgr_input,
+                                       /*width=*/1,
+                                       /*height=*/1,
+                                       /*row_byte_width=*/3);
   ASSERT_FALSE(png.empty());
 
   std::vector<uint8_t> rgba_output = Decode1x1PNGToRGBA(png);
@@ -92,12 +92,12 @@ TEST(ImageDiffPng, EncodeBGRPNG) {
   EXPECT_EQ(rgba_output[3], 255);
 }
 
-TEST(ImageDiffPng, EncodeRGBAPNG) {
+TEST(PngCodec, EncodeRGBA) {
   std::vector<uint8_t> rgba_input = {1, 2, 3, 4};
-  std::vector<uint8_t> png = EncodeRGBAPNG(rgba_input,
-                                           /*width=*/1,
-                                           /*height=*/1,
-                                           /*row_byte_width=*/4);
+  std::vector<uint8_t> png = EncodeRGBA(rgba_input,
+                                        /*width=*/1,
+                                        /*height=*/1,
+                                        /*row_byte_width=*/4);
   ASSERT_FALSE(png.empty());
 
   std::vector<uint8_t> rgba_output = Decode1x1PNGToRGBA(png);
@@ -110,12 +110,12 @@ TEST(ImageDiffPng, EncodeRGBAPNG) {
   EXPECT_EQ(rgba_output[3], rgba_input[3]);
 }
 
-TEST(ImageDiffPng, EncodeGrayPNG) {
+TEST(PngCodec, EncodeGray) {
   std::vector<uint8_t> grayscale_input = {123};
-  std::vector<uint8_t> png = EncodeGrayPNG(grayscale_input,
-                                           /*width=*/1,
-                                           /*height=*/1,
-                                           /*row_byte_width=*/1);
+  std::vector<uint8_t> png = EncodeGray(grayscale_input,
+                                        /*width=*/1,
+                                        /*height=*/1,
+                                        /*row_byte_width=*/1);
   ASSERT_FALSE(png.empty());
 
   std::vector<uint8_t> rgba_output = Decode1x1PNGToRGBA(png);
@@ -128,4 +128,4 @@ TEST(ImageDiffPng, EncodeGrayPNG) {
   EXPECT_EQ(rgba_output[3], 255);                 // A=opaque
 }
 
-}  // namespace image_diff_png
+}  // namespace png_codec

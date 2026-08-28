@@ -37,7 +37,7 @@
 #error "If Rust PNG is enabled, then `libpng` should not be used."
 #endif
 
-namespace image_diff_png {
+namespace png_codec {
 
 namespace {
 
@@ -679,45 +679,45 @@ std::vector<uint8_t> Encode(pdfium::span<const uint8_t> input,
 
 }  // namespace
 
-std::vector<uint8_t> DecodePNG(pdfium::span<const uint8_t> input,
-                               bool reverse_byte_order,
-                               int* width,
-                               int* height) {
+std::vector<uint8_t> Decode(pdfium::span<const uint8_t> input,
+                            bool reverse_byte_order,
+                            int* width,
+                            int* height) {
   ColorFormat format = reverse_byte_order ? FORMAT_BGRA : FORMAT_RGBA;
   return Decode(input, format, width, height);
 }
 
-std::vector<uint8_t> EncodeBGRPNG(pdfium::span<const uint8_t> input,
-                                  int width,
-                                  int height,
-                                  int row_byte_width) {
+std::vector<uint8_t> EncodeBGR(pdfium::span<const uint8_t> input,
+                               int width,
+                               int height,
+                               int row_byte_width) {
   return Encode(input, FORMAT_BGR, width, height, row_byte_width, false,
                 std::vector<Comment>());
 }
 
-std::vector<uint8_t> EncodeRGBAPNG(pdfium::span<const uint8_t> input,
-                                   int width,
-                                   int height,
-                                   int row_byte_width) {
+std::vector<uint8_t> EncodeRGBA(pdfium::span<const uint8_t> input,
+                                int width,
+                                int height,
+                                int row_byte_width) {
   return Encode(input, FORMAT_RGBA, width, height, row_byte_width, false,
                 std::vector<Comment>());
 }
 
-std::vector<uint8_t> EncodeBGRAPNG(pdfium::span<const uint8_t> input,
-                                   int width,
-                                   int height,
-                                   int row_byte_width,
-                                   bool discard_transparency) {
+std::vector<uint8_t> EncodeBGRA(pdfium::span<const uint8_t> input,
+                                int width,
+                                int height,
+                                int row_byte_width,
+                                bool discard_transparency) {
   return Encode(input, FORMAT_BGRA, width, height, row_byte_width,
                 discard_transparency, std::vector<Comment>());
 }
 
-std::vector<uint8_t> EncodeGrayPNG(pdfium::span<const uint8_t> input,
-                                   int width,
-                                   int height,
-                                   int row_byte_width) {
+std::vector<uint8_t> EncodeGray(pdfium::span<const uint8_t> input,
+                                int width,
+                                int height,
+                                int row_byte_width) {
   return Encode(input, FORMAT_GRAY, width, height, row_byte_width, false,
                 std::vector<Comment>());
 }
 
-}  // namespace image_diff_png
+}  // namespace png_codec
