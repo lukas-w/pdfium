@@ -2482,6 +2482,31 @@ TEST_F(FPDFTextEmbedderTest, Bug491516663) {
               ElementsAreArray(kHelloWorldText));
 }
 
+TEST_F(FPDFTextEmbedderTest, Bug554790604) {
+  // The document's ToUnicode CMap is a catch-all bfrange followed by overrides
+  // for individual codes. Per Adobe TN #5014 the later entries should win, so
+  // the page should read as U+00F3, U+00BA, U+20AC, U+00ED, U+00BA, 'X', 'A',
+  // 'B', U+00E9, U+00EA. The lowest mapping wins instead, so every code whose
+  // target is above it keeps the range's identity mapping, and 0x9B becomes an
+  // unprintable C1 control character.
+  static constexpr std::array<unsigned short, 11> kExpectedChars = {
+      'A', 'B', 'C', 'U', 0x009b, 'X', 'A', 'B', 'p', 'q', 0};
+
+  ASSERT_TRUE(OpenDocument("bug_554790604.pdf"));
+  ScopedPage page = LoadScopedPage(0);
+  ASSERT_TRUE(page);
+
+  ScopedFPDFTextPage textpage(FPDFText_LoadPage(page.get()));
+  ASSERT_TRUE(textpage);
+
+  std::array<unsigned short, 128> buffer = {};
+  int num_chars =
+      FPDFText_GetText(textpage.get(), 0, buffer.size(), buffer.data());
+  ASSERT_EQ(static_cast<int>(kExpectedChars.size()), num_chars);
+  EXPECT_THAT(pdfium::span(buffer).first<kExpectedChars.size()>(),
+              ElementsAreArray(kExpectedChars));
+}
+
 TEST_F(FPDFTextEmbedderTest, ActualTextRtl) {
   ASSERT_TRUE(OpenDocument("actual_text_rtl.pdf"));
   ScopedPage page = LoadScopedPage(0);

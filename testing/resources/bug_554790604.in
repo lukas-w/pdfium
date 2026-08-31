@@ -1,0 +1,80 @@
+{{header}}
+{{object 1 0}} <<
+  /Type /Catalog
+  /Pages 2 0 R
+>>
+endobj
+{{object 2 0}} <<
+  /Type /Pages
+  /MediaBox [0 0 300 120]
+  /Count 1
+  /Kids [3 0 R]
+>>
+endobj
+{{object 3 0}} <<
+  /Type /Page
+  /Parent 2 0 R
+  /Resources <<
+    /Font <<
+      /F1 4 0 R
+    >>
+  >>
+  /Contents 5 0 R
+>>
+endobj
+{{object 4 0}} <<
+  /Type /Font
+  /Subtype /Type1
+  /BaseFont /Helvetica
+  /ToUnicode 6 0 R
+>>
+endobj
+{{object 5 0}} <<
+  {{streamlen}}
+>>
+stream
+BT
+20 50 Td
+/F1 14 Tf
+(\101\102\103\125\233\130\301\302\160\161) Tj
+ET
+endstream
+endobj
+{{object 6 0}} <<
+  {{streamlen}}
+>>
+stream
+/CIDInit /ProcSet findresource begin
+12 dict begin
+begincmap
+/CMapName /Repro def
+/CMapType 1 def
+1 begincodespacerange
+<00> <FF>
+endcodespacerange
+1 beginbfrange
+<00> <FF> <0000>
+endbfrange
+8 beginbfchar
+<41> <00F3>
+<42> <00BA>
+<43> <20AC>
+<55> <00ED>
+<9B> <00BA>
+<58> <0058>
+<C1> <0041>
+<C2> <0042>
+endbfchar
+1 beginbfrange
+<70> <71> <00E9>
+endbfrange
+endcmap
+CMapName currentdict /CMap defineresource pop
+end
+end
+endstream
+endobj
+{{xref}}
+{{trailer}}
+{{startxref}}
+%%EOF
