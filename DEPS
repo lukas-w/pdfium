@@ -90,7 +90,7 @@ vars = {
   # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling android_ndk
   # and whatever else without interference from each other.
-  'android_ndk_version': Str('2@30.0.15729638'),
+  'android_ndk_version': Str('2@30.0.16138531'),
   # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling brotli
   # and whatever else without interference from each other.
@@ -361,11 +361,13 @@ deps = {
   'third_party/android_toolchain/ndk': {
     'packages': [
       {
-        'package': 'chromium/third_party/android_toolchain/android_toolchain',
+        'package': 'chromium/third_party/android_toolchain/android_toolchain/${{platform}}',
         'version': 'version:' + Var('android_ndk_version'),
       },
     ],
-    'condition': 'checkout_android_native_support',
+    'condition': 'checkout_android_native_support and '
+                 '((host_os == "linux" and host_cpu == "x64") or '
+                 '(host_os == "mac" and host_cpu == "arm64"))',
     'dep_type': 'cipd',
   },
 
