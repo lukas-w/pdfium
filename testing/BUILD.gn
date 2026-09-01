@@ -100,6 +100,7 @@ source_set("pixel_diff_utils") {
     "utils/pixel_diff_util.cpp",
     "utils/pixel_diff_util.h",
   ]
+  public_deps = [ "../core/fxcrt" ]
   configs += [ "../:pdfium_strict_config" ]
 }
 

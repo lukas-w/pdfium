@@ -9,6 +9,34 @@ import common
 import pngdiffer
 
 
+def _ParseExtraOptions(tokens):
+  flags = []
+  for token in tokens:
+    if not token.startswith('fuzzy='):
+      raise ValueError(f'Unexpected option in suppressions: {token}')
+    params = token[len('fuzzy='):].split(',')
+    if not (1 <= len(params) <= 3):
+      raise ValueError(f'Invalid fuzzy option format: {token}')
+    try:
+      delta = int(params[0])
+    except ValueError as e:
+      raise ValueError(f'Invalid delta value in fuzzy option: {token}') from e
+    if not (0 <= delta <= 255):
+      raise ValueError(
+          f'Delta value {delta} out of range [0, 255] in fuzzy option: {token}')
+    for p in params[1:]:
+      try:
+        val = float(p)
+      except ValueError as e:
+        raise ValueError(
+            f'Invalid float value "{p}" in fuzzy option: {token}') from e
+      if val < 0.0:
+        raise ValueError(
+            f'Negative value {val} not allowed in fuzzy option: {token}')
+    flags.append(f'--{token}')
+  return flags
+
+
 class Suppressor:
 
   def __init__(self, finder, features, js_disabled, xfa_disabled,
@@ -21,31 +49,37 @@ class Suppressor:
     self.suppression_set = self._LoadSuppressedSet('SUPPRESSIONS', finder)
     self.image_suppression_set = self._LoadSuppressedSet(
         'SUPPRESSIONS_IMAGE_DIFF', finder)
-    self.exact_matching_suppression_set = self._LoadSuppressedSet(
-        'SUPPRESSIONS_EXACT_MATCHING', finder)
+    self.exact_matching_suppression_dict = self._LoadSuppressedDict(
+        'SUPPRESSIONS_EXACT_MATCHING', finder, has_value_column=True)
 
   def _LoadSuppressedSet(self, suppressions_filename, finder):
+    return set(
+        self._LoadSuppressedDict(
+            suppressions_filename, finder, has_value_column=False).keys())
+
+  def _LoadSuppressedDict(self,
+                          suppressions_filename,
+                          finder,
+                          has_value_column=False):
     v8_option = "v8" if self.has_v8 else "nov8"
     xfa_option = "xfa" if self.has_xfa else "noxfa"
     with open(os.path.join(finder.TestingDir(), suppressions_filename)) as f:
       os_name = common.os_name()
       mac_platform = common.mac_platform() if os_name == 'mac' else None
-      return set(
-          self._FilterSuppressions(os_name, mac_platform, v8_option, xfa_option,
-                                   self.rendering_option,
-                                   self._ExtractSuppressions(f)))
+      result = {}
+      for item in self._ExtractSuppressions(f):
+        assert len(item) >= 5 if has_value_column else len(item) == 5, (
+            f'Unexpected column count in {suppressions_filename}: {item}')
+        if self._MatchSuppression(item, os_name, mac_platform, v8_option,
+                                  xfa_option, self.rendering_option):
+          filename = item[0]
+          result[filename] = _ParseExtraOptions(
+              item[5:]) if has_value_column else []
+      return result
 
   def _ExtractSuppressions(self, f):
     return [
-        y.split(' ') for y in [x.split('#')[0].strip()
-                               for x in f.readlines()] if y
-    ]
-
-  def _FilterSuppressions(self, os_name, mac_platform, js, xfa,
-                          rendering_option, unfiltered_list):
-    return [
-        x[0] for x in unfiltered_list if self._MatchSuppression(
-            x, os_name, mac_platform, js, xfa, rendering_option)
+        y.split() for y in [x.split('#')[0].strip() for x in f.readlines()] if y
     ]
 
   @staticmethod
@@ -88,8 +122,11 @@ class Suppressor:
     return False
 
   def GetImageMatchingAlgorithm(self, input_filename):
-    if (self.has_rust_decoders or
-        input_filename in self.exact_matching_suppression_set):
+    if input_filename in self.exact_matching_suppression_dict:
       print(f"{input_filename} image diff comparison is fuzzy")
-      return pngdiffer.FUZZY_MATCHING
-    return pngdiffer.EXACT_MATCHING
+      return (pngdiffer.FUZZY_MATCHING,
+              self.exact_matching_suppression_dict[input_filename])
+    if self.has_rust_decoders:
+      print(f"{input_filename} image diff comparison is fuzzy")
+      return (pngdiffer.FUZZY_MATCHING, [])
+    return (pngdiffer.EXACT_MATCHING, [])

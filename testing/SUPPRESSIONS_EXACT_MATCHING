@@ -3,20 +3,26 @@
 # found in the LICENSE file.
 #
 # List of tests to use fuzzy instead of exact matching, one per line.
-# There are five space-separated columns per line
-# Each column (except column 0) can contain a comma-separated list of values.
+# There are at least five space-separated columns per line.
 #
+# Columns 0-4 are predicates (matching conditions):
 # Column 0: test file name
 # Column 1: platform: *, win, mac, mac_arm, mac_x86, linux
 # Column 2: v8 support: *, nov8, v8
 # Column 3: xfa support: *, noxfa, xfa
 # Column 4: rendering support: *, agg, gdi, skia
 #
-# All columns on a line must match, but filenames may be repeated on subsequent
-# lines to suppress more cases.  Within each column, any one of the
-# comma-separated values must match in order for the column to "match".
+# Column 5 is the optional value (diff parameters):
+# Column 5 (optional): *, or <delta>,<mse>,<win_mse>
+#                      (e.g. 3,0.05,15.0; defaults apply if omitted or *)
+#
+# All predicate columns on a line must match, but filenames may be
+# repeated on subsequent lines to match more cases. Within predicate
+# columns (except column 0), a comma-separated list of values may be
+# provided, where any one of the values matching satisfies the predicate for
+# that column.
 # The filenames and keywords are case-sensitive.
-# One exception is the column 1, where "mac" is a shorthand that matches either
+# One exception is column 1, where "mac" is a shorthand that matches either
 # "mac_arm" or "mac_x86".
 #
 # Try to keep the file alphabetized within each category of test.

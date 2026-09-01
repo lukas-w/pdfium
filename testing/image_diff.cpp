@@ -153,7 +153,9 @@ void CountImageSizeMismatchAsPixelDifference(const Image& baseline,
 int PixelsDifferent(const Image& baseline,
                     const Image& actual,
                     uint8_t max_pixel_per_channel_delta,
-                    double max_mean_squared_error) {
+                    double max_mean_squared_error,
+                    int window_size,
+                    double max_window_mean_squared_error) {
   int w = std::min(baseline.w(), actual.w());
   int h = std::min(baseline.h(), actual.h());
 
@@ -179,6 +181,23 @@ int PixelsDifferent(const Image& baseline,
   if (w > 0 && h > 0 && max_mean_squared_error > 0.0) {
     double mse = static_cast<double>(total_squared_error) / (3.0 * w * h);
     if (mse > max_mean_squared_error) {
+      ++pixels_different;
+    }
+  }
+
+  if (w > 0 && h > 0 && window_size > 0 &&
+      max_window_mean_squared_error > 0.0) {
+    std::vector<uint32_t> baseline_overlap(w * h);
+    std::vector<uint32_t> actual_overlap(w * h);
+    for (int y = 0; y < h; ++y) {
+      for (int x = 0; x < w; ++x) {
+        baseline_overlap[y * w + x] = baseline.pixel_at(x, y);
+        actual_overlap[y * w + x] = actual.pixel_at(x, y);
+      }
+    }
+    double win_mse = CalculateMaxWindowMSE(baseline_overlap, actual_overlap, w,
+                                           h, window_size);
+    if (win_mse > max_window_mean_squared_error) {
       ++pixels_different;
     }
   }
@@ -232,8 +251,8 @@ void PrintHelp(const std::string& binary_name) {
       "    RGBA value histograms (which is resistant to shifts in layout).\n"
       "    Passing \"--reverse-byte-order\" additionally assumes the\n"
       "    compare file has BGRA byte ordering.\n"
-      "    Passing \"--fuzzy\" additionally allows individual pixels to\n"
-      "    differ by at most 1 on each channel.\n\n"
+      "    Passing \"--fuzzy[=delta,mse,win_mse]\" additionally allows\n"
+      "    individual pixels and windows to differ within specified limits.\n\n"
       "  %s --diff <compare_file> <reference_file> <output_file>\n"
       "    Compares two files on disk, and if they differ, outputs an image\n"
       "    to <output_file> that visualizes the differing pixels as red\n"
@@ -251,7 +270,9 @@ int CompareImages(const std::string& binary_name,
                   bool compare_histograms,
                   bool reverse_byte_order,
                   uint8_t max_pixel_per_channel_delta,
-                  double max_mean_squared_error) {
+                  double max_mean_squared_error,
+                  int window_size,
+                  double max_window_mean_squared_error) {
   Image actual_image;
   Image baseline_image;
 
@@ -281,9 +302,9 @@ int CompareImages(const std::string& binary_name,
   }
 
   const char* const diff_name = compare_histograms ? "exact diff" : "diff";
-  int pixels_different =
-      PixelsDifferent(actual_image, baseline_image, max_pixel_per_channel_delta,
-                      max_mean_squared_error);
+  int pixels_different = PixelsDifferent(
+      actual_image, baseline_image, max_pixel_per_channel_delta,
+      max_mean_squared_error, window_size, max_window_mean_squared_error);
   float percent = CalculateDifferencePercentage(actual_image, pixels_different);
   const char* const passed = percent > 0.0 ? "failed" : "passed";
   UNSAFE_TODO(printf("%s: %01.2f%% %s (%d pixels differ)\n", diff_name, percent,
@@ -420,6 +441,8 @@ int main(int argc, const char* argv[]) {
   bool reverse_byte_order = false;
   uint8_t max_pixel_per_channel_delta = 0;
   double max_mean_squared_error = 0.0;
+  int window_size = 0;
+  double max_window_mean_squared_error = 0.0;
   std::string filename1;
   std::string filename2;
   std::string diff_filename;
@@ -446,6 +469,16 @@ int main(int argc, const char* argv[]) {
     } else if (UNSAFE_TODO(strcmp(arg, "--fuzzy")) == 0) {
       max_pixel_per_channel_delta = kMaxFuzzyPixelDelta;
       max_mean_squared_error = kMaxFuzzyMeanSquaredError;
+      window_size = kMaxFuzzyWindowSize;
+      max_window_mean_squared_error = kMaxFuzzyWindowMeanSquaredError;
+    } else if (UNSAFE_TODO(strstr(arg, "--fuzzy=")) == arg) {
+      max_pixel_per_channel_delta = kMaxFuzzyPixelDelta;
+      max_mean_squared_error = kMaxFuzzyMeanSquaredError;
+      window_size = kMaxFuzzyWindowSize;
+      max_window_mean_squared_error = kMaxFuzzyWindowMeanSquaredError;
+      UNSAFE_TODO(sscanf(arg, "--fuzzy=%hhu,%lf,%lf",
+                         &max_pixel_per_channel_delta, &max_mean_squared_error,
+                         &max_window_mean_squared_error));
     }
   }
   if (i < argc) {
@@ -466,7 +499,8 @@ int main(int argc, const char* argv[]) {
   } else if (!filename2.empty()) {
     return CompareImages(binary_name, filename1, filename2, histograms,
                          reverse_byte_order, max_pixel_per_channel_delta,
-                         max_mean_squared_error);
+                         max_mean_squared_error, window_size,
+                         max_window_mean_squared_error);
   }
 
   PrintHelp(binary_name);

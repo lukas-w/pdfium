@@ -88,11 +88,19 @@ class PNGDiffer:
       return e
 
   def _RunImageCompareCommand(self, image_diff, image_matching_algorithm):
+    algorithm = image_matching_algorithm
+    extra_flags = []
+    if isinstance(image_matching_algorithm, (tuple, list)):
+      algorithm, extra_flags = image_matching_algorithm
+
     cmd = [self.pdfium_diff_path]
     if self.reverse_byte_order:
       cmd.append('--reverse-byte-order')
-    if image_matching_algorithm == FUZZY_MATCHING:
-      cmd.append('--fuzzy')
+    if algorithm == FUZZY_MATCHING:
+      if extra_flags:
+        cmd.extend(extra_flags)
+      else:
+        cmd.append('--fuzzy')
     cmd.extend([image_diff.actual_path, image_diff.expected_path])
     return self._RunCommand(cmd)
 
