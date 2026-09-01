@@ -385,12 +385,12 @@ void PngPredictLine(pdfium::span<uint8_t> dest_span,
 }
 
 std::optional<DataVector<uint8_t>> PngPredictor(
-    int Colors,
-    int BitsPerComponent,
-    int Columns,
+    int colors,
+    int bits_per_component,
+    int columns,
     pdfium::span<const uint8_t> src_span) {
   const uint32_t row_size =
-      fxge::CalculatePitch8(BitsPerComponent, Colors, Columns).value_or(0);
+      fxge::CalculatePitch8(bits_per_component, colors, columns).value_or(0);
   if (row_size == 0) {
     return std::nullopt;
   }
@@ -414,7 +414,7 @@ std::optional<DataVector<uint8_t>> PngPredictor(
   pdfium::span<const uint8_t> remaining_src_span = src_span;
   pdfium::span<uint8_t> remaining_dest_span = pdfium::span(dest_buf);
   pdfium::span<uint8_t> prev_dest_span;
-  const uint32_t bytes_per_pixel = (Colors * BitsPerComponent + 7) / 8;
+  const uint32_t bytes_per_pixel = (colors * bits_per_component + 7) / 8;
   for (size_t row = 0; row < row_count; row++) {
     const size_t remaining_row_size =
         std::min<size_t>(row_size, remaining_src_span.size() - 1);
@@ -428,11 +428,11 @@ std::optional<DataVector<uint8_t>> PngPredictor(
 }
 
 void TiffPredictLine(pdfium::span<uint8_t> dest_span,
-                     int BitsPerComponent,
-                     int Colors,
-                     int Columns) {
-  if (BitsPerComponent == 1) {
-    int row_bits = std::min(BitsPerComponent * Colors * Columns,
+                     int bits_per_component,
+                     int colors,
+                     int columns) {
+  if (bits_per_component == 1) {
+    int row_bits = std::min(bits_per_component * colors * columns,
                             pdfium::checked_cast<int>(dest_span.size() * 8));
     int index_pre = 0;
     int col_pre = 0;
@@ -450,28 +450,28 @@ void TiffPredictLine(pdfium::span<uint8_t> dest_span,
     }
     return;
   }
-  int BytesPerPixel = BitsPerComponent * Colors / 8;
-  if (BitsPerComponent == 16) {
-    for (size_t i = BytesPerPixel; i + 1 < dest_span.size(); i += 2) {
-      uint16_t pixel = (dest_span[i - BytesPerPixel] << 8) |
-                       dest_span[i - BytesPerPixel + 1];
+  int bytes_per_pixel = bits_per_component * colors / 8;
+  if (bits_per_component == 16) {
+    for (size_t i = bytes_per_pixel; i + 1 < dest_span.size(); i += 2) {
+      uint16_t pixel = (dest_span[i - bytes_per_pixel] << 8) |
+                       dest_span[i - bytes_per_pixel + 1];
       pixel += (dest_span[i] << 8) | dest_span[i + 1];
       dest_span[i] = pixel >> 8;
       dest_span[i + 1] = (uint8_t)pixel;
     }
   } else {
-    for (size_t i = BytesPerPixel; i < dest_span.size(); i++) {
-      dest_span[i] += dest_span[i - BytesPerPixel];
+    for (size_t i = bytes_per_pixel; i < dest_span.size(); i++) {
+      dest_span[i] += dest_span[i - bytes_per_pixel];
     }
   }
 }
 
-bool TiffPredictor(int Colors,
-                   int BitsPerComponent,
-                   int Columns,
+bool TiffPredictor(int colors,
+                   int bits_per_component,
+                   int columns,
                    pdfium::span<uint8_t> data_span) {
   const uint32_t row_size =
-      fxge::CalculatePitch8(BitsPerComponent, Colors, Columns).value_or(0);
+      fxge::CalculatePitch8(bits_per_component, colors, columns).value_or(0);
   if (row_size == 0) {
     return false;
   }
@@ -479,7 +479,7 @@ bool TiffPredictor(int Colors,
   while (!data_span.empty()) {
     auto row_span =
         data_span.first(std::min<size_t>(row_size, data_span.size()));
-    TiffPredictLine(row_span, BitsPerComponent, Colors, Columns);
+    TiffPredictLine(row_span, bits_per_component, colors, columns);
     data_span = data_span.subspan(row_span.size());
   }
   return true;
