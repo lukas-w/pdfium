@@ -86,7 +86,7 @@ vars = {
   # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling abseil
   # and whatever else without interference from each other.
-  'abseil_revision': 'df548c50b2cda67158364d3d23c63043881b391d',
+  'abseil_revision': '435e7d977fb36fb47854a4c552c0706dad0bd7cf',
   # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling android_ndk
   # and whatever else without interference from each other.
@@ -102,7 +102,7 @@ vars = {
   # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling buildtools
   # and whatever else without interference from each other.
-  'buildtools_revision': '9e7655f4ee433ef4c6efcffd57e379db8f8c0432',
+  'buildtools_revision': '6f6a5dbf04b734214f3b1f386567d101ec9d607e',
   # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling catapult
   # and whatever else without interference from each other.
@@ -188,11 +188,11 @@ vars = {
   # and whatever else without interference from each other.
   # If you change this, also update the libc++ revision in
   # //buildtools/deps_revisions.gni.
-  'libcxx_revision': 'b16984ce99c702355a5b2b4c52574e82cec41fb9',
+  'libcxx_revision': '97b436da4c33663581d394f4ee0a5977fc38c2f4',
   # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling libc++abi
   # and whatever else without interference from each other.
-  'libcxxabi_revision': '14cefa83943c62cf7c42f20bdf8c939c855a8b34',
+  'libcxxabi_revision': 'fc1897a2c12aa27e703c3ed48b62eba8abf4ce19',
   # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling libpng
   # and whatever else without interference from each other.
@@ -204,7 +204,7 @@ vars = {
   # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling llvm-libc
   # and whatever else without interference from each other.
-  'llvm_libc_revision': '6622df0b6261ceaccdbfe199040eb9d9e7166fe7',
+  'llvm_libc_revision': '320824188c37e5c28738b9652a0ca8087c934bc9',
   # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling markupsafe
   # and whatever else without interference from each other.
