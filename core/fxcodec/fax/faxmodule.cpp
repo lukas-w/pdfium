@@ -521,7 +521,15 @@ void FaxGet1DLine(pdfium::span<const uint8_t> src_buf,
         }
         return;
       }
+      // Since `run` is really 16-bits, it cannot cause `run_len` to overflow
+      // with the `columns` check below.
       run_len += run;
+      if (run_len > columns) {
+        // No legal 1-D run exceeds the row width, which is bound by
+        // `kFaxMaxImageDimension`.
+        return;
+      }
+
       if (run < 64) {
         break;
       }
