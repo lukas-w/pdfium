@@ -35,7 +35,6 @@ class EmbedderTestEnvironment : public testing::Environment {
 
  private:
   void AddFlag(const std::string& flag);
-  bool CheckFlags();
 
   int version_ = 6;
   FPDF_RENDERER_TYPE renderer_type_;

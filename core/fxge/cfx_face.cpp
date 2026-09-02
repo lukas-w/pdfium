@@ -174,62 +174,6 @@ int Outline_CubicTo(const FT_Vector* control1,
   return 0;
 }
 
-#if defined(PDF_ENABLE_FONTATIONS)
-std::unique_ptr<CFX_Path> ConvertOutline(const skrifa::Outline& outline) {
-  auto skrifa_path = std::make_unique<CFX_Path>();
-  auto point_idx = 0;
-  CFX_PointF current_point(0, 0);
-  for (auto verb : outline.verbs) {
-    switch (verb) {
-      case skrifa::PathVerb::MoveTo: {
-        auto p = outline.points[point_idx++];
-        current_point = CFX_PointF(p.x, p.y);
-        skrifa_path->AppendPoint(current_point, CFX_Path::Point::Type::kMove);
-        break;
-      }
-      case skrifa::PathVerb::LineTo: {
-        auto p = outline.points[point_idx++];
-        current_point = CFX_PointF(p.x, p.y);
-        skrifa_path->AppendPoint(current_point, CFX_Path::Point::Type::kLine);
-        break;
-      }
-      case skrifa::PathVerb::QuadTo: {
-        auto c0 = outline.points[point_idx++];
-        auto p = outline.points[point_idx++];
-        // Convert quadratic to cubic bezier to match FreeType
-        // decomposition.
-        skrifa_path->AppendPoint(
-            CFX_PointF(current_point.x + (c0.x - current_point.x) * 2 / 3,
-                       current_point.y + (c0.y - current_point.y) * 2 / 3),
-            CFX_Path::Point::Type::kBezier);
-        skrifa_path->AppendPoint(
-            CFX_PointF(c0.x + (p.x - c0.x) / 3, c0.y + (p.y - c0.y) / 3),
-            CFX_Path::Point::Type::kBezier);
-        current_point = CFX_PointF(p.x, p.y);
-        skrifa_path->AppendPoint(current_point, CFX_Path::Point::Type::kBezier);
-        break;
-      }
-      case skrifa::PathVerb::CurveTo: {
-        auto c0 = outline.points[point_idx++];
-        auto c1 = outline.points[point_idx++];
-        auto p = outline.points[point_idx++];
-        skrifa_path->AppendPoint(CFX_PointF(c0.x, c0.y),
-                                 CFX_Path::Point::Type::kBezier);
-        skrifa_path->AppendPoint(CFX_PointF(c1.x, c1.y),
-                                 CFX_Path::Point::Type::kBezier);
-        current_point = CFX_PointF(p.x, p.y);
-        skrifa_path->AppendPoint(current_point, CFX_Path::Point::Type::kBezier);
-        break;
-      }
-      case skrifa::PathVerb::Close:
-        skrifa_path->ClosePath();
-        break;
-    }
-  }
-  return skrifa_path;
-}
-#endif  // defined(PDF_ENABLE_FONTATIONS)
-
 FT_Encoding ToFTEncoding(fxge::FontEncoding encoding) {
   switch (encoding) {
     case fxge::FontEncoding::kAdobeCustom:
@@ -917,17 +861,6 @@ std::unique_ptr<CFX_Path> CFX_Face::LoadGlyphPath(
     int dest_width,
     bool is_vertical,
     const CFX_SubstFont* subst_font) {
-#if defined(PDF_ENABLE_FONTATIONS)
-  if (CFX_GEModule::Get()->GetFontMgr()->GetFontBackend() ==
-      CFX_FontMgr::FontBackend::kFontations) {
-    if (skrifa_font_ && skrifa_font_->font->is_ok()) {
-      skrifa::Outline outline;
-      if (skrifa_font_->font->unscaled_outline(glyph_index, outline)) {
-        return ConvertOutline(outline);
-      }
-    }
-  }
-#endif  // defined(PDF_ENABLE_FONTATIONS)
   FT_FaceRec* rec = GetRec();
   FT_Set_Pixel_Sizes(rec, 0, 64);
   FT_Matrix ft_matrix = {65536, 0, 0, 65536};
@@ -1076,19 +1009,6 @@ ByteString CFX_Face::GetGlyphName(uint32_t glyph_index) {
 }
 
 int CFX_Face::GetCharIndex(uint32_t code) {
-#if defined(PDF_ENABLE_FONTATIONS)
-  if (CFX_GEModule::Get()->GetFontMgr()->GetFontBackend() ==
-      CFX_FontMgr::FontBackend::kFontations) {
-    if (skrifa_font_ && skrifa_font_->font->is_ok()) {
-      if (skrifa_font_->font->font_type() == skrifa::FaceFormat::Type1) {
-        if (code <= 0xFF) {
-          return skrifa_font_->font->code_to_gid(static_cast<uint8_t>(code));
-        }
-      }
-      return skrifa_font_->font->unicode_to_gid(code);
-    }
-  }
-#endif  // defined(PDF_ENABLE_FONTATIONS)
   const int ft_result = FT_Get_Char_Index(GetRec(), code);
 #if defined(PDF_ENABLE_SKIA_TYPEFACE_CHECKS)
 #if defined(PDF_ENABLE_FONTATIONS)

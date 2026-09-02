@@ -69,8 +69,8 @@ sk_sp<SkFontMgr> CreateSkiaFontManager(CFX_FontMgr::FontBackend backend) {
 
 CFX_FontMgr::CFX_FontMgr(FontBackend backend)
     : ft_library_(InitializeFreeType()),
-#if defined(PDF_USE_SKIA)
       font_backend_(backend),
+#if defined(PDF_USE_SKIA)
       skia_fontmgr_(CreateSkiaFontManager(font_backend_)),
 #endif
       builtin_mapper_(std::make_unique<CFX_FontMapper>()),

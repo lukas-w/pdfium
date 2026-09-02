@@ -220,15 +220,15 @@ FPDF_InitLibraryWithConfig(const FPDF_LIBRARY_CONFIG* config) {
 
   CFX_FontMgr::FontBackend backend = CFX_FontMgr::FontBackend::kFreeType;
   if (config && config->version >= 5) {
-#if defined(PDF_USE_SKIA)
+#if defined(PDF_ENABLE_FONTATIONS)
     CHECK(config->m_FontLibraryType == FPDF_FONTBACKENDTYPE_FREETYPE ||
           config->m_FontLibraryType == FPDF_FONTBACKENDTYPE_FONTATIONS);
     if (config->m_FontLibraryType == FPDF_FONTBACKENDTYPE_FONTATIONS) {
-      CHECK_EQ(renderer_type, CFX_GEModule::RendererType::kSkia);
       backend = CFX_FontMgr::FontBackend::kFontations;
     }
 #else
-    // AGG-only builds should always use `FPDF_FONTBACKENDTYPE_FREETYPE`.
+    // Builds without Fontations should always use
+    // `FPDF_FONTBACKENDTYPE_FREETYPE`.
     CHECK_EQ(config->m_FontLibraryType, FPDF_FONTBACKENDTYPE_FREETYPE);
 #endif
   }

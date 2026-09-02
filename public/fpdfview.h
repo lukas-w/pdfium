@@ -293,8 +293,7 @@ typedef struct FPDF_LIBRARY_CONFIG_ {
 
   // Version 5 - Experimental.
 
-  // Explicit specification of font library to use when |m_RendererType| is set
-  // to |FPDF_RENDERERTYPE_SKIA|.
+  // Explicit specification of font library to use.
   // |m_FontLibraryType| must be a valid value for |FPDF_LIBRARY_CONFIG|
   // versions of this level or higher, or else the initialization will fail with
   // an immediate crash.

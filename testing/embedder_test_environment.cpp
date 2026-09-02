@@ -72,7 +72,6 @@ void EmbedderTestEnvironment::AddFlags(int argc, char** argv) {
   for (int i = 1; i < argc; ++i) {
     AddFlag(UNSAFE_TODO(argv[i]));
   }
-  CHECK(CheckFlags());
 }
 
 void EmbedderTestEnvironment::AddFlag(const std::string& flag) {
@@ -94,19 +93,13 @@ void EmbedderTestEnvironment::AddFlag(const std::string& flag) {
     }
     return;
   }
+#endif  // defined(PDF_USE_SKIA)
+#if defined(PDF_ENABLE_FONTATIONS)
   if (flag == "--fontations") {
     fontations_ = true;
     return;
   }
-#endif  // defined(PDF_USE_SKIA)
+#endif  // defined(PDF_ENABLE_FONTATIONS)
 
   std::cerr << "Unknown flag: " << flag << "\n";
-}
-
-bool EmbedderTestEnvironment::CheckFlags() {
-  if (fontations_ && renderer_type_ != FPDF_RENDERERTYPE_SKIA) {
-    std::cerr << "--fontations requires --use-renderer=skia as well.\n";
-    return false;
-  }
-  return true;
 }

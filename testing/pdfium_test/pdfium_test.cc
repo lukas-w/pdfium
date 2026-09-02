@@ -183,9 +183,9 @@ struct Options {
   bool save_thumbnails_decoded = false;
   bool save_thumbnails_raw = false;
   RendererType use_renderer_type = RendererType::kDefault;
-#if defined(PDF_ENABLE_SKIA)
+#if defined(PDF_ENABLE_FONTATIONS)
   bool use_fontations_backend = false;
-#endif  // defined(PDF_ENABLE_SKIA)
+#endif  // defined(PDF_ENABLE_FONTATIONS)
 #ifdef PDF_ENABLE_V8
   bool disable_javascript = false;
   std::string js_flags;  // Extra flags to pass to v8 init.
@@ -585,9 +585,11 @@ bool ParseCommandLine(const std::vector<std::string>& args,
 #if defined(PDF_ENABLE_SKIA)
     } else if (cur_arg == "--render-premultiplied") {
       options->render_premultiplied_alpha = true;
+#endif  // defined(PDF_ENABLE_SKIA)
+#if defined(PDF_ENABLE_FONTATIONS)
     } else if (cur_arg == "--fontations") {
       options->use_fontations_backend = true;
-#endif  // defined(PDF_ENABLE_SKIA)
+#endif  // defined(PDF_ENABLE_FONTATIONS)
 #ifdef PDF_ENABLE_V8
     } else if (cur_arg == "--disable-javascript") {
       options->disable_javascript = true;
@@ -799,11 +801,6 @@ bool ParseCommandLine(const std::vector<std::string>& args,
       options->use_renderer_type != RendererType::kSkia) {
     fprintf(stderr,
             "Cannot use --render_premultiplied with selected renderer\n");
-    return false;
-  }
-  if (options->use_fontations_backend &&
-      options->use_renderer_type != RendererType::kSkia) {
-    fprintf(stderr, "Cannot use --fontations with selected renderer\n");
     return false;
   }
 #endif  // defined(PDF_ENABLE_SKIA)
@@ -1918,7 +1915,6 @@ constexpr char kUsageString[] =
 #endif  // _WIN32
     "  --render-premultiplied - render image using premultiplied alpha when "
     "the renderer is Skia\n"
-    " -- fontations           - Use fontations back-end library\n"
 #else
 #ifdef _WIN32
     "  --use-renderer         - renderer to use, one of [agg | gdi]\n"
@@ -1926,7 +1922,9 @@ constexpr char kUsageString[] =
     "  --use-renderer         - renderer to use, one of [agg]\n"
 #endif  // _WIN32
 #endif  // defined(PDF_ENABLE_SKIA)
-
+#if defined(PDF_ENABLE_FONTATIONS)
+    "  --fontations           - Use fontations back-end library\n"
+#endif
 #ifdef PDF_ENABLE_V8
     "  --disable-javascript   - do not execute JS in PDF files\n"
     "  --js-flags=<flags>     - additional flags to pass to V8\n"
@@ -2052,10 +2050,12 @@ int main(int argc, const char* argv[]) {
 #endif  // defined(PDF_ENABLE_SKIA)
   }
 
-#if defined(PDF_ENABLE_SKIA)
+#if defined(PDF_ENABLE_FONTATIONS)
   if (options.use_fontations_backend) {
     config.m_FontLibraryType = FPDF_FONTBACKENDTYPE_FONTATIONS;
   }
+#endif  // defined(PDF_ENABLE_FONTATIONS)
+#if defined(PDF_ENABLE_SKIA)
 #if defined(BUILD_WITH_CHROMIUM)
   // Needed to support Chromium's copy of Skia, which uses a
   // `DiscardableMemoryAllocator`.

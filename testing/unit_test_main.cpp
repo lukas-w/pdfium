@@ -56,7 +56,8 @@ int main(int argc, char** argv) {
 #endif  // BUILDFLAG(IS_WIN)
 
   // PDF test environment will be deleted by gtest.
-  AddGlobalTestEnvironment(new PDFTestEnvironment());
+  auto* pdf_test_environment = new PDFTestEnvironment();
+  AddGlobalTestEnvironment(pdf_test_environment);
 
 #ifdef PDF_ENABLE_V8
   // V8 test environment will be deleted by gtest.
@@ -69,6 +70,9 @@ int main(int argc, char** argv) {
 
   testing::InitGoogleTest(&argc, argv);
   testing::InitGoogleMock(&argc, argv);
+
+  // Anything remaining in argc/argv is a unit_tests flag.
+  pdf_test_environment->AddFlags(argc, argv);
 
   return RUN_ALL_TESTS();
 }

@@ -39,7 +39,7 @@ config("pdfium_common_config") {
     defines += [ "PDF_ENABLE_CLICK_LOGGING" ]
   }
 
-  if (pdf_use_skia && pdf_enable_fontations) {
+  if (pdf_enable_fontations) {
     defines += [ "PDF_ENABLE_FONTATIONS" ]
   }
 
