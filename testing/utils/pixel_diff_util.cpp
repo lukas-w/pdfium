@@ -54,7 +54,9 @@ uint32_t PixelSquaredError(uint32_t baseline_pixel, uint32_t actual_pixel) {
 }
 
 double CalculateMaxWindowMSE(pdfium::span<const uint32_t> baseline,
+                             size_t baseline_stride_pixels,
                              pdfium::span<const uint32_t> actual,
+                             size_t actual_stride_pixels,
                              int w,
                              int h,
                              int window_size) {
@@ -63,8 +65,15 @@ double CalculateMaxWindowMSE(pdfium::span<const uint32_t> baseline,
   }
 
   constexpr double kChannelCount = 3.0;
-  const size_t total_pixels = static_cast<size_t>(w) * h;
-  if (baseline.size() < total_pixels || actual.size() < total_pixels) {
+  if (baseline_stride_pixels < static_cast<size_t>(w) ||
+      actual_stride_pixels < static_cast<size_t>(w)) {
+    return 0.0;
+  }
+  const size_t min_baseline_size =
+      (static_cast<size_t>(h) - 1) * baseline_stride_pixels + w;
+  const size_t min_actual_size =
+      (static_cast<size_t>(h) - 1) * actual_stride_pixels + w;
+  if (baseline.size() < min_baseline_size || actual.size() < min_actual_size) {
     return 0.0;
   }
 
@@ -72,9 +81,15 @@ double CalculateMaxWindowMSE(pdfium::span<const uint32_t> baseline,
   // MSE.
   if (w < window_size || h < window_size) {
     uint64_t total_sq_err = 0;
-    for (size_t i = 0; i < total_pixels; ++i) {
-      total_sq_err += PixelSquaredError(baseline[i], actual[i]);
+    for (int y = 0; y < h; ++y) {
+      const size_t baseline_row_offset = y * baseline_stride_pixels;
+      const size_t actual_row_offset = y * actual_stride_pixels;
+      for (int x = 0; x < w; ++x) {
+        total_sq_err += PixelSquaredError(baseline[baseline_row_offset + x],
+                                          actual[actual_row_offset + x]);
+      }
     }
+    const size_t total_pixels = static_cast<size_t>(w) * h;
     return static_cast<double>(total_sq_err) / (kChannelCount * total_pixels);
   }
 
@@ -83,10 +98,11 @@ double CalculateMaxWindowMSE(pdfium::span<const uint32_t> baseline,
   std::vector<uint64_t> sat(sat_stride * (h + 1), 0);
 
   for (int y = 0; y < h; ++y) {
+    const size_t baseline_row_offset = y * baseline_stride_pixels;
+    const size_t actual_row_offset = y * actual_stride_pixels;
     for (int x = 0; x < w; ++x) {
-      const size_t pixel_idx = static_cast<size_t>(y) * w + x;
-      const uint64_t sq =
-          PixelSquaredError(baseline[pixel_idx], actual[pixel_idx]);
+      const uint64_t sq = PixelSquaredError(baseline[baseline_row_offset + x],
+                                            actual[actual_row_offset + x]);
       sat[(y + 1) * sat_stride + (x + 1)] = sq + sat[y * sat_stride + (x + 1)] +
                                             sat[(y + 1) * sat_stride + x] -
                                             sat[y * sat_stride + x];
@@ -156,6 +172,15 @@ int CalculatePixelsDifferent(pdfium::span<const uint32_t> baseline,
     const double mse =
         static_cast<double>(total_squared_error) / (kChannelCount * w * h);
     if (mse > options.max_mean_squared_error) {
+      ++pixels_different;
+    }
+  }
+
+  if (options.max_window_mean_squared_error > 0.0 && options.window_size > 0) {
+    const double max_win_mse =
+        CalculateMaxWindowMSE(baseline, baseline_stride_pixels, actual,
+                              actual_stride_pixels, w, h, options.window_size);
+    if (max_win_mse > options.max_window_mean_squared_error) {
       ++pixels_different;
     }
   }

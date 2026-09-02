@@ -54,7 +54,7 @@ TEST(PixelDiffUtilTest, FuzzyThresholds) {
 
 TEST(PixelDiffUtilTest, CalculateMaxWindowMSEExactMatch) {
   std::vector<uint32_t> img(64, 0xffffffff);
-  EXPECT_DOUBLE_EQ(0.0, CalculateMaxWindowMSE(img, img, 8, 8, 8));
+  EXPECT_DOUBLE_EQ(0.0, CalculateMaxWindowMSE(img, 8, img, 8, 8, 8, 8));
 }
 
 TEST(PixelDiffUtilTest, CalculateMaxWindowMSEUniformDelta) {
@@ -62,7 +62,8 @@ TEST(PixelDiffUtilTest, CalculateMaxWindowMSEUniformDelta) {
   std::vector<uint32_t> img1(64, 0x00000000);
   std::vector<uint32_t> img2(64, 0x00000001);
   // Squared error = 1 on 1 channel per pixel -> local MSE = 1 / 3 = 0.3333...
-  EXPECT_NEAR(1.0 / 3.0, CalculateMaxWindowMSE(img1, img2, 8, 8, 4), 1e-6);
+  EXPECT_NEAR(1.0 / 3.0, CalculateMaxWindowMSE(img1, 8, img2, 8, 8, 8, 4),
+              1e-6);
 }
 
 TEST(PixelDiffUtilTest, CalculateMaxWindowMSELocalizedDefect) {
@@ -80,7 +81,7 @@ TEST(PixelDiffUtilTest, CalculateMaxWindowMSELocalizedDefect) {
   // Defect error = 16 pixels * (3 * 255^2) = 3121200.
   // Window MSE = 3121200 / (3 * 64) = 16256.25.
   EXPECT_DOUBLE_EQ(16256.25,
-                   CalculateMaxWindowMSE(baseline, actual, 16, 16, 8));
+                   CalculateMaxWindowMSE(baseline, 16, actual, 16, 16, 16, 8));
 }
 
 TEST(PixelDiffUtilTest, CalculateMaxWindowMSEChromaEdge) {
@@ -93,13 +94,39 @@ TEST(PixelDiffUtilTest, CalculateMaxWindowMSEChromaEdge) {
 
   // 8 pixels * 3 channels * 10^2 = 2400.
   // Window MSE = 2400 / (3 * 64) = 12.5.
-  EXPECT_DOUBLE_EQ(12.5, CalculateMaxWindowMSE(baseline, actual, 8, 8, 8));
+  EXPECT_DOUBLE_EQ(12.5,
+                   CalculateMaxWindowMSE(baseline, 8, actual, 8, 8, 8, 8));
+}
+
+TEST(PixelDiffUtilTest, CalculateMaxWindowMSEWithStrides) {
+  // 8x8 image within a buffer with stride = 12.
+  constexpr int kWidth = 8;
+  constexpr int kHeight = 8;
+  constexpr size_t kStride = 12;
+  std::vector<uint32_t> baseline(kStride * kHeight, 0x00000000);
+  std::vector<uint32_t> actual = baseline;
+  // Uniform delta of 1 on red channel inside the 8x8 region.
+  for (int y = 0; y < kHeight; ++y) {
+    for (int x = 0; x < kWidth; ++x) {
+      actual[y * kStride + x] = 0x00000001;
+    }
+  }
+  // Padding pixels outside 8x8 should not affect calculation.
+  for (int y = 0; y < kHeight; ++y) {
+    for (size_t x = kWidth; x < kStride; ++x) {
+      actual[y * kStride + x] = 0x00ffffff;
+    }
+  }
+  EXPECT_NEAR(1.0 / 3.0,
+              CalculateMaxWindowMSE(baseline, kStride, actual, kStride, kWidth,
+                                    kHeight, 4),
+              1e-6);
 }
 
 TEST(PixelDiffUtilTest, CalculateMaxWindowMSEInvalidInputs) {
   std::vector<uint32_t> img(16, 0);
-  EXPECT_DOUBLE_EQ(0.0, CalculateMaxWindowMSE(img, img, 0, 0, 8));
-  EXPECT_DOUBLE_EQ(0.0, CalculateMaxWindowMSE(img, img, 4, 4, 0));
+  EXPECT_DOUBLE_EQ(0.0, CalculateMaxWindowMSE(img, 0, img, 0, 0, 0, 8));
+  EXPECT_DOUBLE_EQ(0.0, CalculateMaxWindowMSE(img, 4, img, 4, 4, 4, 0));
 }
 
 TEST(PixelDiffUtilTest, CalculatePixelsDifferentExactMatch) {
@@ -109,10 +136,32 @@ TEST(PixelDiffUtilTest, CalculatePixelsDifferentExactMatch) {
 }
 
 TEST(PixelDiffUtilTest, CalculatePixelsDifferentTolerance) {
-  std::vector<uint32_t> img1(64, 0x00000000);
-  std::vector<uint32_t> img2(64, 0x00000001);  // delta 1 on red
+  std::vector<uint32_t> baseline(64, 0x00000000);
+  std::vector<uint32_t> actual = baseline;
+  actual[0] = 0x00020202;  // delta 2 on all channels
+  // Exact match fails.
+  EXPECT_EQ(1, CalculatePixelsDifferent(baseline, 8, actual, 8, 8, 8,
+                                        kExactDiffOptions));
+  // Tolerating delta 2 passes.
+  EXPECT_EQ(0, CalculatePixelsDifferent(
+                   baseline, 8, actual, 8, 8, 8,
+                   DiffOptions{.max_pixel_per_channel_delta = 2}));
+  // Tolerating delta 2 but strict MSE (0.0001) fails.
+  EXPECT_EQ(1, CalculatePixelsDifferent(
+                   baseline, 8, actual, 8, 8, 8,
+                   DiffOptions{.max_pixel_per_channel_delta = 2,
+                               .max_mean_squared_error = 0.0001}));
+  // Window MSE failure triggers.
+  EXPECT_EQ(1, CalculatePixelsDifferent(
+                   baseline, 8, actual, 8, 8, 8,
+                   DiffOptions{.max_pixel_per_channel_delta = 2,
+                               .max_mean_squared_error = 1.0,
+                               .window_size = 8,
+                               .max_window_mean_squared_error = 0.01}));
 
   // Under exact diff, all 64 pixels differ.
+  std::vector<uint32_t> img1(64, 0x00000000);
+  std::vector<uint32_t> img2(64, 0x00000001);  // delta 1 on red
   EXPECT_EQ(
       64, CalculatePixelsDifferent(img1, 8, img2, 8, 8, 8, kExactDiffOptions));
 
@@ -129,4 +178,35 @@ TEST(PixelDiffUtilTest, CalculatePixelsDifferentTolerance) {
   };
   EXPECT_EQ(0,
             CalculatePixelsDifferent(img1, 8, img2, 8, 8, 8, relaxed_options));
+}
+
+TEST(PixelDiffUtilTest, DiffOptionsAggregateAndDefaults) {
+  static_assert(std::is_aggregate_v<DiffOptions>);
+
+  constexpr DiffOptions default_options;
+  EXPECT_EQ(0, default_options.max_pixel_per_channel_delta);
+  EXPECT_DOUBLE_EQ(0.0, default_options.max_mean_squared_error);
+  EXPECT_EQ(0, default_options.window_size);
+  EXPECT_DOUBLE_EQ(0.0, default_options.max_window_mean_squared_error);
+
+  EXPECT_EQ(0, kExactDiffOptions.max_pixel_per_channel_delta);
+  EXPECT_DOUBLE_EQ(0.0, kExactDiffOptions.max_mean_squared_error);
+  EXPECT_EQ(0, kExactDiffOptions.window_size);
+  EXPECT_DOUBLE_EQ(0.0, kExactDiffOptions.max_window_mean_squared_error);
+
+  EXPECT_EQ(kMaxFuzzyPixelDelta, kFuzzyDiffOptions.max_pixel_per_channel_delta);
+  EXPECT_DOUBLE_EQ(kMaxFuzzyMeanSquaredError,
+                   kFuzzyDiffOptions.max_mean_squared_error);
+  EXPECT_EQ(kMaxFuzzyWindowSize, kFuzzyDiffOptions.window_size);
+  EXPECT_DOUBLE_EQ(kMaxFuzzyWindowMeanSquaredError,
+                   kFuzzyDiffOptions.max_window_mean_squared_error);
+
+  // Verification with options struct.
+  std::vector<uint32_t> baseline(64, 0x00000000);
+  std::vector<uint32_t> actual = baseline;
+  actual[0] = 0x00000002;
+  EXPECT_EQ(1, CalculatePixelsDifferent(baseline, 8, actual, 8, 8, 8,
+                                        kExactDiffOptions));
+  EXPECT_EQ(0, CalculatePixelsDifferent(baseline, 8, actual, 8, 8, 8,
+                                        kFuzzyDiffOptions));
 }

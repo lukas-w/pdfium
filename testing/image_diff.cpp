@@ -195,8 +195,9 @@ int PixelsDifferent(const Image& baseline,
         actual_overlap[y * w + x] = actual.pixel_at(x, y);
       }
     }
-    double win_mse = CalculateMaxWindowMSE(baseline_overlap, actual_overlap, w,
-                                           h, window_size);
+    double win_mse = CalculateMaxWindowMSE(
+        baseline_overlap, static_cast<size_t>(w), actual_overlap,
+        static_cast<size_t>(w), w, h, window_size);
     if (win_mse > max_window_mean_squared_error) {
       ++pixels_different;
     }
