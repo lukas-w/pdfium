@@ -929,12 +929,13 @@ TEST_F(FPDFEditEmbedderTest, SetPositionsVertical) {
   static constexpr char kExpected[] = "vertical_text_positioned";
   {
     ScopedFPDFBitmap bitmap = RenderPage(page.get());
-    CompareBitmapWithFuzzyExpectationSuffix(bitmap.get(), kExpected);
+    CompareBitmapWithExpectationSuffix(bitmap.get(), kExpected,
+                                       kFuzzyDiffOptions);
   }
   ASSERT_TRUE(FPDFPage_GenerateContent(page.get()));
 
   ASSERT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
-  VerifySavedDocumentWithFuzzyExpectationSuffix(kExpected);
+  VerifySavedDocumentWithExpectationSuffix(kExpected, kFuzzyDiffOptions);
 }
 
 TEST_F(FPDFEditEmbedderTest, SetPositionsBengali2) {
@@ -1061,7 +1062,8 @@ TEST_F(FPDFEditEmbedderTest, SetPositionsBengali3) {
 
   static constexpr char kExpected[] = "set_positions_bengali3";
   ScopedFPDFBitmap page_bitmap = RenderPage(page.get());
-  CompareBitmapWithFuzzyExpectationSuffix(page_bitmap.get(), kExpected);
+  CompareBitmapWithExpectationSuffix(page_bitmap.get(), kExpected,
+                                     kFuzzyDiffOptions);
 
   ASSERT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
   VerifySavedDocumentWithExpectationSuffix(kExpected);
@@ -4157,14 +4159,15 @@ TEST_F(FPDFEditEmbedderTest, SaveAndRender) {
     EXPECT_TRUE(FPDFPath_Close(green_path));
     EXPECT_TRUE(FPDFPage_InsertObject(page.get(), green_path));
     ScopedFPDFBitmap page_bitmap = RenderLoadedPage(page.get());
-    CompareBitmapWithFuzzyExpectationSuffix(page_bitmap.get(), kBug779Png);
+    CompareBitmapWithExpectationSuffix(page_bitmap.get(), kBug779Png,
+                                       kFuzzyDiffOptions);
 
     // Now save the result, closing the page and document
     EXPECT_TRUE(FPDFPage_GenerateContent(page.get()));
     EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
   }
 
-  VerifySavedDocumentWithFuzzyExpectationSuffix(kBug779Png);
+  VerifySavedDocumentWithExpectationSuffix(kBug779Png, kFuzzyDiffOptions);
 }
 
 TEST_F(FPDFEditEmbedderTest, AddMark) {

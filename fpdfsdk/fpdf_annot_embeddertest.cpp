@@ -582,8 +582,8 @@ TEST_F(FPDFAnnotEmbedderTest, ExtractInkMultiple) {
   }
   {
     ScopedFPDFBitmap bitmap = RenderLoadedPageWithFlags(page, FPDF_ANNOT);
-    CompareBitmapWithFuzzyExpectationSuffix(bitmap.get(),
-                                            "annotation_ink_multiple");
+    CompareBitmapWithExpectationSuffix(bitmap.get(), "annotation_ink_multiple",
+                                       kFuzzyDiffOptions);
   }
   UnloadPageNoEvents(page);
 }
@@ -798,8 +798,9 @@ TEST_F(FPDFAnnotEmbedderTest, AddAndSaveUnderlineAnnotation) {
     ASSERT_TRUE(saved_doc);
     ScopedSavedPage saved_page = LoadScopedSavedPage(0);
     ASSERT_TRUE(saved_page);
-    VerifySavedRenderingWithFuzzyExpectationSuffix(
-        saved_page.get(), "annotation_highlight_long_content_added_underline");
+    VerifySavedRenderingWithExpectationSuffix(
+        saved_page.get(), "annotation_highlight_long_content_added_underline",
+        kFuzzyDiffOptions);
 
     // Check that the saved document has 2 annotations on the first page
     EXPECT_EQ(2, FPDFPage_GetAnnotCount(saved_page.get()));
@@ -914,8 +915,8 @@ TEST_F(FPDFAnnotEmbedderTest, ModifyRectQuadpointsWithAP) {
       "annotation_highlight_square_with_ap";
   {
     ScopedFPDFBitmap bitmap = RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-    CompareBitmapWithFuzzyExpectationSuffix(
-        bitmap.get(), kAnnotationHighlightSquareWithApPng);
+    CompareBitmapWithExpectationSuffix(
+        bitmap.get(), kAnnotationHighlightSquareWithApPng, kFuzzyDiffOptions);
   }
 
   FS_RECTF rect;
@@ -956,8 +957,8 @@ TEST_F(FPDFAnnotEmbedderTest, ModifyRectQuadpointsWithAP) {
     {
       ScopedFPDFBitmap bitmap =
           RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-      CompareBitmapWithFuzzyExpectationSuffix(
-          bitmap.get(), kAnnotationHighlightSquareWithApPng);
+      CompareBitmapWithExpectationSuffix(
+          bitmap.get(), kAnnotationHighlightSquareWithApPng, kFuzzyDiffOptions);
     }
 
     // Verify its annotation rectangle.
@@ -978,8 +979,9 @@ TEST_F(FPDFAnnotEmbedderTest, ModifyRectQuadpointsWithAP) {
   // Check that updating the rectangle changes the annotation's position.
   {
     ScopedFPDFBitmap bitmap = RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-    CompareBitmapWithFuzzyExpectationSuffix(
-        bitmap.get(), "annotation_highlight_square_with_ap_modified_highlight");
+    CompareBitmapWithExpectationSuffix(
+        bitmap.get(), "annotation_highlight_square_with_ap_modified_highlight",
+        kFuzzyDiffOptions);
   }
 
   {
@@ -999,8 +1001,9 @@ TEST_F(FPDFAnnotEmbedderTest, ModifyRectQuadpointsWithAP) {
     // Check that updating the rectangle changes the square annotation's
     // position.
     ScopedFPDFBitmap bitmap = RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-    CompareBitmapWithFuzzyExpectationSuffix(
-        bitmap.get(), "annotation_highlight_square_with_ap_modified_square");
+    CompareBitmapWithExpectationSuffix(
+        bitmap.get(), "annotation_highlight_square_with_ap_modified_square",
+        kFuzzyDiffOptions);
   }
 }
 
@@ -1339,8 +1342,8 @@ TEST_F(FPDFAnnotEmbedderTest, AddAndModifyImage) {
   // Check that the page renders correctly with the new image object.
   {
     ScopedFPDFBitmap bitmap = RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-    CompareBitmapWithFuzzyExpectationSuffix(
-        bitmap.get(), "annotation_stamp_with_ap_new_image");
+    CompareBitmapWithExpectationSuffix(
+        bitmap.get(), "annotation_stamp_with_ap_new_image", kFuzzyDiffOptions);
   }
 
   {
@@ -1409,8 +1412,8 @@ TEST_F(FPDFAnnotEmbedderTest, AddAndModifyText) {
   // Check that the page renders correctly with the new text object.
   {
     ScopedFPDFBitmap bitmap = RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-    CompareBitmapWithFuzzyExpectationSuffix(
-        bitmap.get(), "annotation_stamp_with_ap_new_text");
+    CompareBitmapWithExpectationSuffix(
+        bitmap.get(), "annotation_stamp_with_ap_new_text", kFuzzyDiffOptions);
   }
 
   {
@@ -1430,8 +1433,9 @@ TEST_F(FPDFAnnotEmbedderTest, AddAndModifyText) {
   // Check that the page renders correctly with the modified text object.
   {
     ScopedFPDFBitmap bitmap = RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-    CompareBitmapWithFuzzyExpectationSuffix(
-        bitmap.get(), "annotation_stamp_with_ap_modified_text");
+    CompareBitmapWithExpectationSuffix(bitmap.get(),
+                                       "annotation_stamp_with_ap_modified_text",
+                                       kFuzzyDiffOptions);
   }
 
   // Remove the new annotation, and check that the page renders as before.

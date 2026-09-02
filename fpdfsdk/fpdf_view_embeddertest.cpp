@@ -302,11 +302,9 @@ class FPDFViewEmbedderTest : public EmbedderTest {
                                   std::string_view expectation_png_name,
                                   bool fuzzy = false) {
     RenderPageToBitmap(page, bitmap);
-    if (fuzzy) {
-      CompareBitmapWithFuzzyExpectationSuffix(bitmap, expectation_png_name);
-    } else {
-      CompareBitmapWithExpectationSuffix(bitmap, expectation_png_name);
-    }
+    CompareBitmapWithExpectationSuffix(
+        bitmap, expectation_png_name,
+        fuzzy ? kFuzzyDiffOptions : kExactDiffOptions);
   }
 };
 

@@ -269,7 +269,8 @@ TEST_F(CFWLEditEmbedderTest, ImageEditTest) {
   constexpr char kFilledBasename[] = "xfa_image_edit";
   ScopedFPDFBitmap page_bitmap =
       RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-  CompareBitmapWithFuzzyExpectationSuffix(page_bitmap.get(), kFilledBasename);
+  CompareBitmapWithExpectationSuffix(page_bitmap.get(), kFilledBasename,
+                                     kFuzzyDiffOptions);
 }
 
 TEST_F(CFWLEditEmbedderTest, ComboBoxTest) {

@@ -1425,8 +1425,8 @@ TEST_F(FPDFFormFillEmbedderTest, Bug1281) {
 
   ScopedFPDFBitmap bitmap_reverse_byte_order =
       RenderLoadedPageWithFlags(page.get(), FPDF_REVERSE_BYTE_ORDER);
-  CompareBitmapWithFuzzyExpectationSuffix(bitmap_reverse_byte_order.get(),
-                                          "bug_890322_reverse");
+  CompareBitmapWithExpectationSuffix(bitmap_reverse_byte_order.get(),
+                                     "bug_890322_reverse", kFuzzyDiffOptions);
 }
 
 TEST_F(FPDFFormFillEmbedderTest, Bug1302455RenderOnly) {

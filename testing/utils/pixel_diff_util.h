@@ -15,6 +15,18 @@ inline constexpr double kMaxFuzzyMeanSquaredError = 0.05;
 inline constexpr int kMaxFuzzyWindowSize = 8;
 inline constexpr double kMaxFuzzyWindowMeanSquaredError = 15.0;
 
+// Options controlling pixel difference comparisons.
+struct DiffOptions {
+  int max_pixel_per_channel_delta = 0;
+  double max_mean_squared_error = 0.0;
+};
+
+inline constexpr DiffOptions kExactDiffOptions = {};
+inline constexpr DiffOptions kFuzzyDiffOptions = {
+    .max_pixel_per_channel_delta = kMaxFuzzyPixelDelta,
+    .max_mean_squared_error = kMaxFuzzyMeanSquaredError,
+};
+
 // Returns the largest difference in pixel channels between `baseline_pixel` and
 // `actual_pixel`. Pixels are expected to be in 32-bit ARGB or BGRA format.
 uint8_t MaxPixelPerChannelDelta(uint32_t baseline_pixel, uint32_t actual_pixel);

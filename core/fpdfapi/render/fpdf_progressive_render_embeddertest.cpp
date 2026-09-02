@@ -300,11 +300,8 @@ void FPDFProgressiveRenderEmbedderTest::VerifyRenderingWithColorScheme(
   ScopedFPDFBitmap bitmap = RenderPageWithForcedColorScheme(
       page.get(), form_handle(), flags, color_scheme, background_color);
   ASSERT_TRUE(bitmap);
-  if (fuzzy) {
-    CompareBitmapWithFuzzyExpectationSuffix(bitmap.get(), basename);
-  } else {
-    CompareBitmapWithExpectationSuffix(bitmap.get(), basename);
-  }
+  CompareBitmapWithExpectationSuffix(
+      bitmap.get(), basename, fuzzy ? kFuzzyDiffOptions : kExactDiffOptions);
 }
 
 TEST_F(FPDFProgressiveRenderEmbedderTest, RenderTextWithColorScheme) {

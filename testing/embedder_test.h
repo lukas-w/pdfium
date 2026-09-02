@@ -29,6 +29,7 @@
 #include "public/fpdfview.h"
 #include "testing/fake_file_access.h"
 #include "testing/gtest/include/gtest/gtest.h"
+#include "testing/utils/pixel_diff_util.h"
 
 class TestLoader;
 
@@ -346,20 +347,12 @@ class EmbedderTest : public ::testing::Test,
   //
   // This is similar to the behavior in testing/tools/pngdiffer.py.
   //
-  // `max_pixel_per_channel_delta` and `max_mean_squared_error` can optionally
-  // be set to tolerate minor pixel discrepancies. The default is exact
-  // matching.
+  // `options` can optionally be set to tolerate minor pixel discrepancies.
+  // The default is exact matching.
   static void CompareBitmapWithExpectationSuffix(
       FPDF_BITMAP bitmap,
       std::string_view expectation_png_name,
-      int max_pixel_per_channel_delta = 0,
-      double max_mean_squared_error = 0.0);
-
-  // Same as `CompareBitmapWithExpectationSuffix()`, but automatically
-  // applies standard fuzzy tolerance.
-  static void CompareBitmapWithFuzzyExpectationSuffix(
-      FPDF_BITMAP bitmap,
-      std::string_view expectation_png_name);
+      const DiffOptions& options = kExactDiffOptions);
 
   void ClearString() { data_string_.clear(); }
   const std::string& GetString() const { return data_string_; }
@@ -381,15 +374,12 @@ class EmbedderTest : public ::testing::Test,
                             std::string_view expectation_png_name);
   void VerifySavedRenderingWithExpectationSuffix(
       FPDF_PAGE page,
-      std::string_view expectation_png_name);
-  void VerifySavedRenderingWithFuzzyExpectationSuffix(
-      FPDF_PAGE page,
-      std::string_view expectation_png_name);
+      std::string_view expectation_png_name,
+      const DiffOptions& options = kExactDiffOptions);
   void VerifySavedDocument(std::string_view expectation_png_name);
   void VerifySavedDocumentWithExpectationSuffix(
-      std::string_view expectation_png_name);
-  void VerifySavedDocumentWithFuzzyExpectationSuffix(
-      std::string_view expectation_png_name);
+      std::string_view expectation_png_name,
+      const DiffOptions& options = kExactDiffOptions);
 
   void SetWholeFileAvailable();
 
