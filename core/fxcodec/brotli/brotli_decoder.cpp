@@ -42,6 +42,7 @@ DataAndBytesConsumed BrotliDecoder::Decode(pdfium::span<const uint8_t> src_span,
   if (!state) {
     return {DataVector<uint8_t>(), 0u};
   }
+  BrotliDecoderSetParameter(state.get(), BROTLI_DECODER_PARAM_LARGE_WINDOW, 1u);
 
   DataVector<uint8_t> decoded_buffer(estimated_decode_size);
   size_t available_in = src_span.size();
