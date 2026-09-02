@@ -44,4 +44,16 @@ double CalculateMaxWindowMSE(pdfium::span<const uint32_t> baseline,
                              int h,
                              int window_size);
 
+// Returns the number of differing pixels between `baseline` and `actual` within
+// the overlap region of dimensions (`w`, `h`), taking into account maximum
+// per-channel delta and global mean squared error. Pixels are in 32-bit ARGB
+// or BGRA format.
+int CalculatePixelsDifferent(pdfium::span<const uint32_t> baseline,
+                             size_t baseline_stride_pixels,
+                             pdfium::span<const uint32_t> actual,
+                             size_t actual_stride_pixels,
+                             int w,
+                             int h,
+                             const DiffOptions& options = kExactDiffOptions);
+
 #endif  // TESTING_UTILS_PIXEL_DIFF_UTIL_H_

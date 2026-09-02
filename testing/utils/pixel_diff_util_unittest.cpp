@@ -101,3 +101,32 @@ TEST(PixelDiffUtilTest, CalculateMaxWindowMSEInvalidInputs) {
   EXPECT_DOUBLE_EQ(0.0, CalculateMaxWindowMSE(img, img, 0, 0, 8));
   EXPECT_DOUBLE_EQ(0.0, CalculateMaxWindowMSE(img, img, 4, 4, 0));
 }
+
+TEST(PixelDiffUtilTest, CalculatePixelsDifferentExactMatch) {
+  std::vector<uint32_t> img(64, 0xffffffff);
+  EXPECT_EQ(0,
+            CalculatePixelsDifferent(img, 8, img, 8, 8, 8, kExactDiffOptions));
+}
+
+TEST(PixelDiffUtilTest, CalculatePixelsDifferentTolerance) {
+  std::vector<uint32_t> img1(64, 0x00000000);
+  std::vector<uint32_t> img2(64, 0x00000001);  // delta 1 on red
+
+  // Under exact diff, all 64 pixels differ.
+  EXPECT_EQ(
+      64, CalculatePixelsDifferent(img1, 8, img2, 8, 8, 8, kExactDiffOptions));
+
+  // Under fuzzy diff (tolerates delta <= 3 and MSE <= 0.05).
+  // Here MSE = (64 * 1) / (3 * 64) = 0.333 > 0.05, so MSE fails and returns >
+  // 0.
+  EXPECT_GT(CalculatePixelsDifferent(img1, 8, img2, 8, 8, 8, kFuzzyDiffOptions),
+            0);
+
+  // With a relaxed MSE threshold of 0.5, it should report 0 differences.
+  DiffOptions relaxed_options = {
+      .max_pixel_per_channel_delta = 1,
+      .max_mean_squared_error = 0.5,
+  };
+  EXPECT_EQ(0,
+            CalculatePixelsDifferent(img1, 8, img2, 8, 8, 8, relaxed_options));
+}

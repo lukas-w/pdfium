@@ -368,41 +368,13 @@ int CompareBGRxBitmapToPng(pdfium::span<const uint8_t> bitmap_span,
                            size_t bitmap_stride,
                            const DecodedPng& decoded_png,
                            const DiffOptions& options) {
-  const size_t unsigned_width = static_cast<size_t>(decoded_png.width);
   auto decoded_png_span32 = fxcrt::reinterpret_span<const uint32_t>(
       pdfium::span(decoded_png.pixel_data));
-
-  int pixels_different = 0;
-  uint64_t total_squared_error = 0;
-  for (int h = 0; h < decoded_png.height; ++h) {
-    auto decoded_png_row = decoded_png_span32.first(unsigned_width);
-    decoded_png_span32 = decoded_png_span32.subspan(unsigned_width);
-    auto bitmap_row = fxcrt::reinterpret_span<const uint32_t>(
-        bitmap_span.first(bitmap_stride));
-    bitmap_span = bitmap_span.subspan(bitmap_stride);
-    for (int w = 0; w < decoded_png.width; ++w) {
-      uint32_t png_pixel = decoded_png_row[w];
-      uint32_t bitmap_pixel = bitmap_row[w];
-      if (png_pixel == bitmap_pixel) {
-        continue;
-      }
-
-      if (options.max_pixel_per_channel_delta == 0 ||
-          MaxPixelPerChannelDelta(png_pixel, bitmap_pixel) >
-              options.max_pixel_per_channel_delta) {
-        ++pixels_different;
-      }
-      total_squared_error += PixelSquaredError(png_pixel, bitmap_pixel);
-    }
-  }
-  if (options.max_mean_squared_error > 0.0) {
-    double mse = static_cast<double>(total_squared_error) /
-                 (3.0 * decoded_png.width * decoded_png.height);
-    if (mse > options.max_mean_squared_error) {
-      ++pixels_different;
-    }
-  }
-  return pixels_different;
+  auto bitmap_span32 = fxcrt::reinterpret_span<const uint32_t>(bitmap_span);
+  return CalculatePixelsDifferent(
+      decoded_png_span32, static_cast<size_t>(decoded_png.width), bitmap_span32,
+      bitmap_stride / sizeof(uint32_t), decoded_png.width, decoded_png.height,
+      options);
 }
 
 int CompareGrayBitmapToPng(pdfium::span<const uint8_t> bitmap_span,

@@ -116,3 +116,49 @@ double CalculateMaxWindowMSE(pdfium::span<const uint32_t> baseline,
 
   return max_win_mse;
 }
+
+int CalculatePixelsDifferent(pdfium::span<const uint32_t> baseline,
+                             size_t baseline_stride_pixels,
+                             pdfium::span<const uint32_t> actual,
+                             size_t actual_stride_pixels,
+                             int w,
+                             int h,
+                             const DiffOptions& options) {
+  if (w <= 0 || h <= 0) {
+    return 0;
+  }
+
+  int pixels_different = 0;
+  uint64_t total_squared_error = 0;
+  for (int y = 0; y < h; ++y) {
+    const size_t baseline_row_offset = y * baseline_stride_pixels;
+    const size_t actual_row_offset = y * actual_stride_pixels;
+    for (int x = 0; x < w; ++x) {
+      const uint32_t baseline_pixel = baseline[baseline_row_offset + x];
+      const uint32_t actual_pixel = actual[actual_row_offset + x];
+      if (baseline_pixel == actual_pixel) {
+        continue;
+      }
+
+      if (options.max_pixel_per_channel_delta == 0 ||
+          MaxPixelPerChannelDelta(baseline_pixel, actual_pixel) >
+              options.max_pixel_per_channel_delta) {
+        ++pixels_different;
+      }
+      if (options.max_mean_squared_error > 0.0) {
+        total_squared_error += PixelSquaredError(baseline_pixel, actual_pixel);
+      }
+    }
+  }
+
+  if (options.max_mean_squared_error > 0.0) {
+    constexpr double kChannelCount = 3.0;
+    const double mse =
+        static_cast<double>(total_squared_error) / (kChannelCount * w * h);
+    if (mse > options.max_mean_squared_error) {
+      ++pixels_different;
+    }
+  }
+
+  return pixels_different;
+}
