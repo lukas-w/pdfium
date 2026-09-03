@@ -65,12 +65,12 @@ TEST_F(CJSPublicMethodsEmbedderTest, ParseDateUsingFormat) {
   EXPECT_DOUBLE_EQ(504835200000.0, date);
   EXPECT_FALSE(bWrongFormat);
 
-  // 2085, the other '85.
+  // 1985 with two-digit year.
   bWrongFormat = false;
   date = CJS_PublicMethods::ParseDateUsingFormat(isolate(), L"311285",
                                                  L"ddmmyy", &bWrongFormat);
   date = RoundDownDate(date);
-  EXPECT_DOUBLE_EQ(3660595200000.0, date);
+  EXPECT_DOUBLE_EQ(504835200000.0, date);
   EXPECT_FALSE(bWrongFormat);
 
   // 1995
@@ -81,12 +81,12 @@ TEST_F(CJSPublicMethodsEmbedderTest, ParseDateUsingFormat) {
   EXPECT_DOUBLE_EQ(791596800000.0, date);
   EXPECT_FALSE(bWrongFormat);
 
-  // 2095, the other '95.
+  // 1995 with two-digit year.
   bWrongFormat = false;
   date = CJS_PublicMethods::ParseDateUsingFormat(isolate(), L"010295",
                                                  L"ddmmyy", &bWrongFormat);
   date = RoundDownDate(date);
-  EXPECT_DOUBLE_EQ(3947356800000.0, date);
+  EXPECT_DOUBLE_EQ(791596800000.0, date);
   EXPECT_FALSE(bWrongFormat);
 
   // 2005
@@ -97,7 +97,7 @@ TEST_F(CJSPublicMethodsEmbedderTest, ParseDateUsingFormat) {
   EXPECT_DOUBLE_EQ(1107216000000.0, date);
   EXPECT_FALSE(bWrongFormat);
 
-  // 2005
+  // 2005 with two-digit year.
   bWrongFormat = false;
   date = CJS_PublicMethods::ParseDateUsingFormat(isolate(), L"010205",
                                                  L"ddmmyy", &bWrongFormat);

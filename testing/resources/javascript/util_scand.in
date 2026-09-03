@@ -44,6 +44,8 @@ try {
   expect("util.scand('yyyy/mm/dd', '2016/12/20').toUTCString()", tuesday);
   expect("util.scand('dd/mmm/yyyy', '20/Dec/2016').toUTCString()", tuesday);
   expect("util.scand('..dd:-:mmm/yyyy', '**20/*/Dec.2016').toUTCString()", tuesday);
+  expect("util.scand('dd/mm/yy', '20/12/16').toUTCString()", tuesday);
+  expect("util.scand('dd/mm/yy', '31/12/85').toUTCString()", "Tue, 31 Dec 1985 21:48:50 GMT");
   expect("util.scand('hh:MM:ss', '11:22:03').toUTCString()", friday);
   expect("util.scand('s:MM:hh', '3:22:11').toUTCString()", friday);
 } catch (e) {

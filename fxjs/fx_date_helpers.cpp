@@ -332,7 +332,6 @@ ConversionStatus FX_ParseDateUsingFormat(const WideString& value,
   int nHour = FX_GetHourFromTime(dt);
   int nMin = FX_GetMinFromTime(dt);
   int nSec = FX_GetSecFromTime(dt);
-  int nYearSub = 99;  // nYear - 2000;
   bool bPm = false;
   bool bExit = false;
   bool bBadFormat = false;
@@ -558,8 +557,11 @@ ConversionStatus FX_ParseDateUsingFormat(const WideString& value,
     nHour += 12;
   }
 
-  if (nYear >= 0 && nYear <= nYearSub) {
-    nYear += 2000;
+  // Resolves two-digit year ambiguity using Acrobat's date horizon heuristic:
+  // < 50 is assumed in the 21st century (+2000), >= 50 in the 20th century
+  // (+1900).
+  if (nYear >= 0 && nYear < 100) {
+    nYear += nYear < 50 ? 2000 : 1900;
   }
 
   if (!FX_IsValidMonth(nMonth) || !FX_IsValidDay(nDay) ||

@@ -5,5 +5,7 @@ Alert: PASS: util.scand('dd/mm/yyyy', '20/12/2016').toUTCString() = Tue, 20 Dec 
 Alert: PASS: util.scand('yyyy/mm/dd', '2016/12/20').toUTCString() = Tue, 20 Dec 2016 21:48:50 GMT
 Alert: PASS: util.scand('dd/mmm/yyyy', '20/Dec/2016').toUTCString() = Tue, 20 Dec 2016 21:48:50 GMT
 Alert: PASS: util.scand('..dd:-:mmm/yyyy', '**20/*/Dec.2016').toUTCString() = Tue, 20 Dec 2016 21:48:50 GMT
+Alert: PASS: util.scand('dd/mm/yy', '20/12/16').toUTCString() = Tue, 20 Dec 2016 21:48:50 GMT
+Alert: PASS: util.scand('dd/mm/yy', '31/12/85').toUTCString() = Tue, 31 Dec 1985 21:48:50 GMT
 Alert: PASS: util.scand('hh:MM:ss', '11:22:03').toUTCString() = Fri, 09 May 2014 11:22:03 GMT
 Alert: PASS: util.scand('s:MM:hh', '3:22:11').toUTCString() = Fri, 09 May 2014 11:22:03 GMT
