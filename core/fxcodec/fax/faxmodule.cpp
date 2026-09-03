@@ -360,16 +360,24 @@ void FaxG4GetRow(pdfium::span<const uint8_t> src_buf,
                       : pdfium::span<const uint8_t, pdfium::dynamic_extent>(
                             kFaxBlackRunIns),
               src_buf, bitpos);
+          if (run < 0) {
+            return;
+          }
+          // Since `run` is really 16-bits, it cannot cause `run_len1` to
+          // overflow with the `columns` check below.
           run_len1 += run;
+          if (run_len1 > columns) {
+            // No legal 1-D run exceeds the row width, which is bound by
+            // `kFaxMaxImageDimension`.
+            return;
+          }
+
           if (run < 64) {
             break;
           }
         }
         if (a0 < 0) {
           ++run_len1;
-        }
-        if (run_len1 < 0) {
-          return;
         }
 
         a1 = a0 + run_len1;
@@ -385,13 +393,21 @@ void FaxG4GetRow(pdfium::span<const uint8_t> src_buf,
                       : pdfium::span<const uint8_t, pdfium::dynamic_extent>(
                             kFaxWhiteRunIns),
               src_buf, bitpos);
+          if (run < 0) {
+            return;
+          }
+          // Since `run` is really 16-bits, it cannot cause `run_len2` to
+          // overflow with the `columns` check below.
           run_len2 += run;
+          if (run_len2 > columns) {
+            // No legal 1-D run exceeds the row width, which is bound by
+            // `kFaxMaxImageDimension`.
+            return;
+          }
+
           if (run < 64) {
             break;
           }
-        }
-        if (run_len2 < 0) {
-          return;
         }
         a2 = a1 + run_len2;
         if (a0color) {
