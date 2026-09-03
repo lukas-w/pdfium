@@ -121,7 +121,7 @@ RetainPtr<CPDF_TransferFunc> CPDF_DocRenderData::CreateTransferFunc(
           continue;
         }
         pFuncs[i]->Call(pdfium::span_from_ref(input), output);
-        size_t o = FXSYS_roundf(output[0] * 255);
+        uint8_t o = std::clamp(FXSYS_roundf(output[0] * 255.0f), 0, 255);
         if (o != v) {
           bIdentity = false;
         }
@@ -134,7 +134,7 @@ RetainPtr<CPDF_TransferFunc> CPDF_DocRenderData::CreateTransferFunc(
       if (pFuncs[0]->OutputCount() <= kMaxOutputs) {
         pFuncs[0]->Call(pdfium::span_from_ref(input), output);
       }
-      size_t o = FXSYS_roundf(output[0] * 255);
+      uint8_t o = std::clamp(FXSYS_roundf(output[0] * 255.0f), 0, 255);
       if (o != v) {
         bIdentity = false;
       }

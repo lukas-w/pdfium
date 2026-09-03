@@ -1505,7 +1505,7 @@ RetainPtr<CFX_DIBitmap> CPDF_RenderStatus::LoadSMask(
     for (size_t i = 0; i < transfers.size(); ++i) {
       float input = i / 255.0f;
       pFunc->Call(pdfium::span_from_ref(input), results);
-      transfers[i] = FXSYS_roundf(results[0] * 255);
+      transfers[i] = std::clamp(FXSYS_roundf(results[0] * 255.0f), 0, 255);
     }
   } else {
     // Fill |transfers| with 0, 1, ... N.

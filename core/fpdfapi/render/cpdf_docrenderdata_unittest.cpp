@@ -32,15 +32,15 @@ constexpr uint8_t kExpectedType0FunctionSamples[] = {
     123, 122, 121, 120, 119, 117, 116, 115, 113, 112, 110, 109, 107, 105, 104,
     102, 100, 98,  96,  94,  92,  89,  87,  85,  82,  80,  77,  75,  72,  70,
     67,  64,  62,  59,  56,  53,  50,  48,  45,  42,  39,  36,  33,  30,  27,
-    23,  20,  17,  14,  11,  8,   5,   2,   254, 251, 248, 245, 242, 239, 236,
-    233, 229, 226, 223, 220, 217, 214, 211, 208, 206, 203, 200, 197, 194, 192,
-    189, 186, 184, 181, 179, 176, 174, 171, 169, 167, 164, 162, 160, 158, 156,
-    154, 152, 151, 149, 147, 146, 144, 143, 141, 140, 139, 137, 136, 135, 134,
-    133, 133, 132, 131, 131, 130, 130, 129, 129, 129, 129, 129, 129, 129, 129,
-    129, 129, 130, 130, 131, 131, 132, 133, 134, 135, 136, 137, 138, 139, 141,
-    142, 143, 145, 146, 148, 150, 151, 153, 155, 157, 159, 161, 163, 166, 168,
-    170, 172, 175, 177, 180, 182, 185, 188, 190, 193, 196, 198, 201, 204, 207,
-    210, 213, 216, 219, 222, 225, 228, 231, 234, 237, 240, 243, 247, 250, 253,
+    23,  20,  17,  14,  11,  8,   5,   2,   0,   0,   0,   0,   0,   0,   0,
+    0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+    0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+    0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+    0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+    0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+    0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+    0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+    0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
     0};
 
 constexpr uint8_t kExpectedType2FunctionSamples[] = {
@@ -215,12 +215,53 @@ TEST(CPDFDocRenderDataTest, TransferFunctionArray) {
   EXPECT_EQ(0x001a1a00u, func->TranslateColor(0x00ff0000));
   EXPECT_EQ(0x00190d00u, func->TranslateColor(0x0000ff00));
   EXPECT_EQ(0x00191a00u, func->TranslateColor(0x000000ff));
-  EXPECT_EQ(0x001a0f87u, func->TranslateColor(0x00cccccc));
+  EXPECT_EQ(0x001a0f00u, func->TranslateColor(0x00cccccc));
   EXPECT_EQ(0x0019176du, func->TranslateColor(0x00123456));
   EXPECT_EQ(0x001a0d00u, func->TranslateColor(0xffffffff));
   EXPECT_EQ(0x00191a00u, func->TranslateColor(0xff000000));
   EXPECT_EQ(0x001a0d00u, func->TranslateColor(0xccffffff));
   EXPECT_EQ(0x00191a00u, func->TranslateColor(0x99000000));
+}
+
+TEST(CPDFDocRenderDataTest, TransferFunctionClamping) {
+  // Type 2 exponential function: f(x) = C0 + x^N * (C1 - C0).
+  // With C0 = -1.0, C1 = 2.0, N = 1:
+  // f(0.0) = -1.0 (negative, underflow)
+  // f(0.5) = 0.5
+  // f(1.0) = 2.0 (greater than 1.0, overflow)
+  auto func_dict = pdfium::MakeRetain<CPDF_Dictionary>();
+  func_dict->SetNewFor<CPDF_Number>("FunctionType", 2);
+  func_dict->SetNewFor<CPDF_Number>("N", 1);
+
+  auto domain_array = func_dict->SetNewFor<CPDF_Array>("Domain");
+  domain_array->AppendNew<CPDF_Number>(0);
+  domain_array->AppendNew<CPDF_Number>(1);
+
+  auto c0_array = func_dict->SetNewFor<CPDF_Array>("C0");
+  c0_array->AppendNew<CPDF_Number>(-1.0f);
+
+  auto c1_array = func_dict->SetNewFor<CPDF_Array>("C1");
+  c1_array->AppendNew<CPDF_Number>(2.0f);
+
+  TestDocRenderData render_data;
+  auto func = render_data.CreateTransferFuncForTesting(func_dict);
+  ASSERT_TRUE(func);
+  EXPECT_FALSE(func->GetIdentity());
+
+  // Input 0 gives -1.0f, clamped to 0.
+  EXPECT_EQ(0, func->GetSamplesR()[0]);
+  EXPECT_EQ(0, func->GetSamplesG()[0]);
+  EXPECT_EQ(0, func->GetSamplesB()[0]);
+
+  // Input 128 gives 0.505882f -> 129.
+  EXPECT_EQ(129, func->GetSamplesR()[128]);
+  EXPECT_EQ(129, func->GetSamplesG()[128]);
+  EXPECT_EQ(129, func->GetSamplesB()[128]);
+
+  // Input 255 gives 2.0f, clamped to 255.
+  EXPECT_EQ(255, func->GetSamplesR()[255]);
+  EXPECT_EQ(255, func->GetSamplesG()[255]);
+  EXPECT_EQ(255, func->GetSamplesB()[255]);
 }
 
 TEST(CPDFDocRenderDataTest, BadTransferFunctions) {
