@@ -87,8 +87,8 @@ RetainPtr<CPDF_TransferFunc> CPDF_DocRenderData::CreateTransferFunc(
     }
 
     for (uint32_t i = 0; i < 3; ++i) {
-      pFuncs[2 - i] = CPDF_Function::Load(pArray->GetDirectObjectAt(i));
-      if (!pFuncs[2 - i]) {
+      pFuncs[i] = CPDF_Function::Load(pArray->GetDirectObjectAt(i));
+      if (!pFuncs[i]) {
         return nullptr;
       }
     }
