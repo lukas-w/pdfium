@@ -31,6 +31,16 @@ TEST(FXDateHelperTest, GetYearFromTime) {
       // 1972 is a leap year, so there should be an extra day.
       {3 * 365.0 * kMilliSecondsInADay, 1972},
       {(3 * 365.0 + 1) * kMilliSecondsInADay, 1973},
+      // 1900 is not a leap year.
+      // There are 17 leap days between 1900 and 1970.
+      {-(70 * 365.0 + 17) * kMilliSecondsInADay, 1900},
+      {-(69 * 365.0 + 17 + 0.1) * kMilliSecondsInADay, 1900},
+      {-(69 * 365.0 + 17) * kMilliSecondsInADay, 1901},
+      // 2000 is a leap year.
+      // There are 7 leap days between 1970 and 2000.
+      {(30 * 365.0 + 7) * kMilliSecondsInADay, 2000},
+      {(31 * 365.0 + 7) * kMilliSecondsInADay, 2000},
+      {(31 * 365.0 + 8) * kMilliSecondsInADay, 2001},
   };
 
   for (const auto& test : kTests) {
@@ -102,10 +112,49 @@ TEST(FXDateHelperTest, GetMonthFromTime) {
       {(2 * 365.0 + 305) * kMilliSecondsInADay, 10},
       {(2 * 365.0 + 334) * kMilliSecondsInADay, 10},
       {(2 * 365.0 + 335) * kMilliSecondsInADay, 11},
+      // 1900 is not a leap year.
+      // There are 17 leap days between 1900 and 1970.
+      {(-(70 * 365.0 + 17) + 58) * kMilliSecondsInADay, 1},
+      {(-(70 * 365.0 + 17) + 59) * kMilliSecondsInADay, 2},
+      // 2000 is a leap year.
+      // There are 7 leap days between 1970 and 2000.
+      {(30 * 365.0 + 7 + 58) * kMilliSecondsInADay, 1},
+      {(30 * 365.0 + 7 + 59) * kMilliSecondsInADay, 1},
+      {(30 * 365.0 + 7 + 60) * kMilliSecondsInADay, 2},
   };
 
   for (const auto& test : kTests) {
     EXPECT_EQ(test.expected_month, FX_GetMonthFromTime(test.time_ms))
+        << test.time_ms;
+  }
+}
+
+TEST(FXDateHelperTest, GetDayFromTime) {
+  static constexpr struct {
+    double time_ms;
+    int expected_day;
+  } kTests[] = {
+      // 1900 is not a leap year.
+      // There are 17 leap days between 1900 and 1970.
+      {(-(70 * 365.0 + 17) + 58) * kMilliSecondsInADay, 28},
+      {(-(70 * 365.0 + 17) + 59) * kMilliSecondsInADay, 1},
+      // 1970 is not a leap year.
+      {0, 1},
+      {30 * kMilliSecondsInADay, 31},
+      {31 * kMilliSecondsInADay, 1},
+      // 1972 is a leap year.
+      {(2 * 365.0 + 58) * kMilliSecondsInADay, 28},
+      {(2 * 365.0 + 59) * kMilliSecondsInADay, 29},
+      {(2 * 365.0 + 60) * kMilliSecondsInADay, 1},
+      // 2000 is a leap year.
+      // There are 7 leap days between 1970 and 2000.
+      {(30 * 365.0 + 7 + 58) * kMilliSecondsInADay, 28},
+      {(30 * 365.0 + 7 + 59) * kMilliSecondsInADay, 29},
+      {(30 * 365.0 + 7 + 60) * kMilliSecondsInADay, 1},
+  };
+
+  for (const auto& test : kTests) {
+    EXPECT_EQ(test.expected_day, FX_GetDayFromTime(test.time_ms))
         << test.time_ms;
   }
 }
@@ -142,14 +191,18 @@ TEST_F(FXDateHelperFakeTimeTest, ParseDateUsingFormatForValidMonthDay) {
 
   EXPECT_EQ(ConversionStatus::kSuccess,
             FX_ParseDateUsingFormat(L"11/12/2000", L"mm/dd/yyyy", &result));
-  EXPECT_DOUBLE_EQ(973'955'121'000, result);
+  EXPECT_DOUBLE_EQ(974'041'521'000, result);
   EXPECT_EQ(ConversionStatus::kSuccess,
             FX_ParseDateUsingFormat(L"11/12/2000", L"m/d/yyyy", &result));
-  EXPECT_DOUBLE_EQ(973'955'121'000, result);
+  EXPECT_DOUBLE_EQ(974'041'521'000, result);
   EXPECT_EQ(ConversionStatus::kSuccess,
             FX_ParseDateUsingFormat(L"11-12-2000", L"m-d-yyyy", &result));
-  EXPECT_DOUBLE_EQ(973'955'121'000, result);
+  EXPECT_DOUBLE_EQ(974'041'521'000, result);
   EXPECT_EQ(ConversionStatus::kSuccess,
             FX_ParseDateUsingFormat(L"12-11-2000", L"d-m-yyyy", &result));
-  EXPECT_DOUBLE_EQ(973'955'121'000, result);
+  EXPECT_DOUBLE_EQ(974'041'521'000, result);
+
+  EXPECT_EQ(ConversionStatus::kSuccess,
+            FX_ParseDateUsingFormat(L"02/29/2000", L"mm/dd/yyyy", &result));
+  EXPECT_DOUBLE_EQ(951'836'721'000, result);
 }

@@ -68,7 +68,7 @@ int GetDaylightSavingTA(double d) {
 }
 
 bool IsLeapYear(int year) {
-  return (year % 4 == 0) && ((year % 100 != 0) || (year % 400 != 0));
+  return (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
 }
 
 int DayFromYear(int y) {

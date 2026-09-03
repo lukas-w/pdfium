@@ -116,7 +116,6 @@ TestOneXFAFormat("mm", d1, false);
 TestOneXFAFormat("mm", d1, true);
 
 // Date with year 0.
-// TODO(thestig): Why is the output different from Acrobat?
 TestOneFormat("mm/dd/yyyy HH:MM:ss", new Date(0, 06, 04, 15, 59, 58));
 // Date with month 20.
 TestOneFormat("mm/dd/yyyy HH:MM:ss", new Date(2014, 20, 04, 15, 59, 58));
