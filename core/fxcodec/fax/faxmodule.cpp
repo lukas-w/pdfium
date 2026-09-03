@@ -12,6 +12,7 @@
 #include <array>
 #include <iterator>
 #include <memory>
+#include <optional>
 #include <utility>
 
 #include "build/build_config.h"
@@ -284,20 +285,20 @@ uint32_t GetSrcBitSize(pdfium::span<const uint8_t> src_buf) {
   return pdfium::checked_cast<uint32_t>(src_buf.size() * 8);
 }
 
-int FaxGetRun(pdfium::span<const uint8_t> ins_array,
-              pdfium::span<const uint8_t> src_buf,
-              uint32_t* bitpos) {
+std::optional<uint16_t> FaxGetRun(pdfium::span<const uint8_t> ins_array,
+                                  pdfium::span<const uint8_t> src_buf,
+                                  uint32_t* bitpos) {
   const uint32_t bitsize = GetSrcBitSize(src_buf);
   uint32_t code = 0;
   int ins_off = 0;
   while (true) {
     uint8_t ins = ins_array[ins_off++];
     if (ins == 0xff) {
-      return -1;
+      return std::nullopt;
     }
 
     if (*bitpos >= bitsize) {
-      return -1;
+      return std::nullopt;
     }
 
     code <<= 1;
@@ -354,25 +355,25 @@ void FaxG4GetRow(pdfium::span<const uint8_t> src_buf,
         // Mode "Horizontal".
         int run_len1 = 0;
         while (true) {
-          int run = FaxGetRun(
+          std::optional<uint16_t> run = FaxGetRun(
               a0color ? pdfium::span<const uint8_t, pdfium::dynamic_extent>(
                             kFaxWhiteRunIns)
                       : pdfium::span<const uint8_t, pdfium::dynamic_extent>(
                             kFaxBlackRunIns),
               src_buf, bitpos);
-          if (run < 0) {
+          if (!run.has_value()) {
             return;
           }
-          // Since `run` is really 16-bits, it cannot cause `run_len1` to
-          // overflow with the `columns` check below.
-          run_len1 += run;
+          // Since `run` is 16-bit, it cannot cause `run_len1` to overflow
+          // with the `columns` check below.
+          run_len1 += run.value();
           if (run_len1 > columns) {
             // No legal 1-D run exceeds the row width, which is bound by
             // `kFaxMaxImageDimension`.
             return;
           }
 
-          if (run < 64) {
+          if (run.value() < 64) {
             break;
           }
         }
@@ -387,25 +388,25 @@ void FaxG4GetRow(pdfium::span<const uint8_t> src_buf,
 
         int run_len2 = 0;
         while (true) {
-          int run = FaxGetRun(
+          std::optional<uint16_t> run = FaxGetRun(
               a0color ? pdfium::span<const uint8_t, pdfium::dynamic_extent>(
                             kFaxBlackRunIns)
                       : pdfium::span<const uint8_t, pdfium::dynamic_extent>(
                             kFaxWhiteRunIns),
               src_buf, bitpos);
-          if (run < 0) {
+          if (!run.has_value()) {
             return;
           }
-          // Since `run` is really 16-bits, it cannot cause `run_len2` to
-          // overflow with the `columns` check below.
-          run_len2 += run;
+          // Since `run` is 16-bit, it cannot cause `run_len2` to overflow
+          // with the `columns` check below.
+          run_len2 += run.value();
           if (run_len2 > columns) {
             // No legal 1-D run exceeds the row width, which is bound by
             // `kFaxMaxImageDimension`.
             return;
           }
 
-          if (run < 64) {
+          if (run.value() < 64) {
             break;
           }
         }
@@ -523,13 +524,13 @@ void FaxGet1DLine(pdfium::span<const uint8_t> src_buf,
 
     int run_len = 0;
     while (true) {
-      int run =
+      std::optional<uint16_t> run =
           FaxGetRun(color ? pdfium::span<const uint8_t, pdfium::dynamic_extent>(
                                 kFaxWhiteRunIns)
                           : pdfium::span<const uint8_t, pdfium::dynamic_extent>(
                                 kFaxBlackRunIns),
                     src_buf, bitpos);
-      if (run < 0) {
+      if (!run.has_value()) {
         while (*bitpos < bitsize) {
           if (NextBit(src_buf, bitpos)) {
             return;
@@ -537,16 +538,16 @@ void FaxGet1DLine(pdfium::span<const uint8_t> src_buf,
         }
         return;
       }
-      // Since `run` is really 16-bits, it cannot cause `run_len` to overflow
-      // with the `columns` check below.
-      run_len += run;
+      // Since `run` is 16-bit, it cannot cause `run_len` to overflow with the
+      // `columns` check below.
+      run_len += run.value();
       if (run_len > columns) {
         // No legal 1-D run exceeds the row width, which is bound by
         // `kFaxMaxImageDimension`.
         return;
       }
 
-      if (run < 64) {
+      if (run.value() < 64) {
         break;
       }
     }
