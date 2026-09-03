@@ -72,7 +72,7 @@ void _png_get_header_func(png_structp png_ptr, png_infop info_ptr) {
   // Notifies the delegate of image dimensions and metadata.
   if (!context->delegate_->PrepareDirectOutput(
           width, height,
-          fxcodec::ProgressiveDecoderContextDelegate::Format::kArgb)) {
+          fxcodec::ProgressiveDecoderContextDelegate::Format::kBgra)) {
     // Note that `png_error` function is marked as `PNG_NORETURN`.
     png_error(context->png_, "Read Header Callback Error");
   }

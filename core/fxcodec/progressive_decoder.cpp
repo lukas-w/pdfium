@@ -170,7 +170,7 @@ void ProgressiveDecoder::ResampleScanline(
 bool ProgressiveDecoder::PrepareDirectOutput(int src_width,
                                              int src_height,
                                              Format src_format) {
-  if (src_width <= 0 || src_height <= 0 || src_format != Format::kArgb) {
+  if (src_width <= 0 || src_height <= 0 || src_format != Format::kBgra) {
     return false;
   }
   src_width_ = src_width;
@@ -185,13 +185,13 @@ pdfium::span<uint8_t> ProgressiveDecoder::AskScanlineBuf(int line) {
   CHECK_GE(line, 0);
   CHECK_LT(line, src_height_);
   CHECK_EQ(device_bitmap_->GetFormat(), FXDIB_Format::kBgra);
-  CHECK_EQ(src_format_, Format::kArgb);
+  CHECK_EQ(src_format_, Format::kBgra);
   return device_bitmap_->GetWritableScanline(line);
 }
 
 pdfium::span<uint8_t> ProgressiveDecoder::AskImageBuf() {
   CHECK_EQ(device_bitmap_->GetFormat(), FXDIB_Format::kBgra);
-  CHECK_EQ(src_format_, Format::kArgb);
+  CHECK_EQ(src_format_, Format::kBgra);
   return device_bitmap_->GetWritableBuffer();
 }
 
@@ -232,11 +232,11 @@ bool ProgressiveDecoder::BmpDetectImageTypeInBuffer(
       format = FXDIB_Format::k8bppRgb;
       break;
     case 3:
-      src_format_ = Format::kRgb;
+      src_format_ = Format::kBgr;
       format = FXDIB_Format::kBgr;
       break;
     case 4:
-      src_format_ = Format::kRgb32;
+      src_format_ = Format::kBgrx;
       format = FXDIB_Format::kBgrx;
       break;
     default:
@@ -748,9 +748,9 @@ void ProgressiveDecoder::SetTransMethod() {
         case Format::k8bppRgb:
           trans_method_ = TransformMethod::k8BppRgbToRgbNoAlpha;
           break;
-        case Format::kRgb:
-        case Format::kRgb32:
-        case Format::kArgb:
+        case Format::kBgr:
+        case Format::kBgrx:
+        case Format::kBgra:
           trans_method_ = TransformMethod::kRgbMaybeAlphaToRgbMaybeAlpha;
           break;
         case Format::kCmyk:
@@ -775,14 +775,14 @@ void ProgressiveDecoder::SetTransMethod() {
             trans_method_ = TransformMethod::k8BppRgbToRgbNoAlpha;
           }
           break;
-        case Format::kRgb:
-        case Format::kRgb32:
+        case Format::kBgr:
+        case Format::kBgrx:
           trans_method_ = TransformMethod::kRgbMaybeAlphaToRgbMaybeAlpha;
           break;
         case Format::kCmyk:
           trans_method_ = TransformMethod::kCmykToRgbMaybeAlpha;
           break;
-        case Format::kArgb:
+        case Format::kBgra:
           trans_method_ = TransformMethod::kArgbToArgb;
           break;
       }

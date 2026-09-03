@@ -42,7 +42,7 @@ ProgressiveDecoderContextDelegate::Format GetCodecFormat(int num_components) {
     case 1:
       return ProgressiveDecoderContextDelegate::Format::k8bppGray;
     case 3:
-      return ProgressiveDecoderContextDelegate::Format::kRgb;
+      return ProgressiveDecoderContextDelegate::Format::kBgr;
     case 4:
       return ProgressiveDecoderContextDelegate::Format::kCmyk;
     default:

@@ -145,8 +145,8 @@ ProgressiveDecoderContext::Status RustBmpContext::ReadHeader(
 
 ProgressiveDecoderContext::Status RustBmpContext::StartDecode() {
   ProgressiveDecoderContextDelegate::Format format =
-      (components_ == 4) ? ProgressiveDecoderContextDelegate::Format::kArgb
-                         : ProgressiveDecoderContextDelegate::Format::kRgb;
+      (components_ == 4) ? ProgressiveDecoderContextDelegate::Format::kBgra
+                         : ProgressiveDecoderContextDelegate::Format::kBgr;
   if (!delegate_->PrepareDirectOutput(width_, height_, format)) {
     return ProgressiveDecoderContext::Status::kError;
   }

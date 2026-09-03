@@ -40,7 +40,7 @@ bool RustPngContext::ReadHeader() {
   width_ = header_info.width;
   height_ = header_info.height;
   if (!delegate_->PrepareDirectOutput(
-          width_, height_, ProgressiveDecoderContextDelegate::Format::kArgb)) {
+          width_, height_, ProgressiveDecoderContextDelegate::Format::kBgra)) {
     state_ = State::kError;
     return false;
   }

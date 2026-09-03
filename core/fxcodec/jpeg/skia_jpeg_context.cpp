@@ -52,7 +52,7 @@ bool SkiaJpegContext::ReadHeader(RetainPtr<CFX_CodecMemory> codec_memory) {
       SkImageInfo info = decoder_->getInfo();
       if (!delegate_->PrepareDirectOutput(
               info.width(), info.height(),
-              ProgressiveDecoderContextDelegate::Format::kArgb)) {
+              ProgressiveDecoderContextDelegate::Format::kBgra)) {
         decoder_.reset();
         state_ = State::kError;
         return false;
