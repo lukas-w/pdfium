@@ -271,6 +271,7 @@ CJS_Result CJS_Util::printd(CJS_Runtime* pRuntime,
   time.tm_hour = hour;
   time.tm_min = min;
   time.tm_sec = sec;
+  time.tm_wday = FX_GetDayOfWeekFromTime(date);
 
   wchar_t buf[64] = {};
   UNSAFE_TODO(FXSYS_wcsftime(buf, 64, cFormat.c_str(), &time));

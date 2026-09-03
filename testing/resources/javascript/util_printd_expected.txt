@@ -10,8 +10,8 @@ Alert: mmmm: July
 Alert: mmm: Jul
 Alert: mm: 07
 Alert: m: 7
-Alert: dddd: Sunday
-Alert: ddd: Sun
+Alert: dddd: Friday
+Alert: ddd: Fri
 Alert: dd: 04
 Alert: d: 4
 Alert: yyyy: 2014

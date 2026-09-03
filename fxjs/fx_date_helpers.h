@@ -24,6 +24,7 @@ double FX_GetDateTime();
 int FX_GetYearFromTime(double dt);
 int FX_GetMonthFromTime(double dt);
 int FX_GetDayFromTime(double dt);
+int FX_GetDayOfWeekFromTime(double dt);
 int FX_GetHourFromTime(double dt);
 int FX_GetMinFromTime(double dt);
 int FX_GetSecFromTime(double dt);
@@ -50,6 +51,7 @@ ConversionStatus FX_ParseDateUsingFormat(const WideString& value,
 
 using fxjs::FX_GetDateTime;
 using fxjs::FX_GetDayFromTime;
+using fxjs::FX_GetDayOfWeekFromTime;
 using fxjs::FX_GetHourFromTime;
 using fxjs::FX_GetMinFromTime;
 using fxjs::FX_GetMonthFromTime;

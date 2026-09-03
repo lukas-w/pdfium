@@ -159,6 +159,32 @@ TEST(FXDateHelperTest, GetDayFromTime) {
   }
 }
 
+TEST(FXDateHelperTest, GetDayOfWeekFromTime) {
+  static constexpr struct {
+    double time_ms;
+    int expected_day_of_week;  // 0 = Sunday, 1 = Monday, ..., 6 = Saturday.
+  } kTests[] = {
+      {0, 4},                        // 1970-01-01 is Thursday.
+      {1 * kMilliSecondsInADay, 5},  // 1970-01-02 is Friday.
+      {2 * kMilliSecondsInADay, 6},  // 1970-01-03 is Saturday.
+      {3 * kMilliSecondsInADay, 0},  // 1970-01-04 is Sunday.
+      {4 * kMilliSecondsInADay, 1},  // 1970-01-05 is Monday.
+      {5 * kMilliSecondsInADay, 2},  // 1970-01-06 is Tuesday.
+      {6 * kMilliSecondsInADay, 3},  // 1970-01-07 is Wednesday.
+      // Negative timestamps before 1970.
+      {-1 * kMilliSecondsInADay, 3},  // 1969-12-31 is Wednesday.
+      {-2 * kMilliSecondsInADay, 2},  // 1969-12-30 is Tuesday.
+      {-3 * kMilliSecondsInADay, 1},  // 1969-12-29 is Monday.
+      {-4 * kMilliSecondsInADay, 0},  // 1969-12-28 is Sunday.
+      {-5 * kMilliSecondsInADay, 6},  // 1969-12-27 is Saturday.
+  };
+
+  for (const auto& test : kTests) {
+    EXPECT_EQ(test.expected_day_of_week, FX_GetDayOfWeekFromTime(test.time_ms))
+        << test.time_ms;
+  }
+}
+
 using FXDateHelperFakeTimeTest = FakeTimeTest;
 
 TEST_F(FXDateHelperFakeTimeTest, ParseDateUsingFormatWithEmptyParams) {

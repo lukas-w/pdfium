@@ -217,6 +217,11 @@ int FX_GetDayFromTime(double dt) {
   return DateFromTime(dt);
 }
 
+int FX_GetDayOfWeekFromTime(double dt) {
+  // 1970-01-01 was Thursday (day 4 in 0-based Sunday-indexed week).
+  return static_cast<int>(Mod(Day(dt) + 4, 7));
+}
+
 int FX_GetHourFromTime(double dt) {
   return (int)Mod(floor(dt / (60 * 60 * 1000)), 24);
 }
