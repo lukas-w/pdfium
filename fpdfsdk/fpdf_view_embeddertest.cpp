@@ -1641,13 +1641,13 @@ TEST_F(FPDFViewEmbedderTest, RenderHelloWorldWithFlags) {
 }
 
 // Deliberately disabled because this test case renders a large bitmap, which is
-// very slow for debug builds.
-#if defined(NDEBUG)
+// very slow for debug and AddressSanitizer builds.
+#if defined(NDEBUG) && !defined(ADDRESS_SANITIZER)
 #define MAYBE_LargeImageDoesNotRenderBlank LargeImageDoesNotRenderBlank
 #else
 #define MAYBE_LargeImageDoesNotRenderBlank DISABLED_LargeImageDoesNotRenderBlank
 #endif
-TEST_F(FPDFViewEmbedderTest, LargeImageDoesNotRenderBlank) {
+TEST_F(FPDFViewEmbedderTest, MAYBE_LargeImageDoesNotRenderBlank) {
   static constexpr char kFilename[] = "bug_1646";
 
   ASSERT_TRUE(OpenDocument("bug_1646.pdf"));
