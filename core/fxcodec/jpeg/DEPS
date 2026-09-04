@@ -6,10 +6,7 @@ include_rules = [
 ]
 
 specific_include_rules = {
-  "skia_jpeg_context\.(cpp|h)": [
-    '+third_party/skia/include',
-  ],
-  "skia_scanline_decoder\.(cpp|h)": [
-    '+third_party/skia/include',
+  "rust_.*": [
+    '+third_party/rust/cxx',
   ],
 }

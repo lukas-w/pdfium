@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef CORE_FXCODEC_JPEG_SKIA_SCANLINE_DECODER_H_
-#define CORE_FXCODEC_JPEG_SKIA_SCANLINE_DECODER_H_
+#ifndef CORE_FXCODEC_JPEG_RUST_JPEG_SCANLINE_DECODER_H_
+#define CORE_FXCODEC_JPEG_RUST_JPEG_SCANLINE_DECODER_H_
 
 #include <stdint.h>
 
@@ -15,11 +15,9 @@
 #include "core/fxcrt/data_vector.h"
 #include "core/fxcrt/span.h"
 
-class SkCodec;
-
 namespace fxcodec {
 
-class SkiaScanlineDecoder final : public ScanlineDecoder {
+class RustJpegScanlineDecoder final : public ScanlineDecoder {
  public:
   static std::unique_ptr<ScanlineDecoder> Create(
       pdfium::span<const uint8_t> src_span,
@@ -32,8 +30,8 @@ class SkiaScanlineDecoder final : public ScanlineDecoder {
   static std::optional<JpegModule::ImageInfo> LoadInfo(
       pdfium::span<const uint8_t> src_span);
 
-  SkiaScanlineDecoder();
-  ~SkiaScanlineDecoder() override;
+  RustJpegScanlineDecoder();
+  ~RustJpegScanlineDecoder() override;
 
   // ScanlineDecoder:
   [[nodiscard]] bool Rewind() override;
@@ -49,12 +47,10 @@ class SkiaScanlineDecoder final : public ScanlineDecoder {
                   uint32_t scale_denom);
   void CalcPitch();
 
-  std::unique_ptr<SkCodec> decoder_;
-  DataVector<uint8_t> scanline_buf_;
-  DataVector<uint8_t> row_decode_buf_;
-  uint32_t scale_denom_ = 1;
+  DataVector<uint8_t> decoded_image_;
+  uint32_t next_row_ = 0;
 };
 
 }  // namespace fxcodec
 
-#endif  // CORE_FXCODEC_JPEG_SKIA_SCANLINE_DECODER_H_
+#endif  // CORE_FXCODEC_JPEG_RUST_JPEG_SCANLINE_DECODER_H_

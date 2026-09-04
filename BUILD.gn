@@ -51,7 +51,7 @@ config("pdfium_common_config") {
     defines += [ "PDF_ENABLE_RUST_BMP" ]
   }
 
-  if (pdf_use_skia && pdf_enable_rust_jpeg) {
+  if (pdf_enable_rust_jpeg) {
     defines += [ "PDF_ENABLE_RUST_JPEG" ]
   }
 

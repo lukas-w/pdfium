@@ -5,11 +5,11 @@
 import("../../pdfium.gni")
 import("../../testing/test.gni")
 
-if (pdf_enable_rust_bmp || pdf_enable_rust_png) {
+if (pdf_enable_rust_bmp || pdf_enable_rust_jpeg || pdf_enable_rust_png) {
   import("//build/rust/rust_static_library.gni")
 }
 
-if (pdf_enable_rust_bmp || pdf_enable_rust_png) {
+if (pdf_enable_rust_bmp || pdf_enable_rust_jpeg || pdf_enable_rust_png) {
   config("pdfium_rust_ffi_config") {
     include_dirs = [ "$target_gen_dir/../.." ]
   }
@@ -26,6 +26,21 @@ if (pdf_enable_rust_bmp) {
     deps = [
       "//build/rust:cxx_cppdeps",
       "//third_party/rust/image/v0_25:lib",
+    ]
+  }
+}
+
+if (pdf_enable_rust_jpeg) {
+  rust_static_library("rust_jpeg_ffi") {
+    crate_name = "rust_jpeg_ffi"
+    allow_unsafe = true
+    crate_root = "jpeg/rust_jpeg_ffi.rs"
+    sources = [ crate_root ]
+    cxx_bindings = [ crate_root ]
+    public_configs = [ ":pdfium_rust_ffi_config" ]
+    deps = [
+      "//build/rust:cxx_cppdeps",
+      "//third_party/rust/zune_jpeg/v0_5:lib",
     ]
   }
 }
@@ -165,10 +180,13 @@ source_set("fxcodec") {
     }
     if (pdf_enable_rust_jpeg) {
       sources += [
-        "jpeg/skia_jpeg_context.cpp",
-        "jpeg/skia_jpeg_context.h",
+        "jpeg/rust_jpeg_context.cpp",
+        "jpeg/rust_jpeg_context.h",
       ]
-      deps += [ "//skia" ]
+      deps += [
+        ":rust_jpeg_ffi",
+        "//build/rust:cxx_cppdeps",
+      ]
     } else {
       sources += [
         "jpeg/libjpeg_jpeg_context.cpp",
@@ -213,10 +231,13 @@ source_set("fxcodec") {
 
   if (pdf_enable_rust_jpeg) {
     sources += [
-      "jpeg/skia_scanline_decoder.cpp",
-      "jpeg/skia_scanline_decoder.h",
+      "jpeg/rust_jpeg_scanline_decoder.cpp",
+      "jpeg/rust_jpeg_scanline_decoder.h",
     ]
-    deps += [ "//skia" ]
+    deps += [
+      ":rust_jpeg_ffi",
+      "//build/rust:cxx_cppdeps",
+    ]
   }
   visibility = [ "../../*" ]
 }

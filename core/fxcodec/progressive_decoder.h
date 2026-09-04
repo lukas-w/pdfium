@@ -82,6 +82,7 @@ class ProgressiveDecoder final : public ProgressiveDecoderContextDelegate {
     k8BppRgbToRgbNoAlpha,
     k8BppRgbToArgb,
     kRgbMaybeAlphaToRgbMaybeAlpha,
+    kRgbToBgrMaybeAlpha,
     kCmykToRgbMaybeAlpha,
     kArgbToArgb,
   };

@@ -168,7 +168,12 @@ TEST_F(FPDFThumbnailEmbedderTest, GetThumbnailAsBitmapFromPage) {
     ScopedFPDFBitmap thumb_bitmap(FPDFPage_GetThumbnailAsBitmap(page.get()));
 
     EXPECT_EQ(FPDFBitmap_BGR, FPDFBitmap_GetFormat(thumb_bitmap.get()));
+#if defined(PDF_ENABLE_RUST_JPEG)
+    CompareBitmapWithExpectationSuffix(thumb_bitmap.get(), "simple_thumbnail0",
+                                       kFuzzyDiffOptions);
+#else
     CompareBitmap(thumb_bitmap.get(), "simple_thumbnail0");
+#endif
   }
 
   {
@@ -178,7 +183,12 @@ TEST_F(FPDFThumbnailEmbedderTest, GetThumbnailAsBitmapFromPage) {
     ScopedFPDFBitmap thumb_bitmap(FPDFPage_GetThumbnailAsBitmap(page.get()));
 
     EXPECT_EQ(FPDFBitmap_BGR, FPDFBitmap_GetFormat(thumb_bitmap.get()));
+#if defined(PDF_ENABLE_RUST_JPEG)
+    CompareBitmapWithExpectationSuffix(thumb_bitmap.get(), "simple_thumbnail1",
+                                       kFuzzyDiffOptions);
+#else
     CompareBitmap(thumb_bitmap.get(), "simple_thumbnail1");
+#endif
   }
 }
 
@@ -238,7 +248,12 @@ TEST_F(FPDFThumbnailEmbedderTest, GetThumbnailDoesNotAlterPage) {
   ScopedFPDFBitmap thumb_bitmap(FPDFPage_GetThumbnailAsBitmap(page.get()));
 
   EXPECT_EQ(FPDFBitmap_BGR, FPDFBitmap_GetFormat(thumb_bitmap.get()));
+#if defined(PDF_ENABLE_RUST_JPEG)
+  CompareBitmapWithExpectationSuffix(thumb_bitmap.get(), "simple_thumbnail0",
+                                     kFuzzyDiffOptions);
+#else
   CompareBitmap(thumb_bitmap.get(), "simple_thumbnail0");
+#endif
 
   // Get the raw data again
   unsigned long new_raw_size =

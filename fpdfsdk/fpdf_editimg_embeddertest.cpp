@@ -80,7 +80,12 @@ TEST_F(PDFEditImgTest, NewImageObjLoadJpeg) {
   const char kPagePath[] = "mona_lisa_page";
   {
     ScopedFPDFBitmap image_bitmap(FPDFImageObj_GetBitmap(image.get()));
+#if defined(PDF_ENABLE_RUST_JPEG)
+    CompareBitmapWithExpectationSuffix(image_bitmap.get(), kImagePath,
+                                       kFuzzyDiffOptions);
+#else
     CompareBitmap(image_bitmap.get(), kImagePath);
+#endif
   }
 
   FPDFImageObj_SetMatrix(image.get(), kImageWidth, 0, 0, kImageHeight, 0, 0);
@@ -88,11 +93,20 @@ TEST_F(PDFEditImgTest, NewImageObjLoadJpeg) {
   FPDFPage_GenerateContent(page.get());
   {
     ScopedFPDFBitmap page_bitmap = RenderPage(page.get());
+#if defined(PDF_ENABLE_RUST_JPEG)
+    CompareBitmapWithExpectationSuffix(page_bitmap.get(), kPagePath,
+                                       kFuzzyDiffOptions);
+#else
     CompareBitmap(page_bitmap.get(), kPagePath);
+#endif
   }
 
   ASSERT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
+#if defined(PDF_ENABLE_RUST_JPEG)
+  VerifySavedDocumentWithExpectationSuffix(kPagePath, kFuzzyDiffOptions);
+#else
   VerifySavedDocument(kPagePath);
+#endif
 }
 
 TEST_F(PDFEditImgTest, NewImageObjLoadJpegInline) {
@@ -116,7 +130,12 @@ TEST_F(PDFEditImgTest, NewImageObjLoadJpegInline) {
   const char kPagePath[] = "mona_lisa_page";
   {
     ScopedFPDFBitmap image_bitmap(FPDFImageObj_GetBitmap(image.get()));
+#if defined(PDF_ENABLE_RUST_JPEG)
+    CompareBitmapWithExpectationSuffix(image_bitmap.get(), kImagePath,
+                                       kFuzzyDiffOptions);
+#else
     CompareBitmap(image_bitmap.get(), kImagePath);
+#endif
   }
 
   FPDFImageObj_SetMatrix(image.get(), kImageWidth, 0, 0, kImageHeight, 0, 0);
@@ -124,11 +143,20 @@ TEST_F(PDFEditImgTest, NewImageObjLoadJpegInline) {
   FPDFPage_GenerateContent(page.get());
   {
     ScopedFPDFBitmap page_bitmap = RenderPage(page.get());
+#if defined(PDF_ENABLE_RUST_JPEG)
+    CompareBitmapWithExpectationSuffix(page_bitmap.get(), kPagePath,
+                                       kFuzzyDiffOptions);
+#else
     CompareBitmap(page_bitmap.get(), kPagePath);
+#endif
   }
 
   ASSERT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
+#if defined(PDF_ENABLE_RUST_JPEG)
+  VerifySavedDocumentWithExpectationSuffix(kPagePath, kFuzzyDiffOptions);
+#else
   VerifySavedDocument(kPagePath);
+#endif
 }
 
 TEST_F(PDFEditImgTest, SetBitmap) {

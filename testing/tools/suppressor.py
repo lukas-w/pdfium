@@ -12,6 +12,9 @@ import pngdiffer
 def _ParseExtraOptions(tokens):
   flags = []
   for token in tokens:
+    if token in ('*', 'fuzzy'):
+      flags.append('--fuzzy')
+      continue
     if not token.startswith('fuzzy='):
       raise ValueError(f'Unexpected option in suppressions: {token}')
     params = token[len('fuzzy='):].split(',')

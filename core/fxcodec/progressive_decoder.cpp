@@ -11,6 +11,7 @@
 #include <utility>
 
 #include "build/build_config.h"
+#include "core/fxcodec/fx_codec.h"
 #include "core/fxcodec/gif/cfx_gifcontext.h"
 #include "core/fxcodec/progressive_decoder_context.h"
 #include "core/fxcodec/tiff/libtiff_tiff_context.h"
@@ -26,7 +27,6 @@
 #include "core/fxcrt/numerics/safe_conversions.h"
 #include "core/fxcrt/span_util.h"
 #include "core/fxcrt/stl_util.h"
-#include "core/fxcrt/to_underlying.h"
 #include "core/fxge/dib/cfx_cmyk_to_srgb.h"
 #include "core/fxge/dib/cfx_dibitmap.h"
 #include "core/fxge/dib/fx_dib.h"
@@ -42,7 +42,7 @@
 #endif
 
 #if defined(PDF_ENABLE_RUST_JPEG)
-#include "core/fxcodec/jpeg/skia_jpeg_context.h"
+#include "core/fxcodec/jpeg/rust_jpeg_context.h"
 #else
 #include "core/fxcodec/jpeg/libjpeg_jpeg_context.h"
 #endif
@@ -73,7 +73,7 @@ std::unique_ptr<ProgressiveDecoderContext> CreateDecoderContext(
       return std::make_unique<CFX_GifContext>(delegate);
     case FXCODEC_IMAGE_JPG: {
 #if defined(PDF_ENABLE_RUST_JPEG)
-      return std::make_unique<SkiaJpegContext>(delegate);
+      return std::make_unique<RustJpegContext>(delegate);
 #else
       auto context = std::make_unique<LibjpegJpegContext>(delegate);
       if (!context->create_ok_) {
@@ -139,6 +139,8 @@ bool ProgressiveDecoder::PrepareScanlineResampling(
   src_width_ = src_width;
   src_height_ = src_height;
   src_format_ = src_format;
+  src_components_count_ = GetCompsFromFormat(src_format);
+  src_bits_per_component_ = 8;
   SetTransMethod();
   decode_buf_.resize(GetScanlineSize());
   FXDIB_ResampleOptions options;
@@ -406,19 +408,31 @@ bool ProgressiveDecoder::JpegDetectImageTypeInBuffer(
   context_->Input(codec_memory_);
 
 #if defined(PDF_ENABLE_RUST_JPEG)
-  auto* ctx = static_cast<SkiaJpegContext*>(context_.get());
+  auto* ctx = static_cast<RustJpegContext*>(context_.get());
   src_width_ = 0;
   src_height_ = 0;
-  if (ctx->ReadHeader(codec_memory_)) {
+  while (!ctx->ReadHeader()) {
     FXCODEC_STATUS status = FXCODEC_STATUS::kError;
-    while (src_width_ == 0 && ReadMoreData(std::nullopt, &status)) {
-      if (!ctx->ReadHeader(codec_memory_)) {
-        break;
-      }
+    if (!ReadMoreData(std::nullopt, &status)) {
+      break;
     }
   }
 
-  bool got_metadata = (src_width_ > 0 && src_height_ > 0);
+  bool got_metadata = (ctx->width() > 0 && ctx->height() > 0);
+  if (got_metadata) {
+    src_width_ = ctx->width();
+    src_height_ = ctx->height();
+    src_components_count_ = ctx->num_components();
+    src_bits_per_component_ = 8;
+#if defined(PDF_ENABLE_XFA)
+    if (pAttribute) {
+      pAttribute->x_dpi_ = ctx->x_density();
+      pAttribute->y_dpi_ = ctx->y_density();
+      pAttribute->dpi_unit_ =
+          static_cast<CFX_DIBAttribute::ResUnit>(ctx->density_unit());
+    }
+#endif
+  }
   context_.reset();
   return got_metadata;
 #else
@@ -459,7 +473,7 @@ FXCODEC_STATUS ProgressiveDecoder::JpegStartDecode() {
     return status_;
   }
   context_->Input(codec_memory_);
-  auto* ctx = static_cast<SkiaJpegContext*>(context_.get());
+  auto* ctx = static_cast<RustJpegContext*>(context_.get());
   status_ = ctx->StartDecode(device_bitmap_);
   return status_;
 #else
@@ -475,7 +489,7 @@ FXCODEC_STATUS ProgressiveDecoder::JpegStartDecode() {
 
 FXCODEC_STATUS ProgressiveDecoder::JpegContinueDecode() {
 #if defined(PDF_ENABLE_RUST_JPEG)
-  auto* ctx = static_cast<SkiaJpegContext*>(context_.get());
+  auto* ctx = static_cast<RustJpegContext*>(context_.get());
   status_ = ctx->ContinueDecode();
   if (status_ != FXCODEC_STATUS::kDecodeToBeContinued) {
     device_bitmap_ = nullptr;
@@ -753,6 +767,9 @@ void ProgressiveDecoder::SetTransMethod() {
         case Format::kBgra:
           trans_method_ = TransformMethod::kRgbMaybeAlphaToRgbMaybeAlpha;
           break;
+        case Format::kRgb:
+          trans_method_ = TransformMethod::kRgbToBgrMaybeAlpha;
+          break;
         case Format::kCmyk:
           trans_method_ = TransformMethod::kCmykToRgbMaybeAlpha;
           break;
@@ -779,6 +796,9 @@ void ProgressiveDecoder::SetTransMethod() {
         case Format::kBgrx:
           trans_method_ = TransformMethod::kRgbMaybeAlphaToRgbMaybeAlpha;
           break;
+        case Format::kRgb:
+          trans_method_ = TransformMethod::kRgbToBgrMaybeAlpha;
+          break;
         case Format::kCmyk:
           trans_method_ = TransformMethod::kCmykToRgbMaybeAlpha;
           break;
@@ -804,8 +824,7 @@ void ProgressiveDecoder::ResampleScanline(
     Format src_format) {
   uint8_t* src_scan = src_span.data();
   uint8_t* dest_scan = pDeviceBitmap->GetWritableScanline(dest_line).data();
-  const auto src_bytes_per_pixel =
-      (fxcrt::to_underlying(src_format) & 0xff) / 8;
+  const int src_bytes_per_pixel = GetCompsFromFormat(src_format);
   const int dest_bytes_per_pixel = pDeviceBitmap->GetBPP() / 8;
   for (int dest_col = 0; dest_col < src_width_; dest_col++) {
     CStretchEngine::PixelWeight* pPixelWeights =
@@ -892,6 +911,27 @@ void ProgressiveDecoder::ResampleScanline(
           break;
         });
       }
+      case TransformMethod::kRgbToBgrMaybeAlpha: {
+        UNSAFE_TODO({
+          uint32_t dest_b = 0;
+          uint32_t dest_g = 0;
+          uint32_t dest_r = 0;
+          for (int j = pPixelWeights->src_start_; j <= pPixelWeights->src_end_;
+               j++) {
+            uint32_t pixel_weight =
+                pPixelWeights->weights_[j - pPixelWeights->src_start_];
+            const uint8_t* src_pixel = src_scan + j * src_bytes_per_pixel;
+            dest_r += pixel_weight * (*src_pixel++);
+            dest_g += pixel_weight * (*src_pixel++);
+            dest_b += pixel_weight * (*src_pixel);
+          }
+          *dest_scan++ = CStretchEngine::PixelFromFixed(dest_b);
+          *dest_scan++ = CStretchEngine::PixelFromFixed(dest_g);
+          *dest_scan++ = CStretchEngine::PixelFromFixed(dest_r);
+          dest_scan += dest_bytes_per_pixel - 3;
+          break;
+        });
+      }
       case TransformMethod::kCmykToRgbMaybeAlpha: {
         UNSAFE_TODO({
           uint32_t dest_b = 0;
@@ -958,13 +998,6 @@ void ProgressiveDecoder::Resample(const RetainPtr<CFX_DIBitmap>& pDeviceBitmap,
 FXDIB_Format ProgressiveDecoder::GetBitmapFormat() const {
   switch (image_type_) {
     case FXCODEC_IMAGE_JPG:
-#if defined(PDF_ENABLE_RUST_JPEG)
-      // When using the Skia/Rust decoder, Skia prefers standard 32-bit BGRA
-      // buffers.
-      return FXDIB_Format::kBgra;
-#else
-      return GetBitsPerPixel() <= 24 ? FXDIB_Format::kBgr : FXDIB_Format::kBgrx;
-#endif
     case FXCODEC_IMAGE_BMP:
       return GetBitsPerPixel() <= 24 ? FXDIB_Format::kBgr : FXDIB_Format::kBgrx;
     case FXCODEC_IMAGE_PNG:

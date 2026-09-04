@@ -15,7 +15,7 @@
 #include "core/fxcrt/span.h"
 
 #if defined(PDF_ENABLE_RUST_JPEG)
-#include "core/fxcodec/jpeg/skia_scanline_decoder.h"
+#include "core/fxcodec/jpeg/rust_jpeg_scanline_decoder.h"
 #endif
 
 #if BUILDFLAG(IS_WIN)
@@ -42,26 +42,22 @@ std::unique_ptr<ScanlineDecoder> JpegModule::CreateDecoder(
     bool ColorTransform,
     uint32_t scale_denom) {
 #if defined(PDF_ENABLE_RUST_JPEG)
-  auto decoder = SkiaScanlineDecoder::Create(src_span, width, height, nComps,
-                                             ColorTransform, scale_denom);
-  if (decoder) {
-    return decoder;
-  }
-#endif
+  return RustJpegScanlineDecoder::Create(src_span, width, height, nComps,
+                                         ColorTransform, scale_denom);
+#else
   return LibjpegScanlineDecoder::Create(src_span, width, height, nComps,
                                         ColorTransform, scale_denom);
+#endif
 }
 
 // static
 std::optional<JpegModule::ImageInfo> JpegModule::LoadInfo(
     pdfium::span<const uint8_t> src_span) {
 #if defined(PDF_ENABLE_RUST_JPEG)
-  auto info = SkiaScanlineDecoder::LoadInfo(src_span);
-  if (info.has_value()) {
-    return info;
-  }
-#endif
+  return RustJpegScanlineDecoder::LoadInfo(src_span);
+#else
   return LibjpegScanlineDecoder::LoadInfo(src_span);
+#endif
 }
 
 #if BUILDFLAG(IS_WIN)

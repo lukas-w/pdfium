@@ -4842,7 +4842,12 @@ TEST_F(FPDFEditEmbedderTest, GetBitmap) {
     ASSERT_EQ(FPDF_PAGEOBJ_IMAGE, FPDFPageObj_GetType(obj));
     ScopedFPDFBitmap bitmap(FPDFImageObj_GetBitmap(obj));
     EXPECT_EQ(FPDFBitmap_BGR, FPDFBitmap_GetFormat(bitmap.get()));
+#if defined(PDF_ENABLE_RUST_JPEG)
+    CompareBitmapWithExpectationSuffix(bitmap.get(), "embedded_images_37",
+                                       kFuzzyDiffOptions);
+#else
     CompareBitmap(bitmap.get(), "embedded_images_37");
+#endif
   }
 
   {
@@ -4850,7 +4855,14 @@ TEST_F(FPDFEditEmbedderTest, GetBitmap) {
     ASSERT_EQ(FPDF_PAGEOBJ_IMAGE, FPDFPageObj_GetType(obj));
     ScopedFPDFBitmap bitmap(FPDFImageObj_GetBitmap(obj));
     EXPECT_EQ(FPDFBitmap_BGR, FPDFBitmap_GetFormat(bitmap.get()));
+#if defined(PDF_ENABLE_RUST_JPEG)
+    CompareBitmapWithExpectationSuffix(
+        bitmap.get(), "embedded_images_38",
+        DiffOptions{.max_pixel_per_channel_delta = 3,
+                    .max_mean_squared_error = 0.3});
+#else
     CompareBitmap(bitmap.get(), "embedded_images_38");
+#endif
   }
 }
 

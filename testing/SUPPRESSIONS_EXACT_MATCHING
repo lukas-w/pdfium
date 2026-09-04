@@ -34,6 +34,9 @@
 # Sensitive to transparency code changes.
 bug_1258968.in * * * skia
 
+# Decoder and text subpixel differences.
+resolve_nodes_0.pdf * * * * fuzzy
+
 # TODO(crbug.com/459586268): Remove these entries once macOS support for Intel
 # hardware goes away. Then rebase the test expectations as needed.
 bug_1383708.in mac * * skia
@@ -56,6 +59,106 @@ xfermodes.pdf * * * skia
 xfermodes2.pdf * * * skia
 xfermodes3.pdf * * * skia
 
+# Continuous-tone JPEG upsampling and edge reconstruction tolerance.
+1.pdf * * * * fuzzy
+3bigpreview.pdf * * * * fuzzy=21,0.1,10.0
+FRC_11_8.2.4_View_edit.pdf * * * * fuzzy
+FRC_12_8.2.4_View_remove_all.pdf * * * * fuzzy
+FRC_13_8.2.4_View_remove_value.pdf * * * * fuzzy
+FRC_14_8.2.4_Sort_remove_all.pdf * * * * fuzzy
+FRC_15_8.2.4_Sort_remove_value.pdf * * * * fuzzy
+FRC_1_8.2.4_Type_8.6_.pdf * * * * fuzzy
+FRC_2_8.2.4_Type_8.6__remove_value.pdf * * * * fuzzy
+FRC_3_8.2.4_Type_8.6__edit_.pdf * * * * fuzzy
+FRC_4_8.2.4_Schema_8.6__remove_all.pdf * * * * fuzzy
+FRC_5_8.2.4_Schema_8.6__remove_value.pdf * * * * fuzzy
+FRC_6_8.2.4_Schema_8.6__remove_obj.pdf * * * * fuzzy
+FRC_7_8.2.4_View_H.pdf * * * * fuzzy
+FRC_8.5_URI_IsMap.pdf * * * * fuzzy
+FRC_8_8.2.4_View_D.pdf * * * * fuzzy
+FRC_9_8.2.4_View_T.pdf * * * * fuzzy
+all_trigger_browsefordoc.pdf * * * * fuzzy
+bug_691967.pdf * * * * fuzzy
+bug_86459.pdf * * * * fuzzy
+ch_7_0.pdf * * * * fuzzy
+ch_7_1.pdf * * * * fuzzy
+ch_7_4.pdf * * * * fuzzy
+ch_7_5.pdf * * * * fuzzy
+ch_7_6.pdf * * * * fuzzy
+ch_7_7.pdf * * * * fuzzy
+ch_7_8.pdf * * * * fuzzy
+en_tem.pdf * * * * fuzzy
+example_001.pdf * * * * fuzzy
+example_003.pdf * * * * fuzzy
+example_004.pdf * * * * fuzzy
+example_005.pdf * * * * fuzzy
+example_006.pdf * * * * fuzzy
+example_007.pdf * * * * fuzzy
+example_008.pdf * * * * fuzzy
+example_009.pdf * * * * fuzzy=3,0.15,5.0
+example_010.pdf * * * * fuzzy
+example_011.pdf * * * * fuzzy
+example_013.pdf * * * * fuzzy
+example_014.pdf * * * * fuzzy
+example_015.pdf * * * * fuzzy
+example_016.pdf * * * * fuzzy
+example_017.pdf * * * * fuzzy
+example_018.pdf * * * * fuzzy
+example_019.pdf * * * * fuzzy
+example_020.pdf * * * * fuzzy
+example_021.pdf * * * * fuzzy
+example_022.pdf * * * * fuzzy
+example_023.pdf * * * * fuzzy
+example_024.pdf * * * * fuzzy
+example_025.pdf * * * * fuzzy
+example_026.pdf * * * * fuzzy=4,0.05,5.0
+example_027.pdf * * * * fuzzy
+example_029.pdf * * * * fuzzy
+example_030.pdf * * * * fuzzy
+example_031.pdf * * * * fuzzy
+example_032.pdf * * * * fuzzy
+example_033.pdf * * * * fuzzy
+example_034.pdf * * * * fuzzy=4,0.05,5.0
+example_035.pdf * * * * fuzzy
+example_036.pdf * * * * fuzzy
+example_037.pdf * * * * fuzzy
+example_038.pdf * * * * fuzzy
+example_039.pdf * * * * fuzzy
+example_040.pdf * * * * fuzzy
+example_041.pdf * * * * fuzzy
+example_042.pdf * * * * fuzzy
+example_043.pdf * * * * fuzzy
+example_044.pdf * * * * fuzzy
+example_045.pdf * * * * fuzzy
+example_046.pdf * * * * fuzzy
+example_047.pdf * * * * fuzzy
+example_048.pdf * * * * fuzzy
+example_049.pdf * * * * fuzzy
+example_050.pdf * * * * fuzzy
+example_051.pdf * * * * fuzzy=3,0.35,5.0
+example_052.pdf * * * * fuzzy
+example_053.pdf * * * * fuzzy
+example_054.pdf * * * * fuzzy
+example_055.pdf * * * * fuzzy
+example_056.pdf * * * * fuzzy
+example_057.pdf * * * * fuzzy
+example_058.pdf * * * * fuzzy
+example_059.pdf * * * * fuzzy
+example_060.pdf * * * * fuzzy
+example_061.pdf * * * * fuzzy
+example_062.pdf * * * * fuzzy=4,0.05,5.0
+example_063.pdf * * * * fuzzy
+example_064.pdf * * * * fuzzy
+example_065.pdf * * * * fuzzy
+image_8bit_devicergb_dctdecode.pdf * * * * fuzzy
+image_bmp.pdf * * * * fuzzy
+image_foxit.pdf * * * * fuzzy=10,0.35,10.0
+image_jpg.pdf * * * * fuzzy
+image_tif.pdf * * * * fuzzy=10,0.05,10.0
+new_pdfsign3.pdf * * * * fuzzy
+new_stamp3.pdf * * * * fuzzy
+quick_start_guide.pdf * * * * fuzzy=4,0.05,5.0
+
 # TODO(crbug.com/459586268): Remove these entries once macOS support for Intel
 # hardware goes away. Then rebase the test expectations as needed.
 1.pdf mac * * skia
@@ -66,7 +169,6 @@ xfermodes3.pdf * * * skia
 2_halftone.pdf mac * * skia
 3_image_imagemask.pdf mac * * skia
 3_interpolate_image.pdf mac * * skia
-3bigpreview.pdf mac * * skia
 4_3.pdf mac * * skia
 4_36.pdf mac * * skia
 FRC_11_8.2.4_View_edit.pdf mac * * skia
@@ -138,19 +240,14 @@ en_uicase_.pdf mac * * skia
 en_uicase_2_.pdf mac * * skia
 example_001.pdf mac * * skia
 example_006.pdf mac * * skia
-example_009.pdf mac * * skia
 example_010.pdf mac * * skia
 example_018.pdf mac * * skia
 example_025.pdf mac * * skia
-example_026.pdf mac * * skia
-example_034.pdf mac * * skia
 example_039.pdf mac * * skia
 example_040.pdf mac * * skia
-example_051.pdf mac * * skia
 example_057.pdf mac * * skia
 example_058.pdf mac * * skia
 example_060.pdf mac * * skia
-example_062.pdf mac * * skia
 example_063.pdf mac * * skia
 example_064.pdf mac * * skia
 form_button0.pdf mac * * skia
@@ -165,17 +262,14 @@ form_button8.pdf mac * * skia
 form_button9.pdf mac * * skia
 image_8bit_devicergb_dctdecode.pdf mac * * skia
 image_bmp.pdf mac * * skia
-image_foxit.pdf mac * * skia
 image_gif.pdf mac * * skia
 image_jpg.pdf mac * * skia
 image_png.pdf mac * * skia
-image_tif.pdf mac * * skia
 new_stamp3.pdf mac * * skia
 new_textmarkup2.pdf mac * * skia
 new_textmarkup8.pdf mac * * skia
 path_5_pattern.pdf mac * * skia
 path_9.pdf mac_x86 * * skia
-quick_start_guide.pdf mac * * skia
 shading_2_15.pdf mac * * skia
 shading_2_17.pdf mac * * skia
 shading_2_4.pdf mac * * skia
