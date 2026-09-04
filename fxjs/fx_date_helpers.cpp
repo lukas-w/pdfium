@@ -364,102 +364,62 @@ ConversionStatus FX_ParseDateUsingFormat(const WideString& value,
       case 't': {
         const size_t old_value_idx = value_idx;
         size_t chars_to_skip = 0;
-        const size_t remaining = format.GetLength() - format_idx - 1;
+        size_t token_len = 1;
+        while (format_idx + token_len < format.GetLength() &&
+               format[format_idx + token_len] == format_char) {
+          ++token_len;
+        }
 
-        if (remaining == 0 || format[format_idx + 1] != format_char) {
+        if (token_len <= 2) {
           switch (format_char) {
             case 'y':
-              ++format_idx;
-              ++value_idx;
+              if (token_len == 1) {
+                ++value_idx;
+              } else {
+                year =
+                    FX_ParseStringInteger(value, value_idx, &chars_to_skip, 2);
+                value_idx += chars_to_skip;
+              }
               break;
             case 'm':
               month =
                   FX_ParseStringInteger(value, value_idx, &chars_to_skip, 2);
-              ++format_idx;
               value_idx += chars_to_skip;
               break;
             case 'd':
               day = FX_ParseStringInteger(value, value_idx, &chars_to_skip, 2);
-              ++format_idx;
               value_idx += chars_to_skip;
               break;
             case 'H':
-              hour = FX_ParseStringInteger(value, value_idx, &chars_to_skip, 2);
-              ++format_idx;
-              value_idx += chars_to_skip;
-              break;
             case 'h':
               hour = FX_ParseStringInteger(value, value_idx, &chars_to_skip, 2);
-              ++format_idx;
               value_idx += chars_to_skip;
               break;
             case 'M':
               minute =
                   FX_ParseStringInteger(value, value_idx, &chars_to_skip, 2);
-              ++format_idx;
               value_idx += chars_to_skip;
               break;
             case 's':
               second =
                   FX_ParseStringInteger(value, value_idx, &chars_to_skip, 2);
-              ++format_idx;
               value_idx += chars_to_skip;
               break;
             case 't':
-              is_pm =
-                  (value_idx < value.GetLength() && value[value_idx] == 'p');
-              ++format_idx;
-              ++value_idx;
+              if (token_len == 1) {
+                is_pm =
+                    (value_idx < value.GetLength() && value[value_idx] == 'p');
+                ++value_idx;
+              } else {
+                is_pm =
+                    (value_idx + 1 < value.GetLength() &&
+                     value[value_idx] == 'p' && value[value_idx + 1] == 'm');
+                value_idx += 2;
+              }
               break;
           }
-        } else if (remaining == 1 || format[format_idx + 2] != format_char) {
-          switch (format_char) {
-            case 'y':
-              year = FX_ParseStringInteger(value, value_idx, &chars_to_skip, 2);
-              format_idx += 2;
-              value_idx += chars_to_skip;
-              break;
-            case 'm':
-              month =
-                  FX_ParseStringInteger(value, value_idx, &chars_to_skip, 2);
-              format_idx += 2;
-              value_idx += chars_to_skip;
-              break;
-            case 'd':
-              day = FX_ParseStringInteger(value, value_idx, &chars_to_skip, 2);
-              format_idx += 2;
-              value_idx += chars_to_skip;
-              break;
-            case 'H':
-              hour = FX_ParseStringInteger(value, value_idx, &chars_to_skip, 2);
-              format_idx += 2;
-              value_idx += chars_to_skip;
-              break;
-            case 'h':
-              hour = FX_ParseStringInteger(value, value_idx, &chars_to_skip, 2);
-              format_idx += 2;
-              value_idx += chars_to_skip;
-              break;
-            case 'M':
-              minute =
-                  FX_ParseStringInteger(value, value_idx, &chars_to_skip, 2);
-              format_idx += 2;
-              value_idx += chars_to_skip;
-              break;
-            case 's':
-              second =
-                  FX_ParseStringInteger(value, value_idx, &chars_to_skip, 2);
-              format_idx += 2;
-              value_idx += chars_to_skip;
-              break;
-            case 't':
-              is_pm = (value_idx + 1 < value.GetLength() &&
-                       value[value_idx] == 'p' && value[value_idx + 1] == 'm');
-              format_idx += 2;
-              value_idx += 2;
-              break;
-          }
-        } else if (remaining == 2 || format[format_idx + 3] != format_char) {
+          format_idx += token_len;
+        } else if (token_len == 3) {
           switch (format_char) {
             case 'm': {
               bool found = false;
@@ -493,7 +453,7 @@ ConversionStatus FX_ParseDateUsingFormat(const WideString& value,
               value_idx += 3;
               break;
           }
-        } else if (remaining == 3 || format[format_idx + 4] != format_char) {
+        } else if (token_len == 4) {
           switch (format_char) {
             case 'y':
               year = FX_ParseStringInteger(value, value_idx, &chars_to_skip, 4);
