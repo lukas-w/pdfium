@@ -320,38 +320,38 @@ int FX_ParseStringInteger(const WideString& str,
 ConversionStatus FX_ParseDateUsingFormat(const WideString& value,
                                          const WideString& format,
                                          double* result) {
-  double dt = FX_GetDateTime();
+  const double dt = FX_GetDateTime();
   if (format.IsEmpty() || value.IsEmpty()) {
     *result = dt;
     return ConversionStatus::kSuccess;
   }
 
-  int nYear = FX_GetYearFromTime(dt);
-  int nMonth = FX_GetMonthFromTime(dt) + 1;
-  int nDay = FX_GetDayFromTime(dt);
-  int nHour = FX_GetHourFromTime(dt);
-  int nMin = FX_GetMinFromTime(dt);
-  int nSec = FX_GetSecFromTime(dt);
-  bool bPm = false;
-  bool bExit = false;
-  bool bBadFormat = false;
-  size_t i = 0;
-  size_t j = 0;
+  int year = FX_GetYearFromTime(dt);
+  int month = FX_GetMonthFromTime(dt) + 1;
+  int day = FX_GetDayFromTime(dt);
+  int hour = FX_GetHourFromTime(dt);
+  int minute = FX_GetMinFromTime(dt);
+  int second = FX_GetSecFromTime(dt);
+  bool is_pm = false;
+  bool exit_loop = false;
+  bool bad_format = false;
+  size_t format_idx = 0;
+  size_t value_idx = 0;
 
-  while (i < format.GetLength()) {
-    if (bExit) {
+  while (format_idx < format.GetLength()) {
+    if (exit_loop) {
       break;
     }
 
-    wchar_t c = format[i];
-    switch (c) {
+    const wchar_t format_char = format[format_idx];
+    switch (format_char) {
       case ':':
       case '.':
       case '-':
       case '\\':
       case '/':
-        i++;
-        j++;
+        ++format_idx;
+        ++value_idx;
         break;
 
       case 'y':
@@ -362,221 +362,234 @@ ConversionStatus FX_ParseDateUsingFormat(const WideString& value,
       case 'M':
       case 's':
       case 't': {
-        size_t oldj = j;
-        size_t nSkip = 0;
-        size_t remaining = format.GetLength() - i - 1;
+        const size_t old_value_idx = value_idx;
+        size_t chars_to_skip = 0;
+        const size_t remaining = format.GetLength() - format_idx - 1;
 
-        if (remaining == 0 || format[i + 1] != c) {
-          switch (c) {
+        if (remaining == 0 || format[format_idx + 1] != format_char) {
+          switch (format_char) {
             case 'y':
-              i++;
-              j++;
+              ++format_idx;
+              ++value_idx;
               break;
             case 'm':
-              nMonth = FX_ParseStringInteger(value, j, &nSkip, 2);
-              i++;
-              j += nSkip;
+              month =
+                  FX_ParseStringInteger(value, value_idx, &chars_to_skip, 2);
+              ++format_idx;
+              value_idx += chars_to_skip;
               break;
             case 'd':
-              nDay = FX_ParseStringInteger(value, j, &nSkip, 2);
-              i++;
-              j += nSkip;
+              day = FX_ParseStringInteger(value, value_idx, &chars_to_skip, 2);
+              ++format_idx;
+              value_idx += chars_to_skip;
               break;
             case 'H':
-              nHour = FX_ParseStringInteger(value, j, &nSkip, 2);
-              i++;
-              j += nSkip;
+              hour = FX_ParseStringInteger(value, value_idx, &chars_to_skip, 2);
+              ++format_idx;
+              value_idx += chars_to_skip;
               break;
             case 'h':
-              nHour = FX_ParseStringInteger(value, j, &nSkip, 2);
-              i++;
-              j += nSkip;
+              hour = FX_ParseStringInteger(value, value_idx, &chars_to_skip, 2);
+              ++format_idx;
+              value_idx += chars_to_skip;
               break;
             case 'M':
-              nMin = FX_ParseStringInteger(value, j, &nSkip, 2);
-              i++;
-              j += nSkip;
+              minute =
+                  FX_ParseStringInteger(value, value_idx, &chars_to_skip, 2);
+              ++format_idx;
+              value_idx += chars_to_skip;
               break;
             case 's':
-              nSec = FX_ParseStringInteger(value, j, &nSkip, 2);
-              i++;
-              j += nSkip;
+              second =
+                  FX_ParseStringInteger(value, value_idx, &chars_to_skip, 2);
+              ++format_idx;
+              value_idx += chars_to_skip;
               break;
             case 't':
-              bPm = (j < value.GetLength() && value[j] == 'p');
-              i++;
-              j++;
+              is_pm =
+                  (value_idx < value.GetLength() && value[value_idx] == 'p');
+              ++format_idx;
+              ++value_idx;
               break;
           }
-        } else if (remaining == 1 || format[i + 2] != c) {
-          switch (c) {
+        } else if (remaining == 1 || format[format_idx + 2] != format_char) {
+          switch (format_char) {
             case 'y':
-              nYear = FX_ParseStringInteger(value, j, &nSkip, 2);
-              i += 2;
-              j += nSkip;
+              year = FX_ParseStringInteger(value, value_idx, &chars_to_skip, 2);
+              format_idx += 2;
+              value_idx += chars_to_skip;
               break;
             case 'm':
-              nMonth = FX_ParseStringInteger(value, j, &nSkip, 2);
-              i += 2;
-              j += nSkip;
+              month =
+                  FX_ParseStringInteger(value, value_idx, &chars_to_skip, 2);
+              format_idx += 2;
+              value_idx += chars_to_skip;
               break;
             case 'd':
-              nDay = FX_ParseStringInteger(value, j, &nSkip, 2);
-              i += 2;
-              j += nSkip;
+              day = FX_ParseStringInteger(value, value_idx, &chars_to_skip, 2);
+              format_idx += 2;
+              value_idx += chars_to_skip;
               break;
             case 'H':
-              nHour = FX_ParseStringInteger(value, j, &nSkip, 2);
-              i += 2;
-              j += nSkip;
+              hour = FX_ParseStringInteger(value, value_idx, &chars_to_skip, 2);
+              format_idx += 2;
+              value_idx += chars_to_skip;
               break;
             case 'h':
-              nHour = FX_ParseStringInteger(value, j, &nSkip, 2);
-              i += 2;
-              j += nSkip;
+              hour = FX_ParseStringInteger(value, value_idx, &chars_to_skip, 2);
+              format_idx += 2;
+              value_idx += chars_to_skip;
               break;
             case 'M':
-              nMin = FX_ParseStringInteger(value, j, &nSkip, 2);
-              i += 2;
-              j += nSkip;
+              minute =
+                  FX_ParseStringInteger(value, value_idx, &chars_to_skip, 2);
+              format_idx += 2;
+              value_idx += chars_to_skip;
               break;
             case 's':
-              nSec = FX_ParseStringInteger(value, j, &nSkip, 2);
-              i += 2;
-              j += nSkip;
+              second =
+                  FX_ParseStringInteger(value, value_idx, &chars_to_skip, 2);
+              format_idx += 2;
+              value_idx += chars_to_skip;
               break;
             case 't':
-              bPm = (j + 1 < value.GetLength() && value[j] == 'p' &&
-                     value[j + 1] == 'm');
-              i += 2;
-              j += 2;
+              is_pm = (value_idx + 1 < value.GetLength() &&
+                       value[value_idx] == 'p' && value[value_idx + 1] == 'm');
+              format_idx += 2;
+              value_idx += 2;
               break;
           }
-        } else if (remaining == 2 || format[i + 3] != c) {
-          switch (c) {
+        } else if (remaining == 2 || format[format_idx + 3] != format_char) {
+          switch (format_char) {
             case 'm': {
-              bool bFind = false;
-              nSkip = FindSubWordLength(value, j);
-              if (nSkip == KMonthAbbreviationLength) {
-                WideString sMonth = value.Substr(j, KMonthAbbreviationLength);
+              bool found = false;
+              chars_to_skip = FindSubWordLength(value, value_idx);
+              if (chars_to_skip == KMonthAbbreviationLength) {
+                const WideString month_str =
+                    value.Substr(value_idx, KMonthAbbreviationLength);
                 for (size_t m = 0; m < std::size(kMonths); ++m) {
-                  if (sMonth.EqualsASCIINoCase(kMonths[m])) {
-                    nMonth = static_cast<int>(m) + 1;
-                    i += 3;
-                    j += nSkip;
-                    bFind = true;
+                  if (month_str.EqualsASCIINoCase(kMonths[m])) {
+                    month = static_cast<int>(m) + 1;
+                    format_idx += 3;
+                    value_idx += chars_to_skip;
+                    found = true;
                     break;
                   }
                 }
               }
 
-              if (!bFind) {
-                nMonth = FX_ParseStringInteger(value, j, &nSkip, 3);
-                i += 3;
-                j += nSkip;
+              if (!found) {
+                month =
+                    FX_ParseStringInteger(value, value_idx, &chars_to_skip, 3);
+                format_idx += 3;
+                value_idx += chars_to_skip;
               }
-            } break;
+              break;
+            }
             case 'y':
               break;
             default:
-              i += 3;
-              j += 3;
+              format_idx += 3;
+              value_idx += 3;
               break;
           }
-        } else if (remaining == 3 || format[i + 4] != c) {
-          switch (c) {
+        } else if (remaining == 3 || format[format_idx + 4] != format_char) {
+          switch (format_char) {
             case 'y':
-              nYear = FX_ParseStringInteger(value, j, &nSkip, 4);
-              j += nSkip;
-              i += 4;
+              year = FX_ParseStringInteger(value, value_idx, &chars_to_skip, 4);
+              format_idx += 4;
+              value_idx += chars_to_skip;
               break;
             case 'm': {
-              bool bFind = false;
-              nSkip = FindSubWordLength(value, j);
-              if (nSkip <= kLongestFullMonthLength) {
-                WideString sMonth = value.Substr(j, nSkip);
-                sMonth.MakeLower();
+              bool found = false;
+              chars_to_skip = FindSubWordLength(value, value_idx);
+              if (chars_to_skip <= kLongestFullMonthLength) {
+                WideString month_str = value.Substr(value_idx, chars_to_skip);
+                month_str.MakeLower();
                 for (size_t m = 0; m < std::size(kFullMonths); ++m) {
-                  auto sFullMonths = WideString::FromASCII(kFullMonths[m]);
-                  sFullMonths.MakeLower();
-                  if (sFullMonths.Contains(sMonth.AsStringView())) {
-                    nMonth = static_cast<int>(m) + 1;
-                    i += 4;
-                    j += nSkip;
-                    bFind = true;
+                  auto full_month = WideString::FromASCII(kFullMonths[m]);
+                  full_month.MakeLower();
+                  if (full_month.Contains(month_str.AsStringView())) {
+                    month = static_cast<int>(m) + 1;
+                    format_idx += 4;
+                    value_idx += chars_to_skip;
+                    found = true;
                     break;
                   }
                 }
               }
-              if (!bFind) {
-                nMonth = FX_ParseStringInteger(value, j, &nSkip, 4);
-                i += 4;
-                j += nSkip;
+              if (!found) {
+                month =
+                    FX_ParseStringInteger(value, value_idx, &chars_to_skip, 4);
+                format_idx += 4;
+                value_idx += chars_to_skip;
               }
-            } break;
+              break;
+            }
             default:
-              i += 4;
-              j += 4;
+              format_idx += 4;
+              value_idx += 4;
               break;
           }
         } else {
-          if (j >= value.GetLength() || format[i] != value[j]) {
-            bBadFormat = true;
-            bExit = true;
+          if (value_idx >= value.GetLength() ||
+              format[format_idx] != value[value_idx]) {
+            bad_format = true;
+            exit_loop = true;
           }
-          i++;
-          j++;
+          ++format_idx;
+          ++value_idx;
         }
 
-        if (oldj == j) {
-          bBadFormat = true;
-          bExit = true;
+        if (old_value_idx == value_idx) {
+          bad_format = true;
+          exit_loop = true;
         }
         break;
       }
 
       default:
-        if (value.GetLength() <= j) {
-          bExit = true;
-        } else if (format[i] != value[j]) {
-          bBadFormat = true;
-          bExit = true;
+        if (value.GetLength() <= value_idx) {
+          exit_loop = true;
+        } else if (format[format_idx] != value[value_idx]) {
+          bad_format = true;
+          exit_loop = true;
         }
 
-        i++;
-        j++;
+        ++format_idx;
+        ++value_idx;
         break;
     }
   }
 
-  if (bBadFormat) {
+  if (bad_format) {
     return ConversionStatus::kBadFormat;
   }
 
-  if (bPm) {
-    nHour += 12;
+  if (is_pm) {
+    hour += 12;
   }
 
   // Resolves two-digit year ambiguity using Acrobat's date horizon heuristic:
   // < 50 is assumed in the 21st century (+2000), >= 50 in the 20th century
   // (+1900).
-  if (nYear >= 0 && nYear < 100) {
-    nYear += nYear < 50 ? 2000 : 1900;
+  if (year >= 0 && year < 100) {
+    year += year < 50 ? 2000 : 1900;
   }
 
-  if (!FX_IsValidMonth(nMonth) || !FX_IsValidDay(nDay) ||
-      !FX_IsValid24Hour(nHour) || !FX_IsValidMinute(nMin) ||
-      !FX_IsValidSecond(nSec)) {
+  if (!FX_IsValidMonth(month) || !FX_IsValidDay(day) ||
+      !FX_IsValid24Hour(hour) || !FX_IsValidMinute(minute) ||
+      !FX_IsValidSecond(second)) {
     return ConversionStatus::kBadDate;
   }
 
-  dt = FX_MakeDate(FX_MakeDay(nYear, nMonth - 1, nDay),
-                   FX_MakeTime(nHour, nMin, nSec, 0));
-  if (isnan(dt)) {
+  const double parsed_dt = FX_MakeDate(FX_MakeDay(year, month - 1, day),
+                                       FX_MakeTime(hour, minute, second, 0));
+  if (isnan(parsed_dt)) {
     return ConversionStatus::kBadDate;
   }
 
-  *result = dt;
+  *result = parsed_dt;
   return ConversionStatus::kSuccess;
 }
 
