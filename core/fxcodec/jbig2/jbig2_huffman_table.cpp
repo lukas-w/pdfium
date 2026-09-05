@@ -15,20 +15,8 @@
 #include "core/fxcrt/check.h"
 #include "core/fxcrt/check_op.h"
 #include "core/fxcrt/fx_safe_types.h"
-#include "core/fxcrt/raw_span.h"
 
 namespace {
-
-struct JBig2TableLine {
-  uint8_t PREFLEN;
-  uint8_t RANDELEN;
-  int32_t RANGELOW;
-};
-
-struct HuffmanTable {
-  bool HTOOB;
-  pdfium::raw_span<const JBig2TableLine> lines;
-};
 
 constexpr JBig2TableLine kTableLine1[] = {{1, 4, 0},
                                           {2, 8, 16},
@@ -133,10 +121,7 @@ static_assert(CJBig2_HuffmanTable::kNumHuffmanTables ==
 }  // namespace
 
 CJBig2_HuffmanTable::CJBig2_HuffmanTable(size_t idx) {
-  const HuffmanTable& table = kHuffmanTables[idx];
-  HTOOB = table.HTOOB;
-  NTEMP = static_cast<uint32_t>(table.lines.size());
-  ok_ = ParseFromStandardTable(idx);
+  ok_ = ParseFromTable(kHuffmanTables[idx]);
   DCHECK(ok_);
 }
 
@@ -145,17 +130,33 @@ CJBig2_HuffmanTable::CJBig2_HuffmanTable(CJBig2_BitStream* pStream)
   ok_ = ParseFromCodedBuffer(pStream);
 }
 
+CJBig2_HuffmanTable::CJBig2_HuffmanTable(pdfium::span<uint8_t> prefix_lengths) {
+  std::vector<JBig2TableLine> lines(prefix_lengths.size() + 2);
+  for (size_t i = 0; const auto& length : prefix_lengths) {
+    lines[i].PREFLEN = length;
+    lines[i].RANGELEN = 0;
+    lines[i].RANGELOW = static_cast<int>(i);
+    ++i;
+  }
+  // Dummy open-ended intervals:
+  lines[prefix_lengths.size()] = {0, 0, 0};
+  lines[prefix_lengths.size() + 1] = {0, 0, 0};
+
+  ok_ = ParseFromTable({.HTOOB = false, .lines = lines});
+}
+
 CJBig2_HuffmanTable::~CJBig2_HuffmanTable() = default;
 
-bool CJBig2_HuffmanTable::ParseFromStandardTable(size_t idx) {
-  pdfium::span<const JBig2TableLine> lines =
-      kHuffmanTables[idx].lines.first(NTEMP);
+bool CJBig2_HuffmanTable::ParseFromTable(const HuffmanTable& table) {
+  HTOOB = table.HTOOB;
+  NTEMP = static_cast<uint32_t>(table.lines.size());
+  pdfium::span<const JBig2TableLine> lines = table.lines;
   CODES.resize(lines.size());
   RANGELEN.resize(lines.size());
   RANGELOW.resize(lines.size());
   for (size_t i = 0; const auto& line : lines) {
     CODES[i].codelen = line.PREFLEN;
-    RANGELEN[i] = line.RANDELEN;
+    RANGELEN[i] = line.RANGELEN;
     RANGELOW[i] = line.RANGELOW;
     ++i;
   }

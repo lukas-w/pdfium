@@ -18,6 +18,7 @@
 #include "core/fxcodec/jbig2/jbig2_grd_proc.h"
 #include "core/fxcodec/jbig2/jbig2_grrd_proc.h"
 #include "core/fxcodec/jbig2/jbig2_htrd_proc.h"
+#include "core/fxcodec/jbig2/jbig2_huffman_decoder.h"
 #include "core/fxcodec/jbig2/jbig2_pdd_proc.h"
 #include "core/fxcodec/jbig2/jbig2_sdd_proc.h"
 #include "core/fxcodec/jbig2/jbig2_trd_proc.h"
@@ -1212,49 +1213,31 @@ JBig2_Result CJBig2_Context::ParseRegionInfo(JBig2RegionInfo* pRI) {
 
 std::vector<JBig2HuffmanCode> CJBig2_Context::DecodeSymbolIDHuffmanTable(
     uint32_t SBNUMSYMS) {
-  const size_t kRunCodesSize = 35;
-  std::array<JBig2HuffmanCode, kRunCodesSize> huffman_codes;
-  for (size_t i = 0; i < kRunCodesSize; ++i) {
-    if (stream_->readNBits(4, &huffman_codes[i].codelen) != 0) {
+  std::array<uint8_t, 35> runcode_lengths;
+  for (uint8_t& runcode_length : runcode_lengths) {
+    uint32_t code_length;
+    if (stream_->readNBits(4, &code_length) != 0) {
       return std::vector<JBig2HuffmanCode>();
     }
+    runcode_length = code_length;
   }
-  if (!HuffmanAssignCode(huffman_codes)) {
+
+  CJBig2_HuffmanTable runcode_table(runcode_lengths);
+  if (!runcode_table.IsOK()) {
     return std::vector<JBig2HuffmanCode>();
   }
+
+  CJBig2_HuffmanDecoder runcode_decoder(stream_.get());
 
   std::vector<JBig2HuffmanCode> SBSYMCODES(SBNUMSYMS);
   int32_t run = 0;
   int32_t i = 0;
   while (i < static_cast<int>(SBNUMSYMS)) {
-    size_t j;
-    FX_SAFE_INT32 nSafeVal = 0;
-    int32_t nBits = 0;
-    uint32_t nTemp;
-    while (true) {
-      if (stream_->read1Bit(&nTemp) != 0) {
-        return std::vector<JBig2HuffmanCode>();
-      }
-
-      nSafeVal <<= 1;
-      if (!nSafeVal.IsValid()) {
-        return std::vector<JBig2HuffmanCode>();
-      }
-
-      nSafeVal |= nTemp;
-      ++nBits;
-      const int32_t nVal = nSafeVal.ValueOrDie();
-      for (j = 0; j < kRunCodesSize; ++j) {
-        if (nBits == huffman_codes[j].codelen &&
-            nVal == huffman_codes[j].code) {
-          break;
-        }
-      }
-      if (j < kRunCodesSize) {
-        break;
-      }
+    int32_t runcode;
+    if (runcode_decoder.DecodeAValue(&runcode_table, &runcode) != 0) {
+      return std::vector<JBig2HuffmanCode>();
     }
-    int32_t runcode = static_cast<int32_t>(j);
+    uint32_t nTemp;
     if (runcode < 32) {
       SBSYMCODES[i].codelen = runcode;
       run = 0;
