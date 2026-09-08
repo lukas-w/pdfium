@@ -1190,6 +1190,22 @@ FPDFPageObj_SetDashArray(FPDF_PAGEOBJECT page_object,
                          size_t dash_count,
                          float phase);
 
+// Experimental API.
+// Get a bitmap rasterization of the stroke pattern of |page_object|.
+// To render correctly, the caller must provide the |document| associated with
+// |page_object|. The returned bitmap will be owned by the caller, and
+// FPDFBitmap_Destroy() must be called on the returned bitmap when it is no
+// longer needed.
+//
+//   document    - handle to the document containing |page_object|.
+//   page_object - handle to a page object.
+//
+// Returns the bitmap, or NULL if the stroke is not a tiling pattern or on
+// failure.
+FPDF_EXPORT FPDF_BITMAP FPDF_CALLCONV
+FPDFPageObj_GetRenderedStrokePattern(FPDF_DOCUMENT document,
+                                     FPDF_PAGEOBJECT page_object);
+
 // Get number of segments inside |path|.
 //
 //   path - handle to a path.

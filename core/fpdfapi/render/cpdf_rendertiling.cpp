@@ -26,7 +26,17 @@
 
 namespace {
 
-RetainPtr<CFX_DIBitmap> DrawPatternBitmap(
+std::optional<int> CheckedFloatToInt(float value) {
+  if (!pdfium::IsValueInRangeForNumericType<int>(value)) {
+    return std::nullopt;
+  }
+  return static_cast<int>(value);
+}
+
+}  // namespace
+
+// static
+RetainPtr<CFX_DIBitmap> CPDF_RenderTiling::DrawPatternBitmap(
     CPDF_Document* doc,
     CPDF_PageImageCache* pCache,
     CPDF_TilingPattern* pPattern,
@@ -71,15 +81,6 @@ RetainPtr<CFX_DIBitmap> DrawPatternBitmap(
 
   return pBitmap;
 }
-
-std::optional<int> CheckedFloatToInt(float value) {
-  if (!pdfium::IsValueInRangeForNumericType<int>(value)) {
-    return std::nullopt;
-  }
-  return static_cast<int>(value);
-}
-
-}  // namespace
 
 // static
 RetainPtr<CFX_DIBitmap> CPDF_RenderTiling::Draw(
