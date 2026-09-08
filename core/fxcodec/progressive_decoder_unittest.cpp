@@ -1070,4 +1070,19 @@ TEST_F(ProgressiveDecoderTest, PngGammaChunk) {
                     ElementsAre(0xBB, 0xBB, 0xBB, 0xFF)));
 }
 
+TEST_F(ProgressiveDecoderTest, JpegInvalidComponents) {
+  // JPEG with SOF3 marker containing 2 color components (unsupported).
+  static constexpr uint8_t kInput[] = {
+      0xFF, 0xD8, 0xFE, 0xFF, 0xC3, 0x00, 0x0E, 0x04, 0x00, 0x01, 0x00,
+      0x2B, 0x02, 0x00, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x03, 0x03,
+      0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0xF0, 0x03, 0x03};
+
+  ProgressiveDecoder decoder;
+  auto source = pdfium::MakeRetain<CFX_ReadOnlySpanStream>(kInput);
+  CFX_DIBAttribute attr;
+  FXCODEC_STATUS status =
+      decoder.LoadImageInfo(std::move(source), FXCODEC_IMAGE_JPG, &attr, true);
+  EXPECT_EQ(FXCODEC_STATUS::kError, status);
+}
+
 }  // namespace fxcodec

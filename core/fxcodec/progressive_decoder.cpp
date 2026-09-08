@@ -133,7 +133,8 @@ bool ProgressiveDecoder::PrepareScanlineResampling(
     Format src_format,
     pdfium::span<const FX_ARGB> palette,
     std::optional<FX_ARGB> fill_argb) {
-  if (!device_bitmap_) {
+  if (!device_bitmap_ || src_format == Format::kInvalid || src_width <= 0 ||
+      src_height <= 0) {
     return false;
   }
   src_width_ = src_width;
@@ -432,6 +433,8 @@ bool ProgressiveDecoder::JpegDetectImageTypeInBuffer(
           static_cast<CFX_DIBAttribute::ResUnit>(ctx->density_unit());
     }
 #endif
+  } else {
+    status_ = FXCODEC_STATUS::kError;
   }
   context_.reset();
   return got_metadata;
@@ -544,6 +547,9 @@ bool ProgressiveDecoder::PngDetectImageTypeInBuffer() {
 #endif
 
   bool got_metadata = (src_width_ > 0 && src_height_ > 0);
+  if (!got_metadata) {
+    status_ = FXCODEC_STATUS::kError;
+  }
   context_.reset();
   return got_metadata;
 }
@@ -728,6 +734,8 @@ FXCODEC_STATUS ProgressiveDecoder::LoadImageInfo(
   // If we're skipping the type check then bail out at this point and return
   // the failed status.
   if (bSkipImageTypeCheck) {
+    status_ = FXCODEC_STATUS::kError;
+    file_ = nullptr;
     return status_;
   }
 
