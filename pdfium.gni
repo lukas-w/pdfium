@@ -56,11 +56,6 @@ declare_args() {
   # Note that Fontations requires Skia and Rust support.
   pdf_enable_fontations = pdf_enable_fontations_override
 
-  # Build PDFium with code to compare FT/Skia/Fontations results in
-  # parallel. Currently flags several spots, so must be false except when
-  # developing locally.
-  pdf_enable_skia_typeface_checks = false
-
   # Build PDFium with Rust-based BMP decoder. If enabled, it ensures that PDFium
   # doesn't depend on its native C++ BMP decoder. Note that
   # `pdf_enable_rust_bmp` requires Skia and Rust support.
