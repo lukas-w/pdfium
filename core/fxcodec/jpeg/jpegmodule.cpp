@@ -19,11 +19,10 @@
 #endif
 
 #if BUILDFLAG(IS_WIN)
-#include <type_traits>
-
 #include "core/fxcodec/jpeg/jpeg_common.h"
 #include "core/fxcrt/compiler_specific.h"
 #include "core/fxcrt/fx_memory.h"
+#include "core/fxcrt/fx_memory_wrappers.h"
 #include "core/fxcrt/fx_safe_types.h"
 #include "core/fxcrt/numerics/safe_conversions.h"
 #include "core/fxcrt/retain_ptr.h"
@@ -32,6 +31,22 @@
 #endif  // BUILDFLAG(IS_WIN)
 
 namespace fxcodec {
+
+#if BUILDFLAG(IS_WIN)
+namespace {
+
+struct ScopedJpegCompressCommon {
+  ~ScopedJpegCompressCommon() {
+    if (created) {
+      jpeg_common_destroy_compress(&common);
+    }
+  }
+  JpegCompressCommon common = {};
+  bool created = false;
+};
+
+}  // namespace
+#endif  // BUILDFLAG(IS_WIN)
 
 // static
 std::unique_ptr<ScanlineDecoder> JpegModule::CreateDecoder(
@@ -64,17 +79,6 @@ std::optional<JpegModule::ImageInfo> JpegModule::LoadInfo(
 bool JpegModule::JpegEncode(const RetainPtr<const CFX_DIBBase>& pSource,
                             uint8_t** dest_buf,
                             size_t* dest_size) {
-  jpeg_error_mgr jerr;
-  jerr.error_exit = jpeg_common_error_do_nothing;
-  jerr.emit_message = jpeg_common_error_do_nothing_int;
-  jerr.output_message = jpeg_common_error_do_nothing;
-  jerr.format_message = jpeg_common_error_do_nothing_char;
-  jerr.reset_error_mgr = jpeg_common_error_do_nothing;
-
-  jpeg_compress_struct cinfo = {};  // Aggregate initialization.
-  static_assert(std::is_aggregate_v<decltype(cinfo)>);
-  cinfo.err = &jerr;
-  jpeg_create_compress(&cinfo);
   const int bytes_per_pixel = pSource->GetBPP() / 8;
   uint32_t nComponents = bytes_per_pixel >= 3 ? 3 : 1;
   uint32_t pitch = pSource->GetPitch();
@@ -88,48 +92,57 @@ bool JpegModule::JpegEncode(const RetainPtr<const CFX_DIBBase>& pSource,
     return false;
   }
 
+  static constexpr uint32_t kMinTryBufLen = 1024;
   uint32_t dest_buf_length = safe_buf_len.ValueOrDie();
-  *dest_buf = FX_TryAlloc(uint8_t, dest_buf_length);
-  const int MIN_TRY_BUF_LEN = 1024;
-  while (!(*dest_buf) && dest_buf_length > MIN_TRY_BUF_LEN) {
-    dest_buf_length >>= 1;
-    *dest_buf = FX_TryAlloc(uint8_t, dest_buf_length);
+  std::unique_ptr<uint8_t, FxFreeDeleter> local_dest;
+  for (; dest_buf_length >= kMinTryBufLen; dest_buf_length >>= 1) {
+    local_dest.reset(FX_TryAlloc(uint8_t, dest_buf_length));
+    if (local_dest) {
+      break;
+    }
   }
-  if (!(*dest_buf)) {
+  if (!local_dest) {
     return false;
   }
 
-  jpeg_destination_mgr dest;
-  dest.init_destination = jpeg_common_dest_do_nothing;
-  dest.term_destination = jpeg_common_dest_do_nothing;
-  dest.empty_output_buffer = jpeg_common_dest_empty;
-  dest.next_output_byte = *dest_buf;
-  dest.free_in_buffer = dest_buf_length;
-  cinfo.dest = &dest;
-  cinfo.image_width = width;
-  cinfo.image_height = height;
-  cinfo.input_components = nComponents;
-  if (nComponents == 1) {
-    cinfo.in_color_space = JCS_GRAYSCALE;
-  } else if (nComponents == 3) {
-    cinfo.in_color_space = JCS_RGB;
-  } else {
-    cinfo.in_color_space = JCS_CMYK;
-  }
-  uint8_t* line_buf = nullptr;
-  if (nComponents > 1) {
-    line_buf = FX_Alloc2D(uint8_t, width, nComponents);
+  ScopedJpegCompressCommon compress_common;
+  compress_common.created =
+      jpeg_common_create_compress(&compress_common.common);
+  if (!compress_common.created) {
+    return false;
   }
 
-  jpeg_set_defaults(&cinfo);
-  jpeg_start_compress(&cinfo, TRUE);
-  JSAMPROW row_pointer[1];
+  compress_common.common.dest_mgr.next_output_byte = local_dest.get();
+  compress_common.common.dest_mgr.free_in_buffer = dest_buf_length;
+  compress_common.common.cinfo.image_width = width;
+  compress_common.common.cinfo.image_height = height;
+  compress_common.common.cinfo.input_components = nComponents;
+  if (nComponents == 1) {
+    compress_common.common.cinfo.in_color_space = JCS_GRAYSCALE;
+  } else if (nComponents == 3) {
+    compress_common.common.cinfo.in_color_space = JCS_RGB;
+  } else {
+    compress_common.common.cinfo.in_color_space = JCS_CMYK;
+  }
+
+  std::unique_ptr<uint8_t, FxFreeDeleter> line_buf;
+  if (nComponents > 1) {
+    line_buf.reset(FX_Alloc2D(uint8_t, width, nComponents));
+  }
+
+  if (!jpeg_common_set_defaults(&compress_common.common) ||
+      !jpeg_common_start_compress(&compress_common.common, TRUE)) {
+    return false;
+  }
+
+  JSAMPROW row_pointer;
   JDIMENSION row;
-  while (cinfo.next_scanline < cinfo.image_height) {
+  while (compress_common.common.cinfo.next_scanline <
+         compress_common.common.cinfo.image_height) {
     pdfium::span<const uint8_t> src_scan =
-        pSource->GetScanline(cinfo.next_scanline);
+        pSource->GetScanline(compress_common.common.cinfo.next_scanline);
     if (nComponents > 1) {
-      uint8_t* dest_scan = line_buf;
+      uint8_t* dest_scan = line_buf.get();
       if (nComponents == 3) {
         UNSAFE_TODO({
           for (uint32_t i = 0; i < width; i++) {
@@ -146,29 +159,36 @@ bool JpegModule::JpegEncode(const RetainPtr<const CFX_DIBBase>& pSource,
           }
         });
       }
-      row_pointer[0] = line_buf;
+      row_pointer = line_buf.get();
     } else {
-      row_pointer[0] = const_cast<uint8_t*>(src_scan.data());
+      row_pointer = const_cast<uint8_t*>(src_scan.data());
     }
-    row = cinfo.next_scanline;
-    jpeg_write_scanlines(&cinfo, row_pointer, 1);
+    row = compress_common.common.cinfo.next_scanline;
+    if (jpeg_common_write_scanlines(&compress_common.common, &row_pointer, 1) <
+        0) {
+      return false;
+    }
     UNSAFE_TODO({
-      if (cinfo.next_scanline == row) {
+      if (compress_common.common.cinfo.next_scanline == row) {
         static constexpr size_t kJpegBlockSize = 1048576;
-        *dest_buf =
-            FX_Realloc(uint8_t, *dest_buf, dest_buf_length + kJpegBlockSize);
-        dest.next_output_byte =
-            *dest_buf + dest_buf_length - dest.free_in_buffer;
+        local_dest.reset(FX_Realloc(uint8_t, local_dest.release(),
+                                    dest_buf_length + kJpegBlockSize));
+        compress_common.common.dest_mgr.next_output_byte =
+            local_dest.get() + dest_buf_length -
+            compress_common.common.dest_mgr.free_in_buffer;
         dest_buf_length += kJpegBlockSize;
-        dest.free_in_buffer += kJpegBlockSize;
+        compress_common.common.dest_mgr.free_in_buffer += kJpegBlockSize;
       }
     });
   }
-  jpeg_finish_compress(&cinfo);
-  jpeg_destroy_compress(&cinfo);
-  FX_Free(line_buf);
-  *dest_size = dest_buf_length - static_cast<size_t>(dest.free_in_buffer);
+  if (!jpeg_common_finish_compress(&compress_common.common)) {
+    return false;
+  }
 
+  *dest_size =
+      dest_buf_length -
+      static_cast<size_t>(compress_common.common.dest_mgr.free_in_buffer);
+  *dest_buf = local_dest.release();
   return true;
 }
 #endif  // BUILDFLAG(IS_WIN)

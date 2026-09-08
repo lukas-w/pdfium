@@ -62,6 +62,24 @@ void jpeg_common_error_do_nothing_char(j_common_ptr cinfo, char* arg);
 void jpeg_common_error_fatal(j_common_ptr cinfo);
 
 #if BUILDFLAG(IS_WIN)
+struct JpegCompressCommon {
+  jmp_buf jmpbuf;
+  struct jpeg_compress_struct cinfo;
+  struct jpeg_error_mgr error_mgr;
+  struct jpeg_destination_mgr dest_mgr;
+};
+typedef struct JpegCompressCommon JpegCompressCommon;
+
+boolean jpeg_common_create_compress(JpegCompressCommon* jpeg_compress);
+void jpeg_common_destroy_compress(JpegCompressCommon* jpeg_compress);
+boolean jpeg_common_set_defaults(JpegCompressCommon* jpeg_compress);
+boolean jpeg_common_start_compress(JpegCompressCommon* jpeg_compress,
+                                   boolean write_all_tables);
+int jpeg_common_write_scanlines(JpegCompressCommon* jpeg_compress,
+                                JSAMPROW* scanlines,
+                                unsigned int num_lines);
+boolean jpeg_common_finish_compress(JpegCompressCommon* jpeg_compress);
+
 void jpeg_common_dest_do_nothing(j_compress_ptr cinfo);
 boolean jpeg_common_dest_empty(j_compress_ptr cinfo);
 #endif  // BUILDFLAG(IS_WIN)
