@@ -100,6 +100,12 @@ class CPDF_DIB final : public CFX_DIBBase {
   bool CreateDCTDecoder(pdfium::span<const uint8_t> src_span,
                         const CPDF_Dictionary* pParams,
                         uint8_t resolution_levels_to_skip);
+  // Whether `components_` matches the color space's own component count, which
+  // is the condition under which a scanline gets translated at all. The two
+  // can disagree because LoadColorInfo() overrides `components_` for an
+  // ICCBased color space named DeviceGray, DeviceRGB or DeviceCMYK. Returns
+  // false when there is no color space.
+  bool ComponentCountMatchesColorSpace() const;
   bool ShouldDecodeJpegToBgr() const;
   void TranslateScanline24bpp(pdfium::span<uint8_t> dest_scan,
                               pdfium::span<const uint8_t> src_scan) const;

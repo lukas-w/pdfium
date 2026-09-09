@@ -16,6 +16,7 @@
 
 #include "core/fpdfapi/page/cpdf_colorspace.h"
 #include "core/fpdfapi/page/cpdf_docpagedata.h"
+#include "core/fpdfapi/page/cpdf_iccprofile.h"
 #include "core/fpdfapi/page/cpdf_image.h"
 #include "core/fpdfapi/page/cpdf_imageobject.h"
 #include "core/fpdfapi/page/cpdf_indexedcs.h"
@@ -522,19 +523,39 @@ CPDF_DIB::LoadState CPDF_DIB::CreateDecoder(uint8_t resolution_levels_to_skip) {
   return LoadState::kSuccess;
 }
 
+bool CPDF_DIB::ComponentCountMatchesColorSpace() const {
+  return color_space_ && components_ == color_space_->ComponentCount();
+}
+
 // Whether the JPEG decoder should be asked to emit BGR-ordered scanlines.
 // Only true when GetScanline()'s only transformation of the decoded RGB
 // scanline would be TranslateScanline24bppDefaultDecode()'s per-pixel
 // RGB-to-BGR swap, which a BGR decode makes a pass-through:
 // - a default Decode array (no per-component decode arithmetic),
 // - no color key mask (its comparisons read components in R,G,B order),
-// - plain DeviceRGB or CalRGB (both translate as the bare swap; every
-//   other family goes through CPDF_ColorSpace::TranslateImageLine()),
+// - a color space whose whole translation is the bare swap: DeviceRGB,
+//   CalRGB, or ICCBased with an sRGB profile (whose TranslateImageLine()
+//   is exactly fxcodec::ReverseRGB()); every other case goes through a
+//   real conversion,
 // - 3 components at 8 bpc (the swap case).
 bool CPDF_DIB::ShouldDecodeJpegToBgr() const {
-  return default_decode_ && !color_key_ && components_ == 3 && bpc_ == 8 &&
-         (family_ == CPDF_ColorSpace::Family::kDeviceRGB ||
-          family_ == CPDF_ColorSpace::Family::kCalRGB);
+  if (!default_decode_ || color_key_ || components_ != 3 || bpc_ != 8) {
+    return false;
+  }
+  if (family_ == CPDF_ColorSpace::Family::kDeviceRGB ||
+      family_ == CPDF_ColorSpace::Family::kCalRGB) {
+    return true;
+  }
+  // For an sRGB profile, CPDF_ICCBasedCS::TranslateImageLine() is exactly
+  // fxcodec::ReverseRGB(), so the whole translation is the swap. Any other
+  // profile converts through the alternate color space instead, which is not
+  // a swap, so those keep the translate path.
+  if (family_ == CPDF_ColorSpace::Family::kICCBased &&
+      ComponentCountMatchesColorSpace()) {
+    RetainPtr<CPDF_IccProfile> profile = color_space_->GetIccProfile();
+    return profile && profile->IsSRGB();
+  }
+  return false;
 }
 
 bool CPDF_DIB::CreateDCTDecoder(pdfium::span<const uint8_t> src_span,
@@ -1082,7 +1103,7 @@ bool CPDF_DIB::TranslateScanline24bppDefaultDecode(
       return false;
     }
 
-    if (components_ == color_space_->ComponentCount()) {
+    if (ComponentCountMatchesColorSpace()) {
       color_space_->TranslateImageLine(dest_scan, src_scan, GetWidth(),
                                        GetWidth(), GetHeight(), TransMask());
     }
