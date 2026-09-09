@@ -20,6 +20,7 @@
 #include "core/fxcodec/jbig2/jbig2_huffman_table.h"
 #include "core/fxcodec/jbig2/jbig2_symbol_dict.h"
 #include "core/fxcodec/jbig2/jbig2_trd_proc.h"
+#include "core/fxcrt/fx_ceil_log2.h"
 #include "core/fxcrt/fx_safe_types.h"
 #include "core/fxcrt/span_util.h"
 #include "core/fxcrt/stl_util.h"
@@ -37,11 +38,8 @@ std::unique_ptr<CJBig2_SymbolDict> CJBig2_SDDProc::DecodeArith(
   auto IAAI = std::make_unique<CJBig2_ArithIntDecoder>();
   auto IAEX = std::make_unique<CJBig2_ArithIntDecoder>();
 
-  uint32_t SBSYMCODELENA = 0;
-  while ((uint32_t)(1 << SBSYMCODELENA) < (SDNUMINSYMS + SDNUMNEWSYMS)) {
-    SBSYMCODELENA++;
-  }
-  JBig2IntDecoderState ids(static_cast<uint8_t>(SBSYMCODELENA));
+  uint8_t SBSYMCODELENA = fxcrt::CeilLog2(SDNUMINSYMS + SDNUMNEWSYMS);
+  JBig2IntDecoderState ids(SBSYMCODELENA);
 
   std::vector<std::unique_ptr<CJBig2_Image>> SDNEWSYMS(SDNUMNEWSYMS);
   uint32_t HCHEIGHT = 0;
@@ -304,12 +302,8 @@ std::unique_ptr<CJBig2_SymbolDict> CJBig2_SDDProc::DecodeHuffman(
           pDecoder->SBNUMINSTANCES = REFAGGNINST;
           pDecoder->SBSTRIPS = 1;
           pDecoder->SBNUMSYMS = SDNUMINSYMS + NSYMSDECODED;
-          uint32_t nTmp = 1;
-          while (static_cast<uint32_t>(1 << nTmp) <
-                 SDNUMINSYMS + SDNUMNEWSYMS) {
-            ++nTmp;
-          }
-          uint8_t SBSYMCODELEN = static_cast<uint8_t>(nTmp);
+          uint8_t SBSYMCODELEN =
+              std::max<uint8_t>(1, fxcrt::CeilLog2(SDNUMINSYMS + SDNUMNEWSYMS));
           std::vector<uint8_t> SBSYMCODES(
               /*count=*/pDecoder->SBNUMSYMS, /*value=*/SBSYMCODELEN);
           pDecoder->SBSYMCODES = CJBig2_HuffmanTable(SBSYMCODES);
@@ -345,11 +339,9 @@ std::unique_ptr<CJBig2_SymbolDict> CJBig2_SDDProc::DecodeHuffman(
           }
 
         } else if (REFAGGNINST == 1) {
-          uint32_t nTmp = 1;
-          while ((uint32_t)(1 << nTmp) < SDNUMINSYMS + SDNUMNEWSYMS) {
-            nTmp++;
-          }
-          uint8_t SBSYMCODELEN = (uint8_t)nTmp;
+          uint8_t SBSYMCODELEN =
+              std::max<uint8_t>(1, fxcrt::CeilLog2(SDNUMINSYMS + SDNUMNEWSYMS));
+          uint32_t nTmp = 0;
           uint32_t IDI = 0;
           for (uint32_t n = 0; n < SBSYMCODELEN; ++n) {
             if (pStream->read1Bit(&nTmp) != 0) {

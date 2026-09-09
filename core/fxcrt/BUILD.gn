@@ -62,6 +62,7 @@ source_set("fxcrt") {
     "fx_2d_size.h",
     "fx_bidi.cpp",
     "fx_bidi.h",
+    "fx_ceil_log2.h",
     "fx_codepage.cpp",
     "fx_codepage.h",
     "fx_codepage_forward.h",

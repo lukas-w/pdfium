@@ -24,6 +24,7 @@
 #include "core/fxcodec/jbig2/jbig2_trd_proc.h"
 #include "core/fxcrt/check_op.h"
 #include "core/fxcrt/fixed_size_data_vector.h"
+#include "core/fxcrt/fx_ceil_log2.h"
 #include "core/fxcrt/fx_memory_wrappers.h"
 #include "core/fxcrt/fx_safe_types.h"
 #include "core/fxcrt/pauseindicator_iface.h"
@@ -720,11 +721,7 @@ JBig2_Result CJBig2_Context::ParseTextRegion(CJBig2_Segment* pSegment) {
     stream_->alignByte();
     pTRD->SBSYMCODES = std::move(SBSYMCODES);
   } else {
-    dwTemp = 0;
-    while ((uint32_t)(1 << dwTemp) < pTRD->SBNUMSYMS) {
-      ++dwTemp;
-    }
-    SBSYMCODELEN = static_cast<uint8_t>(dwTemp);
+    SBSYMCODELEN = fxcrt::CeilLog2(pTRD->SBNUMSYMS);
   }
 
   if (pTRD->SBHUFF) {
