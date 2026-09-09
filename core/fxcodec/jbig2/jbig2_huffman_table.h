@@ -42,6 +42,10 @@ class CJBig2_HuffmanTable {
   // Creates a huffman table that maps a canonical code with length
   // prefix_lengths[i] to i.
   explicit CJBig2_HuffmanTable(pdfium::span<uint8_t> prefix_lengths);
+
+  CJBig2_HuffmanTable();
+  CJBig2_HuffmanTable(CJBig2_HuffmanTable&&);
+  CJBig2_HuffmanTable& operator=(CJBig2_HuffmanTable&&);
   ~CJBig2_HuffmanTable();
 
   bool IsHTOOB() const { return HTOOB; }
@@ -58,9 +62,9 @@ class CJBig2_HuffmanTable {
   bool ParseFromCodedBuffer(CJBig2_BitStream* pStream);
   void ExtendBuffers(bool increment);
 
-  bool ok_;
-  bool HTOOB;
-  uint32_t NTEMP;
+  bool ok_ = false;
+  bool HTOOB = false;
+  uint32_t NTEMP = 0;
   std::vector<JBig2HuffmanCode> CODES;
   std::vector<int> RANGELEN;
   std::vector<int> RANGELOW;

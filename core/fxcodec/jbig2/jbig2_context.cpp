@@ -711,9 +711,9 @@ JBig2_Result CJBig2_Context::ParseTextRegion(CJBig2_Segment* pSegment) {
 
   uint8_t SBSYMCODELEN = 0;
   if (pTRD->SBHUFF) {
-    std::vector<JBig2HuffmanCode> SBSYMCODES =
+    CJBig2_HuffmanTable SBSYMCODES =
         DecodeSymbolIDHuffmanTable(pTRD->SBNUMSYMS);
-    if (SBSYMCODES.empty()) {
+    if (!SBSYMCODES.IsOK()) {
       return JBig2_Result::kFailure;
     }
 
@@ -1211,61 +1211,61 @@ JBig2_Result CJBig2_Context::ParseRegionInfo(JBig2RegionInfo* pRI) {
   return JBig2_Result::kSuccess;
 }
 
-std::vector<JBig2HuffmanCode> CJBig2_Context::DecodeSymbolIDHuffmanTable(
+CJBig2_HuffmanTable CJBig2_Context::DecodeSymbolIDHuffmanTable(
     uint32_t SBNUMSYMS) {
   std::array<uint8_t, 35> runcode_lengths;
   for (uint8_t& runcode_length : runcode_lengths) {
     uint32_t code_length;
     if (stream_->readNBits(4, &code_length) != 0) {
-      return std::vector<JBig2HuffmanCode>();
+      return CJBig2_HuffmanTable();
     }
     runcode_length = code_length;
   }
 
   CJBig2_HuffmanTable runcode_table(runcode_lengths);
   if (!runcode_table.IsOK()) {
-    return std::vector<JBig2HuffmanCode>();
+    return CJBig2_HuffmanTable();
   }
 
   CJBig2_HuffmanDecoder runcode_decoder(stream_.get());
 
-  std::vector<JBig2HuffmanCode> SBSYMCODES(SBNUMSYMS);
+  std::vector<uint8_t> SBSYMCODES(SBNUMSYMS);
   int32_t run = 0;
   int32_t i = 0;
   while (i < static_cast<int>(SBNUMSYMS)) {
     int32_t runcode;
     if (runcode_decoder.DecodeAValue(&runcode_table, &runcode) != 0) {
-      return std::vector<JBig2HuffmanCode>();
+      return CJBig2_HuffmanTable();
     }
     uint32_t nTemp;
     if (runcode < 32) {
-      SBSYMCODES[i].codelen = runcode;
+      SBSYMCODES[i] = runcode;
       run = 0;
     } else if (runcode == 32) {
       if (stream_->readNBits(2, &nTemp) != 0) {
-        return std::vector<JBig2HuffmanCode>();
+        return CJBig2_HuffmanTable();
       }
       run = nTemp + 3;
     } else if (runcode == 33) {
       if (stream_->readNBits(3, &nTemp) != 0) {
-        return std::vector<JBig2HuffmanCode>();
+        return CJBig2_HuffmanTable();
       }
       run = nTemp + 3;
     } else if (runcode == 34) {
       if (stream_->readNBits(7, &nTemp) != 0) {
-        return std::vector<JBig2HuffmanCode>();
+        return CJBig2_HuffmanTable();
       }
       run = nTemp + 11;
     }
     if (run > 0) {
       if (i + run > (int)SBNUMSYMS) {
-        return std::vector<JBig2HuffmanCode>();
+        return CJBig2_HuffmanTable();
       }
       for (int32_t k = 0; k < run; ++k) {
         if (runcode == 32 && i > 0) {
-          SBSYMCODES[i + k].codelen = SBSYMCODES[i - 1].codelen;
+          SBSYMCODES[i + k] = SBSYMCODES[i - 1];
         } else {
-          SBSYMCODES[i + k].codelen = 0;
+          SBSYMCODES[i + k] = 0;
         }
       }
       i += run;
@@ -1273,10 +1273,7 @@ std::vector<JBig2HuffmanCode> CJBig2_Context::DecodeSymbolIDHuffmanTable(
       ++i;
     }
   }
-  if (!HuffmanAssignCode(SBSYMCODES)) {
-    return std::vector<JBig2HuffmanCode>();
-  }
-  return SBSYMCODES;
+  return CJBig2_HuffmanTable(SBSYMCODES);
 }
 
 const CJBig2_HuffmanTable* CJBig2_Context::GetHuffmanTable(size_t idx) {

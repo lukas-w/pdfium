@@ -13,6 +13,8 @@
 #include <memory>
 #include <vector>
 
+#include "core/fxcodec/jbig2/jbig2_huffman_decoder.h"
+#include "core/fxcodec/jbig2/jbig2_huffman_table.h"
 #include "core/fxcodec/jbig2/jbig2_image.h"
 #include "core/fxcrt/span.h"
 #include "core/fxcrt/unowned_ptr.h"
@@ -21,9 +23,7 @@ class CJBig2_ArithDecoder;
 class CJBig2_ArithIaidDecoder;
 class CJBig2_ArithIntDecoder;
 class CJBig2_BitStream;
-class CJBig2_HuffmanTable;
 class JBig2ArithCtx;
-struct JBig2HuffmanCode;
 
 struct JBig2IntDecoderState {
   explicit JBig2IntDecoderState(uint8_t SBSYMCODELEN);
@@ -73,7 +73,7 @@ class CJBig2_TRDProc {
   uint32_t SBNUMINSTANCES;
   uint32_t SBSTRIPS;
   uint32_t SBNUMSYMS;
-  std::vector<JBig2HuffmanCode> SBSYMCODES;
+  CJBig2_HuffmanTable SBSYMCODES;
   std::vector<UnownedPtr<CJBig2_Image>> SBSYMS;
   JBig2ComposeOp SBCOMBOP;
   JBig2Corner REFCORNER;

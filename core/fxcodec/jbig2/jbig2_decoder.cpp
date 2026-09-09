@@ -7,6 +7,7 @@
 #include "core/fxcodec/jbig2/jbig2_decoder.h"
 
 #include <algorithm>
+#include <utility>
 
 #include "core/fxcodec/jbig2/jbig2_context.h"
 #include "core/fxcodec/jbig2/jbig2_document_context.h"

@@ -304,18 +304,16 @@ std::unique_ptr<CJBig2_SymbolDict> CJBig2_SDDProc::DecodeHuffman(
           pDecoder->SBNUMINSTANCES = REFAGGNINST;
           pDecoder->SBSTRIPS = 1;
           pDecoder->SBNUMSYMS = SDNUMINSYMS + NSYMSDECODED;
-          std::vector<JBig2HuffmanCode> SBSYMCODES(pDecoder->SBNUMSYMS);
           uint32_t nTmp = 1;
           while (static_cast<uint32_t>(1 << nTmp) <
                  SDNUMINSYMS + SDNUMNEWSYMS) {
             ++nTmp;
           }
           uint8_t SBSYMCODELEN = static_cast<uint8_t>(nTmp);
-          for (uint32_t i = 0; i < pDecoder->SBNUMSYMS; ++i) {
-            SBSYMCODES[i].codelen = SBSYMCODELEN;
-            SBSYMCODES[i].code = i;
-          }
-          pDecoder->SBSYMCODES = std::move(SBSYMCODES);
+          std::vector<uint8_t> SBSYMCODES(
+              /*count=*/pDecoder->SBNUMSYMS, /*value=*/SBSYMCODELEN);
+          pDecoder->SBSYMCODES = CJBig2_HuffmanTable(SBSYMCODES);
+          DCHECK(pDecoder->SBSYMCODES.IsOK());
           std::vector<UnownedPtr<CJBig2_Image>> SBSYMS(pDecoder->SBNUMSYMS);
           fxcrt::Copy(pdfium::span(SDINSYMS).first(SDNUMINSYMS),
                       pdfium::span(SBSYMS));

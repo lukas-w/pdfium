@@ -132,33 +132,12 @@ std::unique_ptr<CJBig2_Image> CJBig2_TRDProc::DecodeHuffman(
       }
 
       int32_t TI = SAFE_TI.ValueOrDie();
-      FX_SAFE_INT32 nSafeVal = 0;
-      int32_t nBits = 0;
-      uint32_t IDI;
-      for (;;) {
-        uint32_t nTmp;
-        if (pStream->read1Bit(&nTmp) != 0) {
-          return nullptr;
-        }
 
-        nSafeVal <<= 1;
-        if (!nSafeVal.IsValid()) {
-          return nullptr;
-        }
-
-        nSafeVal |= nTmp;
-        ++nBits;
-        const int32_t nVal = nSafeVal.ValueOrDie();
-        for (IDI = 0; IDI < SBNUMSYMS; ++IDI) {
-          if (nBits == SBSYMCODES[IDI].codelen &&
-              nVal == SBSYMCODES[IDI].code) {
-            break;
-          }
-        }
-        if (IDI < SBNUMSYMS) {
-          break;
-        }
+      int32_t IDI;
+      if (pHuffmanDecoder->DecodeAValue(&SBSYMCODES, &IDI) != 0) {
+        return nullptr;
       }
+
       bool RI = false;
       if (SBREFINE != 0 && pStream->read1Bit(&RI) != 0) {
         return nullptr;

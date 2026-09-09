@@ -125,8 +125,7 @@ CJBig2_HuffmanTable::CJBig2_HuffmanTable(size_t idx) {
   DCHECK(ok_);
 }
 
-CJBig2_HuffmanTable::CJBig2_HuffmanTable(CJBig2_BitStream* pStream)
-    : HTOOB(false), NTEMP(0) {
+CJBig2_HuffmanTable::CJBig2_HuffmanTable(CJBig2_BitStream* pStream) {
   ok_ = ParseFromCodedBuffer(pStream);
 }
 
@@ -145,6 +144,10 @@ CJBig2_HuffmanTable::CJBig2_HuffmanTable(pdfium::span<uint8_t> prefix_lengths) {
   ok_ = ParseFromTable({.HTOOB = false, .lines = lines});
 }
 
+CJBig2_HuffmanTable::CJBig2_HuffmanTable() = default;
+CJBig2_HuffmanTable::CJBig2_HuffmanTable(CJBig2_HuffmanTable&&) = default;
+CJBig2_HuffmanTable& CJBig2_HuffmanTable::operator=(CJBig2_HuffmanTable&&) =
+    default;
 CJBig2_HuffmanTable::~CJBig2_HuffmanTable() = default;
 
 bool CJBig2_HuffmanTable::ParseFromTable(const HuffmanTable& table) {
