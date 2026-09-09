@@ -369,12 +369,12 @@ std::unique_ptr<CJBig2_SymbolDict> CJBig2_SDDProc::DecodeHuffman(
             return nullptr;
           }
 
-          auto SBHUFFRDX = std::make_unique<CJBig2_HuffmanTable>(15);
+          auto SBHUFFRDXRDY = std::make_unique<CJBig2_HuffmanTable>(15);
           auto SBHUFFRSIZE = std::make_unique<CJBig2_HuffmanTable>(1);
           int32_t RDXI;
           int32_t RDYI;
-          if ((pHuffmanDecoder->DecodeAValue(SBHUFFRDX.get(), &RDXI) != 0) ||
-              (pHuffmanDecoder->DecodeAValue(SBHUFFRDX.get(), &RDYI) != 0) ||
+          if ((pHuffmanDecoder->DecodeAValue(SBHUFFRDXRDY.get(), &RDXI) != 0) ||
+              (pHuffmanDecoder->DecodeAValue(SBHUFFRDXRDY.get(), &RDYI) != 0) ||
               (pHuffmanDecoder->DecodeAValue(SBHUFFRSIZE.get(), &nVal) != 0)) {
             return nullptr;
           }
