@@ -1237,25 +1237,25 @@ CJBig2_HuffmanTable CJBig2_Context::DecodeSymbolIDHuffmanTable(
     if (runcode_decoder.DecodeAValue(&runcode_table, &runcode) != 0) {
       return CJBig2_HuffmanTable();
     }
-    uint32_t nTemp;
+    uint32_t temp;
     if (runcode < 32) {
       SBSYMCODES[i] = runcode;
       run = 0;
     } else if (runcode == 32) {
-      if (stream_->readNBits(2, &nTemp) != 0) {
+      if (stream_->readNBits(2, &temp) != 0) {
         return CJBig2_HuffmanTable();
       }
-      run = nTemp + 3;
+      run = temp + 3;
     } else if (runcode == 33) {
-      if (stream_->readNBits(3, &nTemp) != 0) {
+      if (stream_->readNBits(3, &temp) != 0) {
         return CJBig2_HuffmanTable();
       }
-      run = nTemp + 3;
+      run = temp + 3;
     } else if (runcode == 34) {
-      if (stream_->readNBits(7, &nTemp) != 0) {
+      if (stream_->readNBits(7, &temp) != 0) {
         return CJBig2_HuffmanTable();
       }
-      run = nTemp + 11;
+      run = temp + 11;
     }
     if (run > 0) {
       if (i + run > (int)SBNUMSYMS) {
@@ -1283,35 +1283,4 @@ const CJBig2_HuffmanTable* CJBig2_Context::GetHuffmanTable(size_t idx) {
     huffman_tables_[idx] = std::make_unique<CJBig2_HuffmanTable>(idx);
   }
   return huffman_tables_[idx].get();
-}
-
-// static
-bool CJBig2_Context::HuffmanAssignCode(
-    pdfium::span<JBig2HuffmanCode> symcodes) {
-  int lenmax = 0;
-  for (const auto& symcode : symcodes) {
-    lenmax = std::max(symcode.codelen, lenmax);
-  }
-  std::vector<int> lencounts(lenmax + 1);
-  std::vector<int> firstcodes(lenmax + 1);
-  for (const auto& symcode : symcodes) {
-    ++lencounts[symcode.codelen];
-  }
-  lencounts[0] = 0;
-  for (int i = 1; i <= lenmax; ++i) {
-    FX_SAFE_INT32 shifted = firstcodes[i - 1];
-    shifted += lencounts[i - 1];
-    shifted <<= 1;
-    if (!shifted.IsValid()) {
-      return false;
-    }
-    firstcodes[i] = shifted.ValueOrDie();
-    int curcode = firstcodes[i];
-    for (auto& symcode : symcodes) {
-      if (symcode.codelen == i) {
-        symcode.code = curcode++;
-      }
-    }
-  }
-  return true;
 }

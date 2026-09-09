@@ -6,6 +6,7 @@
 
 #include "core/fxcodec/jbig2/jbig2_huffman_table.h"
 
+#include <algorithm>
 #include <array>
 #include <iterator>
 #include <limits>
@@ -118,6 +119,35 @@ static_assert(CJBig2_HuffmanTable::kNumHuffmanTables ==
                   std::size(kHuffmanTables),
               "kNumHuffmanTables must be equal to the size of kHuffmanTables");
 
+bool HuffmanAssignCode(pdfium::span<JBig2HuffmanCode> symcodes) {
+  int lenmax = 0;
+  for (const auto& symcode : symcodes) {
+    lenmax = std::max(symcode.codelen, lenmax);
+  }
+  std::vector<int> lencounts(lenmax + 1);
+  std::vector<int> firstcodes(lenmax + 1);
+  for (const auto& symcode : symcodes) {
+    ++lencounts[symcode.codelen];
+  }
+  lencounts[0] = 0;
+  for (int i = 1; i <= lenmax; ++i) {
+    FX_SAFE_INT32 shifted = firstcodes[i - 1];
+    shifted += lencounts[i - 1];
+    shifted <<= 1;
+    if (!shifted.IsValid()) {
+      return false;
+    }
+    firstcodes[i] = shifted.ValueOrDie();
+    int curcode = firstcodes[i];
+    for (auto& symcode : symcodes) {
+      if (symcode.codelen == i) {
+        symcode.code = curcode++;
+      }
+    }
+  }
+  return true;
+}
+
 }  // namespace
 
 CJBig2_HuffmanTable::CJBig2_HuffmanTable(size_t idx) {
@@ -144,10 +174,11 @@ CJBig2_HuffmanTable::CJBig2_HuffmanTable(pdfium::span<uint8_t> prefix_lengths) {
   ok_ = ParseFromTable({.HTOOB = false, .lines = lines});
 }
 
-CJBig2_HuffmanTable::CJBig2_HuffmanTable() = default;
-CJBig2_HuffmanTable::CJBig2_HuffmanTable(CJBig2_HuffmanTable&&) = default;
-CJBig2_HuffmanTable& CJBig2_HuffmanTable::operator=(CJBig2_HuffmanTable&&) =
+CJBig2_HuffmanTable::CJBig2_HuffmanTable() noexcept = default;
+CJBig2_HuffmanTable::CJBig2_HuffmanTable(CJBig2_HuffmanTable&&) noexcept =
     default;
+CJBig2_HuffmanTable& CJBig2_HuffmanTable::operator=(
+    CJBig2_HuffmanTable&&) noexcept = default;
 CJBig2_HuffmanTable::~CJBig2_HuffmanTable() = default;
 
 bool CJBig2_HuffmanTable::ParseFromTable(const HuffmanTable& table) {
@@ -163,7 +194,7 @@ bool CJBig2_HuffmanTable::ParseFromTable(const HuffmanTable& table) {
     RANGELOW[i] = line.RANGELOW;
     ++i;
   }
-  return CJBig2_Context::HuffmanAssignCode(CODES);
+  return HuffmanAssignCode(CODES);
 }
 
 bool CJBig2_HuffmanTable::ParseFromCodedBuffer(CJBig2_BitStream* pStream) {
@@ -237,7 +268,7 @@ bool CJBig2_HuffmanTable::ParseFromCodedBuffer(CJBig2_BitStream* pStream) {
     ++NTEMP;
   }
 
-  return CJBig2_Context::HuffmanAssignCode(pdfium::span(CODES).first(NTEMP));
+  return HuffmanAssignCode(pdfium::span(CODES).first(NTEMP));
 }
 
 void CJBig2_HuffmanTable::ExtendBuffers(bool increment) {

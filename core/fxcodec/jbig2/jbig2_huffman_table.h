@@ -17,6 +17,11 @@
 
 class CJBig2_BitStream;
 
+struct JBig2HuffmanCode {
+  int32_t codelen;
+  int32_t code;
+};
+
 struct JBig2TableLine {
   uint8_t PREFLEN;
   uint8_t RANGELEN;
@@ -43,9 +48,9 @@ class CJBig2_HuffmanTable {
   // prefix_lengths[i] to i.
   explicit CJBig2_HuffmanTable(pdfium::span<uint8_t> prefix_lengths);
 
-  CJBig2_HuffmanTable();
-  CJBig2_HuffmanTable(CJBig2_HuffmanTable&&);
-  CJBig2_HuffmanTable& operator=(CJBig2_HuffmanTable&&);
+  CJBig2_HuffmanTable() noexcept;
+  CJBig2_HuffmanTable(CJBig2_HuffmanTable&&) noexcept;
+  CJBig2_HuffmanTable& operator=(CJBig2_HuffmanTable&&) noexcept;
   ~CJBig2_HuffmanTable();
 
   bool IsHTOOB() const { return HTOOB; }

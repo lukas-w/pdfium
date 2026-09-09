@@ -17,11 +17,6 @@ struct JBig2RegionInfo {
   uint8_t flags;
 };
 
-struct JBig2HuffmanCode {
-  int32_t codelen;
-  int32_t code;
-};
-
 constexpr int32_t kJBig2OOB = 1;
 
 constexpr int32_t kJBig2MaxReferredSegmentCount = 64;
