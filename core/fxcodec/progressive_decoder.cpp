@@ -698,11 +698,11 @@ bool ProgressiveDecoder::ReadMoreDataInternal(size_t unconsumed_bytes,
 }
 
 FXCODEC_STATUS ProgressiveDecoder::LoadImageInfo(
-    RetainPtr<IFX_SeekableReadStream> pFile,
-    FXCODEC_IMAGE_TYPE imageType,
-    CFX_DIBAttribute* pAttribute,
-    bool bSkipImageTypeCheck) {
-  DCHECK(pAttribute);
+    RetainPtr<IFX_SeekableReadStream> file,
+    FXCODEC_IMAGE_TYPE image_type,
+    CFX_DIBAttribute* attribute,
+    bool skip_fallback_type_detection) {
+  DCHECK(attribute);
 
   switch (status_) {
     case FXCODEC_STATUS::kFrameReady:
@@ -714,7 +714,7 @@ FXCODEC_STATUS ProgressiveDecoder::LoadImageInfo(
     case FXCODEC_STATUS::kDecodeFinished:
       break;
   }
-  file_ = std::move(pFile);
+  file_ = std::move(file);
   if (!file_) {
     status_ = FXCODEC_STATUS::kError;
     return status_;
@@ -724,23 +724,22 @@ FXCODEC_STATUS ProgressiveDecoder::LoadImageInfo(
   src_height_ = 0;
   src_components_count_ = 0;
   src_bits_per_component_ = 0;
-  if (imageType != FXCODEC_IMAGE_UNKNOWN &&
-      DetectImageType(imageType, pAttribute)) {
-    image_type_ = imageType;
+  if (image_type != FXCODEC_IMAGE_UNKNOWN &&
+      DetectImageType(image_type, attribute)) {
+    image_type_ = image_type;
     status_ = FXCODEC_STATUS::kFrameReady;
     return status_;
   }
-  // If we got here then the image data does not match the requested decoder.
-  // If we're skipping the type check then bail out at this point and return
-  // the failed status.
-  if (bSkipImageTypeCheck) {
+  // The image data does not match the requested decoder. If skipping fallback
+  // type detection, bail out at this point and return the failed status.
+  if (skip_fallback_type_detection) {
     status_ = FXCODEC_STATUS::kError;
     file_ = nullptr;
     return status_;
   }
 
   for (int type = FXCODEC_IMAGE_UNKNOWN + 1; type < FXCODEC_IMAGE_MAX; type++) {
-    if (DetectImageType(static_cast<FXCODEC_IMAGE_TYPE>(type), pAttribute)) {
+    if (DetectImageType(static_cast<FXCODEC_IMAGE_TYPE>(type), attribute)) {
       image_type_ = static_cast<FXCODEC_IMAGE_TYPE>(type);
       status_ = FXCODEC_STATUS::kFrameReady;
       return status_;

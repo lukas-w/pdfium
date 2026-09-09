@@ -41,10 +41,10 @@ class ProgressiveDecoder final : public ProgressiveDecoderContextDelegate {
   ProgressiveDecoder();
   ~ProgressiveDecoder() override;
 
-  FXCODEC_STATUS LoadImageInfo(RetainPtr<IFX_SeekableReadStream> pFile,
-                               FXCODEC_IMAGE_TYPE imageType,
-                               CFX_DIBAttribute* pAttribute,
-                               bool bSkipImageTypeCheck);
+  FXCODEC_STATUS LoadImageInfo(RetainPtr<IFX_SeekableReadStream> file,
+                               FXCODEC_IMAGE_TYPE image_type,
+                               CFX_DIBAttribute* attribute,
+                               bool skip_fallback_type_detection);
 
   int32_t GetWidth() const { return src_width_; }
   int32_t GetHeight() const { return src_height_; }
