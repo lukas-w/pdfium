@@ -10,12 +10,13 @@
 #include <optional>
 
 #include "build/build_config.h"
-#include "core/fxcodec/jpeg/libjpeg_scanline_decoder.h"
 #include "core/fxcodec/scanlinedecoder.h"
 #include "core/fxcrt/span.h"
 
 #if defined(PDF_ENABLE_RUST_JPEG)
 #include "core/fxcodec/jpeg/rust_jpeg_scanline_decoder.h"
+#else
+#include "core/fxcodec/jpeg/libjpeg_scanline_decoder.h"
 #endif
 
 #if BUILDFLAG(IS_WIN)

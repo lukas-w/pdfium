@@ -202,13 +202,6 @@ config("skia_config") {
     defines += [ "SK_CODEC_DECODES_BMP_WITH_RUST" ]
   }
 
-  if (pdf_enable_rust_jpeg) {
-    defines += [
-      "SK_CODEC_DECODES_JPEG",
-      "SK_CODEC_DECODES_JPEG_WITH_RUST",
-    ]
-  }
-
   if (pdf_enable_rust_png) {
     defines += [
       "SK_CODEC_DECODES_PNG",
@@ -479,15 +472,6 @@ component("skia") {
   sources += skia_encode_png_base
   sources += skia_encode_public
   sources += skia_encode_srcs
-  sources += [
-    "//third_party/skia/src/codec/SkJpegCodec.cpp",
-    "//third_party/skia/src/codec/SkJpegDecoderMgr.cpp",
-    "//third_party/skia/src/codec/SkJpegMetadataDecoderImpl.cpp",
-    "//third_party/skia/src/codec/SkJpegMultiPicture.cpp",
-    "//third_party/skia/src/codec/SkJpegSegmentScan.cpp",
-    "//third_party/skia/src/codec/SkJpegSourceMgr.cpp",
-    "//third_party/skia/src/codec/SkJpegUtility.cpp",
-  ]
 
   if (pdf_enable_rust_png) {
     sources += skia_codec_rust_png
@@ -504,7 +488,6 @@ component("skia") {
     sources += skia_encode_png_public
     deps += [ "../third_party:png" ]
   }
-  deps += [ "../third_party:jpeg" ]
 }
 
 # Template for things that are logically part of :skia, but need to be split out
