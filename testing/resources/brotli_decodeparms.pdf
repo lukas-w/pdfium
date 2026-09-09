@@ -1,0 +1,127 @@
+%PDF-1.7
+% ò¤ô
+1 0 obj <<
+  /Type /Catalog
+  /Pages 2 0 R
+>>
+endobj
+
+2 0 obj <<
+  /Type /Pages
+  /Count 1
+  /Kids [3 0 R]
+>>
+endobj
+
+3 0 obj <<
+  /Type /Page
+  /Parent 2 0 R
+  /Contents 4 0 R
+  /MediaBox [0 0 600 200]
+  /Resources <<
+    /ProcSet [/PDF /ImageC]
+    /ColorSpace <<
+      /C1 [/Pattern]
+    >>
+    /Pattern <<
+      /P1 5 0 R
+    >>
+  >>
+>>
+endobj
+
+4 0 obj <<
+  /Length 231
+>>
+stream
+q
+0.24 0 0 0.24 0 0 cm
+/C1 cs
+/P1 scn
+888 400 108 60 re
+f*
+0 0 0 rg
+888 460 m
+888 400 l
+S
+/C1 cs
+/P1 scn
+1536 400 108 60 re
+f*
+0 0 0 rg
+1536 460 m
+1536 400 l
+S
+/C1 cs
+/P1 scn
+2184 400 108 60 re
+f*
+0 0 0 rg
+2184 460 m
+2184 400 l
+S
+Q
+endstream
+endobj
+
+5 0 obj <<
+  /Type /Pattern
+  /PaintType 1
+  /PatternType 1
+  /TilingType 1
+  /BBox [0 0 128 32]
+  /Matrix [.202488 0 0 -.449947 0 791.999]
+  /Resources <<
+    /ProcSet [/PDF /ImageC]
+    /XObject <<
+      /R17 6 0 R
+    >>
+  >>
+  /XStep 128
+  /YStep 32
+  /Length 92
+>>
+stream
+0.24 0 0 0.24 0 0 cm
+q
+0 134 534 -134 re
+W n
+q 533.333 0 0 -133.333 0 133.333 cm
+/R17 Do
+Q
+Q
+endstream
+endobj
+
+6 0 obj <<
+  /Type /XObject
+  /Subtype /Image
+  /Width 4
+  /Height 4
+  /BitsPerComponent 8
+  /ColorSpace /DeviceRGB
+  /DecodeParms [ null << /Columns 4 /Colors 3 /Predictor 15 >> ]
+  /Filter [/ASCII85Decode /BrotliDecode]
+  /Length 25
+>>
+stream
+)`%KhVZC<6O9\e5^cO.m$NL~>
+endstream
+endobj
+
+xref
+0 7
+0000000000 65535 f 
+0000000015 00000 n 
+0000000069 00000 n 
+0000000133 00000 n 
+0000000364 00000 n 
+0000000649 00000 n 
+0000001037 00000 n 
+trailer <<
+  /Root 1 0 R
+  /Size 7
+>>
+startxref
+1326
+%%EOF

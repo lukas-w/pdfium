@@ -84,6 +84,18 @@ TEST_F(BrotliEnabledEmbedderTest, BrotliRectangles) {
   CompareBitmapWithExpectationSuffix(bitmap.get(), pdfium::kRectanglesPng);
 }
 
+TEST_F(BrotliEnabledEmbedderTest, BrotliDecodeParms) {
+  ASSERT_TRUE(OpenDocument("brotli_decodeparms.pdf"));
+
+  ScopedPage page = LoadScopedPage(0);
+  ASSERT_TRUE(page);
+
+  ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
+  ASSERT_TRUE(bitmap);
+
+  CompareBitmapWithExpectationSuffix(bitmap.get(), "brotli_decode_parms");
+}
+
 TEST_F(BrotliEnabledEmbedderTest, BrotliWithLength1Argument) {
   ASSERT_TRUE(OpenDocument("hello_world_brotli_with_length1.pdf"));
 
