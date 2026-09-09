@@ -262,6 +262,7 @@ pdfium_unittest_source_set("unittests") {
     ":fxcodec",
     "../../third_party:libopenjpeg2",
     "../fpdfapi/parser",
+    "../fxge",
   ]
   pdfium_root_dir = "../../"
 
@@ -271,7 +272,6 @@ pdfium_unittest_source_set("unittests") {
       "gif/lzw_decompressor_unittest.cpp",
       "progressive_decoder_unittest.cpp",
     ]
-    deps += [ "../fxge" ]
     if (pdf_use_skia) {
       sources += [ "codec_memory_sk_stream_unittest.cpp" ]
       deps += [ "//skia" ]

@@ -56,13 +56,17 @@ std::unique_ptr<ScanlineDecoder> JpegModule::CreateDecoder(
     uint32_t height,
     int nComps,
     bool ColorTransform,
-    uint32_t scale_denom) {
+    uint32_t scale_denom,
+    bool prefer_bgr_output) {
 #if defined(PDF_ENABLE_RUST_JPEG)
+  // RustJpegScanlineDecoder does not implement `prefer_bgr_output`; it never
+  // reports ScanlinesAreBgr(), so callers translate as usual.
   return RustJpegScanlineDecoder::Create(src_span, width, height, nComps,
                                          ColorTransform, scale_denom);
 #else
   return LibjpegScanlineDecoder::Create(src_span, width, height, nComps,
-                                        ColorTransform, scale_denom);
+                                        ColorTransform, scale_denom,
+                                        prefer_bgr_output);
 #endif
 }
 

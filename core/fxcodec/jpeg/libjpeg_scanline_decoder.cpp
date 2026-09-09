@@ -55,10 +55,11 @@ std::unique_ptr<ScanlineDecoder> LibjpegScanlineDecoder::Create(
     uint32_t height,
     int nComps,
     bool ColorTransform,
-    uint32_t scale_denom) {
+    uint32_t scale_denom,
+    bool prefer_bgr_output) {
   auto decoder = std::make_unique<LibjpegScanlineDecoder>();
   if (!decoder->CreateImpl(src_span, width, height, nComps, ColorTransform,
-                           scale_denom)) {
+                           scale_denom, prefer_bgr_output)) {
     return nullptr;
   }
   return decoder;
@@ -122,6 +123,22 @@ bool LibjpegScanlineDecoder::InitDecode(bool bAcceptKnownBadHeader) {
     common_.cinfo.out_color_space = common_.cinfo.jpeg_color_space;
   }
 
+#ifdef JCS_EXTENSIONS
+  // When the caller asked for BGR scanlines and the output would otherwise
+  // be plain 3-component RGB, have libjpeg-turbo emit the swapped order
+  // directly (JCS_EXT_BGR): the same decode pipeline, storing the three
+  // converted samples at exchanged offsets, so the per-sample values are
+  // identical to a JCS_RGB decode. Deliberately not done when the output
+  // is anything else (grayscale, CMYK, or the raw non-JCS_RGB pass-through
+  // selected above), where no swap exists to fold in.
+  scanlines_are_bgr_ = prefer_bgr_output_ &&
+                       common_.cinfo.num_components == 3 &&
+                       common_.cinfo.out_color_space == JCS_RGB;
+  if (scanlines_are_bgr_) {
+    common_.cinfo.out_color_space = JCS_EXT_BGR;
+  }
+#endif  // JCS_EXTENSIONS
+
   orig_width_ = common_.cinfo.image_width;
   orig_height_ = common_.cinfo.image_height;
 
@@ -166,7 +183,9 @@ bool LibjpegScanlineDecoder::CreateImpl(pdfium::span<const uint8_t> src_span,
                                         uint32_t height,
                                         int nComps,
                                         bool ColorTransform,
-                                        uint32_t scale_denom) {
+                                        uint32_t scale_denom,
+                                        bool prefer_bgr_output) {
+  prefer_bgr_output_ = prefer_bgr_output;
   // Only power-of-two scalings up to 1/8 are supported: ScaledJpegSize() (which
   // sizes the scanline buffer via CalcPitch()) only matches libjpeg's actual
   // output dimensions for these. A different value would desynchronize the two

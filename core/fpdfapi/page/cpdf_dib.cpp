@@ -522,6 +522,21 @@ CPDF_DIB::LoadState CPDF_DIB::CreateDecoder(uint8_t resolution_levels_to_skip) {
   return LoadState::kSuccess;
 }
 
+// Whether the JPEG decoder should be asked to emit BGR-ordered scanlines.
+// Only true when GetScanline()'s only transformation of the decoded RGB
+// scanline would be TranslateScanline24bppDefaultDecode()'s per-pixel
+// RGB-to-BGR swap, which a BGR decode makes a pass-through:
+// - a default Decode array (no per-component decode arithmetic),
+// - no color key mask (its comparisons read components in R,G,B order),
+// - plain DeviceRGB or CalRGB (both translate as the bare swap; every
+//   other family goes through CPDF_ColorSpace::TranslateImageLine()),
+// - 3 components at 8 bpc (the swap case).
+bool CPDF_DIB::ShouldDecodeJpegToBgr() const {
+  return default_decode_ && !color_key_ && components_ == 3 && bpc_ == 8 &&
+         (family_ == CPDF_ColorSpace::Family::kDeviceRGB ||
+          family_ == CPDF_ColorSpace::Family::kCalRGB);
+}
+
 bool CPDF_DIB::CreateDCTDecoder(pdfium::span<const uint8_t> src_span,
                                 const CPDF_Dictionary* pParams,
                                 uint8_t resolution_levels_to_skip) {
@@ -532,7 +547,8 @@ bool CPDF_DIB::CreateDCTDecoder(pdfium::span<const uint8_t> src_span,
                                << std::min<int>(resolution_levels_to_skip, 3);
   decoder_ = JpegModule::CreateDecoder(
       src_span, GetWidth(), GetHeight(), components_,
-      !pParams || pParams->GetIntegerFor("ColorTransform", 1), scale_denom);
+      !pParams || pParams->GetIntegerFor("ColorTransform", 1), scale_denom,
+      ShouldDecodeJpegToBgr());
   if (decoder_) {
     // Adopt the decoder's dimensions. libjpeg may have decoded at a reduced
     // size (scale_denom above), and its dimensions are authoritative in any
@@ -563,7 +579,7 @@ bool CPDF_DIB::CreateDCTDecoder(pdfium::span<const uint8_t> src_span,
     bpc_ = info.bits_per_components;
     decoder_ = JpegModule::CreateDecoder(src_span, GetWidth(), GetHeight(),
                                          components_, info.color_transform,
-                                         scale_denom);
+                                         scale_denom, ShouldDecodeJpegToBgr());
     if (decoder_) {
       SetWidth(decoder_->GetWidth());
       SetHeight(decoder_->GetHeight());
@@ -618,9 +634,9 @@ bool CPDF_DIB::CreateDCTDecoder(pdfium::span<const uint8_t> src_span,
   }
 
   bpc_ = info.bits_per_components;
-  decoder_ =
-      JpegModule::CreateDecoder(src_span, GetWidth(), GetHeight(), components_,
-                                info.color_transform, scale_denom);
+  decoder_ = JpegModule::CreateDecoder(src_span, GetWidth(), GetHeight(),
+                                       components_, info.color_transform,
+                                       scale_denom, ShouldDecodeJpegToBgr());
   if (decoder_) {
     SetWidth(decoder_->GetWidth());
     SetHeight(decoder_->GetHeight());
@@ -1270,9 +1286,21 @@ pdfium::span<const uint8_t> CPDF_DIB::GetScanline(int line) const {
     }
   }
   if (color_space_) {
-    TranslateScanline24bpp(line_buf_, src_line);
     src_pitch_value = 3 * GetWidth();
-    src_line = pdfium::span(line_buf_).first(src_pitch_value);
+    // Ask the decoder what it did rather than re-evaluating
+    // ShouldDecodeJpegToBgr(): that predicate reads `bpc_` and `components_`,
+    // which CreateDCTDecoder() updates between its attempts at creating a
+    // decoder, so it does not necessarily still describe the decoder that
+    // ended up being used. A decoder may also decline the request outright.
+    // When the decoder did emit B,G,R, the translation below would have been
+    // the default-decode RGB-to-BGR swap and nothing else, so the decoded
+    // scanline is already the result.
+    if (decoder_ && decoder_->ScanlinesAreBgr()) {
+      src_line = src_line.first(src_pitch_value);
+    } else {
+      TranslateScanline24bpp(line_buf_, src_line);
+      src_line = pdfium::span(line_buf_).first(src_pitch_value);
+    }
   }
   if (!color_key_) {
     return src_line;

@@ -36,6 +36,12 @@ class ScanlineDecoder {
   int CountComps() const { return comps_; }
   int GetBPC() const { return bpc_; }
 
+  // True when 3-component scanlines are returned in B,G,R sample order
+  // instead of the natural R,G,B order. Only LibjpegScanlineDecoder ever
+  // sets this, and only when it was asked to and could comply; see
+  // JpegModule::CreateDecoder().
+  bool ScanlinesAreBgr() const { return scanlines_are_bgr_; }
+
   virtual uint32_t GetSrcOffset() = 0;
 
  protected:
@@ -49,6 +55,7 @@ class ScanlineDecoder {
   int comps_;
   int bpc_;
   uint32_t pitch_;
+  bool scanlines_are_bgr_ = false;
   int next_line_ = -1;
   pdfium::raw_span<uint8_t> last_scanline_;
 };

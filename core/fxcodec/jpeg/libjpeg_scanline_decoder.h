@@ -28,7 +28,8 @@ class LibjpegScanlineDecoder final : public ScanlineDecoder {
       uint32_t height,
       int nComps,
       bool ColorTransform,
-      uint32_t scale_denom);
+      uint32_t scale_denom,
+      bool prefer_bgr_output);
 
   static std::optional<JpegModule::ImageInfo> LoadInfo(
       pdfium::span<const uint8_t> src_span);
@@ -47,7 +48,8 @@ class LibjpegScanlineDecoder final : public ScanlineDecoder {
                   uint32_t height,
                   int nComps,
                   bool ColorTransform,
-                  uint32_t scale_denom);
+                  uint32_t scale_denom,
+                  bool prefer_bgr_output);
   bool InitDecode(bool bAcceptKnownBadHeader);
   void CalcPitch();
   void InitDecompressSrc();
@@ -69,6 +71,7 @@ class LibjpegScanlineDecoder final : public ScanlineDecoder {
   bool decompress_created_ = false;
   bool started_ = false;
   bool jpeg_transform_ = false;
+  bool prefer_bgr_output_ = false;
   uint32_t scale_denom_ = 1;
 };
 

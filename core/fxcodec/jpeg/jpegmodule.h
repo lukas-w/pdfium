@@ -41,13 +41,21 @@ class JpegModule {
   // 1/`scale_denom` in each dimension. Must be one of 1, 2, 4, or 8 (libjpeg's
   // supported power-of-two DCT scalings). The resulting decoder reports the
   // scaled-down dimensions via GetWidth()/GetHeight().
+  //
+  // `prefer_bgr_output` requests scanlines with the red and blue samples
+  // swapped, i.e. in B,G,R order. The request is honored only when the
+  // decode output would otherwise be plain 3-component RGB; whether it took
+  // effect is reported by ScanlineDecoder::ScanlinesAreBgr() on the result.
+  // libjpeg-turbo emits the swapped order at no cost (JCS_EXT_BGR), which
+  // lets a caller whose destination is BGR skip a per-pixel swap.
   static std::unique_ptr<ScanlineDecoder> CreateDecoder(
       pdfium::span<const uint8_t> src_span,
       uint32_t width,
       uint32_t height,
       int nComps,
       bool ColorTransform,
-      uint32_t scale_denom);
+      uint32_t scale_denom,
+      bool prefer_bgr_output);
 
   static std::optional<ImageInfo> LoadInfo(
       pdfium::span<const uint8_t> src_span);
