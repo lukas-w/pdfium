@@ -75,6 +75,8 @@ source_set("fxcodec") {
     "fx_codec_def.h",
     "icc/icc_transform.cpp",
     "icc/icc_transform.h",
+    "image_predictors.cpp",
+    "image_predictors.h",
     "jbig2/jbig2_arith_decoder.cpp",
     "jbig2/jbig2_arith_decoder.h",
     "jbig2/jbig2_arith_int_decoder.cpp",
