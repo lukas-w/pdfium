@@ -26,8 +26,19 @@ class CPDF_Dictionary;
 class CPDF_Object;
 
 namespace fxcodec {
+
 class ScanlineDecoder;
-}
+
+// Parameters come from ISO 32000-1:2008, table 8.
+struct DecodeParams {
+  int predictor = 0;
+  int colors = 1;
+  int bits_per_component = 8;
+  int columns = 1;
+  bool early_change = true;
+};
+
+}  // namespace fxcodec
 
 // Indexed by 8-bit char code, contains unicode code points.
 extern const std::array<uint16_t, 256> kPDFDocEncoding;
@@ -75,6 +86,11 @@ using DecoderArray =
     std::vector<std::pair<ByteString, RetainPtr<const CPDF_Object>>>;
 std::optional<DecoderArray> GetDecoderArray(
     RetainPtr<const CPDF_Dictionary> dict);
+
+// May return a struct for the DecodeParams. Returns default values if params
+// is a nullptr and returns std::nullopt if the DecodeParams are invalid.
+std::optional<fxcodec::DecodeParams> GetAndCheckDecodeParams(
+    const CPDF_Dictionary* params);
 
 struct PDFDataDecodeResult {
   PDFDataDecodeResult();

@@ -40,21 +40,6 @@ namespace {
 
 const uint32_t kMaxStreamSize = 20 * 1024 * 1024;
 
-bool CheckFlateDecodeParams(int Colors, int BitsPerComponent, int Columns) {
-  if (Colors < 0 || BitsPerComponent < 0 || Columns < 0) {
-    return false;
-  }
-
-  FX_SAFE_INT32 check = Columns;
-  check *= Colors;
-  check *= BitsPerComponent;
-  if (!check.IsValid()) {
-    return false;
-  }
-
-  return check.ValueOrDie() <= INT_MAX - 7;
-}
-
 uint8_t GetA85Result(uint32_t res, size_t i) {
   return static_cast<uint8_t>(res >> (3 - i) * 8);
 }
@@ -119,6 +104,36 @@ bool ValidateDecoderPipeline(const CPDF_Array* pDecoders) {
     }
   }
   return true;
+}
+
+std::optional<fxcodec::DecodeParams> GetAndCheckDecodeParams(
+    const CPDF_Dictionary* params) {
+  fxcodec::DecodeParams ret;
+  if (!params) {
+    return ret;
+  }
+  ret.predictor = params->GetIntegerFor("Predictor");
+  ret.early_change = !!params->GetIntegerFor("EarlyChange", 1);
+  ret.colors = params->GetIntegerFor("Colors", 1);
+  ret.bits_per_component = params->GetIntegerFor("BitsPerComponent", 8);
+  ret.columns = params->GetIntegerFor("Columns", 1);
+
+  if (ret.colors < 0 || ret.bits_per_component < 0 || ret.columns < 0) {
+    return std::nullopt;
+  }
+
+  FX_SAFE_INT32 check = ret.columns;
+  check *= ret.colors;
+  check *= ret.bits_per_component;
+  if (!check.IsValid()) {
+    return std::nullopt;
+  }
+
+  if (check.ValueOrDie() > INT_MAX - 7) {
+    return std::nullopt;
+  }
+
+  return ret;
 }
 
 DataAndBytesConsumed A85Decode(pdfium::span<const uint8_t> src_span) {
@@ -348,46 +363,31 @@ std::unique_ptr<ScanlineDecoder> CreateFlateDecoder(
     int nComps,
     int bpc,
     const CPDF_Dictionary* pParams) {
-  int predictor = 0;
-  int Colors = 0;
-  int BitsPerComponent = 0;
-  int Columns = 0;
-  if (pParams) {
-    predictor = pParams->GetIntegerFor("Predictor");
-    Colors = pParams->GetIntegerFor("Colors", 1);
-    BitsPerComponent = pParams->GetIntegerFor("BitsPerComponent", 8);
-    Columns = pParams->GetIntegerFor("Columns", 1);
-    if (!CheckFlateDecodeParams(Colors, BitsPerComponent, Columns)) {
-      return nullptr;
-    }
+  std::optional<fxcodec::DecodeParams> decode_params =
+      GetAndCheckDecodeParams(pParams);
+  if (!decode_params.has_value()) {
+    return nullptr;
   }
-  return FlateModule::CreateDecoder(src_span, width, height, nComps, bpc,
-                                    predictor, Colors, BitsPerComponent,
-                                    Columns);
+  const fxcodec::DecodeParams& decode_vars = decode_params.value();
+  return FlateModule::CreateDecoder(
+      src_span, width, height, nComps, bpc, decode_vars.predictor,
+      decode_vars.colors, decode_vars.bits_per_component, decode_vars.columns);
 }
 
 DataAndBytesConsumed FlateOrLZWDecode(bool use_lzw,
                                       pdfium::span<const uint8_t> src_span,
                                       const CPDF_Dictionary* pParams,
                                       uint32_t estimated_size) {
-  int predictor = 0;
-  int Colors = 0;
-  int BitsPerComponent = 0;
-  int Columns = 0;
-  bool bEarlyChange = true;
-  if (pParams) {
-    predictor = pParams->GetIntegerFor("Predictor");
-    bEarlyChange = !!pParams->GetIntegerFor("EarlyChange", 1);
-    Colors = pParams->GetIntegerFor("Colors", 1);
-    BitsPerComponent = pParams->GetIntegerFor("BitsPerComponent", 8);
-    Columns = pParams->GetIntegerFor("Columns", 1);
-    if (!CheckFlateDecodeParams(Colors, BitsPerComponent, Columns)) {
-      return {DataVector<uint8_t>(), FX_INVALID_OFFSET};
-    }
+  std::optional<fxcodec::DecodeParams> decode_params =
+      GetAndCheckDecodeParams(pParams);
+  if (!decode_params.has_value()) {
+    return {DataVector<uint8_t>(), FX_INVALID_OFFSET};
   }
-  return FlateModule::FlateOrLZWDecode(use_lzw, src_span, bEarlyChange,
-                                       predictor, Colors, BitsPerComponent,
-                                       Columns, estimated_size);
+  const fxcodec::DecodeParams& decode_vars = decode_params.value();
+  return FlateModule::FlateOrLZWDecode(
+      use_lzw, src_span, decode_vars.early_change, decode_vars.predictor,
+      decode_vars.colors, decode_vars.bits_per_component, decode_vars.columns,
+      estimated_size);
 }
 
 std::optional<DecoderArray> GetDecoderArray(
