@@ -128,6 +128,14 @@ TEST(FxSkrifaTest, TestRobotoGlyph167Bounds) {
                       NormalizeFontMetric(skrifa_bbox.y_min, upem));
 
   EXPECT_TRUE(ft_bbox.Near(skrifa_rect, 1));
+
+  std::optional<FX_RECT> font_glyph_bbox = face->GetFontGlyphBBox(167);
+  ASSERT_TRUE(font_glyph_bbox.has_value());
+  FX_RECT expected_rect(NormalizeFontMetric(skrifa_bbox.x_min, upem),
+                        NormalizeFontMetric(skrifa_bbox.y_min, upem),
+                        NormalizeFontMetric(skrifa_bbox.x_max, upem),
+                        NormalizeFontMetric(skrifa_bbox.y_max, upem));
+  EXPECT_TRUE(font_glyph_bbox->Near(expected_rect, 1));
 }
 
 TEST(FxSkrifaTest, TestMinionCff) {

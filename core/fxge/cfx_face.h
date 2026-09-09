@@ -183,6 +183,10 @@ class CFX_Face final : public Retainable, public Observable {
   // it is large enough to hold the data.
   size_t GetSfntTable(uint32_t table, pdfium::span<uint8_t> buffer);
 
+#if defined(PDF_ENABLE_FONTATIONS)
+  bool IsFontations() const;
+#endif
+
 #if defined(PDF_ENABLE_XFA) || BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_LINUX)
   std::optional<std::array<uint8_t, 2>> GetOs2Panose();
 #endif
