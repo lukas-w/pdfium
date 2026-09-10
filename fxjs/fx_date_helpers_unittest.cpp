@@ -237,39 +237,35 @@ TEST_F(FXDateHelperFakeTimeTest, ParseDateUsingFormatFor12HourTime) {
   double result = 0.0;
   const double kBaseDay = FX_MakeDay(2020, 3, 23);
 
-  // TODO(crbug.com/555848528): 12:30:00 PM should be 12:30 (noon), but adds 12
-  // without modulo 12, resulting in hour 24 (rolling over into the next day).
+  // 12:30:00 PM is 12:30.
   EXPECT_EQ(ConversionStatus::kSuccess,
             FX_ParseDateUsingFormat(L"2020/04/23 12:30:00 pm",
                                     L"yyyy/mm/dd hh:MM:ss tt", &result));
-  EXPECT_DOUBLE_EQ(FX_MakeDate(kBaseDay, FX_MakeTime(24, 30, 0, 0)), result);
+  EXPECT_DOUBLE_EQ(FX_MakeDate(kBaseDay, FX_MakeTime(12, 30, 0, 0)), result);
   EXPECT_EQ(ConversionStatus::kSuccess,
             FX_ParseDateUsingFormat(L"2020/04/23 12:30:00 PM",
                                     L"yyyy/mm/dd hh:MM:ss tt", &result));
   EXPECT_DOUBLE_EQ(FX_MakeDate(kBaseDay, FX_MakeTime(12, 30, 0, 0)), result);
 
-  // TODO(crbug.com/555848528): 12:30:00 AM should be 00:30 (midnight), but is
-  // left as hour 12 (noon).
+  // 12:30:00 AM is 00:30.
   EXPECT_EQ(ConversionStatus::kSuccess,
             FX_ParseDateUsingFormat(L"2020/04/23 12:30:00 am",
                                     L"yyyy/mm/dd hh:MM:ss tt", &result));
-  EXPECT_DOUBLE_EQ(FX_MakeDate(kBaseDay, FX_MakeTime(12, 30, 0, 0)), result);
+  EXPECT_DOUBLE_EQ(FX_MakeDate(kBaseDay, FX_MakeTime(0, 30, 0, 0)), result);
   EXPECT_EQ(ConversionStatus::kSuccess,
             FX_ParseDateUsingFormat(L"2020/04/23 12:30:00 AM",
                                     L"yyyy/mm/dd hh:MM:ss tt", &result));
-  EXPECT_DOUBLE_EQ(FX_MakeDate(kBaseDay, FX_MakeTime(12, 30, 0, 0)), result);
+  EXPECT_DOUBLE_EQ(FX_MakeDate(kBaseDay, FX_MakeTime(0, 30, 0, 0)), result);
 
   // 1:30:00 PM is 13:30.
   EXPECT_EQ(ConversionStatus::kSuccess,
             FX_ParseDateUsingFormat(L"2020/04/23 1:30:00 pm",
                                     L"yyyy/mm/dd h:MM:ss tt", &result));
   EXPECT_DOUBLE_EQ(FX_MakeDate(kBaseDay, FX_MakeTime(13, 30, 0, 0)), result);
-  // TODO(crbug.com/555848528): Uppercase "PM" should be 13:30, but defaults to
-  // AM (01:30).
   EXPECT_EQ(ConversionStatus::kSuccess,
             FX_ParseDateUsingFormat(L"2020/04/23 1:30:00 PM",
                                     L"yyyy/mm/dd h:MM:ss tt", &result));
-  EXPECT_DOUBLE_EQ(FX_MakeDate(kBaseDay, FX_MakeTime(1, 30, 0, 0)), result);
+  EXPECT_DOUBLE_EQ(FX_MakeDate(kBaseDay, FX_MakeTime(13, 30, 0, 0)), result);
 
   // 1:30:00 AM is 01:30.
   EXPECT_EQ(ConversionStatus::kSuccess,
@@ -282,36 +278,34 @@ TEST_F(FXDateHelperFakeTimeTest, ParseDateUsingFormatFor12HourTime) {
   EXPECT_DOUBLE_EQ(FX_MakeDate(kBaseDay, FX_MakeTime(1, 30, 0, 0)), result);
 
   // Single 't' marker.
-  // TODO(crbug.com/555848528): Single 'p' results in hour 24.
+  // 12:30:00 P is 12:30.
   EXPECT_EQ(ConversionStatus::kSuccess,
             FX_ParseDateUsingFormat(L"2020/04/23 12:30:00 p",
                                     L"yyyy/mm/dd hh:MM:ss t", &result));
-  EXPECT_DOUBLE_EQ(FX_MakeDate(kBaseDay, FX_MakeTime(24, 30, 0, 0)), result);
+  EXPECT_DOUBLE_EQ(FX_MakeDate(kBaseDay, FX_MakeTime(12, 30, 0, 0)), result);
   EXPECT_EQ(ConversionStatus::kSuccess,
             FX_ParseDateUsingFormat(L"2020/04/23 12:30:00 P",
                                     L"yyyy/mm/dd hh:MM:ss t", &result));
   EXPECT_DOUBLE_EQ(FX_MakeDate(kBaseDay, FX_MakeTime(12, 30, 0, 0)), result);
 
-  // TODO(crbug.com/555848528): Single 'a' left as hour 12.
+  // 12:30:00 A is 00:30.
   EXPECT_EQ(ConversionStatus::kSuccess,
             FX_ParseDateUsingFormat(L"2020/04/23 12:30:00 a",
                                     L"yyyy/mm/dd hh:MM:ss t", &result));
-  EXPECT_DOUBLE_EQ(FX_MakeDate(kBaseDay, FX_MakeTime(12, 30, 0, 0)), result);
+  EXPECT_DOUBLE_EQ(FX_MakeDate(kBaseDay, FX_MakeTime(0, 30, 0, 0)), result);
   EXPECT_EQ(ConversionStatus::kSuccess,
             FX_ParseDateUsingFormat(L"2020/04/23 12:30:00 A",
                                     L"yyyy/mm/dd hh:MM:ss t", &result));
-  EXPECT_DOUBLE_EQ(FX_MakeDate(kBaseDay, FX_MakeTime(12, 30, 0, 0)), result);
+  EXPECT_DOUBLE_EQ(FX_MakeDate(kBaseDay, FX_MakeTime(0, 30, 0, 0)), result);
 
-  // Malformed AM/PM markers.
-  // TODO(crbug.com/555848528): Malformed markers should return kBadFormat, but
-  // are currently accepted as AM.
-  EXPECT_EQ(ConversionStatus::kSuccess,
+  // Malformed AM/PM markers should return kBadFormat.
+  EXPECT_EQ(ConversionStatus::kBadFormat,
             FX_ParseDateUsingFormat(L"2020/04/23 1:30:00 xm",
                                     L"yyyy/mm/dd h:MM:ss tt", &result));
-  EXPECT_EQ(ConversionStatus::kSuccess,
+  EXPECT_EQ(ConversionStatus::kBadFormat,
             FX_ParseDateUsingFormat(L"2020/04/23 1:30:00 px",
                                     L"yyyy/mm/dd h:MM:ss tt", &result));
-  EXPECT_EQ(ConversionStatus::kSuccess,
+  EXPECT_EQ(ConversionStatus::kBadFormat,
             FX_ParseDateUsingFormat(L"2020/04/23 1:30:00 x",
                                     L"yyyy/mm/dd h:MM:ss t", &result));
 }

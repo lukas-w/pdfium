@@ -332,7 +332,8 @@ ConversionStatus FX_ParseDateUsingFormat(const WideString& value,
   int hour = FX_GetHourFromTime(dt);
   int minute = FX_GetMinFromTime(dt);
   int second = FX_GetSecFromTime(dt);
-  bool is_pm = false;
+  enum class AmPm { kNone, kAm, kPm };
+  AmPm am_pm = AmPm::kNone;
   bool exit_loop = false;
   bool bad_format = false;
   size_t format_idx = 0;
@@ -405,18 +406,21 @@ ConversionStatus FX_ParseDateUsingFormat(const WideString& value,
                   FX_ParseStringInteger(value, value_idx, &chars_to_skip, 2);
               value_idx += chars_to_skip;
               break;
-            case 't':
-              if (token_len == 1) {
-                is_pm =
-                    (value_idx < value.GetLength() && value[value_idx] == 'p');
-                ++value_idx;
-              } else {
-                is_pm =
-                    (value_idx + 1 < value.GetLength() &&
-                     value[value_idx] == 'p' && value[value_idx + 1] == 'm');
-                value_idx += 2;
+            case 't': {
+              if (value_idx + token_len <= value.GetLength()) {
+                const WideStringView marker =
+                    value.AsStringView().Substr(value_idx, token_len);
+                if (marker.EqualsASCIINoCase(token_len == 1 ? "p" : "pm")) {
+                  am_pm = AmPm::kPm;
+                  value_idx += token_len;
+                } else if (marker.EqualsASCIINoCase(token_len == 1 ? "a"
+                                                                   : "am")) {
+                  am_pm = AmPm::kAm;
+                  value_idx += token_len;
+                }
               }
               break;
+            }
           }
           format_idx += token_len;
         } else if (token_len == 3) {
@@ -526,8 +530,11 @@ ConversionStatus FX_ParseDateUsingFormat(const WideString& value,
     return ConversionStatus::kBadFormat;
   }
 
-  if (is_pm) {
-    hour += 12;
+  // Adjust 12-hour clock (1-12) to 24-hour clock (0-23).
+  // Evaluated after the format loop because 't' can precede 'h' in format
+  // strings.
+  if (am_pm != AmPm::kNone) {
+    hour = (hour % 12) + (am_pm == AmPm::kPm ? 12 : 0);
   }
 
   // Resolves two-digit year ambiguity using Acrobat's date horizon heuristic:
