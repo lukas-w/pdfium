@@ -203,6 +203,7 @@ if (is_linux || is_chromeos) {
   config("system_fontconfig") {
     libs = [ "fontconfig" ]
   }
+
   group("fontconfig") {
     public_configs = [ ":system_fontconfig" ]
   }
@@ -216,6 +217,7 @@ if (pdf_use_agg) {
       cflags = [ "-Wno-unused-function" ]
     }
   }
+
   source_set("fx_agg") {
     configs -= [ "//build/config/compiler:chromium_code" ]
     configs += [
@@ -366,6 +368,7 @@ if (use_system_lcms2) {
     packages = [ "lcms2" ]
   }
 }
+
 group("lcms2") {
   if (use_system_lcms2) {
     public_configs = [ ":lcms2_from_pkgconfig" ]
@@ -380,6 +383,7 @@ if (use_system_libopenjpeg2) {
     packages = [ "libopenjp2" ]
   }
 }
+
 group("libopenjpeg2") {
   if (use_system_libopenjpeg2) {
     public_configs = [ ":libopenjpeg2_from_pkgconfig" ]
@@ -534,9 +538,10 @@ if (pdf_enable_xfa) {
 if (pdf_use_partition_alloc) {
   group("pdfium_pa") {
     public_deps = [
+      "//base/allocator/partition_allocator/src/partition_alloc",
       "//base/allocator/partition_allocator/src/partition_alloc:buildflags",
       "//base/allocator/partition_allocator/src/partition_alloc:raw_ptr",
     ]
-    deps = [ "//base/allocator/partition_allocator/src/partition_alloc" ]
+    visibility = [ "../*" ]
   }
 }
