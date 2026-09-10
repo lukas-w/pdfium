@@ -47,8 +47,8 @@ class CFXJS_PerIsolateData {
 
   ~CFXJS_PerIsolateData();
 
-  static void SetUp(v8::Isolate* pIsolate);
-  static CFXJS_PerIsolateData* Get(v8::Isolate* pIsolate);
+  static void SetUp(v8::Isolate* isolate);
+  static CFXJS_PerIsolateData* Get(v8::Isolate* isolate);
 
   uint32_t CurrentMaxObjDefinitionID() const;
   CFXJS_ObjDefinition* ObjDefinitionForID(uint32_t id) const;
@@ -58,14 +58,17 @@ class CFXJS_PerIsolateData {
   void SetExtension(std::unique_ptr<ExtensionIface> extension) {
     extension_ = std::move(extension);
   }
+  v8::Local<v8::ObjectTemplate> GetOrCreateDefaultGlobalObjectTemplate(
+      v8::Isolate* isolate);
 
  private:
-  explicit CFXJS_PerIsolateData(v8::Isolate* pIsolate);
+  explicit CFXJS_PerIsolateData(v8::Isolate* isolate);
 
   const wchar_t* const tag_;  // Raw, always a literal.
   std::vector<std::unique_ptr<CFXJS_ObjDefinition>> object_defn_array_;
   std::unique_ptr<V8TemplateMap> dynamic_objs_map_;
   std::unique_ptr<ExtensionIface> extension_;
+  v8::Global<v8::ObjectTemplate> default_global_object_template_;
 };
 
 class CFXJS_PerObjectData {
@@ -96,7 +99,7 @@ class CFXJS_PerObjectData {
   std::unique_ptr<Binding> binding_;
 };
 
-void FXJS_Initialize(unsigned int embedderDataSlot, v8::Isolate* pIsolate);
+void FXJS_Initialize(unsigned int embedderDataSlot, v8::Isolate* isolate);
 void FXJS_Release();
 
 // Gets the global isolate set by FXJS_Initialize(), or makes a new one each
@@ -109,7 +112,7 @@ size_t FXJS_GlobalIsolateRefCount();
 
 class CFXJS_Engine : public CFX_IsolateWrapper {
  public:
-  explicit CFXJS_Engine(v8::Isolate* pIsolate);
+  explicit CFXJS_Engine(v8::Isolate* isolate);
   ~CFXJS_Engine() override;
 
   using Constructor =
@@ -117,7 +120,7 @@ class CFXJS_Engine : public CFX_IsolateWrapper {
   using Destructor = std::function<void(v8::Local<v8::Object> obj)>;
 
   static uint32_t GetObjDefnID(v8::Local<v8::Object> pObj);
-  static CFXJS_PerObjectData::Binding* GetBinding(v8::Isolate* pIsolate,
+  static CFXJS_PerObjectData::Binding* GetBinding(v8::Isolate* isolate,
                                                   v8::Local<v8::Object> pObj);
   static void SetBinding(v8::Local<v8::Object> pObj,
                          std::unique_ptr<CFXJS_PerObjectData::Binding> p);

@@ -31,8 +31,6 @@ unsigned int g_embedderDataSlot = 1u;
 v8::Isolate* g_isolate = nullptr;
 size_t g_isolate_ref_count = 0;
 CFX_V8ArrayBufferAllocator* g_arrayBufferAllocator = nullptr;
-v8::Global<v8::ObjectTemplate>* g_DefaultGlobalObjectTemplate = nullptr;
-
 
 // Only the address matters, values are for humans debugging. ASLR should
 // ensure that these values are unlikely to arise otherwise. Keep these
@@ -270,23 +268,15 @@ class CFXJS_ObjDefinition {
 };
 
 static v8::Local<v8::ObjectTemplate> GetGlobalObjectTemplate(
-    v8::Isolate* pIsolate) {
-  CFXJS_PerIsolateData* pIsolateData = CFXJS_PerIsolateData::Get(pIsolate);
+    v8::Isolate* isolate) {
+  CFXJS_PerIsolateData* pIsolateData = CFXJS_PerIsolateData::Get(isolate);
   for (uint32_t i = 1; i <= pIsolateData->CurrentMaxObjDefinitionID(); ++i) {
     CFXJS_ObjDefinition* pObjDef = pIsolateData->ObjDefinitionForID(i);
     if (pObjDef->GetObjType() == FXJSOBJTYPE_GLOBAL) {
       return pObjDef->GetInstanceTemplate();
     }
   }
-  if (!g_DefaultGlobalObjectTemplate) {
-    v8::Local<v8::ObjectTemplate> hGlobalTemplate =
-        v8::ObjectTemplate::New(pIsolate);
-    hGlobalTemplate->Set(v8::Symbol::GetToStringTag(pIsolate),
-                         fxv8::NewStringHelper(pIsolate, "global"));
-    g_DefaultGlobalObjectTemplate =
-        new v8::Global<v8::ObjectTemplate>(pIsolate, hGlobalTemplate);
-  }
-  return g_DefaultGlobalObjectTemplate->Get(pIsolate);
+  return pIsolateData->GetOrCreateDefaultGlobalObjectTemplate(isolate);
 }
 
 void V8TemplateMapTraits::Dispose(v8::Isolate* isolate,
@@ -321,20 +311,18 @@ V8TemplateMapTraits::MapType* V8TemplateMapTraits::MapFromWeakCallbackInfo(
   return pObjsMap ? pObjsMap->GetMap() : nullptr;
 }
 
-void FXJS_Initialize(unsigned int embedderDataSlot, v8::Isolate* pIsolate) {
+void FXJS_Initialize(unsigned int embedderDataSlot, v8::Isolate* isolate) {
   if (g_isolate) {
     DCHECK_EQ(g_embedderDataSlot, embedderDataSlot);
-    DCHECK_EQ(g_isolate, pIsolate);
+    DCHECK_EQ(g_isolate, isolate);
     return;
   }
   g_embedderDataSlot = embedderDataSlot;
-  g_isolate = pIsolate;
+  g_isolate = isolate;
 }
 
 void FXJS_Release() {
   DCHECK(!g_isolate || g_isolate_ref_count == 0);
-  delete g_DefaultGlobalObjectTemplate;
-  g_DefaultGlobalObjectTemplate = nullptr;
   g_isolate = nullptr;
 
   delete g_arrayBufferAllocator;
@@ -361,23 +349,23 @@ size_t FXJS_GlobalIsolateRefCount() {
 }
 
 // static
-void CFXJS_PerIsolateData::SetUp(v8::Isolate* pIsolate) {
-  if (!pIsolate->GetData(g_embedderDataSlot)) {
-    pIsolate->SetData(g_embedderDataSlot, new CFXJS_PerIsolateData(pIsolate));
+void CFXJS_PerIsolateData::SetUp(v8::Isolate* isolate) {
+  if (!isolate->GetData(g_embedderDataSlot)) {
+    isolate->SetData(g_embedderDataSlot, new CFXJS_PerIsolateData(isolate));
   }
 }
 
 // static
-CFXJS_PerIsolateData* CFXJS_PerIsolateData::Get(v8::Isolate* pIsolate) {
+CFXJS_PerIsolateData* CFXJS_PerIsolateData::Get(v8::Isolate* isolate) {
   auto* result =
-      static_cast<CFXJS_PerIsolateData*>(pIsolate->GetData(g_embedderDataSlot));
+      static_cast<CFXJS_PerIsolateData*>(isolate->GetData(g_embedderDataSlot));
   CHECK(result->tag_ == kPerIsolateDataTag);
   return result;
 }
 
-CFXJS_PerIsolateData::CFXJS_PerIsolateData(v8::Isolate* pIsolate)
+CFXJS_PerIsolateData::CFXJS_PerIsolateData(v8::Isolate* isolate)
     : tag_(kPerIsolateDataTag),
-      dynamic_objs_map_(std::make_unique<V8TemplateMap>(pIsolate)) {}
+      dynamic_objs_map_(std::make_unique<V8TemplateMap>(isolate)) {}
 
 CFXJS_PerIsolateData::~CFXJS_PerIsolateData() = default;
 
@@ -398,10 +386,23 @@ uint32_t CFXJS_PerIsolateData::AssignIDForObjDefinition(
   return CurrentMaxObjDefinitionID();
 }
 
+v8::Local<v8::ObjectTemplate>
+CFXJS_PerIsolateData::GetOrCreateDefaultGlobalObjectTemplate(
+    v8::Isolate* isolate) {
+  if (default_global_object_template_.IsEmpty()) {
+    v8::Local<v8::ObjectTemplate> hGlobalTemplate =
+        v8::ObjectTemplate::New(isolate);
+    hGlobalTemplate->Set(v8::Symbol::GetToStringTag(isolate),
+                         fxv8::NewStringHelper(isolate, "global"));
+    default_global_object_template_.Reset(isolate, hGlobalTemplate);
+  }
+  return default_global_object_template_.Get(isolate);
+}
+
 CFXJS_Engine::CFXJS_Engine() : CFX_IsolateWrapper(nullptr) {}
 
-CFXJS_Engine::CFXJS_Engine(v8::Isolate* pIsolate)
-    : CFX_IsolateWrapper(pIsolate) {}
+CFXJS_Engine::CFXJS_Engine(v8::Isolate* isolate)
+    : CFX_IsolateWrapper(isolate) {}
 
 CFXJS_Engine::~CFXJS_Engine() = default;
 
@@ -673,7 +674,7 @@ v8::Local<v8::Context> CFXJS_Engine::GetV8Context() {
 
 // static
 CFXJS_PerObjectData::Binding* CFXJS_Engine::GetBinding(
-    v8::Isolate* pIsolate,
+    v8::Isolate* isolate,
     v8::Local<v8::Object> pObj) {
   auto* pData = CFXJS_PerObjectData::GetFromObject(pObj);
   return pData ? pData->GetBinding() : nullptr;
