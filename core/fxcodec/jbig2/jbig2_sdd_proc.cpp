@@ -341,14 +341,10 @@ std::unique_ptr<CJBig2_SymbolDict> CJBig2_SDDProc::DecodeHuffman(
         } else if (REFAGGNINST == 1) {
           uint8_t SBSYMCODELEN =
               std::max<uint8_t>(1, fxcrt::CeilLog2(SDNUMINSYMS + SDNUMNEWSYMS));
-          uint32_t nTmp = 0;
-          uint32_t IDI = 0;
-          for (uint32_t n = 0; n < SBSYMCODELEN; ++n) {
-            if (pStream->read1Bit(&nTmp) != 0) {
-              return nullptr;
-            }
 
-            IDI = (IDI << 1) | nTmp;
+          uint32_t IDI = 0;
+          if (pStream->readNBits(SBSYMCODELEN, &IDI) != 0) {
+            return nullptr;
           }
 
           uint32_t SBNUMSYMS = SDNUMINSYMS + NSYMSDECODED;
@@ -372,7 +368,7 @@ std::unique_ptr<CJBig2_SymbolDict> CJBig2_SDDProc::DecodeHuffman(
           }
 
           pStream->alignByte();
-          nTmp = pStream->getOffset();
+          uint32_t offset_before_grr = pStream->getOffset();
 
           auto pGRRD = std::make_unique<CJBig2_GRRDProc>();
           pGRRD->GRW = SYMWIDTH;
@@ -394,7 +390,7 @@ std::unique_ptr<CJBig2_SymbolDict> CJBig2_SDDProc::DecodeHuffman(
 
           pStream->alignByte();
           pStream->addOffset(2);
-          if ((uint32_t)nVal != (pStream->getOffset() - nTmp)) {
+          if ((uint32_t)nVal != (pStream->getOffset() - offset_before_grr)) {
             return nullptr;
           }
         }
