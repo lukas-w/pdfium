@@ -48,6 +48,18 @@ try {
   expect("util.scand('dd/mm/yy', '31/12/85').toUTCString()", "Tue, 31 Dec 1985 21:48:50 GMT");
   expect("util.scand('hh:MM:ss', '11:22:03').toUTCString()", friday);
   expect("util.scand('s:MM:hh', '3:22:11').toUTCString()", friday);
+  expect("util.scand('hh:MM:ss tt', '11:22:03 am').toUTCString()", friday);
+  expect("util.scand('hh:MM:ss tt', '11:22:03 pm').toUTCString()", "Fri, 09 May 2014 23:22:03 GMT");
+  // TODO(crbug.com/555848528): Uppercase 'PM' is treated as AM.
+  expect("util.scand('hh:MM:ss tt', '11:22:03 PM').toUTCString()", friday);
+  // TODO(crbug.com/555848528): '12:22:03 pm' rolls over to the next day.
+  expect("util.scand('hh:MM:ss tt', '12:22:03 pm').toUTCString()", "Sat, 10 May 2014 00:22:03 GMT");
+  // TODO(crbug.com/555848528): '12:22:03 am' is treated as noon.
+  expect("util.scand('hh:MM:ss tt', '12:22:03 am').toUTCString()", "Fri, 09 May 2014 12:22:03 GMT");
+  // TODO(crbug.com/555848528): '12:22:03 p' rolls over to the next day.
+  expect("util.scand('hh:MM:ss t', '12:22:03 p').toUTCString()", "Sat, 10 May 2014 00:22:03 GMT");
+  // TODO(crbug.com/555848528): '12:22:03 a' is treated as noon.
+  expect("util.scand('hh:MM:ss t', '12:22:03 a').toUTCString()", "Fri, 09 May 2014 12:22:03 GMT");
 } catch (e) {
   app.alert("Truly unexpected error: " + e);
 }
