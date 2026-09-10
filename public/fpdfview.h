@@ -308,6 +308,12 @@ typedef struct FPDF_LIBRARY_CONFIG_ {
   // is enabled. For setting the bool to true to have an effect, PDFium must be
   // built with |PDF_ENABLE_BROTLI|.
   FPDF_BOOL m_BrotliEnabled;
+
+  // Version 7 - Experimental.
+
+  // Boolean to specify whether PDFium creates a dedicated v8::Isolate for each
+  // document. When true, |m_pIsolate| must be NULL.
+  FPDF_BOOL m_IsolatePerDocument;
 } FPDF_LIBRARY_CONFIG;
 
 // Function: FPDF_InitLibraryWithConfig

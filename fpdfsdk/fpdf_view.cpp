@@ -261,8 +261,13 @@ FPDF_InitLibraryWithConfig(const FPDF_LIBRARY_CONFIG* config) {
 
   if (config && config->version >= 2) {
     void* platform = config->version >= 3 ? config->m_pPlatform : nullptr;
+    const bool isolate_per_document =
+        config->version >= 7 && config->m_IsolatePerDocument;
+    if (isolate_per_document) {
+      CHECK(!config->m_pIsolate);
+    }
     IJS_Runtime::Initialize(config->m_v8EmbedderSlot, config->m_pIsolate,
-                            platform);
+                            platform, isolate_per_document);
   }
   g_bLibraryInitialized = true;
 }

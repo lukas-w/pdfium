@@ -2043,6 +2043,26 @@ TEST_F(FPDFViewEmbedderTest, Bug2087) {
 }
 #endif  // defined(PDF_USE_SKIA)
 
+TEST_F(FPDFViewEmbedderTest, BadIsolatePerDocumentConfig) {
+  FPDF_DestroyLibrary();
+
+  const FPDF_LIBRARY_CONFIG kBadConfig = {
+      .version = 7,
+      .m_pUserFontPaths = nullptr,
+      .m_pIsolate = reinterpret_cast<void*>(1),
+      .m_v8EmbedderSlot = 0,
+      .m_pPlatform = nullptr,
+      .m_RendererType = FPDF_RENDERERTYPE_AGG,
+      .m_FontLibraryType = FPDF_FONTBACKENDTYPE_FREETYPE,
+      .m_BrotliEnabled = false,
+      .m_IsolatePerDocument = true,
+  };
+  EXPECT_DEATH_IF_SUPPORTED(FPDF_InitLibraryWithConfig(&kBadConfig), "");
+
+  EmbedderTestEnvironment::GetInstance()->TearDown();
+  EmbedderTestEnvironment::GetInstance()->SetUp();
+}
+
 TEST_F(FPDFViewEmbedderTest, NoSmoothTextItalicOverlappingGlyphs) {
   ASSERT_TRUE(OpenDocument("bug_1919.pdf"));
   ScopedPage page = LoadScopedPage(0);

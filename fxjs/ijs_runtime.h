@@ -46,10 +46,14 @@ class IJS_Runtime {
     UnownedPtr<IJS_EventContext> context_;
   };
 
-  static void Initialize(unsigned int slot, void* isolate, void* platform);
+  static void Initialize(unsigned int slot,
+                         void* isolate,
+                         void* platform,
+                         bool isolate_per_document);
   static void Destroy();
   static std::unique_ptr<IJS_Runtime> Create(
       CPDFSDK_FormFillEnvironment* pFormFillEnv);
+  static bool IsIsolatePerDocument();
 
   virtual ~IJS_Runtime();
 
