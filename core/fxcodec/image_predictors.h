@@ -8,8 +8,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include <optional>
-
+#include "core/fxcodec/data_and_bytes_consumed.h"
 #include "core/fxcrt/data_vector.h"
 #include "core/fxcrt/span.h"
 
@@ -20,27 +19,23 @@ enum class PredictorType : uint8_t { kNone, kTiff, kPng };
 // Values come from ISO 32000-1:2008, table 10.
 PredictorType GetPredictor(int predictor);
 
+const DataAndBytesConsumed ApplyPredictor(DataVector<uint8_t> decoded_buf,
+                                          int predictor,
+                                          int colors,
+                                          int bits_per_component,
+                                          int columns,
+                                          uint32_t bytes_consumed);
+
 void PngPredictLine(pdfium::span<uint8_t> dest_span,
                     pdfium::span<const uint8_t> src_span,
                     pdfium::span<const uint8_t> last_span,
                     size_t row_size,
                     uint32_t bytes_per_pixel);
 
-std::optional<DataVector<uint8_t>> PngPredictor(
-    int colors,
-    int bits_per_component,
-    int columns,
-    pdfium::span<const uint8_t> src_span);
-
 void TiffPredictLine(pdfium::span<uint8_t> dest_span,
                      int bits_per_component,
                      int colors,
                      int columns);
-
-bool TiffPredictor(int colors,
-                   int bits_per_component,
-                   int columns,
-                   pdfium::span<uint8_t> data_span);
 
 }  // namespace fxcodec
 

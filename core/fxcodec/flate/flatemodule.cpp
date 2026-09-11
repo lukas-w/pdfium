@@ -617,7 +617,6 @@ DataAndBytesConsumed FlateModule::FlateOrLZWDecode(
     uint32_t estimated_size) {
   DataVector<uint8_t> dest_buf;
   uint32_t bytes_consumed = FX_INVALID_OFFSET;
-  PredictorType predictor_type = GetPredictor(predictor);
 
   if (bLZW) {
     auto decoder = std::make_unique<CLZWDecoder>(src_span, bEarlyChange);
@@ -633,23 +632,8 @@ DataAndBytesConsumed FlateModule::FlateOrLZWDecode(
     bytes_consumed = result.bytes_consumed;
   }
 
-  switch (predictor_type) {
-    case PredictorType::kNone: {
-      return {std::move(dest_buf), bytes_consumed};
-    }
-    case PredictorType::kPng: {
-      std::optional<DataVector<uint8_t>> result =
-          PngPredictor(Colors, BitsPerComponent, Columns, dest_buf);
-      if (!result.has_value()) {
-        return {std::move(dest_buf), FX_INVALID_OFFSET};
-      }
-      return {std::move(result.value()), bytes_consumed};
-    }
-    case PredictorType::kTiff: {
-      bool ret = TiffPredictor(Colors, BitsPerComponent, Columns, dest_buf);
-      return {std::move(dest_buf), ret ? bytes_consumed : FX_INVALID_OFFSET};
-    }
-  }
+  return ApplyPredictor(std::move(dest_buf), predictor, Colors,
+                        BitsPerComponent, Columns, bytes_consumed);
 }
 
 // static
