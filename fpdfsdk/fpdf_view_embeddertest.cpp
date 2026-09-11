@@ -1796,10 +1796,6 @@ TEST_F(PostScriptLevel2EmbedderTest, Image) {
       "!fAD!!fAD!!fAD!!fAD!!fAD!!fAD!&-(;~>\n"
       "Q\n"
       "Q\n"
-      "q\n"
-      "q\n"
-      "Q\n"
-      "Q\n"
       "Q\n"
       "Q\n"
       "\n"
@@ -1835,10 +1831,6 @@ q
 q
 [49.9 0 0 -50 281.1 106.6]cm 50 50 8[50 0 0 -50 0 50]currentfile/ASCII85Decode filter /FlateDecode filter false 3 colorimage
 Gb"0;0`_7S!5bE%:[N')TE"rlzGQSs[!!*~>
-Q
-Q
-q
-q
 Q
 Q
 Q

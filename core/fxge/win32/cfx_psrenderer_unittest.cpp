@@ -228,13 +228,11 @@ TEST(PSRendererTest, SetClipPathFill) {
   path.AppendRect(20.2f, 40.4f, 100.6f, 200.8f);
   renderer.SetClip_PathFill(path, /*matrix=*/nullptr,
                             CFX_FillRenderOptions::WindingOptions());
-  // TODO(crbug.com/553140224): Clip box should be FX_RECT(20, 40, 101, 201).
-  EXPECT_EQ(renderer.GetClipBox(), FX_RECT(20, 241, 120, 40));
+  EXPECT_EQ(renderer.GetClipBox(), FX_RECT(20, 40, 101, 201));
 
   CFX_Path path2;
   path2.AppendRect(50.1f, 80.3f, 150.7f, 250.9f);
   renderer.SetClip_PathFill(path2, /*matrix=*/nullptr,
                             CFX_FillRenderOptions::WindingOptions());
-  // TODO(crbug.com/553140224): Clip box should be FX_RECT(50, 80, 101, 201).
-  EXPECT_EQ(renderer.GetClipBox(), FX_RECT(50, 331, 200, 80));
+  EXPECT_EQ(renderer.GetClipBox(), FX_RECT(50, 80, 101, 201));
 }

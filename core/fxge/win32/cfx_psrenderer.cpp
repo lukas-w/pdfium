@@ -378,10 +378,7 @@ void CFX_PSRenderer::SetClip_PathFill(
     rect = pObject2Device->TransformRect(rect);
   }
 
-  clip_box_.left = static_cast<int>(rect.left);
-  clip_box_.right = static_cast<int>(rect.left + rect.right);
-  clip_box_.top = static_cast<int>(rect.top + rect.bottom);
-  clip_box_.bottom = static_cast<int>(rect.bottom);
+  clip_box_.Intersect(rect.GetOuterRect());
 
   WriteString("W");
   if (fill_options.fill_type != CFX_FillRenderOptions::FillType::kWinding) {
