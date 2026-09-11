@@ -7,25 +7,25 @@
 #ifndef CORE_FXGE_CFX_GLYPHBITMAP_H_
 #define CORE_FXGE_CFX_GLYPHBITMAP_H_
 
+#include "core/fxcrt/fx_coordinates.h"
 #include "core/fxcrt/retain_ptr.h"
 
 class CFX_DIBitmap;
 
 class CFX_GlyphBitmap {
  public:
-  CFX_GlyphBitmap(int left, int top, RetainPtr<CFX_DIBitmap> bitmap);
+  CFX_GlyphBitmap(const CFX_Point& top_left_origin,
+                  RetainPtr<CFX_DIBitmap> bitmap);
   CFX_GlyphBitmap(const CFX_GlyphBitmap&) = delete;
   CFX_GlyphBitmap& operator=(const CFX_GlyphBitmap&) = delete;
   ~CFX_GlyphBitmap();
 
   RetainPtr<CFX_DIBitmap> GetWritableBitmap();
   RetainPtr<const CFX_DIBitmap> GetBitmap() const;
-  int left() const { return left_; }
-  int top() const { return top_; }
+  const CFX_Point& top_left_origin() const { return top_left_origin_; }
 
  private:
-  const int left_;
-  const int top_;
+  const CFX_Point top_left_origin_;
   const RetainPtr<CFX_DIBitmap> bitmap_;
 };
 

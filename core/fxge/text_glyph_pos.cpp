@@ -18,14 +18,14 @@ TextGlyphPos::~TextGlyphPos() = default;
 std::optional<CFX_Point> TextGlyphPos::GetOrigin(
     const CFX_Point& offset) const {
   FX_SAFE_INT32 left = origin_.x;
-  left += glyph_->left();
+  left += glyph_->top_left_origin().x;
   left -= offset.x;
   if (!left.IsValid()) {
     return std::nullopt;
   }
 
   FX_SAFE_INT32 top = origin_.y;
-  top -= glyph_->top();
+  top -= glyph_->top_left_origin().y;
   top -= offset.y;
   if (!top.IsValid()) {
     return std::nullopt;

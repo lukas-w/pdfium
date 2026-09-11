@@ -55,7 +55,6 @@
 #include "core/fxcrt/containers/contains.h"
 #include "core/fxcrt/data_vector.h"
 #include "core/fxcrt/fx_2d_size.h"
-#include "core/fxcrt/fx_safe_types.h"
 #include "core/fxcrt/fx_system.h"
 #include "core/fxcrt/notreached.h"
 #include "core/fxcrt/span.h"
@@ -1074,20 +1073,16 @@ bool CPDF_RenderStatus::ProcessType3Text(CPDF_TextObject* textobj,
 
       CFX_Point origin(FXSYS_roundf(matrix.e), FXSYS_roundf(matrix.f));
       if (glyphs.empty()) {
-        FX_SAFE_INT32 left = origin.x;
-        left += pBitmap->left();
-        if (!left.IsValid()) {
+        TextGlyphPos glyph;
+        glyph.glyph_ = pBitmap;
+        glyph.origin_ = origin;
+        std::optional<CFX_Point> glyph_origin = glyph.GetOrigin({0, 0});
+        if (!glyph_origin.has_value()) {
           continue;
         }
 
-        FX_SAFE_INT32 top = origin.y;
-        top -= pBitmap->top();
-        if (!top.IsValid()) {
-          continue;
-        }
-
-        device_->SetBitMask(pBitmap->GetBitmap(), left.ValueOrDie(),
-                            top.ValueOrDie(), fill_argb);
+        device_->SetBitMask(pBitmap->GetBitmap(), glyph_origin->x,
+                            glyph_origin->y, fill_argb);
       } else {
         glyphs[iChar].glyph_ = pBitmap;
         glyphs[iChar].origin_ = origin;

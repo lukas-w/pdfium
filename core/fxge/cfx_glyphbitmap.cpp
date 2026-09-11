@@ -8,10 +8,9 @@
 
 #include "core/fxge/dib/cfx_dibitmap.h"
 
-CFX_GlyphBitmap::CFX_GlyphBitmap(int left,
-                                 int top,
+CFX_GlyphBitmap::CFX_GlyphBitmap(const CFX_Point& top_left_origin,
                                  RetainPtr<CFX_DIBitmap> bitmap)
-    : left_(left), top_(top), bitmap_(std::move(bitmap)) {}
+    : top_left_origin_(top_left_origin), bitmap_(std::move(bitmap)) {}
 
 CFX_GlyphBitmap::~CFX_GlyphBitmap() = default;
 
