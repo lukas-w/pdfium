@@ -29,7 +29,6 @@ namespace {
 
 unsigned int g_embedderDataSlot = 1u;
 v8::Isolate* g_isolate = nullptr;
-CFX_V8ArrayBufferAllocator* g_arrayBufferAllocator = nullptr;
 
 // Only the address matters, values are for humans debugging. ASLR should
 // ensure that these values are unlikely to arise otherwise. Keep these
@@ -324,9 +323,6 @@ void FXJS_Release() {
   DCHECK(!g_isolate || !CFXJS_PerIsolateData::Get(g_isolate) ||
          CFXJS_PerIsolateData::Get(g_isolate)->engine_ref_count() == 0);
   g_isolate = nullptr;
-
-  delete g_arrayBufferAllocator;
-  g_arrayBufferAllocator = nullptr;
 }
 
 bool FXJS_GetIsolate(v8::Isolate** pResultIsolate) {
@@ -335,11 +331,9 @@ bool FXJS_GetIsolate(v8::Isolate** pResultIsolate) {
     return false;
   }
   // Provide backwards compatibility when no external isolate.
-  if (!g_arrayBufferAllocator) {
-    g_arrayBufferAllocator = new CFX_V8ArrayBufferAllocator();
-  }
   v8::Isolate::CreateParams params;
-  params.array_buffer_allocator = g_arrayBufferAllocator;
+  params.array_buffer_allocator =
+      CFX_V8ArrayBufferAllocator::GetSharedInstance();
   *pResultIsolate = v8::Isolate::New(params);
   return true;
 }

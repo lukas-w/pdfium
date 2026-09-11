@@ -1323,11 +1323,7 @@ FPDF_EXPORT const char* FPDF_CALLCONV FPDF_GetRecommendedV8Flags() {
 }
 
 FPDF_EXPORT void* FPDF_CALLCONV FPDF_GetArrayBufferAllocatorSharedInstance() {
-  // Deliberately leaked. This allocator is used outside of the library
-  // initialization / destruction lifecycle, and the caller does not take
-  // ownership of the object. Thus there is no existing way to delete this.
-  static auto* s_allocator = new CFX_V8ArrayBufferAllocator();
-  return s_allocator;
+  return CFX_V8ArrayBufferAllocator::GetSharedInstance();
 }
 #endif  // PDF_ENABLE_V8
 

@@ -17,6 +17,11 @@ class CFX_V8ArrayBufferAllocator final : public v8::ArrayBuffer::Allocator {
  public:
   static const size_t kMaxAllowedBytes = 0x10000000;
 
+  // Deliberately leaked. This allocator is used outside of the library
+  // initialization / destruction lifecycle, and the caller does not take
+  // ownership of the object. Thus there is no existing way to delete this.
+  static CFX_V8ArrayBufferAllocator* GetSharedInstance();
+
   CFX_V8ArrayBufferAllocator();
   CFX_V8ArrayBufferAllocator(const CFX_V8ArrayBufferAllocator&) = delete;
   CFX_V8ArrayBufferAllocator(CFX_V8ArrayBufferAllocator&&) = delete;

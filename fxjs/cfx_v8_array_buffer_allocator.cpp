@@ -8,6 +8,12 @@
 
 #include "core/fxcrt/fx_memory.h"
 
+// static
+CFX_V8ArrayBufferAllocator* CFX_V8ArrayBufferAllocator::GetSharedInstance() {
+  static auto* s_allocator = new CFX_V8ArrayBufferAllocator();
+  return s_allocator;
+}
+
 CFX_V8ArrayBufferAllocator::CFX_V8ArrayBufferAllocator() = default;
 
 CFX_V8ArrayBufferAllocator::~CFX_V8ArrayBufferAllocator() = default;
