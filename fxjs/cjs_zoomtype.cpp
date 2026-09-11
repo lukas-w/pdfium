@@ -6,6 +6,8 @@
 
 #include "fxjs/cjs_zoomtype.h"
 
+#include "fxjs/js_define.h"
+
 const JSConstSpec CJS_Zoomtype::ConstSpecs[] = {
     {"none", JSConstSpec::String, 0, "NoVary"},
     {"fitP", JSConstSpec::String, 0, "FitPage"},
@@ -15,11 +17,9 @@ const JSConstSpec CJS_Zoomtype::ConstSpecs[] = {
     {"pref", JSConstSpec::String, 0, "Preferred"},
     {"refW", JSConstSpec::String, 0, "ReflowWidth"}};
 
-uint32_t CJS_Zoomtype::ObjDefnID = 0;
-
 // static
 void CJS_Zoomtype::DefineJSObjects(CFXJS_Engine* pEngine) {
-  ObjDefnID =
-      pEngine->DefineObj("zoomtype", FXJSOBJTYPE_STATIC, nullptr, nullptr);
-  DefineConsts(pEngine, ObjDefnID, ConstSpecs);
+  pEngine->DefineObj(kObjDefnId, "zoomtype", FXJSOBJTYPE_STATIC, nullptr,
+                     nullptr);
+  DefineConsts(pEngine, kObjDefnId, ConstSpecs);
 }

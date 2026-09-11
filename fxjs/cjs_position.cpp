@@ -6,6 +6,8 @@
 
 #include "fxjs/cjs_position.h"
 
+#include "fxjs/js_define.h"
+
 const JSConstSpec CJS_Position::ConstSpecs[] = {
     {"textOnly", JSConstSpec::Number, 0, nullptr},
     {"iconOnly", JSConstSpec::Number, 1, nullptr},
@@ -15,11 +17,9 @@ const JSConstSpec CJS_Position::ConstSpecs[] = {
     {"textIconH", JSConstSpec::Number, 5, nullptr},
     {"overlay", JSConstSpec::Number, 6, nullptr}};
 
-uint32_t CJS_Position::ObjDefnID = 0;
-
 // static
 void CJS_Position::DefineJSObjects(CFXJS_Engine* pEngine) {
-  ObjDefnID =
-      pEngine->DefineObj("position", FXJSOBJTYPE_STATIC, nullptr, nullptr);
-  DefineConsts(pEngine, ObjDefnID, ConstSpecs);
+  pEngine->DefineObj(kObjDefnId, "position", FXJSOBJTYPE_STATIC, nullptr,
+                     nullptr);
+  DefineConsts(pEngine, kObjDefnId, ConstSpecs);
 }

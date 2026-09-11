@@ -74,21 +74,14 @@ const JSMethodSpec CJS_App::MethodSpecs[] = {
     {"setInterval", setInterval_static},
     {"setTimeOut", setTimeOut_static}};
 
-uint32_t CJS_App::ObjDefnID = 0;
-
 const char CJS_App::kName[] = "app";
 
 // static
-uint32_t CJS_App::GetObjDefnID() {
-  return ObjDefnID;
-}
-
-// static
 void CJS_App::DefineJSObjects(CFXJS_Engine* pEngine) {
-  ObjDefnID = pEngine->DefineObj(CJS_App::kName, FXJSOBJTYPE_STATIC,
-                                 JSConstructor<CJS_App>, JSDestructor);
-  DefineProps(pEngine, ObjDefnID, PropertySpecs);
-  DefineMethods(pEngine, ObjDefnID, MethodSpecs);
+  pEngine->DefineObj(kObjDefnId, CJS_App::kName, FXJSOBJTYPE_STATIC,
+                     JSConstructor<CJS_App>, JSDestructor);
+  DefineProps(pEngine, kObjDefnId, PropertySpecs);
+  DefineMethods(pEngine, kObjDefnId, MethodSpecs);
 }
 
 CJS_App::CJS_App(v8::Local<v8::Object> pObject, CJS_Runtime* pRuntime)
@@ -331,7 +324,7 @@ CJS_Result CJS_App::setInterval(CJS_Runtime* pRuntime,
   timers_.insert(std::move(timerRef));
 
   v8::Local<v8::Object> pRetObj = pRuntime->NewFXJSBoundObject(
-      CJS_TimerObj::GetObjDefnID(), FXJSOBJTYPE_DYNAMIC);
+      CJS_TimerObj::kObjDefnId, FXJSOBJTYPE_DYNAMIC);
   if (pRetObj.IsEmpty()) {
     return CJS_Result::Failure(JSMessage::kBadObjectError);
   }
@@ -363,7 +356,7 @@ CJS_Result CJS_App::setTimeOut(CJS_Runtime* pRuntime,
   timers_.insert(std::move(timerRef));
 
   v8::Local<v8::Object> pRetObj = pRuntime->NewFXJSBoundObject(
-      CJS_TimerObj::GetObjDefnID(), FXJSOBJTYPE_DYNAMIC);
+      CJS_TimerObj::kObjDefnId, FXJSOBJTYPE_DYNAMIC);
   if (pRetObj.IsEmpty()) {
     return CJS_Result::Failure(JSMessage::kBadObjectError);
   }

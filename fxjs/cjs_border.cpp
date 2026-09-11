@@ -6,6 +6,8 @@
 
 #include "fxjs/cjs_border.h"
 
+#include "fxjs/js_define.h"
+
 const JSConstSpec CJS_Border::ConstSpecs[] = {
     {"s", JSConstSpec::String, 0, "solid"},
     {"b", JSConstSpec::String, 0, "beveled"},
@@ -13,11 +15,9 @@ const JSConstSpec CJS_Border::ConstSpecs[] = {
     {"i", JSConstSpec::String, 0, "inset"},
     {"u", JSConstSpec::String, 0, "underline"}};
 
-uint32_t CJS_Border::ObjDefnID = 0;
-
 // static
 void CJS_Border::DefineJSObjects(CFXJS_Engine* pEngine) {
-  ObjDefnID =
-      pEngine->DefineObj("border", FXJSOBJTYPE_STATIC, nullptr, nullptr);
-  DefineConsts(pEngine, ObjDefnID, ConstSpecs);
+  pEngine->DefineObj(kObjDefnId, "border", FXJSOBJTYPE_STATIC, nullptr,
+                     nullptr);
+  DefineConsts(pEngine, kObjDefnId, ConstSpecs);
 }

@@ -6,17 +6,17 @@
 
 #include "fxjs/cjs_scalewhen.h"
 
+#include "fxjs/js_define.h"
+
 const JSConstSpec CJS_ScaleWhen::ConstSpecs[] = {
     {"always", JSConstSpec::Number, 0, nullptr},
     {"never", JSConstSpec::Number, 1, nullptr},
     {"tooBig", JSConstSpec::Number, 2, nullptr},
     {"tooSmall", JSConstSpec::Number, 3, nullptr}};
 
-uint32_t CJS_ScaleWhen::ObjDefnID = 0;
-
 // static
 void CJS_ScaleWhen::DefineJSObjects(CFXJS_Engine* pEngine) {
-  ObjDefnID =
-      pEngine->DefineObj("scaleWhen", FXJSOBJTYPE_STATIC, nullptr, nullptr);
-  DefineConsts(pEngine, ObjDefnID, ConstSpecs);
+  pEngine->DefineObj(kObjDefnId, "scaleWhen", FXJSOBJTYPE_STATIC, nullptr,
+                     nullptr);
+  DefineConsts(pEngine, kObjDefnId, ConstSpecs);
 }

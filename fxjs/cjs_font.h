@@ -8,15 +8,16 @@
 #define FXJS_CJS_FONT_H_
 
 #include "fxjs/cjs_object.h"
+#include "fxjs/js_define.h"
 
 class CJS_Font final : public CJS_Object {
  public:
+  static constexpr uint32_t kObjDefnId = kJSFontObjDefnID;
   static void DefineJSObjects(CFXJS_Engine* pEngine);
 
   CJS_Font() = delete;
 
  private:
-  static uint32_t ObjDefnID;
   static const JSConstSpec ConstSpecs[];
 };
 

@@ -56,13 +56,13 @@ std::optional<IJS_Runtime::JS_Error> CJS_EventContext::RunScript(
 
 CJS_Field* CJS_EventContext::SourceField() {
   v8::Local<v8::Object> pDocObj = runtime_->NewFXJSBoundObject(
-      CJS_Document::GetObjDefnID(), FXJSOBJTYPE_DYNAMIC);
+      CJS_Document::kObjDefnId, FXJSOBJTYPE_DYNAMIC);
   if (pDocObj.IsEmpty()) {
     return nullptr;
   }
 
-  v8::Local<v8::Object> pFieldObj = runtime_->NewFXJSBoundObject(
-      CJS_Field::GetObjDefnID(), FXJSOBJTYPE_DYNAMIC);
+  v8::Local<v8::Object> pFieldObj =
+      runtime_->NewFXJSBoundObject(CJS_Field::kObjDefnId, FXJSOBJTYPE_DYNAMIC);
   if (pFieldObj.IsEmpty()) {
     return nullptr;
   }
@@ -80,13 +80,13 @@ CJS_Field* CJS_EventContext::SourceField() {
 
 CJS_Field* CJS_EventContext::TargetField() {
   v8::Local<v8::Object> pDocObj = runtime_->NewFXJSBoundObject(
-      CJS_Document::GetObjDefnID(), FXJSOBJTYPE_DYNAMIC);
+      CJS_Document::kObjDefnId, FXJSOBJTYPE_DYNAMIC);
   if (pDocObj.IsEmpty()) {
     return nullptr;
   }
 
-  v8::Local<v8::Object> pFieldObj = runtime_->NewFXJSBoundObject(
-      CJS_Field::GetObjDefnID(), FXJSOBJTYPE_DYNAMIC);
+  v8::Local<v8::Object> pFieldObj =
+      runtime_->NewFXJSBoundObject(CJS_Field::kObjDefnId, FXJSOBJTYPE_DYNAMIC);
   if (pFieldObj.IsEmpty()) {
     return nullptr;
   }

@@ -6,6 +6,8 @@
 
 #include "fxjs/cjs_font.h"
 
+#include "fxjs/js_define.h"
+
 const JSConstSpec CJS_Font::ConstSpecs[] = {
     {"Times", JSConstSpec::String, 0, "Times-Roman"},
     {"TimesB", JSConstSpec::String, 0, "Times-Bold"},
@@ -22,10 +24,8 @@ const JSConstSpec CJS_Font::ConstSpecs[] = {
     {"Symbol", JSConstSpec::String, 0, "Symbol"},
     {"ZapfD", JSConstSpec::String, 0, "ZapfDingbats"}};
 
-uint32_t CJS_Font::ObjDefnID = 0;
-
 // static
 void CJS_Font::DefineJSObjects(CFXJS_Engine* pEngine) {
-  ObjDefnID = pEngine->DefineObj("font", FXJSOBJTYPE_STATIC, nullptr, nullptr);
-  DefineConsts(pEngine, ObjDefnID, ConstSpecs);
+  pEngine->DefineObj(kObjDefnId, "font", FXJSOBJTYPE_STATIC, nullptr, nullptr);
+  DefineConsts(pEngine, kObjDefnId, ConstSpecs);
 }

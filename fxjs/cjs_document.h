@@ -21,7 +21,7 @@ struct CJS_DelayData;
 
 class CJS_Document final : public CJS_Object, public Observable {
  public:
-  static uint32_t GetObjDefnID();
+  static constexpr uint32_t kObjDefnId = kJSDocumentObjDefnID;
   static void DefineJSObjects(CFXJS_Engine* pEngine);
 
   CJS_Document(v8::Local<v8::Object> pObject, CJS_Runtime* pRuntime);
@@ -111,7 +111,6 @@ class CJS_Document final : public CJS_Object, public Observable {
   JS_STATIC_METHOD(syncAnnotScan, CJS_Document)
 
  private:
-  static uint32_t ObjDefnID;
   static const char kName[];
   static const JSPropertySpec PropertySpecs[];
   static const JSMethodSpec MethodSpecs[];

@@ -116,20 +116,14 @@ const JSMethodSpec CJS_Document::MethodSpecs[] = {
     {"submitForm", submitForm_static},
     {"syncAnnotScan", syncAnnotScan_static}};
 
-uint32_t CJS_Document::ObjDefnID = 0;
 const char CJS_Document::kName[] = "Document";
 
 // static
-uint32_t CJS_Document::GetObjDefnID() {
-  return ObjDefnID;
-}
-
-// static
 void CJS_Document::DefineJSObjects(CFXJS_Engine* pEngine) {
-  ObjDefnID = pEngine->DefineObj(CJS_Document::kName, FXJSOBJTYPE_GLOBAL,
-                                 JSConstructor<CJS_Document>, JSDestructor);
-  DefineProps(pEngine, ObjDefnID, PropertySpecs);
-  DefineMethods(pEngine, ObjDefnID, MethodSpecs);
+  pEngine->DefineObj(kObjDefnId, CJS_Document::kName, FXJSOBJTYPE_GLOBAL,
+                     JSConstructor<CJS_Document>, JSDestructor);
+  DefineProps(pEngine, kObjDefnId, PropertySpecs);
+  DefineMethods(pEngine, kObjDefnId, MethodSpecs);
 }
 
 CJS_Document::CJS_Document(v8::Local<v8::Object> pObject, CJS_Runtime* pRuntime)
@@ -268,8 +262,8 @@ CJS_Result CJS_Document::getField(CJS_Runtime* pRuntime,
     return CJS_Result::Success(pRuntime->NewUndefined());
   }
 
-  v8::Local<v8::Object> pFieldObj = pRuntime->NewFXJSBoundObject(
-      CJS_Field::GetObjDefnID(), FXJSOBJTYPE_DYNAMIC);
+  v8::Local<v8::Object> pFieldObj =
+      pRuntime->NewFXJSBoundObject(CJS_Field::kObjDefnId, FXJSOBJTYPE_DYNAMIC);
   if (pFieldObj.IsEmpty()) {
     return CJS_Result::Failure(JSMessage::kBadObjectError);
   }
@@ -1102,8 +1096,8 @@ CJS_Result CJS_Document::getAnnot(CJS_Runtime* pRuntime,
     return CJS_Result::Failure(JSMessage::kBadObjectError);
   }
 
-  v8::Local<v8::Object> pObj = pRuntime->NewFXJSBoundObject(
-      CJS_Annot::GetObjDefnID(), FXJSOBJTYPE_DYNAMIC);
+  v8::Local<v8::Object> pObj =
+      pRuntime->NewFXJSBoundObject(CJS_Annot::kObjDefnId, FXJSOBJTYPE_DYNAMIC);
   if (pObj.IsEmpty()) {
     return CJS_Result::Failure(JSMessage::kBadObjectError);
   }
@@ -1147,7 +1141,7 @@ CJS_Result CJS_Document::getAnnots(CJS_Runtime* pRuntime,
       }
 
       v8::Local<v8::Object> pObj = pRuntime->NewFXJSBoundObject(
-          CJS_Annot::GetObjDefnID(), FXJSOBJTYPE_DYNAMIC);
+          CJS_Annot::kObjDefnId, FXJSOBJTYPE_DYNAMIC);
       if (pObj.IsEmpty()) {
         return CJS_Result::Failure(JSMessage::kBadObjectError);
       }
@@ -1215,8 +1209,8 @@ CJS_Result CJS_Document::get_icons(CJS_Runtime* pRuntime) {
   v8::Local<v8::Array> Icons = pRuntime->NewArray();
   int i = 0;
   for (const auto& name : icon_names_) {
-    v8::Local<v8::Object> pObj = pRuntime->NewFXJSBoundObject(
-        CJS_Icon::GetObjDefnID(), FXJSOBJTYPE_DYNAMIC);
+    v8::Local<v8::Object> pObj =
+        pRuntime->NewFXJSBoundObject(CJS_Icon::kObjDefnId, FXJSOBJTYPE_DYNAMIC);
     if (pObj.IsEmpty()) {
       return CJS_Result::Failure(JSMessage::kBadObjectError);
     }
@@ -1249,8 +1243,8 @@ CJS_Result CJS_Document::getIcon(CJS_Runtime* pRuntime,
     return CJS_Result::Failure(JSMessage::kBadObjectError);
   }
 
-  v8::Local<v8::Object> pObj = pRuntime->NewFXJSBoundObject(
-      CJS_Icon::GetObjDefnID(), FXJSOBJTYPE_DYNAMIC);
+  v8::Local<v8::Object> pObj =
+      pRuntime->NewFXJSBoundObject(CJS_Icon::kObjDefnId, FXJSOBJTYPE_DYNAMIC);
   if (pObj.IsEmpty()) {
     return CJS_Result::Failure(JSMessage::kBadObjectError);
   }

@@ -34,20 +34,14 @@ const JSPropertySpec CJS_Color::PropertySpecs[] = {
 const JSMethodSpec CJS_Color::MethodSpecs[] = {{"convert", convert_static},
                                                {"equal", equal_static}};
 
-uint32_t CJS_Color::ObjDefnID = 0;
 const char CJS_Color::kName[] = "color";
 
 // static
-uint32_t CJS_Color::GetObjDefnID() {
-  return ObjDefnID;
-}
-
-// static
 void CJS_Color::DefineJSObjects(CFXJS_Engine* pEngine) {
-  ObjDefnID = pEngine->DefineObj(CJS_Color::kName, FXJSOBJTYPE_STATIC,
-                                 JSConstructor<CJS_Color>, JSDestructor);
-  DefineProps(pEngine, ObjDefnID, PropertySpecs);
-  DefineMethods(pEngine, ObjDefnID, MethodSpecs);
+  pEngine->DefineObj(kObjDefnId, CJS_Color::kName, FXJSOBJTYPE_STATIC,
+                     JSConstructor<CJS_Color>, JSDestructor);
+  DefineProps(pEngine, kObjDefnId, PropertySpecs);
+  DefineMethods(pEngine, kObjDefnId, MethodSpecs);
 }
 
 // static

@@ -14,12 +14,12 @@
 #ifndef FXJS_CFXJS_ENGINE_H_
 #define FXJS_CFXJS_ENGINE_H_
 
+#include <array>
 #include <functional>
 #include <limits>
 #include <map>
 #include <memory>
 #include <utility>
-#include <vector>
 
 #include "core/fxcrt/widestring.h"
 #include "fxjs/cfx_isolate_wrapper.h"
@@ -38,6 +38,11 @@ enum FXJSOBJTYPE {
   FXJSOBJTYPE_GLOBAL,       // The global object itself (may only appear once).
 };
 
+// Defined here to avoid circular include dependencies with js_define.h. The
+// maximum must be consistent with constants in js_define.h.
+inline constexpr uint32_t kNotAnFxObject = 0;
+inline constexpr size_t kMaxFxObjDefinitions = 21;
+
 class CFXJS_PerIsolateData {
  public:
   // Hook for XFA's data, when present.
@@ -51,9 +56,9 @@ class CFXJS_PerIsolateData {
   static CFXJS_PerIsolateData* GetOrCreate(v8::Isolate* isolate);
   static CFXJS_PerIsolateData* Get(v8::Isolate* isolate);
 
-  uint32_t CurrentMaxObjDefinitionID() const;
   CFXJS_ObjDefinition* ObjDefinitionForID(uint32_t id) const;
-  uint32_t AssignIDForObjDefinition(std::unique_ptr<CFXJS_ObjDefinition> pDefn);
+  void InstallObjDefinitionForID(uint32_t id,
+                                 std::unique_ptr<CFXJS_ObjDefinition> pDefn);
   V8TemplateMap* GetDynamicObjsMap() { return dynamic_objs_map_.get(); }
   ExtensionIface* GetExtension() { return extension_.get(); }
   void SetExtension(std::unique_ptr<ExtensionIface> extension) {
@@ -77,7 +82,8 @@ class CFXJS_PerIsolateData {
 
   size_t engine_ref_count_ = 0;
   const wchar_t* const tag_;  // Raw, always a literal.
-  std::vector<std::unique_ptr<CFXJS_ObjDefinition>> object_defn_array_;
+  std::array<std::unique_ptr<CFXJS_ObjDefinition>, kMaxFxObjDefinitions>
+      object_defn_array_;
   std::unique_ptr<V8TemplateMap> dynamic_objs_map_;
   std::unique_ptr<ExtensionIface> extension_;
   v8::Global<v8::ObjectTemplate> default_global_object_template_;
@@ -138,11 +144,11 @@ class CFXJS_Engine : public CFX_IsolateWrapper {
                          std::unique_ptr<CFXJS_PerObjectData::Binding> p);
   static void FreePerObjectData(v8::Local<v8::Object> pObj);
 
-  // Always returns a valid (i.e. non-zero), newly-created objDefnID.
-  uint32_t DefineObj(const char* sObjName,
-                     FXJSOBJTYPE eObjType,
-                     Constructor pConstructor,
-                     Destructor pDestructor);
+  void DefineObj(uint32_t nObjDefnID,
+                 const char* sObjName,
+                 FXJSOBJTYPE eObjType,
+                 Constructor pConstructor,
+                 Destructor pDestructor);
 
   void DefineObjMethod(uint32_t nObjDefnID,
                        const char* sMethodName,
@@ -187,7 +193,7 @@ class CFXJS_Engine : public CFX_IsolateWrapper {
 
  private:
   v8::Global<v8::Context> v8_context_;
-  std::vector<v8::Global<v8::Object>> static_objects_;
+  std::array<v8::Global<v8::Object>, kMaxFxObjDefinitions> static_objects_;
   std::map<WideString, v8::Global<v8::Array>> const_arrays_;
 };
 

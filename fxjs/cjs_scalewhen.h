@@ -8,15 +8,16 @@
 #define FXJS_CJS_SCALEWHEN_H_
 
 #include "fxjs/cjs_object.h"
+#include "fxjs/js_define.h"
 
 class CJS_ScaleWhen final : public CJS_Object {
  public:
+  static constexpr uint32_t kObjDefnId = kJSScaleWhenObjDefnID;
   static void DefineJSObjects(CFXJS_Engine* pEngine);
 
   CJS_ScaleWhen() = delete;
 
  private:
-  static uint32_t ObjDefnID;
   static const JSConstSpec ConstSpecs[];
 };
 

@@ -6,17 +6,17 @@
 
 #include "fxjs/cjs_highlight.h"
 
+#include "fxjs/js_define.h"
+
 const JSConstSpec CJS_Highlight::ConstSpecs[] = {
     {"n", JSConstSpec::String, 0, "none"},
     {"i", JSConstSpec::String, 0, "invert"},
     {"p", JSConstSpec::String, 0, "push"},
     {"o", JSConstSpec::String, 0, "outline"}};
 
-uint32_t CJS_Highlight::ObjDefnID = 0;
-
 // static
 void CJS_Highlight::DefineJSObjects(CFXJS_Engine* pEngine) {
-  ObjDefnID =
-      pEngine->DefineObj("highlight", FXJSOBJTYPE_STATIC, nullptr, nullptr);
-  DefineConsts(pEngine, ObjDefnID, ConstSpecs);
+  pEngine->DefineObj(kObjDefnId, "highlight", FXJSOBJTYPE_STATIC, nullptr,
+                     nullptr);
+  DefineConsts(pEngine, kObjDefnId, ConstSpecs);
 }

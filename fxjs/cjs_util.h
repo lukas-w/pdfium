@@ -22,7 +22,7 @@ class CJS_Util final : public CJS_Object {
     kString = 2,
   };
 
-  static uint32_t GetObjDefnID();
+  static constexpr uint32_t kObjDefnId = kJSUtilObjDefnID;
   static void DefineJSObjects(CFXJS_Engine* pEngine);
 
   CJS_Util(v8::Local<v8::Object> pObject, CJS_Runtime* pRuntime);
@@ -48,7 +48,6 @@ class CJS_Util final : public CJS_Object {
   JS_STATIC_METHOD(byteToChar, CJS_Util)
 
  private:
-  static uint32_t ObjDefnID;
   static const char kName[];
   static const JSMethodSpec MethodSpecs[];
 

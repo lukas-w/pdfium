@@ -6,17 +6,17 @@
 
 #include "fxjs/cjs_display.h"
 
+#include "fxjs/js_define.h"
+
 const JSConstSpec CJS_Display::ConstSpecs[] = {
     {"visible", JSConstSpec::Number, 0, nullptr},
     {"hidden", JSConstSpec::Number, 1, nullptr},
     {"noPrint", JSConstSpec::Number, 2, nullptr},
     {"noView", JSConstSpec::Number, 3, nullptr}};
 
-uint32_t CJS_Display::ObjDefnID = 0;
-
 // static
 void CJS_Display::DefineJSObjects(CFXJS_Engine* pEngine) {
-  ObjDefnID =
-      pEngine->DefineObj("display", FXJSOBJTYPE_STATIC, nullptr, nullptr);
-  DefineConsts(pEngine, ObjDefnID, ConstSpecs);
+  pEngine->DefineObj(kObjDefnId, "display", FXJSOBJTYPE_STATIC, nullptr,
+                     nullptr);
+  DefineConsts(pEngine, kObjDefnId, ConstSpecs);
 }

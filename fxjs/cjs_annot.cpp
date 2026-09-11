@@ -17,20 +17,13 @@ const JSPropertySpec CJS_Annot::PropertySpecs[] = {
     {"name", get_name_static, set_name_static},
     {"type", get_type_static, set_type_static}};
 
-uint32_t CJS_Annot::ObjDefnID = 0;
-
 const char CJS_Annot::kName[] = "Annot";
 
 // static
-uint32_t CJS_Annot::GetObjDefnID() {
-  return ObjDefnID;
-}
-
-// static
 void CJS_Annot::DefineJSObjects(CFXJS_Engine* pEngine) {
-  ObjDefnID = pEngine->DefineObj(CJS_Annot::kName, FXJSOBJTYPE_DYNAMIC,
-                                 JSConstructor<CJS_Annot>, JSDestructor);
-  DefineProps(pEngine, ObjDefnID, PropertySpecs);
+  pEngine->DefineObj(kObjDefnId, CJS_Annot::kName, FXJSOBJTYPE_DYNAMIC,
+                     JSConstructor<CJS_Annot>, JSDestructor);
+  DefineProps(pEngine, kObjDefnId, PropertySpecs);
 }
 
 CJS_Annot::CJS_Annot(v8::Local<v8::Object> pObject, CJS_Runtime* pRuntime)

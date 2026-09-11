@@ -40,8 +40,6 @@ CJS_Global::JSGlobalData::~JSGlobalData() = default;
 const JSMethodSpec CJS_Global::MethodSpecs[] = {
     {"setPersistent", setPersistent_static}};
 
-uint32_t CJS_Global::ObjDefnID = 0;
-
 // static
 void CJS_Global::setPersistent_static(
     const v8::FunctionCallbackInfo<v8::Value>& info) {
@@ -157,21 +155,16 @@ void CJS_Global::enumprop_static(
 // static
 void CJS_Global::DefineAllProperties(CFXJS_Engine* pEngine) {
   pEngine->DefineObjAllProperties(
-      ObjDefnID, CJS_Global::queryprop_static, CJS_Global::getprop_static,
+      kObjDefnId, CJS_Global::queryprop_static, CJS_Global::getprop_static,
       CJS_Global::putprop_static, CJS_Global::delprop_static,
       CJS_Global::enumprop_static);
 }
 
 // static
-uint32_t CJS_Global::GetObjDefnID() {
-  return ObjDefnID;
-}
-
-// static
 void CJS_Global::DefineJSObjects(CFXJS_Engine* pEngine) {
-  ObjDefnID = pEngine->DefineObj("global", FXJSOBJTYPE_STATIC,
-                                 JSConstructor<CJS_Global>, JSDestructor);
-  DefineMethods(pEngine, ObjDefnID, MethodSpecs);
+  pEngine->DefineObj(kObjDefnId, "global", FXJSOBJTYPE_STATIC,
+                     JSConstructor<CJS_Global>, JSDestructor);
+  DefineMethods(pEngine, kObjDefnId, MethodSpecs);
   DefineAllProperties(pEngine);
 }
 

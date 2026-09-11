@@ -636,20 +636,14 @@ const JSMethodSpec CJS_Field::MethodSpecs[] = {
     {"signatureSign", signatureSign_static},
     {"signatureValidate", signatureValidate_static}};
 
-uint32_t CJS_Field::ObjDefnID = 0;
 const char CJS_Field::kName[] = "Field";
 
 // static
-uint32_t CJS_Field::GetObjDefnID() {
-  return ObjDefnID;
-}
-
-// static
 void CJS_Field::DefineJSObjects(CFXJS_Engine* pEngine) {
-  ObjDefnID = pEngine->DefineObj(CJS_Field::kName, FXJSOBJTYPE_DYNAMIC,
-                                 JSConstructor<CJS_Field>, JSDestructor);
-  DefineProps(pEngine, ObjDefnID, PropertySpecs);
-  DefineMethods(pEngine, ObjDefnID, MethodSpecs);
+  pEngine->DefineObj(kObjDefnId, CJS_Field::kName, FXJSOBJTYPE_DYNAMIC,
+                     JSConstructor<CJS_Field>, JSDestructor);
+  DefineProps(pEngine, kObjDefnId, PropertySpecs);
+  DefineMethods(pEngine, kObjDefnId, MethodSpecs);
 }
 
 CJS_Field::CJS_Field(v8::Local<v8::Object> pObject, CJS_Runtime* pRuntime)
@@ -2483,8 +2477,8 @@ CJS_Result CJS_Field::buttonGetIcon(CJS_Runtime* pRuntime,
     return CJS_Result::Failure(JSMessage::kBadObjectError);
   }
 
-  v8::Local<v8::Object> pObj = pRuntime->NewFXJSBoundObject(
-      CJS_Icon::GetObjDefnID(), FXJSOBJTYPE_DYNAMIC);
+  v8::Local<v8::Object> pObj =
+      pRuntime->NewFXJSBoundObject(CJS_Icon::kObjDefnId, FXJSOBJTYPE_DYNAMIC);
   if (pObj.IsEmpty()) {
     return CJS_Result::Failure(JSMessage::kBadObjectError);
   }
@@ -2609,7 +2603,7 @@ CJS_Result CJS_Field::getArray(CJS_Runtime* pRuntime,
   int j = 0;
   for (const auto& pStr : swSort) {
     v8::Local<v8::Object> pObj = pRuntime->NewFXJSBoundObject(
-        CJS_Field::GetObjDefnID(), FXJSOBJTYPE_DYNAMIC);
+        CJS_Field::kObjDefnId, FXJSOBJTYPE_DYNAMIC);
     if (pObj.IsEmpty()) {
       return CJS_Result::Failure(JSMessage::kBadObjectError);
     }

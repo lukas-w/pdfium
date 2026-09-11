@@ -9,17 +9,10 @@
 #include "fxjs/global_timer.h"
 #include "fxjs/js_define.h"
 
-uint32_t CJS_TimerObj::ObjDefnID = 0;
-
-// static
-uint32_t CJS_TimerObj::GetObjDefnID() {
-  return ObjDefnID;
-}
-
 // static
 void CJS_TimerObj::DefineJSObjects(CFXJS_Engine* pEngine) {
-  ObjDefnID = pEngine->DefineObj("TimerObj", FXJSOBJTYPE_DYNAMIC,
-                                 JSConstructor<CJS_TimerObj>, JSDestructor);
+  pEngine->DefineObj(kObjDefnId, "TimerObj", FXJSOBJTYPE_DYNAMIC,
+                     JSConstructor<CJS_TimerObj>, JSDestructor);
 }
 
 CJS_TimerObj::CJS_TimerObj(v8::Local<v8::Object> pObject, CJS_Runtime* pRuntime)

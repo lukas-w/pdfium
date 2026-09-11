@@ -30,7 +30,7 @@ enum FIELD_PROP {
 
 class CJS_Field final : public CJS_Object {
  public:
-  static uint32_t GetObjDefnID();
+  static constexpr uint32_t kObjDefnId = kJSFieldObjDefnID;
   static void DefineJSObjects(CFXJS_Engine* pEngine);
   static void DoDelay(CPDFSDK_FormFillEnvironment* pFormFillEnv,
                       CJS_DelayData* pData);
@@ -124,7 +124,6 @@ class CJS_Field final : public CJS_Object {
   CJS_Result set_text_color(CJS_Runtime* pRuntime, v8::Local<v8::Value> vp);
 
  private:
-  static uint32_t ObjDefnID;
   static const char kName[];
   static const JSPropertySpec PropertySpecs[];
   static const JSMethodSpec MethodSpecs[];

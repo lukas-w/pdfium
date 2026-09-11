@@ -269,9 +269,9 @@ class CFXJS_ObjDefinition {
 static v8::Local<v8::ObjectTemplate> GetGlobalObjectTemplate(
     v8::Isolate* isolate) {
   CFXJS_PerIsolateData* pIsolateData = CFXJS_PerIsolateData::Get(isolate);
-  for (uint32_t i = 1; i <= pIsolateData->CurrentMaxObjDefinitionID(); ++i) {
+  for (uint32_t i = 1; i < kMaxFxObjDefinitions; ++i) {
     CFXJS_ObjDefinition* pObjDef = pIsolateData->ObjDefinitionForID(i);
-    if (pObjDef->GetObjType() == FXJSOBJTYPE_GLOBAL) {
+    if (pObjDef && pObjDef->GetObjType() == FXJSOBJTYPE_GLOBAL) {
       return pObjDef->GetInstanceTemplate();
     }
   }
@@ -286,7 +286,7 @@ void V8TemplateMapTraits::Dispose(v8::Isolate* isolate,
     return;
   }
   uint32_t id = CFXJS_Engine::GetObjDefnID(obj);
-  if (id == 0) {
+  if (id == kNotAnFxObject) {
     return;
   }
   CFXJS_PerIsolateData* pIsolateData = CFXJS_PerIsolateData::Get(isolate);
@@ -380,21 +380,18 @@ CFXJS_PerIsolateData::CFXJS_PerIsolateData(v8::Isolate* isolate)
 
 CFXJS_PerIsolateData::~CFXJS_PerIsolateData() = default;
 
-uint32_t CFXJS_PerIsolateData::CurrentMaxObjDefinitionID() const {
-  return fxcrt::CollectionSize<uint32_t>(object_defn_array_);
-}
-
 CFXJS_ObjDefinition* CFXJS_PerIsolateData::ObjDefinitionForID(
     uint32_t id) const {
-  return id > 0 && id <= CurrentMaxObjDefinitionID()
-             ? object_defn_array_[id - 1].get()
-             : nullptr;
+  return id < object_defn_array_.size() ? object_defn_array_[id].get()
+                                        : nullptr;
 }
 
-uint32_t CFXJS_PerIsolateData::AssignIDForObjDefinition(
+void CFXJS_PerIsolateData::InstallObjDefinitionForID(
+    uint32_t id,
     std::unique_ptr<CFXJS_ObjDefinition> pDefn) {
-  object_defn_array_.push_back(std::move(pDefn));
-  return CurrentMaxObjDefinitionID();
+  CHECK_NE(id, kNotAnFxObject);
+  CHECK(!object_defn_array_[id]);
+  object_defn_array_[id] = std::move(pDefn);
 }
 
 v8::Local<v8::ObjectTemplate>
@@ -420,7 +417,7 @@ CFXJS_Engine::~CFXJS_Engine() = default;
 // static
 uint32_t CFXJS_Engine::GetObjDefnID(v8::Local<v8::Object> pObj) {
   CFXJS_PerObjectData* pData = CFXJS_PerObjectData::GetFromObject(pObj);
-  return pData ? pData->GetObjDefnID() : 0;
+  return pData ? pData->GetObjDefnID() : kNotAnFxObject;
 }
 
 // static
@@ -442,15 +439,17 @@ void CFXJS_Engine::FreePerObjectData(v8::Local<v8::Object> pObj) {
   delete pData;
 }
 
-uint32_t CFXJS_Engine::DefineObj(const char* sObjName,
-                                 FXJSOBJTYPE eObjType,
-                                 CFXJS_Engine::Constructor pConstructor,
-                                 CFXJS_Engine::Destructor pDestructor) {
+void CFXJS_Engine::DefineObj(uint32_t nObjDefnID,
+                             const char* sObjName,
+                             FXJSOBJTYPE eObjType,
+                             CFXJS_Engine::Constructor pConstructor,
+                             CFXJS_Engine::Destructor pDestructor) {
   v8::Isolate::Scope isolate_scope(GetIsolate());
   v8::HandleScope handle_scope(GetIsolate());
   CFXJS_PerIsolateData* pIsolateData =
       CFXJS_PerIsolateData::GetOrCreate(GetIsolate());
-  return pIsolateData->AssignIDForObjDefinition(
+  pIsolateData->InstallObjDefinitionForID(
+      nObjDefnID,
       std::make_unique<CFXJS_ObjDefinition>(GetIsolate(), sObjName, eObjType,
                                             pConstructor, pDestructor));
 }
@@ -548,10 +547,11 @@ void CFXJS_Engine::InitializeEngine() {
   }
 
   v8::Context::Scope context_scope(v8Context);
-  uint32_t maxID = pIsolateData->CurrentMaxObjDefinitionID();
-  static_objects_.resize(maxID + 1);
-  for (uint32_t i = 1; i <= maxID; ++i) {
+  for (uint32_t i = 1; i < kMaxFxObjDefinitions; ++i) {
     CFXJS_ObjDefinition* pObjDef = pIsolateData->ObjDefinitionForID(i);
+    if (!pObjDef) {
+      continue;
+    }
     if (pObjDef->GetObjType() == FXJSOBJTYPE_GLOBAL) {
       CFXJS_PerObjectData::SetNewDataInObject(i, pThis);
       pObjDef->RunConstructor(this, pThis);
@@ -581,8 +581,11 @@ void CFXJS_Engine::ReleaseEngine() {
 
   const_arrays_.clear();
 
-  for (uint32_t i = 1; i <= pIsolateData->CurrentMaxObjDefinitionID(); ++i) {
+  for (uint32_t i = 1; i < kMaxFxObjDefinitions; ++i) {
     CFXJS_ObjDefinition* pObjDef = pIsolateData->ObjDefinitionForID(i);
+    if (!pObjDef) {
+      continue;
+    }
     v8::Local<v8::Object> pObj;
     if (pObjDef->GetObjType() == FXJSOBJTYPE_GLOBAL) {
       pObj = context->Global();

@@ -6,6 +6,8 @@
 
 #include "fxjs/cjs_style.h"
 
+#include "fxjs/js_define.h"
+
 const JSConstSpec CJS_Style::ConstSpecs[] = {
     {"ch", JSConstSpec::String, 0, "check"},
     {"cr", JSConstSpec::String, 0, "cross"},
@@ -14,10 +16,8 @@ const JSConstSpec CJS_Style::ConstSpecs[] = {
     {"st", JSConstSpec::String, 0, "star"},
     {"sq", JSConstSpec::String, 0, "square"}};
 
-uint32_t CJS_Style::ObjDefnID = 0;
-
 // static
 void CJS_Style::DefineJSObjects(CFXJS_Engine* pEngine) {
-  ObjDefnID = pEngine->DefineObj("style", FXJSOBJTYPE_STATIC, nullptr, nullptr);
-  DefineConsts(pEngine, ObjDefnID, ConstSpecs);
+  pEngine->DefineObj(kObjDefnId, "style", FXJSOBJTYPE_STATIC, nullptr, nullptr);
+  DefineConsts(pEngine, kObjDefnId, ConstSpecs);
 }

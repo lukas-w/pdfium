@@ -87,43 +87,27 @@ void CJS_Runtime::DefineJSObjects() {
   v8::Local<v8::Context> context = v8::Context::New(GetIsolate());
   v8::Context::Scope context_scope(context);
 
-  // The call order determines the "ObjDefID" assigned to each class.
-  // ObjDefIDs 0 - 2
   CJS_Border::DefineJSObjects(this);
   CJS_Display::DefineJSObjects(this);
   CJS_Font::DefineJSObjects(this);
-
-  // ObjDefIDs 3 - 5
   CJS_Highlight::DefineJSObjects(this);
   CJS_Position::DefineJSObjects(this);
   CJS_ScaleHow::DefineJSObjects(this);
-
-  // ObjDefIDs 6 - 8
   CJS_ScaleWhen::DefineJSObjects(this);
   CJS_Style::DefineJSObjects(this);
   CJS_Zoomtype::DefineJSObjects(this);
-
-  // ObjDefIDs 9 - 11
   CJS_App::DefineJSObjects(this);
   CJS_Color::DefineJSObjects(this);
   CJS_Console::DefineJSObjects(this);
-
-  // ObjDefIDs 12 - 14
   CJS_Document::DefineJSObjects(this);
   CJS_Event::DefineJSObjects(this);
   CJS_Field::DefineJSObjects(this);
-
-  // ObjDefIDs 15 - 17
   CJS_Global::DefineJSObjects(this);
   CJS_Icon::DefineJSObjects(this);
   CJS_Util::DefineJSObjects(this);
-
-  // ObjDefIDs 18 - 20 (these can't fail, return void).
   CJS_PublicMethods::DefineJSObjects(this);
   CJS_GlobalConsts::DefineJSObjects(this);
   CJS_GlobalArrays::DefineJSObjects(this);
-
-  // ObjDefIDs 21 - 22.
   CJS_TimerObj::DefineJSObjects(this);
   CJS_Annot::DefineJSObjects(this);
 }

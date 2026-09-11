@@ -8,12 +8,13 @@
 #define FXJS_CJS_TIMEROBJ_H_
 
 #include "fxjs/cjs_object.h"
+#include "fxjs/js_define.h"
 
 class GlobalTimer;
 
 class CJS_TimerObj final : public CJS_Object {
  public:
-  static uint32_t GetObjDefnID();
+  static constexpr uint32_t kObjDefnId = kJSTimerObjDefnID;
   static void DefineJSObjects(CFXJS_Engine* pEngine);
 
   CJS_TimerObj(v8::Local<v8::Object> pObject, CJS_Runtime* pRuntime);
@@ -23,7 +24,6 @@ class CJS_TimerObj final : public CJS_Object {
   int GetTimerID() const { return timer_id_; }
 
  private:
-  static uint32_t ObjDefnID;
 
   int timer_id_ = 0;  // Weak reference to GlobalTimer through global map.
 };

@@ -9,19 +9,13 @@
 const JSPropertySpec CJS_Icon::PropertySpecs[] = {
     {"name", get_name_static, set_name_static}};
 
-uint32_t CJS_Icon::ObjDefnID = 0;
 const char CJS_Icon::kName[] = "Icon";
 
 // static
-uint32_t CJS_Icon::GetObjDefnID() {
-  return ObjDefnID;
-}
-
-// static
 void CJS_Icon::DefineJSObjects(CFXJS_Engine* pEngine) {
-  ObjDefnID = pEngine->DefineObj(CJS_Icon::kName, FXJSOBJTYPE_DYNAMIC,
-                                 JSConstructor<CJS_Icon>, JSDestructor);
-  DefineProps(pEngine, ObjDefnID, PropertySpecs);
+  pEngine->DefineObj(kObjDefnId, CJS_Icon::kName, FXJSOBJTYPE_DYNAMIC,
+                     JSConstructor<CJS_Icon>, JSDestructor);
+  DefineProps(pEngine, kObjDefnId, PropertySpecs);
 }
 
 CJS_Icon::CJS_Icon(v8::Local<v8::Object> pObject, CJS_Runtime* pRuntime)

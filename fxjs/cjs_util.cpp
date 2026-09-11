@@ -81,19 +81,13 @@ const JSMethodSpec CJS_Util::MethodSpecs[] = {
     {"scand", scand_static},
     {"byteToChar", byteToChar_static}};
 
-uint32_t CJS_Util::ObjDefnID = 0;
 const char CJS_Util::kName[] = "util";
 
 // static
-uint32_t CJS_Util::GetObjDefnID() {
-  return ObjDefnID;
-}
-
-// static
 void CJS_Util::DefineJSObjects(CFXJS_Engine* pEngine) {
-  ObjDefnID = pEngine->DefineObj(CJS_Util::kName, FXJSOBJTYPE_STATIC,
-                                 JSConstructor<CJS_Util>, JSDestructor);
-  DefineMethods(pEngine, ObjDefnID, MethodSpecs);
+  pEngine->DefineObj(kObjDefnId, CJS_Util::kName, FXJSOBJTYPE_STATIC,
+                     JSConstructor<CJS_Util>, JSDestructor);
+  DefineMethods(pEngine, kObjDefnId, MethodSpecs);
 }
 
 CJS_Util::CJS_Util(v8::Local<v8::Object> pObject, CJS_Runtime* pRuntime)

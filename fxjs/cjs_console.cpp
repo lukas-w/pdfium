@@ -16,19 +16,13 @@ const JSMethodSpec CJS_Console::MethodSpecs[] = {{"clear", clear_static},
                                                  {"println", println_static},
                                                  {"show", show_static}};
 
-uint32_t CJS_Console::ObjDefnID = 0;
 const char CJS_Console::kName[] = "console";
 
 // static
-uint32_t CJS_Console::GetObjDefnID() {
-  return ObjDefnID;
-}
-
-// static
 void CJS_Console::DefineJSObjects(CFXJS_Engine* pEngine) {
-  ObjDefnID = pEngine->DefineObj(CJS_Console::kName, FXJSOBJTYPE_STATIC,
-                                 JSConstructor<CJS_Console>, JSDestructor);
-  DefineMethods(pEngine, ObjDefnID, MethodSpecs);
+  pEngine->DefineObj(kObjDefnId, CJS_Console::kName, FXJSOBJTYPE_STATIC,
+                     JSConstructor<CJS_Console>, JSDestructor);
+  DefineMethods(pEngine, kObjDefnId, MethodSpecs);
 }
 
 CJS_Console::CJS_Console(v8::Local<v8::Object> pObject, CJS_Runtime* pRuntime)

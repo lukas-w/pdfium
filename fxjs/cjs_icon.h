@@ -12,7 +12,7 @@
 
 class CJS_Icon final : public CJS_Object {
  public:
-  static uint32_t GetObjDefnID();
+  static constexpr uint32_t kObjDefnId = kJSIconObjDefnID;
   static void DefineJSObjects(CFXJS_Engine* pEngine);
 
   CJS_Icon(v8::Local<v8::Object> pObject, CJS_Runtime* pRuntime);
@@ -24,7 +24,6 @@ class CJS_Icon final : public CJS_Object {
   JS_STATIC_PROP(name, name, CJS_Icon)
 
  private:
-  static uint32_t ObjDefnID;
   static const char kName[];
   static const JSPropertySpec PropertySpecs[];
 
