@@ -15,6 +15,7 @@
 #define FXJS_CFXJS_ENGINE_H_
 
 #include <functional>
+#include <limits>
 #include <map>
 #include <memory>
 #include <utility>
@@ -47,7 +48,7 @@ class CFXJS_PerIsolateData {
 
   ~CFXJS_PerIsolateData();
 
-  static void SetUp(v8::Isolate* isolate);
+  static CFXJS_PerIsolateData* GetOrCreate(v8::Isolate* isolate);
   static CFXJS_PerIsolateData* Get(v8::Isolate* isolate);
 
   uint32_t CurrentMaxObjDefinitionID() const;
@@ -61,9 +62,20 @@ class CFXJS_PerIsolateData {
   v8::Local<v8::ObjectTemplate> GetOrCreateDefaultGlobalObjectTemplate(
       v8::Isolate* isolate);
 
+  size_t engine_ref_count() const { return engine_ref_count_; }
+  size_t IncrementEngineRefCount() {
+    CHECK_LT(engine_ref_count_, std::numeric_limits<size_t>::max());
+    return ++engine_ref_count_;
+  }
+  size_t DecrementEngineRefCount() {
+    CHECK_GT(engine_ref_count_, 0u);
+    return --engine_ref_count_;
+  }
+
  private:
   explicit CFXJS_PerIsolateData(v8::Isolate* isolate);
 
+  size_t engine_ref_count_ = 0;
   const wchar_t* const tag_;  // Raw, always a literal.
   std::vector<std::unique_ptr<CFXJS_ObjDefinition>> object_defn_array_;
   std::unique_ptr<V8TemplateMap> dynamic_objs_map_;

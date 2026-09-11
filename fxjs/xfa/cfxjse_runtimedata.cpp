@@ -47,8 +47,7 @@ std::unique_ptr<CFXJSE_RuntimeData> CFXJSE_RuntimeData::Create(
 }
 
 CFXJSE_RuntimeData* CFXJSE_RuntimeData::Get(v8::Isolate* pIsolate) {
-  CFXJS_PerIsolateData::SetUp(pIsolate);
-  CFXJS_PerIsolateData* pData = CFXJS_PerIsolateData::Get(pIsolate);
+  CFXJS_PerIsolateData* pData = CFXJS_PerIsolateData::GetOrCreate(pIsolate);
   if (!pData->GetExtension()) {
     pData->SetExtension(CFXJSE_RuntimeData::Create(pIsolate));
   }

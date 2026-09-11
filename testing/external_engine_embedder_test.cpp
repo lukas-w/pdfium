@@ -21,7 +21,7 @@ void ExternalEngineEmbedderTest::SetUp() {
 
   v8::Isolate::Scope isolate_scope(isolate());
   v8::HandleScope handle_scope(isolate());
-  CFXJS_PerIsolateData::SetUp(isolate());
+  CFXJS_PerIsolateData::GetOrCreate(isolate());
   engine_ = std::make_unique<CFXJS_Engine>(isolate());
   engine_->InitializeEngine();
 }
