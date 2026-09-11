@@ -13,7 +13,9 @@
 #include "core/fxcrt/fx_stream.h"
 #include "core/fxcrt/retain_ptr.h"
 #include "core/fxcrt/span.h"
+#include "core/fxge/cfx_fillrenderoptions.h"
 #include "core/fxge/cfx_gemodule.h"
+#include "core/fxge/cfx_path.h"
 #include "core/fxge/dib/cfx_dibitmap.h"
 #include "core/fxge/dib/fx_dib.h"
 #include "core/fxge/win32/cfx_psfonttracker.h"
@@ -213,4 +215,26 @@ restore
 
   auto output = ByteString(ByteStringView(output_stream->GetSpan()));
   EXPECT_EQ(output, kExpectedOutput);
+}
+
+TEST(PSRendererTest, SetClipPathFill) {
+  auto output_stream = pdfium::MakeRetain<TestWriteStream>();
+  CFX_PSFontTracker font_tracker;
+  CFX_PSRenderer renderer(&font_tracker, /*encoder_iface=*/nullptr);
+  renderer.Init(output_stream, CFX_PSRenderer::RenderingLevel::kLevel2,
+                /*width=*/500, /*height=*/500);
+
+  CFX_Path path;
+  path.AppendRect(20.2f, 40.4f, 100.6f, 200.8f);
+  renderer.SetClip_PathFill(path, /*matrix=*/nullptr,
+                            CFX_FillRenderOptions::WindingOptions());
+  // TODO(crbug.com/553140224): Clip box should be FX_RECT(20, 40, 101, 201).
+  EXPECT_EQ(renderer.GetClipBox(), FX_RECT(20, 241, 120, 40));
+
+  CFX_Path path2;
+  path2.AppendRect(50.1f, 80.3f, 150.7f, 250.9f);
+  renderer.SetClip_PathFill(path2, /*matrix=*/nullptr,
+                            CFX_FillRenderOptions::WindingOptions());
+  // TODO(crbug.com/553140224): Clip box should be FX_RECT(50, 80, 101, 201).
+  EXPECT_EQ(renderer.GetClipBox(), FX_RECT(50, 331, 200, 80));
 }
