@@ -2484,13 +2484,10 @@ TEST_F(FPDFTextEmbedderTest, Bug491516663) {
 
 TEST_F(FPDFTextEmbedderTest, Bug554790604) {
   // The document's ToUnicode CMap is a catch-all bfrange followed by overrides
-  // for individual codes. Per Adobe TN #5014 the later entries should win, so
-  // the page should read as U+00F3, U+00BA, U+20AC, U+00ED, U+00BA, 'X', 'A',
-  // 'B', U+00E9, U+00EA. The lowest mapping wins instead, so every code whose
-  // target is above it keeps the range's identity mapping, and 0x9B becomes an
-  // unprintable C1 control character.
+  // for individual codes. Per Adobe TN #5014 the later entries win, so the page
+  // reads as accented characters rather than the range's identity mapping.
   static constexpr std::array<unsigned short, 11> kExpectedChars = {
-      'A', 'B', 'C', 'U', 0x009b, 'X', 'A', 'B', 'p', 'q', 0};
+      0x00f3, 0x00ba, 0x20ac, 0x00ed, 0x00ba, 'X', 'A', 'B', 0x00e9, 0x00ea, 0};
 
   ASSERT_TRUE(OpenDocument("bug_554790604.pdf"));
   ScopedPage page = LoadScopedPage(0);

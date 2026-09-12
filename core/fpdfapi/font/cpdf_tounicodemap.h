@@ -53,16 +53,14 @@ class CPDF_ToUnicodeMap {
 
   // Key: charcode
   // Value: unicode
-  // If there are multiple entries with the same key, this stores the lowest
-  // value.
+  // If a charcode is mapped more than once, this stores the last mapping, as
+  // later map entries supersede earlier ones.
   std::map<uint32_t, uint32_t> map_;
   // Key: unicode
   // Value: charcode
-  // Since `map_` may encounter entries with the same key but different values,
-  // that situation does not cause a conflict in `reverse_map_`. Thus
-  // `reverse_map_` may have a different number of entries compared to `map_`.
-  // Similar to `map_`, if there is a key collision, then this stores the lowest
-  // value.
+  // Several charcodes may map to one unicode, so `reverse_map_` may have fewer
+  // entries than `map_`. On such a collision this stores the last charcode,
+  // matching how `map_` resolves a charcode mapped more than once.
   std::map<uint32_t, uint32_t> reverse_map_;
 
   UnownedPtr<const CPDF_CID2UnicodeMap> base_map_;

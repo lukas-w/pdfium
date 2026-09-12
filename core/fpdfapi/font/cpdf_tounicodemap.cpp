@@ -373,13 +373,32 @@ void CPDF_ToUnicodeMap::SetCode(uint32_t srccode, WideString destcode) {
 }
 
 void CPDF_ToUnicodeMap::InsertIntoMaps(uint32_t code, uint32_t destcode) {
-  auto [it, inserted] = map_.insert({code, destcode});
-  if (!inserted) {
-    it->second = std::min(it->second, destcode);
-  }
+  // Adobe TN #5014, "Adobe CMap and CIDFont Files Specification": "Code
+  // mappings (unlike codespace ranges) may overlap, but succeeding maps
+  // superceded preceding maps." A later bfchar or bfrange entry therefore
+  // replaces an earlier mapping for the same code, which subset fonts rely on
+  // when a catch-all bfrange is followed by overrides for individual codes.
+  map_[code] = destcode;
+  reverse_map_[destcode] = code;
 
-  auto [reverse_it, reverse_inserted] = reverse_map_.insert({destcode, code});
-  if (!reverse_inserted) {
-    reverse_it->second = std::min(reverse_it->second, code);
-  }
+  // TODO(crbug.com/554790604): Two rough edges remain here.
+  //
+  // A superseded mapping leaves an orphaned entry behind in `reverse_map_`:
+  // after InsertIntoMaps(1, 2) and then InsertIntoMaps(1, 3), `map_` holds
+  // {1: 3} but `reverse_map_` holds {2: 1, 3: 1}, so ReverseLookup(2) still
+  // answers 1 for a mapping that no longer exists. Rebuilding `reverse_map_`
+  // from the finished `map_` removes those, but it changes which charcode
+  // font subsetting picks, so it needs its own change.
+  //
+  // Also, last-wins is only meaningful for a CMap that a producer authored.
+  // LoadCompositeFont() collects a font's cmap into a multimap keyed by glyph,
+  // so a glyph that several unicodes reach contributes several entries, and
+  // LoadUnicode() then emits overlapping bfranges for it. Which of those wins
+  // comes down to the order they were emitted in rather than to the font, and
+  // no ordering is right for all of them. Among the pairs
+  // FPDFSaveWithFontSubsetEmbedderTest covers, last-wins picks U+4E00 over
+  // U+2F00, which is the better answer, but also U+F906 over U+53E5 and
+  // U+00A0 over U+0020, which are worse; lowest-wins gets those same three
+  // the other way round. Making that CMap map each charcode once is the real
+  // fix.
 }

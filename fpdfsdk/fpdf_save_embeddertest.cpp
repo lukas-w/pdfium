@@ -326,11 +326,18 @@ class FPDFSaveWithFontSubsetEmbedderTest : public FPDFSaveEmbedderTest {
       // "Goodbye, world!\r\n"
       'G', 'o', 'o', 'd', 'b', 'y', 'e', ',', ' ', 'w', 'o', 'r', 'l', 'd', '!',
       '\r', '\n',
-      // "这是第一句。"
-      0x8FD9, 0x662F, 0x7B2C, 0x2F00, 0x53E5, 0x3002};
+      // "这是第一句。", where U+F906 is a compatibility ideograph for U+53E5.
+      // TODO(crbug.com/554790604): The CMap generated for the subset font maps
+      // the last two charcodes twice, so which unicode text extraction returns
+      // is decided by the tie-break rather than by the font. U+4E00 is the
+      // better answer of the two for the fourth character, U+53E5 for the
+      // fifth; no single tie-break rule produces both.
+      0x8FD9, 0x662F, 0x7B2C, 0x4E00, 0xF906, 0x3002};
   static constexpr std::array<FPDF_WCHAR, 14> kExpectedSecondTextAdded = {
-      // "Hello again."
-      '\r', '\n', 'H', 'e', 'l', 'l', 'o', ' ', 'a', 'g', 'a', 'i', 'n', '.'};
+      // "Hello again.", where the space is U+00A0 for the same reason as
+      // above: this font's generated CMap also maps that charcode twice.
+      '\r',   '\n', 'H', 'e', 'l', 'l', 'o',
+      0x00A0, 'a',  'g', 'a', 'i', 'n', '.'};
 
   ScopedFPDFFont LoadTestFont(const std::string& font_path) {
     std::vector<uint8_t> font_data = GetFileContents(font_path.c_str());
@@ -438,7 +445,7 @@ TEST_F(FPDFSaveWithFontSubsetEmbedderTest, SaveWithSubsetWithNewText) {
   // font, since text only contains a subset of the characters in the test font.
   EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, FPDF_SUBSET_NEW_FONTS));
   EXPECT_THAT(GetString(), StartsWith("%PDF-1.7\r\n"));
-  EXPECT_EQ(4453u, GetString().size());
+  EXPECT_EQ(4454u, GetString().size());
 
   // Verify the text is visible.
   VerifySavedDocumentWithExpectationSuffix(kSaveNewTextFilename);

@@ -403,11 +403,9 @@ TEST(CPDFToUnicodeMapTest, SucceedingMapsSupersedePreceding) {
         "1 beginbfrange<00><FF><0000>endbfrange\n"
         "3 beginbfchar<41><00F3><42><00BA><43><20AC>endbfchar";
     CPDF_ToUnicodeMap map(pdfium::MakeRetain<CPDF_Stream>(kInput1));
-    // Should be U+00F3, U+00BA and U+20AC. The lowest value wins instead, so
-    // each charcode keeps the identity mapping from the earlier bfrange.
-    EXPECT_EQ(L"A", map.Lookup(0x41));
-    EXPECT_EQ(L"B", map.Lookup(0x42));
-    EXPECT_EQ(L"C", map.Lookup(0x43));
+    EXPECT_EQ(L"\u00f3", map.Lookup(0x41));
+    EXPECT_EQ(L"\u00ba", map.Lookup(0x42));
+    EXPECT_EQ(L"\u20ac", map.Lookup(0x43));
     // A charcode no later entry mentions keeps the range's mapping.
     EXPECT_EQ(L"D", map.Lookup(0x44));
   }
@@ -417,14 +415,12 @@ TEST(CPDFToUnicodeMapTest, SucceedingMapsSupersedePreceding) {
         "1 beginbfrange<00><FF><0000>endbfrange\n"
         "1 beginbfrange<70><71><00E9>endbfrange";
     CPDF_ToUnicodeMap map(pdfium::MakeRetain<CPDF_Stream>(kInput2));
-    // Should be U+00E9 and U+00EA.
-    EXPECT_EQ(L"p", map.Lookup(0x70));
-    EXPECT_EQ(L"q", map.Lookup(0x71));
+    EXPECT_EQ(L"\u00e9", map.Lookup(0x70));
+    EXPECT_EQ(L"\u00ea", map.Lookup(0x71));
     EXPECT_EQ(L"r", map.Lookup(0x72));
   }
   {
-    // A mapping to a lower unicode happens to win today as well, since it is
-    // also the lowest. This case is unaffected by the bug.
+    // A mapping to a lower unicode also wins when it comes later.
     static constexpr uint8_t kInput3[] =
         "1 beginbfchar<41><00F3>endbfchar\n"
         "1 beginbfchar<41><0041>endbfchar";
