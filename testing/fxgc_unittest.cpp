@@ -17,7 +17,7 @@ void FXGCUnitTest::SetUp() {
   ::testing::Test::SetUp();
   auto* env = V8TestEnvironment::GetInstance();
   FXGC_Initialize(env->platform(), env->isolate());
-  heap_ = FXGC_CreateHeap();
+  heap_ = FXGC_CreateHeap(nullptr);
   ASSERT_TRUE(heap_);
 }
 

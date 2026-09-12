@@ -229,11 +229,11 @@ if (pdf_enable_v8) {
         "gc/heap.h",
       ]
       configs += [ "../:pdfium_strict_config" ]
-      deps = [
+      deps = [ "//v8" ]
+      public_deps = [
         "../core/fxcrt",
-        "//v8:v8_libplatform",
+        "//v8:cppgc",
       ]
-      public_deps = [ "//v8:cppgc" ]
     }
   }
 }

@@ -111,7 +111,7 @@ void CPDFXFA_ModuleDestroy() {
 CPDFXFA_Context::CPDFXFA_Context(CPDF_Document* pPDFDoc)
     : pdfdoc_(pPDFDoc),
       doc_env_(std::make_unique<CPDFXFA_DocEnvironment>(this)),
-      gc_heap_(FXGC_CreateHeap()) {
+      gc_heap_(FXGC_CreateHeap(nullptr)) {
   DCHECK(pdfdoc_);
 
   // There might not be a heap when JS not initialized.
@@ -169,7 +169,7 @@ bool CPDFXFA_Context::LoadXFADoc() {
   AutoNuller<cppgc::Persistent<CXFA_FFDoc>> doc_nuller(&xfadoc_);
   xfadoc_ = cppgc::MakeGarbageCollected<CXFA_FFDoc>(
       gc_heap_->GetAllocationHandle(), xfaapp_, doc_env_.get(), pdfdoc_,
-      gc_heap_.get());
+      gc_heap_->GetStandaloneHeap());
 
   if (!xfadoc_->OpenDoc(xml_.get())) {
     FXSYS_SetLastError(FPDF_ERR_XFALOAD);
@@ -424,7 +424,7 @@ CFX_Timer::HandlerIface* CPDFXFA_Context::GetTimerHandler() const {
 }
 
 cppgc::Heap* CPDFXFA_Context::GetGCHeap() const {
-  return gc_heap_.get();
+  return gc_heap_ ? gc_heap_->GetStandaloneHeap() : nullptr;
 }
 
 bool CPDFXFA_Context::SaveDatasetsPackage(

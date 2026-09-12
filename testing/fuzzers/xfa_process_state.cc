@@ -8,14 +8,14 @@
 #include "v8/include/libplatform/libplatform.h"
 
 XFAProcessState::XFAProcessState(v8::Platform* platform, v8::Isolate* isolate)
-    : platform_(platform), isolate_(isolate), heap_(FXGC_CreateHeap()) {}
+    : platform_(platform), isolate_(isolate), heap_(FXGC_CreateHeap(isolate)) {}
 
 XFAProcessState::~XFAProcessState() {
   FXGC_ForceGarbageCollection(heap_.get());
 }
 
 cppgc::Heap* XFAProcessState::GetHeap() const {
-  return heap_.get();
+  return heap_ ? heap_->GetStandaloneHeap() : nullptr;
 }
 
 void XFAProcessState::ForceGCAndPump() {

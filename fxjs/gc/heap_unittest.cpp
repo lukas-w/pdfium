@@ -75,13 +75,13 @@ class HeapUnitTest : public FXGCUnitTest {
 };
 
 TEST_F(HeapUnitTest, SeveralHeaps) {
-  FXGCScopedHeap heap1 = FXGC_CreateHeap();
+  FXGCScopedHeap heap1 = FXGC_CreateHeap(nullptr);
   EXPECT_TRUE(heap1);
 
-  FXGCScopedHeap heap2 = FXGC_CreateHeap();
+  FXGCScopedHeap heap2 = FXGC_CreateHeap(nullptr);
   EXPECT_TRUE(heap2);
 
-  FXGCScopedHeap heap3 = FXGC_CreateHeap();
+  FXGCScopedHeap heap3 = FXGC_CreateHeap(nullptr);
   EXPECT_TRUE(heap3);
 
   // Test manually destroying the heap.
@@ -92,7 +92,7 @@ TEST_F(HeapUnitTest, SeveralHeaps) {
 }
 
 TEST_F(HeapUnitTest, NoReferences) {
-  FXGCScopedHeap heap1 = FXGC_CreateHeap();
+  FXGCScopedHeap heap1 = FXGC_CreateHeap(nullptr);
   ASSERT_TRUE(heap1);
   {
     auto holder = std::make_unique<CollectibleHolder>(
@@ -109,7 +109,7 @@ TEST_F(HeapUnitTest, NoReferences) {
 }
 
 TEST_F(HeapUnitTest, HasReferences) {
-  FXGCScopedHeap heap1 = FXGC_CreateHeap();
+  FXGCScopedHeap heap1 = FXGC_CreateHeap(nullptr);
   ASSERT_TRUE(heap1);
   {
     auto holder = std::make_unique<CollectibleHolder>(
@@ -129,7 +129,7 @@ TEST_F(HeapUnitTest, HasReferences) {
 
 // TODO(tsepez): enable when CPPGC fixes this segv.
 TEST_F(HeapUnitTest, DISABLED_DeleteHeapHasReferences) {
-  FXGCScopedHeap heap1 = FXGC_CreateHeap();
+  FXGCScopedHeap heap1 = FXGC_CreateHeap(nullptr);
   ASSERT_TRUE(heap1);
   {
     auto holder = std::make_unique<CollectibleHolder>(
@@ -150,7 +150,7 @@ TEST_F(HeapUnitTest, DISABLED_DeleteHeapHasReferences) {
 }
 
 TEST_F(HeapUnitTest, DeleteHeapNoReferences) {
-  FXGCScopedHeap heap1 = FXGC_CreateHeap();
+  FXGCScopedHeap heap1 = FXGC_CreateHeap(nullptr);
   ASSERT_TRUE(heap1);
   {
     auto holder = std::make_unique<CollectibleHolder>(

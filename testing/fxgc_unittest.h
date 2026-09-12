@@ -17,7 +17,10 @@ class FXGCUnitTest : public ::testing::Test {
   void SetUp() override;
   void TearDown() override;
 
-  cppgc::Heap* heap() const { return heap_.get(); }
+  cppgc::Heap* heap() const {
+    return heap_ ? heap_->GetStandaloneHeap() : nullptr;
+  }
+  FXGC_Heap* fxgc_heap() const { return heap_.get(); }
   void ForceGCAndPump();
   void Pump();
 
