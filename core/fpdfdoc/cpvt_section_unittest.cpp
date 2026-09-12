@@ -323,3 +323,57 @@ TEST_F(CPVT_SectionTest, OutputLines_ParagraphSeparator) {
   EXPECT_LT(section.GetWordFromArray(0)->fWordX,
             section.GetWordFromArray(1)->fWordX);
 }
+
+TEST_F(CPVT_SectionTest, OutputLines_Multiline_CurrencySymbol) {
+  CPVT_VariableText vt(provider_.get());
+  vt.SetFontSize(10.0f);
+  // Narrow width to force word wrap (stub font chars are 0.1 wide at font size
+  // 10).
+  vt.SetPlateRect(CFX_FloatRect(0, 0, 0.35f, 1000));
+  vt.SetAutoReturn(true);
+  vt.Initialize();
+
+  // Test '$' (0x0024): prefix currency symbol does not divide from '1'.
+  // With "A $1", "A " fits on line 0 (width 0.2), but adding "$1" (width 0.2)
+  // exceeds 0.35. Since '$' is a prefix symbol, it stays with '1' on line 1.
+  {
+    CPVT_Section section(&vt);
+    PopulateSectionWithText(section, {'A', ' ', '$', '1'});
+    section.Rearrange();
+
+    ASSERT_EQ(2, section.GetLineArraySize());
+    const CPVT_Section::Line* line0 = section.GetLineFromArray(0);
+    ASSERT_TRUE(line0);
+    EXPECT_EQ(0, line0->line_info_.nBeginWordIndex);
+    EXPECT_EQ(1, line0->line_info_.nEndWordIndex);
+
+    const CPVT_Section::Line* line1 = section.GetLineFromArray(1);
+    ASSERT_TRUE(line1);
+    EXPECT_EQ(2, line1->line_info_.nBeginWordIndex);
+    EXPECT_EQ(3, line1->line_info_.nEndWordIndex);
+  }
+
+  // Test Euro (0x0080): defined as a currency symbol in IsCurrencySymbol().
+  // However, because of the incorrect check in IsPunctuation(), 0x0080 is
+  // incorrectly classified as punctuation. This causes NeedDivision() to treat
+  // 0x0080 as punctuation instead of a prefix symbol, leaving it at the end of
+  // line 0 rather than keeping it with '1' on line 1.
+  {
+    CPVT_Section section(&vt);
+    PopulateSectionWithText(section, {'A', ' ', 0x0080, '1'});
+    section.Rearrange();
+
+    ASSERT_EQ(2, section.GetLineArraySize());
+    const CPVT_Section::Line* line0 = section.GetLineFromArray(0);
+    ASSERT_TRUE(line0);
+    EXPECT_EQ(0, line0->line_info_.nBeginWordIndex);
+    // TODO(crbug.com/557320960): Behavior is wrong. 0x0080 should move to line
+    // 1 with '1'.
+    EXPECT_EQ(2, line0->line_info_.nEndWordIndex);
+
+    const CPVT_Section::Line* line1 = section.GetLineFromArray(1);
+    ASSERT_TRUE(line1);
+    EXPECT_EQ(3, line1->line_info_.nBeginWordIndex);
+    EXPECT_EQ(3, line1->line_info_.nEndWordIndex);
+  }
+}
