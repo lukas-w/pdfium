@@ -81,7 +81,7 @@ bool IsPunctuation(uint32_t word) {
   if (word >= 0x0080 && word <= 0x00FF) {
     return (word == 0x0082 || word == 0x0084 || word == 0x0085 ||
             word == 0x0091 || word == 0x0092 || word == 0x0093 ||
-            word <= 0x0094 || word == 0x0096 || word == 0x00B4 ||
+            word == 0x0094 || word == 0x0096 || word == 0x00B4 ||
             word == 0x00B8);
   }
   if (word >= 0x2000 && word <= 0x206F) {
