@@ -471,6 +471,65 @@ TEST_F(FPDFAttachmentEmbedderTest, GetSubtypeInvalid) {
             FPDFAttachment_GetSubtype(attachment, nullptr, 10));
 }
 
+TEST_F(FPDFAttachmentEmbedderTest, GetAFRelationship) {
+  ASSERT_TRUE(OpenDocument("embedded_attachments_with_af.pdf"));
+  ASSERT_EQ(3, FPDFDoc_GetAttachmentCount(document()));
+
+  // Attachment 0 (1.txt) has /AFRelationship /Alternative.
+  FPDF_ATTACHMENT attachment = FPDFDoc_GetAttachment(document(), 0);
+  ASSERT_TRUE(attachment);
+
+  constexpr char kExpectedRelationship[] = "Alternative";
+  unsigned long length =
+      FPDFAttachment_GetAFRelationship(attachment, nullptr, 0);
+  ASSERT_EQ(2u * (strlen(kExpectedRelationship) + 1), length);
+
+  std::vector<FPDF_WCHAR> buf = GetFPDFWideStringBuffer(length);
+  EXPECT_EQ(length,
+            FPDFAttachment_GetAFRelationship(attachment, buf.data(), length));
+  EXPECT_EQ(kExpectedRelationship, GetPlatformString(buf.data()));
+
+  // Attachment 1 (2.txt) has no /AFRelationship -> empty string (length 2).
+  FPDF_ATTACHMENT no_relationship = FPDFDoc_GetAttachment(document(), 1);
+  ASSERT_TRUE(no_relationship);
+  EXPECT_EQ(2u, FPDFAttachment_GetAFRelationship(no_relationship, buf.data(),
+                                                 length));
+  EXPECT_EQ("", GetPlatformString(buf.data()));
+
+  // Attachment 2 (3.txt) has a numeric /AFRelationship, which is not a name
+  // object -> empty string (length 2).
+  FPDF_ATTACHMENT numeric_relationship = FPDFDoc_GetAttachment(document(), 2);
+  ASSERT_TRUE(numeric_relationship);
+  EXPECT_EQ(2u, FPDFAttachment_GetAFRelationship(numeric_relationship,
+                                                 buf.data(), length));
+  EXPECT_EQ("", GetPlatformString(buf.data()));
+}
+
+TEST_F(FPDFAttachmentEmbedderTest, GetAFRelationshipInvalid) {
+  ASSERT_TRUE(OpenDocument("embedded_attachments_with_af.pdf"));
+  FPDF_ATTACHMENT attachment = FPDFDoc_GetAttachment(document(), 0);
+  ASSERT_TRUE(attachment);
+
+  // Null attachment -> 0.
+  std::vector<FPDF_WCHAR> buf(1);
+  EXPECT_EQ(0u, FPDFAttachment_GetAFRelationship(nullptr, buf.data(), 1));
+
+  // Buffer too small: unmodified, but the full length is still returned.
+  constexpr char kExpectedRelationship[] = "Alternative";
+  unsigned long length =
+      FPDFAttachment_GetAFRelationship(attachment, nullptr, 0);
+  ASSERT_EQ(2u * (strlen(kExpectedRelationship) + 1), length);
+
+  std::vector<FPDF_WCHAR> small_buf(length - 1);
+  constexpr FPDF_WCHAR kPattern = 0xDEAD;
+  std::ranges::fill(small_buf, kPattern);
+  EXPECT_EQ(length, FPDFAttachment_GetAFRelationship(
+                        attachment, small_buf.data(), small_buf.size()));
+  // The buffer was too small to hold the result, so it must be left
+  // unmodified: every element still holds the pre-filled pattern.
+  EXPECT_THAT(small_buf, testing::Each(kPattern));
+}
+
 TEST_F(FPDFAttachmentEmbedderTest, ReadAttachmentDescription) {
   ASSERT_TRUE(OpenDocument("embedded_attachments_with_desc.pdf"));
 

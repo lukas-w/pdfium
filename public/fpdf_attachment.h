@@ -220,6 +220,26 @@ FPDFAttachment_GetSubtype(FPDF_ATTACHMENT attachment,
                           FPDF_WCHAR* buffer,
                           unsigned long buflen);
 
+// Experimental API.
+// Get the associated file relationship string (the /AFRelationship entry in
+// the file specification dictionary of the embedded file |attachment|; PDF
+// 2.0, ISO 32000-2:2020, Table 43), e.g. "Source", "Data", "Alternative",
+// "Supplement" or "Unspecified". |buffer| is only modified if |buflen| is
+// longer than the length of the relationship name. If the /AFRelationship
+// entry is absent or is not a name, an empty string is copied to |buffer| and
+// the return value is 2. On other errors, |buffer| is not modified and the
+// return value is 0.
+//
+//   attachment - handle to an attachment.
+//   buffer     - buffer for holding the relationship name encoded in UTF-16LE.
+//   buflen     - length of the buffer in bytes.
+//
+// Returns the length of the relationship name in bytes.
+FPDF_EXPORT unsigned long FPDF_CALLCONV
+FPDFAttachment_GetAFRelationship(FPDF_ATTACHMENT attachment,
+                                 FPDF_WCHAR* buffer,
+                                 unsigned long buflen);
+
 #ifdef __cplusplus
 }  // extern "C"
 #endif  // __cplusplus

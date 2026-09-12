@@ -380,3 +380,30 @@ FPDFAttachment_GetSubtype(FPDF_ATTACHMENT attachment,
   return Utf16EncodeMaybeCopyAndReturnLength(
       PDF_DecodeText(subtype.unsigned_span()), buffer_span);
 }
+
+FPDF_EXPORT unsigned long FPDF_CALLCONV
+FPDFAttachment_GetAFRelationship(FPDF_ATTACHMENT attachment,
+                                 FPDF_WCHAR* buffer,
+                                 unsigned long buflen) {
+  CPDF_Object* file = CPDFObjectFromFPDFAttachment(attachment);
+  if (!file) {
+    return 0;
+  }
+
+  CPDF_FileSpec spec(pdfium::WrapRetain(file));
+  RetainPtr<const CPDF_Dictionary> file_spec_dict = spec.GetFileSpecDict();
+  if (!file_spec_dict) {
+    return 0;
+  }
+
+  // SAFETY: required from caller.
+  auto buffer_span = UNSAFE_BUFFERS(SpanFromFPDFApiArgs(buffer, buflen));
+
+  // /AFRelationship is a name in the file specification dictionary (sibling of
+  // /EF, /F, /UF, /Desc), so read it like GetSubtype reads /Subtype. When the
+  // entry is absent GetNameFor returns an empty string, which decodes to an
+  // empty WideString and yields the documented empty-string result (length 2).
+  ByteString relationship = file_spec_dict->GetNameFor("AFRelationship");
+  return Utf16EncodeMaybeCopyAndReturnLength(
+      PDF_DecodeText(relationship.unsigned_span()), buffer_span);
+}
