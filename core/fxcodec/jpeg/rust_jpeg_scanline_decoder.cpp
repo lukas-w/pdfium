@@ -100,7 +100,10 @@ std::unique_ptr<ScanlineDecoder> RustJpegScanlineDecoder::Create(
 
 RustJpegScanlineDecoder::RustJpegScanlineDecoder() = default;
 
-RustJpegScanlineDecoder::~RustJpegScanlineDecoder() = default;
+RustJpegScanlineDecoder::~RustJpegScanlineDecoder() {
+  // Span in superclass can't outlive our buffer.
+  last_scanline_ = pdfium::span<uint8_t>();
+}
 
 bool RustJpegScanlineDecoder::CreateImpl(pdfium::span<const uint8_t> src_span,
                                          uint32_t width,
