@@ -2067,6 +2067,29 @@ TEST_F(FPDFFormFillTextFormEmbedderTest, DeleteTextFieldEntireSelection) {
   EXPECT_EQ(Selection(), "");
 }
 
+TEST_F(FPDFFormFillTextFormEmbedderTest,
+       ControlCharacterChordsDoNotClearSelection) {
+  // Regression test for https://crbug.com/528342021. A modifier chord may
+  // produce a control character even when the modifier is not the platform
+  // shortcut key, e.g. Ctrl-C on Apple platforms. Such characters must not be
+  // typed into the field, where they would replace (and effectively clear)
+  // the current selection.
+  TypeTextIntoTextField(3, RegularFormBegin());
+  SelectAllTextAtPoint(RegularFormBegin());
+  EXPECT_EQ(FocusedFieldText(), "ABC");
+  EXPECT_EQ(Selection(), "ABC");
+
+  // ETX (0x03), as produced by Ctrl-C. This chord is not the platform
+  // shortcut on Apple platforms.
+  FORM_OnChar(form_handle(), page(), 0x03, FWL_EVENTFLAG_ControlKey);
+  EXPECT_EQ(FocusedFieldText(), "ABC");
+
+  // The same character as produced by Cmd-C, which is not the platform
+  // shortcut on non-Apple platforms.
+  FORM_OnChar(form_handle(), page(), 0x03, FWL_EVENTFLAG_MetaKey);
+  EXPECT_EQ(FocusedFieldText(), "ABC");
+}
+
 TEST_F(FPDFFormFillTextFormEmbedderTest, DeleteTextFieldSelectionMiddle) {
   // Select middle section of text.
   TypeTextIntoTextField(12, RegularFormBegin());

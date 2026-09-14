@@ -596,6 +596,14 @@ bool CPWL_Edit::OnCharInternal(uint16_t nChar, Mask<FWL_EVENTFLAG> nFlag) {
     return false;
   }
 
+  // A modifier chord may produce a control character even when the modifier
+  // is not the platform shortcut key, e.g. Ctrl-C on Apple platforms, where
+  // the shortcut key is Meta. Never type such characters, as that would
+  // silently replace the current selection. See https://crbug.com/528342021.
+  if (nChar < 32 && (IsCTRLKeyDown(nFlag) || IsMETAKeyDown(nFlag))) {
+    return false;
+  }
+
   if (IsReadOnly()) {
     return true;
   }

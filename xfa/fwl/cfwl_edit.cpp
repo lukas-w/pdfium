@@ -1059,8 +1059,6 @@ void CFWL_Edit::OnChar(CFWL_MessageKey* pMsg) {
         UpdateCaret();
       }
       break;
-    case L'\n':
-    case 27:   // Esc
     case 127:  // Delete
       break;
     case L'\t':
@@ -1075,6 +1073,9 @@ void CFWL_Edit::OnChar(CFWL_MessageKey* pMsg) {
       break;
     default: {
       if (pdfium::IsPlatformShortcutKey(pMsg->flags_)) {
+        break;
+      }
+      if (c < 32) {
         break;
       }
 
