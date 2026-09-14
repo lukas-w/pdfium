@@ -4,6 +4,7 @@
 
 #include "core/fxcodec/brotli/brotli_decoder.h"
 
+#include <algorithm>
 #include <memory>
 #include <utility>
 
@@ -57,8 +58,9 @@ DataAndBytesConsumed BrotliDecoder::Decode(pdfium::span<const uint8_t> src_span,
         BrotliDecoderDecompressStream(state.get(), &available_in, &next_in,
                                       &available_out, &next_out, &total_out);
     if (result == BROTLI_DECODER_RESULT_NEEDS_MORE_OUTPUT &&
-        decoded_buffer.size() <= kMaxDecodeBytes / 2) {
-      decoded_buffer.resize(decoded_buffer.size() * 2);
+        decoded_buffer.size() < kMaxDecodeBytes) {
+      decoded_buffer.resize(
+          std::min(decoded_buffer.size() * 2, kMaxDecodeBytes));
       continue;
     }
     if (result == BROTLI_DECODER_RESULT_SUCCESS) {
