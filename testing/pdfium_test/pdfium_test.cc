@@ -1501,7 +1501,6 @@ bool PdfProcessor::ProcessPage(const int page_index) {
     return true;
   }
 
-  ScopedFPDFTextPage text_page(FPDFText_LoadPage(page));
   double scale = 1.0;
   if (!options().scale_factor_as_string.empty()) {
     std::stringstream(options().scale_factor_as_string) >> scale;
