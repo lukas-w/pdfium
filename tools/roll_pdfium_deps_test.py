@@ -148,10 +148,6 @@ vars = {
 
   'checkout_instrumented_libraries': 'checkout_linux and checkout_configuration != "small"',
 
-  # By default bot checkouts the WPR archive files only when this
-  # flag is set True.
-  'checkout_wpr_archives': False,
-
   # By default, do not check out WebKit for iOS, as it is not needed unless
   # running against ToT WebKit rather than system WebKit. This can be overridden
   # e.g. with custom_vars.
