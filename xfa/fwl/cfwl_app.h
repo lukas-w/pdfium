@@ -27,7 +27,7 @@ class CFWL_App final : public cppgc::GarbageCollected<CFWL_App> {
     virtual CFWL_WidgetMgr::AdapterIface* GetWidgetMgrAdapter() = 0;
     virtual CFX_Timer::HandlerIface* GetTimerHandler() = 0;
     virtual IFWL_ThemeProvider* GetThemeProvider() = 0;
-    virtual cppgc::Heap* GetHeap() = 0;
+    virtual FXGC_Heap* GetHeap() = 0;
   };
 
   CONSTRUCT_VIA_MAKE_GARBAGE_COLLECTED;
@@ -44,7 +44,7 @@ class CFWL_App final : public cppgc::GarbageCollected<CFWL_App> {
   IFWL_ThemeProvider* GetThemeProvider() const {
     return adapter_->GetThemeProvider();
   }
-  cppgc::Heap* GetHeap() const { return adapter_->GetHeap(); }
+  FXGC_Heap* GetHeap() const { return adapter_->GetHeap(); }
   CFWL_WidgetMgr* GetWidgetMgr() const { return widget_mgr_; }
   CFWL_NoteDriver* GetNoteDriver() const { return note_driver_; }
 

@@ -128,7 +128,7 @@ class CXFA_FFApp final : public cppgc::GarbageCollected<CXFA_FFApp>,
                                const WideString& wsEncode) = 0;
 
     virtual CFX_Timer::HandlerIface* GetTimerHandler() const = 0;
-    virtual cppgc::Heap* GetGCHeap() const = 0;
+    virtual FXGC_Heap* GetGCHeap() const = 0;
   };
 
   CONSTRUCT_VIA_MAKE_GARBAGE_COLLECTED;
@@ -139,7 +139,7 @@ class CXFA_FFApp final : public cppgc::GarbageCollected<CXFA_FFApp>,
   CFWL_WidgetMgr::AdapterIface* GetWidgetMgrAdapter() override;
   CFX_Timer::HandlerIface* GetTimerHandler() override;
   pdfium::IFWL_ThemeProvider* GetThemeProvider() override;
-  cppgc::Heap* GetHeap() override;
+  FXGC_Heap* GetHeap() override;
 
   bool LoadFWLTheme(CXFA_FFDoc* doc);
   CFWL_WidgetMgr* GetFWLWidgetMgr() const { return fwlapp_->GetWidgetMgr(); }

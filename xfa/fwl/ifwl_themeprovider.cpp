@@ -21,7 +21,7 @@
 
 namespace pdfium {
 
-IFWL_ThemeProvider::IFWL_ThemeProvider(cppgc::Heap* pHeap)
+IFWL_ThemeProvider::IFWL_ThemeProvider(FXGC_Heap* pHeap)
     : check_box_tp_(cppgc::MakeGarbageCollected<CFWL_CheckBoxTP>(
           pHeap->GetAllocationHandle())),
       list_box_tp_(cppgc::MakeGarbageCollected<CFWL_ListBoxTP>(

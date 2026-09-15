@@ -1064,7 +1064,7 @@ const uint8_t k_ruRU_Locale[] = {
     0xB3, 0x85, 0xFA, 0x59, 0x2A, 0x7A, 0xFF, 0x3D, 0xC4, 0x3F, 0xDE, 0xCB,
     0x8B, 0xC4};
 
-CXFA_XMLLocale* GetLocaleFromBuffer(cppgc::Heap* heap,
+CXFA_XMLLocale* GetLocaleFromBuffer(FXGC_Heap* heap,
                                     pdfium::span<const uint8_t> src_span) {
   if (src_span.empty()) {
     return nullptr;
@@ -1130,7 +1130,7 @@ CXFA_LocaleMgr::LangID GetLanguageID(WideString wsLanguage) {
 
 }  // namespace
 
-CXFA_LocaleMgr::CXFA_LocaleMgr(cppgc::Heap* pHeap,
+CXFA_LocaleMgr::CXFA_LocaleMgr(FXGC_Heap* pHeap,
                                CXFA_Node* pLocaleSet,
                                WideString wsDeflcid)
     : heap_(pHeap),

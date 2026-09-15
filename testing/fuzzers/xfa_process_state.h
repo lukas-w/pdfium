@@ -21,7 +21,7 @@ class XFAProcessState {
   XFAProcessState(v8::Platform* platform, v8::Isolate* isolate);
   ~XFAProcessState();
 
-  cppgc::Heap* GetHeap() const;
+  FXGC_Heap* GetHeap() const { return heap_.get(); }
   void ForceGCAndPump();
 
  private:

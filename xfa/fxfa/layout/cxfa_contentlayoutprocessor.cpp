@@ -656,7 +656,7 @@ CFX_PointF CalculatePositionedContainerPos(CXFA_Node* pNode,
 }  // namespace
 
 CXFA_ContentLayoutProcessor::CXFA_ContentLayoutProcessor(
-    cppgc::Heap* pHeap,
+    FXGC_Heap* pHeap,
     CXFA_Node* pNode,
     CXFA_ViewLayoutProcessor* pViewLayoutProcessor)
     : heap_(pHeap),

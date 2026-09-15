@@ -42,7 +42,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
   uint8_t type_selector = pre[2] % std::size(kTypes);
 
   auto* state = static_cast<XFAProcessState*>(FPDF_GetFuzzerPerProcessState());
-  cppgc::Heap* heap = state->GetHeap();
+  FXGC_Heap* heap = state->GetHeap();
 
   size_t pattern_len = span.size() / 2;
   WideString pattern =

@@ -1344,7 +1344,7 @@ void UpdateDataRelation(CXFA_Node* pDataNode, CXFA_Node* pDataDescriptionNode) {
 }  // namespace
 
 CXFA_Document::CXFA_Document(CXFA_FFNotify* notify,
-                             cppgc::Heap* heap,
+                             FXGC_Heap* heap,
                              LayoutProcessorIface* pLayout)
     : heap_(heap),
       notify_(notify),
@@ -1528,7 +1528,7 @@ CXFA_LocaleMgr* CXFA_Document::GetLocaleMgr() {
   return locale_mgr_;
 }
 
-cppgc::Heap* CXFA_Document::GetHeap() const {
+FXGC_Heap* CXFA_Document::GetHeap() const {
   return heap_;
 }
 

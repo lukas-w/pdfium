@@ -40,10 +40,6 @@ class CXFA_FFNotify;
 class CXFA_Node;
 class CXFA_Object;
 
-namespace cppgc {
-class Heap;
-}  // namespace cppgc
-
 enum XFA_VERSION {
   XFA_VERSION_UNKNOWN = 0,
   XFA_VERSION_200 = 200,
@@ -97,7 +93,7 @@ class CXFA_Document final : public cppgc::GarbageCollected<CXFA_Document> {
 
   CXFA_FFNotify* GetNotify() const { return notify_; }
   CXFA_NodeOwner* GetNodeOwner() { return node_owner_; }
-  cppgc::Heap* GetHeap() const;
+  FXGC_Heap* GetHeap() const;
   CXFA_LocaleMgr* GetLocaleMgr();
   CXFA_Object* GetXFAObject(XFA_HashCode wsNodeNameHash);
   CXFA_Node* GetNodeByID(CXFA_Node* pRoot, WideStringView wsID) const;
@@ -158,10 +154,10 @@ class CXFA_Document final : public cppgc::GarbageCollected<CXFA_Document> {
                        WideStringView& wsSOM);
 
   CXFA_Document(CXFA_FFNotify* notify,
-                cppgc::Heap* heap,
+                FXGC_Heap* heap,
                 LayoutProcessorIface* pLayout);
 
-  UnownedPtr<cppgc::Heap> heap_;
+  UnownedPtr<FXGC_Heap> heap_;
   std::unique_ptr<CFXJSE_Engine> script_context_;
   cppgc::Member<CXFA_FFNotify> const notify_;
   cppgc::Member<CXFA_NodeOwner> const node_owner_;

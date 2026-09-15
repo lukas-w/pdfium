@@ -22,10 +22,6 @@ class CXFA_Node;
 class CXFA_ViewLayoutItem;
 class CXFA_ViewLayoutProcessor;
 
-namespace cppgc {
-class Heap;
-}  // namespace cppgc
-
 class CXFA_LayoutProcessor final : public CXFA_Document::LayoutProcessorIface {
  public:
   static CXFA_LayoutProcessor* FromDocument(const CXFA_Document* pXFADoc);
@@ -53,13 +49,13 @@ class CXFA_LayoutProcessor final : public CXFA_Document::LayoutProcessorIface {
   }
 
  private:
-  explicit CXFA_LayoutProcessor(cppgc::Heap* pHeap);
+  explicit CXFA_LayoutProcessor(FXGC_Heap* pHeap);
 
-  cppgc::Heap* GetHeap() { return heap_; }
+  FXGC_Heap* GetHeap() { return heap_; }
   bool NeedLayout() const;
   int32_t RestartLayout();
 
-  UnownedPtr<cppgc::Heap> const heap_;
+  UnownedPtr<FXGC_Heap> const heap_;
   cppgc::Member<CXFA_ViewLayoutProcessor> view_layout_processor_;
   cppgc::Member<CXFA_ContentLayoutProcessor> content_layout_processor_;
   uint32_t progress_counter_ = 0;

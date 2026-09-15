@@ -26,7 +26,7 @@ CXFA_LayoutProcessor* CXFA_LayoutProcessor::FromDocument(
   return static_cast<CXFA_LayoutProcessor*>(pXFADoc->GetLayoutProcessor());
 }
 
-CXFA_LayoutProcessor::CXFA_LayoutProcessor(cppgc::Heap* pHeap) : heap_(pHeap) {}
+CXFA_LayoutProcessor::CXFA_LayoutProcessor(FXGC_Heap* pHeap) : heap_(pHeap) {}
 
 CXFA_LayoutProcessor::~CXFA_LayoutProcessor() = default;
 

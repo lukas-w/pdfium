@@ -353,7 +353,7 @@ void CXFA_ViewLayoutProcessor::CXFA_ViewRecord::Trace(
 }
 
 CXFA_ViewLayoutProcessor::CXFA_ViewLayoutProcessor(
-    cppgc::Heap* pHeap,
+    FXGC_Heap* pHeap,
     CXFA_LayoutProcessor* pLayoutProcessor)
     : heap_(pHeap),
       layout_processor_(pLayoutProcessor),

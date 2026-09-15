@@ -57,7 +57,7 @@ FX_IMAGEDIB_AND_DPI::~FX_IMAGEDIB_AND_DPI() = default;
 CXFA_FFDoc::CXFA_FFDoc(CXFA_FFApp* pApp,
                        CallbackIface* pDocEnvironment,
                        CPDF_Document* pPDFDoc,
-                       cppgc::Heap* pHeap)
+                       FXGC_Heap* pHeap)
     : doc_environment_(pDocEnvironment),
       pdfdoc_(pPDFDoc),
       heap_(pHeap),

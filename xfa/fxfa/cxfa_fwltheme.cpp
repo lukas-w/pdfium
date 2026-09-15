@@ -51,7 +51,7 @@ CXFA_FFWidget* GetOutmostFFWidget(CFWL_Widget* pWidget) {
 
 }  // namespace
 
-CXFA_FWLTheme::CXFA_FWLTheme(cppgc::Heap* pHeap, CXFA_FFApp* pApp)
+CXFA_FWLTheme::CXFA_FWLTheme(FXGC_Heap* pHeap, CXFA_FFApp* pApp)
     : IFWL_ThemeProvider(pHeap),
       text_out_(std::make_unique<CFDE_TextOut>()),
       app_(pApp) {}

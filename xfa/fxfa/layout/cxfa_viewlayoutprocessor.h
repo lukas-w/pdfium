@@ -51,7 +51,7 @@ class CXFA_ViewLayoutProcessor
 
   void PreFinalize();
   void Trace(cppgc::Visitor* visitor) const;
-  cppgc::Heap* GetHeap() const { return heap_; }
+  FXGC_Heap* GetHeap() const { return heap_; }
 
   bool InitLayoutPage(CXFA_Node* pFormNode);
   bool PrepareFirstPage(CXFA_Node* pRootSubform);
@@ -92,7 +92,7 @@ class CXFA_ViewLayoutProcessor
     CXFA_ViewRecord();
   };
 
-  CXFA_ViewLayoutProcessor(cppgc::Heap* pHeap,
+  CXFA_ViewLayoutProcessor(FXGC_Heap* pHeap,
                            CXFA_LayoutProcessor* pLayoutProcessor);
 
   bool AppendNewPage(bool bFirstTemPage);
@@ -183,7 +183,7 @@ class CXFA_ViewLayoutProcessor
   void ProcessSimplexOrDuplexPageSets(CXFA_ViewLayoutItem* pPageSetLayoutItem,
                                       bool bIsSimplex);
 
-  UnownedPtr<cppgc::Heap> heap_;
+  UnownedPtr<FXGC_Heap> heap_;
   cppgc::Member<CXFA_LayoutProcessor> layout_processor_;
   cppgc::Member<CXFA_Node> page_set_node_;
   cppgc::Member<CXFA_Node> cur_page_area_;

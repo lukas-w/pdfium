@@ -101,7 +101,7 @@ class CPDFXFA_Context final : public CPDF_Document::Extension,
                      const WideString& wsData,
                      const WideString& wsEncode) override;
   CFX_Timer::HandlerIface* GetTimerHandler() const override;
-  cppgc::Heap* GetGCHeap() const override;
+  FXGC_Heap* GetGCHeap() const override;
 
   bool SaveDatasetsPackage(const RetainPtr<IFX_SeekableStream>& pStream);
   bool SaveFormPackage(const RetainPtr<IFX_SeekableStream>& pStream);

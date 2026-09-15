@@ -57,7 +57,7 @@ class CXFA_ContentLayoutProcessor
   ~CXFA_ContentLayoutProcessor();
 
   void Trace(cppgc::Visitor* visitor) const;
-  cppgc::Heap* GetHeap() const { return heap_; }
+  FXGC_Heap* GetHeap() const { return heap_; }
 
   Result DoLayout(bool bUseBreakControl, float fHeightLimit, float fRealHeight);
   void DoLayoutPageArea(CXFA_ViewLayoutItem* pPageAreaLayoutItem);
@@ -82,7 +82,7 @@ class CXFA_ContentLayoutProcessor
   using ContentLayoutItemVector =
       std::vector<cppgc::Persistent<CXFA_ContentLayoutItem>>;
 
-  CXFA_ContentLayoutProcessor(cppgc::Heap* pHeap,
+  CXFA_ContentLayoutProcessor(FXGC_Heap* pHeap,
                               CXFA_Node* pNode,
                               CXFA_ViewLayoutProcessor* pViewLayoutProcessor);
 
@@ -226,7 +226,7 @@ class CXFA_ContentLayoutProcessor
   float last_row_width_ = 0;
   float last_row_y_ = 0;
   float width_limit_ = 0;
-  UnownedPtr<cppgc::Heap> heap_;
+  UnownedPtr<FXGC_Heap> heap_;
   cppgc::Member<CXFA_Node> const form_node_;
   cppgc::Member<CXFA_Node> cur_child_node_;
   cppgc::Member<CXFA_Node> keep_head_node_;

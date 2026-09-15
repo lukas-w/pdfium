@@ -48,7 +48,7 @@ class IFWL_ThemeProvider : public cppgc::GarbageCollectedMixin {
       const CFWL_ThemePart& pThemePart) const = 0;
 
  protected:
-  explicit IFWL_ThemeProvider(cppgc::Heap* pHeap);
+  explicit IFWL_ThemeProvider(FXGC_Heap* pHeap);
 
   CFWL_WidgetTP* GetTheme(const CFWL_Widget* pWidget) const;
 

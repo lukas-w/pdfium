@@ -22,10 +22,7 @@
 
 class CFXJSE_Context;
 class CXFA_Document;
-
-namespace cppgc {
-class Heap;
-}  // namespace cppgc
+class FXGC_Heap;
 
 class CFXJSE_FormCalcContext final : public CFXJSE_HostObject {
  public:
@@ -268,7 +265,7 @@ class CFXJSE_FormCalcContext final : public CFXJSE_HostObject {
   static void concat_fm_object(CFXJSE_HostObject* pThis,
                                const v8::FunctionCallbackInfo<v8::Value>& info);
 
-  static std::optional<WideTextBuffer> Translate(cppgc::Heap* pHeap,
+  static std::optional<WideTextBuffer> Translate(FXGC_Heap* pHeap,
                                                  WideStringView wsFormcalc);
 
   v8::Local<v8::Value> GlobalPropertyGetter();

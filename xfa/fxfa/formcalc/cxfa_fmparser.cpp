@@ -20,7 +20,7 @@ constexpr unsigned int kMaxExpressionListSize = 10000;
 
 }  // namespace
 
-CXFA_FMParser::CXFA_FMParser(cppgc::Heap* pHeap, CXFA_FMLexer* pLexer)
+CXFA_FMParser::CXFA_FMParser(FXGC_Heap* pHeap, CXFA_FMLexer* pLexer)
     : heap_(pHeap), lexer_(pLexer), max_parse_depth_(kMaxParseDepth) {}
 
 CXFA_FMParser::~CXFA_FMParser() = default;

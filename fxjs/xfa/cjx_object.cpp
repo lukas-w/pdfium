@@ -1037,7 +1037,7 @@ void CJX_Object::OnChanged(XFA_Attribute eAttr, bool bScriptModify) {
   GetXFANode()->SendAttributeChangeMessage(eAttr, bScriptModify);
 }
 
-CJX_Object::CalcData* CJX_Object::GetOrCreateCalcData(cppgc::Heap* heap) {
+CJX_Object::CalcData* CJX_Object::GetOrCreateCalcData(FXGC_Heap* heap) {
   if (!calc_data_) {
     calc_data_ =
         cppgc::MakeGarbageCollected<CalcData>(heap->GetAllocationHandle());

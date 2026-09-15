@@ -21,7 +21,7 @@ class CFX_XMLElement;
 class CXFA_XMLLocale final : public GCedLocaleIface {
  public:
   // Object is created on cppgc heap.
-  static CXFA_XMLLocale* Create(cppgc::Heap* heap,
+  static CXFA_XMLLocale* Create(FXGC_Heap* heap,
                                 pdfium::span<const uint8_t> data);
 
   CONSTRUCT_VIA_MAKE_GARBAGE_COLLECTED;

@@ -169,7 +169,7 @@ bool CPDFXFA_Context::LoadXFADoc() {
   AutoNuller<cppgc::Persistent<CXFA_FFDoc>> doc_nuller(&xfadoc_);
   xfadoc_ = cppgc::MakeGarbageCollected<CXFA_FFDoc>(
       gc_heap_->GetAllocationHandle(), xfaapp_, doc_env_.get(), pdfdoc_,
-      gc_heap_->GetStandaloneHeap());
+      gc_heap_.get());
 
   if (!xfadoc_->OpenDoc(xml_.get())) {
     FXSYS_SetLastError(FPDF_ERR_XFALOAD);
@@ -423,8 +423,8 @@ CFX_Timer::HandlerIface* CPDFXFA_Context::GetTimerHandler() const {
   return form_fill_env_ ? form_fill_env_->GetTimerHandler() : nullptr;
 }
 
-cppgc::Heap* CPDFXFA_Context::GetGCHeap() const {
-  return gc_heap_ ? gc_heap_->GetStandaloneHeap() : nullptr;
+FXGC_Heap* CPDFXFA_Context::GetGCHeap() const {
+  return gc_heap_.get();
 }
 
 bool CPDFXFA_Context::SaveDatasetsPackage(

@@ -58,6 +58,6 @@ IFWL_ThemeProvider* CXFA_FFApp::GetThemeProvider() {
   return fwltheme_;
 }
 
-cppgc::Heap* CXFA_FFApp::GetHeap() {
+FXGC_Heap* CXFA_FFApp::GetHeap() {
   return provider_->GetGCHeap();
 }

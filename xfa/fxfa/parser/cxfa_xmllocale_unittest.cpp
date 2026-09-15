@@ -87,7 +87,7 @@ const char kXMLData[] =
     "</currencySymbols>"
     "</locale>";
 
-CXFA_XMLLocale* CreateLocaleHelper(cppgc::Heap* heap) {
+CXFA_XMLLocale* CreateLocaleHelper(FXGC_Heap* heap) {
   return CXFA_XMLLocale::Create(heap, ByteStringView(kXMLData).unsigned_span());
 }
 

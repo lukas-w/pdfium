@@ -5087,7 +5087,7 @@ ByteString CFXJSE_FormCalcContext::GenerateSomExpression(ByteStringView bsName,
 }
 
 std::optional<WideTextBuffer> CFXJSE_FormCalcContext::Translate(
-    cppgc::Heap* pHeap,
+    FXGC_Heap* pHeap,
     WideStringView wsFormcalc) {
   if (wsFormcalc.IsEmpty()) {
     return WideTextBuffer();

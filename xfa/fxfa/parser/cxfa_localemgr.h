@@ -55,14 +55,12 @@ class CXFA_LocaleMgr final : public cppgc::GarbageCollected<CXFA_LocaleMgr>,
   std::optional<WideString> GetConfigLocaleName(CXFA_Node* pConfig) const;
 
  private:
-  CXFA_LocaleMgr(cppgc::Heap* pHeap,
-                 CXFA_Node* pLocaleSet,
-                 WideString wsDeflcid);
+  CXFA_LocaleMgr(FXGC_Heap* pHeap, CXFA_Node* pLocaleSet, WideString wsDeflcid);
 
   // May allocate a new object on the cppgc heap.
   CXFA_XMLLocale* GetLocale(LangID lcid);
 
-  UnownedPtr<cppgc::Heap> heap_;
+  UnownedPtr<FXGC_Heap> heap_;
   std::vector<cppgc::Member<CXFA_NodeLocale>> locale_array_;
   std::vector<cppgc::Member<CXFA_XMLLocale>> xmllocale_array_;
   cppgc::Member<GCedLocaleIface> def_locale_;
