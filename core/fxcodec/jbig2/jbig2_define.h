@@ -19,9 +19,11 @@ struct JBig2RegionInfo {
 
 constexpr int32_t kJBig2OOB = 1;
 
+// Somewhat arbitrary limits to limit damage done by malicious inputs.
+// Should be well above what's found in real-world files.
 constexpr int32_t kJBig2MaxReferredSegmentCount = 64;
-constexpr uint32_t kJBig2MaxExportSymbols = 65535;
-constexpr uint32_t kJBig2MaxNewSymbols = 65535;
+constexpr uint32_t kJBig2MaxExportSymbols = 1 << 20;
+constexpr uint32_t kJBig2MaxNewSymbols = 1 << 20;
 constexpr uint32_t kJBig2MaxPatternIndex = 65535;
 constexpr int32_t kJBig2MaxImageSize = 65535;
 
