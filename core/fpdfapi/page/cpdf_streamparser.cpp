@@ -135,7 +135,7 @@ uint32_t DecodeInlineStream(pdfium::span<const uint8_t> src_span,
   }
 #if defined(PDF_ENABLE_BROTLI)
   if (decoder == "BrotliDecode" && BrotliDecoder::GetBrotliEnabled()) {
-    return BrotliDecoder::Decode(src_span, orig_size).bytes_consumed;
+    return BrotliDecode(src_span, pParam.Get(), orig_size).bytes_consumed;
   }
 #endif
 

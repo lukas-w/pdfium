@@ -8,6 +8,7 @@
 #include <memory>
 #include <utility>
 
+#include "core/fxcodec/image_predictors.h"
 #include "core/fxcrt/check.h"
 #include "core/fxcrt/data_vector.h"
 #include "core/fxcrt/numerics/safe_conversions.h"
@@ -27,6 +28,10 @@ struct BrotliDecoderStateDeleter {
 }  // namespace
 
 DataAndBytesConsumed BrotliDecoder::Decode(pdfium::span<const uint8_t> src_span,
+                                           int predictor_value,
+                                           int colors,
+                                           int bits_per_component,
+                                           int columns,
                                            uint32_t estimated_decode_size) {
   CHECK(g_brotli_enabled);
   if (src_span.empty()) {
@@ -65,8 +70,10 @@ DataAndBytesConsumed BrotliDecoder::Decode(pdfium::span<const uint8_t> src_span,
     }
     if (result == BROTLI_DECODER_RESULT_SUCCESS) {
       decoded_buffer.resize(total_out);
-      return {std::move(decoded_buffer),
-              static_cast<uint32_t>(src_span.subspan(available_in).size())};
+      return fxcodec::ApplyPredictor(
+          std::move(decoded_buffer), predictor_value, colors,
+          bits_per_component, columns,
+          static_cast<uint32_t>(src_span.subspan(available_in).size()));
     }
     return {DataVector<uint8_t>(), 0u};
   }

@@ -71,6 +71,12 @@ fxcodec::DataAndBytesConsumed A85Decode(pdfium::span<const uint8_t> src_span);
 
 fxcodec::DataAndBytesConsumed HexDecode(pdfium::span<const uint8_t> src_span);
 
+#if defined(PDF_ENABLE_BROTLI)
+fxcodec::DataAndBytesConsumed BrotliDecode(pdfium::span<const uint8_t> src_span,
+                                           const CPDF_Dictionary* params,
+                                           uint32_t estimated_size);
+#endif
+
 fxcodec::DataAndBytesConsumed FlateOrLZWDecode(
     bool use_lzw,
     pdfium::span<const uint8_t> src_span,

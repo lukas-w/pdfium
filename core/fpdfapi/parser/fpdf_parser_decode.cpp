@@ -374,6 +374,22 @@ std::unique_ptr<ScanlineDecoder> CreateFlateDecoder(
       decode_vars.colors, decode_vars.bits_per_component, decode_vars.columns);
 }
 
+#if defined(PDF_ENABLE_BROTLI)
+DataAndBytesConsumed BrotliDecode(pdfium::span<const uint8_t> src_span,
+                                  const CPDF_Dictionary* params,
+                                  uint32_t estimated_size) {
+  std::optional<fxcodec::DecodeParams> decode_params =
+      GetAndCheckDecodeParams(params);
+  if (!decode_params.has_value()) {
+    return {DataVector<uint8_t>(), FX_INVALID_OFFSET};
+  }
+  const fxcodec::DecodeParams& decode_vars = decode_params.value();
+  return BrotliDecoder::Decode(
+      src_span, decode_vars.predictor, decode_vars.colors,
+      decode_vars.bits_per_component, decode_vars.columns, estimated_size);
+}
+#endif
+
 DataAndBytesConsumed FlateOrLZWDecode(bool use_lzw,
                                       pdfium::span<const uint8_t> src_span,
                                       const CPDF_Dictionary* pParams,
@@ -498,13 +514,8 @@ std::optional<PDFDataDecodeResult> PDF_DataDecode(
     }
 #if defined(PDF_ENABLE_BROTLI)
     else if (decoder == "BrotliDecode" && BrotliDecoder::GetBrotliEnabled()) {
-      if (bImageAcc && i == nSize - 1) {
-        result.image_encoding = "BrotliDecode";
-        result.image_params = std::move(pParam);
-        return result;
-      }
       DataAndBytesConsumed decode_result =
-          BrotliDecoder::Decode(last_span, estimated_size);
+          BrotliDecode(last_span, pParam, estimated_size);
       new_buf = std::move(decode_result.data);
       bytes_consumed = decode_result.bytes_consumed;
     }
