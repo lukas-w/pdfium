@@ -88,6 +88,63 @@ void jpeg_common_error_fatal(j_common_ptr cinfo) {
 }
 
 #if BUILDFLAG(IS_WIN)
+boolean jpeg_common_create_compress(JpegCompressCommon* jpeg_compress) {
+  if (setjmp(jpeg_compress->jmpbuf) == -1) {
+    return FALSE;
+  }
+  jpeg_compress->cinfo.err = &jpeg_compress->error_mgr;
+  jpeg_compress->cinfo.client_data = jpeg_compress;
+  jpeg_compress->error_mgr.error_exit = jpeg_common_error_fatal;
+  jpeg_compress->error_mgr.emit_message = jpeg_common_error_do_nothing_int;
+  jpeg_compress->error_mgr.output_message = jpeg_common_error_do_nothing;
+  jpeg_compress->error_mgr.format_message = jpeg_common_error_do_nothing_char;
+  jpeg_compress->error_mgr.reset_error_mgr = jpeg_common_error_do_nothing;
+  jpeg_create_compress(&jpeg_compress->cinfo);
+  jpeg_compress->dest_mgr.init_destination = jpeg_common_dest_do_nothing;
+  jpeg_compress->dest_mgr.term_destination = jpeg_common_dest_do_nothing;
+  jpeg_compress->dest_mgr.empty_output_buffer = jpeg_common_dest_empty;
+  jpeg_compress->cinfo.dest = &jpeg_compress->dest_mgr;
+  return TRUE;
+}
+
+void jpeg_common_destroy_compress(JpegCompressCommon* jpeg_compress) {
+  jpeg_destroy_compress(&jpeg_compress->cinfo);
+}
+
+boolean jpeg_common_set_defaults(JpegCompressCommon* jpeg_compress) {
+  if (setjmp(jpeg_compress->jmpbuf) == -1) {
+    return FALSE;
+  }
+  jpeg_set_defaults(&jpeg_compress->cinfo);
+  return TRUE;
+}
+
+boolean jpeg_common_start_compress(JpegCompressCommon* jpeg_compress,
+                                   boolean write_all_tables) {
+  if (setjmp(jpeg_compress->jmpbuf) == -1) {
+    return FALSE;
+  }
+  jpeg_start_compress(&jpeg_compress->cinfo, write_all_tables);
+  return TRUE;
+}
+
+int jpeg_common_write_scanlines(JpegCompressCommon* jpeg_compress,
+                                JSAMPROW* scanlines,
+                                unsigned int num_lines) {
+  if (setjmp(jpeg_compress->jmpbuf) == -1) {
+    return -1;
+  }
+  return (int)jpeg_write_scanlines(&jpeg_compress->cinfo, scanlines, num_lines);
+}
+
+boolean jpeg_common_finish_compress(JpegCompressCommon* jpeg_compress) {
+  if (setjmp(jpeg_compress->jmpbuf) == -1) {
+    return FALSE;
+  }
+  jpeg_finish_compress(&jpeg_compress->cinfo);
+  return TRUE;
+}
+
 void jpeg_common_dest_do_nothing(j_compress_ptr cinfo) {}
 
 boolean jpeg_common_dest_empty(j_compress_ptr cinfo) {
