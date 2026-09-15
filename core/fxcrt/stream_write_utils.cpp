@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "core/fpdfapi/edit/cpdf_contentstream_write_utils.h"
+#include "core/fxcrt/stream_write_utils.h"
 
 #include <array>
 #include <cmath>
@@ -108,6 +108,8 @@ unsigned FloatToDecimal(
 
 }  // namespace
 
+namespace fxcrt {
+
 std::ostream& WriteFloat(std::ostream& stream, float value) {
   char buffer[kMaximumFloatToDecimalLength];
   unsigned size = FloatToDecimal(value, buffer);
@@ -138,3 +140,5 @@ std::ostream& WriteRect(std::ostream& stream, const CFX_FloatRect& rect) {
   WriteFloat(stream, rect.Height());
   return stream;
 }
+
+}  // namespace fxcrt

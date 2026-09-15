@@ -8,9 +8,9 @@
 
 #include <sstream>
 
-#include "core/fpdfapi/edit/cpdf_contentstream_write_utils.h"
 #include "core/fxcrt/fx_stream.h"
 #include "core/fxcrt/fx_string_wrappers.h"
+#include "core/fxcrt/stream_write_utils.h"
 
 namespace {
 

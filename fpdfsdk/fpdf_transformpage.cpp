@@ -10,7 +10,6 @@
 #include <sstream>
 
 #include "constants/page_object.h"
-#include "core/fpdfapi/edit/cpdf_contentstream_write_utils.h"
 #include "core/fpdfapi/page/cpdf_clippath.h"
 #include "core/fpdfapi/page/cpdf_page.h"
 #include "core/fpdfapi/page/cpdf_pageobject.h"
@@ -25,6 +24,7 @@
 #include "core/fxcrt/numerics/safe_conversions.h"
 #include "core/fxcrt/span.h"
 #include "core/fxcrt/stl_util.h"
+#include "core/fxcrt/stream_write_utils.h"
 #include "core/fxge/cfx_fillrenderoptions.h"
 #include "core/fxge/cfx_path.h"
 #include "fpdfsdk/cpdfsdk_helpers.h"

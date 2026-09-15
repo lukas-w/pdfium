@@ -20,7 +20,6 @@
 #include "constants/font_encodings.h"
 #include "constants/form_fields.h"
 #include "constants/page_object.h"
-#include "core/fpdfapi/edit/cpdf_contentstream_write_utils.h"
 #include "core/fpdfapi/page/cpdf_page.h"
 #include "core/fpdfapi/page/cpdf_pageobject.h"
 #include "core/fpdfapi/parser/cpdf_array.h"
@@ -35,6 +34,7 @@
 #include "core/fpdfdoc/cpdf_annot.h"
 #include "core/fxcrt/containers/contains.h"
 #include "core/fxcrt/fx_string_wrappers.h"
+#include "core/fxcrt/stream_write_utils.h"
 #include "fpdfsdk/cpdfsdk_helpers.h"
 
 enum FPDF_TYPE { MAX, MIN };

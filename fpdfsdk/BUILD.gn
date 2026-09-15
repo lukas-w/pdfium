@@ -70,7 +70,6 @@ source_set("fpdfsdk") {
     "../constants",
     "../core/fdrm",
     "../core/fpdfapi/edit",
-    "../core/fpdfapi/edit:contentstream_write_utils",
     "../core/fpdfapi/font",
     "../core/fpdfapi/page",
     "../core/fpdfapi/parser",

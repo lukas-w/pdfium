@@ -31,7 +31,6 @@ source_set("edit") {
     "../../../:pdfium_noshorten_config",
   ]
   deps = [
-    ":contentstream_write_utils",
     "../../../constants",
     "../../fxcrt",
     "../font",
@@ -42,30 +41,14 @@ source_set("edit") {
   visibility = [ "../../../*" ]
 }
 
-source_set("contentstream_write_utils") {
-  sources = [
-    "cpdf_contentstream_write_utils.cpp",
-    "cpdf_contentstream_write_utils.h",
-  ]
-  configs += [
-    "../../../:pdfium_strict_config",
-    "../../../:pdfium_noshorten_config",
-  ]
-  deps = [
-    "../../fxcrt",
-    "//third_party/dragonbox",
-  ]
-}
-
 pdfium_unittest_source_set("unittests") {
   sources = [
-    "cpdf_contentstream_write_utils_unittest.cpp",
     "cpdf_npagetooneexporter_unittest.cpp",
     "cpdf_pagecontentgenerator_unittest.cpp",
   ]
   deps = [
-    ":contentstream_write_utils",
     ":edit",
+    "../../fxcrt",
     "../../fxge",
     "../font",
     "../page",

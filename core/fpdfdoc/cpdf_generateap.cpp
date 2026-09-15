@@ -16,7 +16,6 @@
 #include "constants/font_encodings.h"
 #include "constants/form_fields.h"
 #include "constants/form_flags.h"
-#include "core/fpdfapi/edit/cpdf_contentstream_write_utils.h"
 #include "core/fpdfapi/font/cpdf_font.h"
 #include "core/fpdfapi/page/cpdf_docpagedata.h"
 #include "core/fpdfapi/parser/cpdf_array.h"
@@ -40,6 +39,7 @@
 #include "core/fpdfdoc/cpvt_word.h"
 #include "core/fxcrt/fx_string_wrappers.h"
 #include "core/fxcrt/notreached.h"
+#include "core/fxcrt/stream_write_utils.h"
 #include "core/fxge/cfx_renderdevice.h"
 
 namespace {

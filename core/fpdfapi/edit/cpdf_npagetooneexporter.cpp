@@ -12,7 +12,6 @@
 #include <utility>
 
 #include "constants/page_object.h"
-#include "core/fpdfapi/edit/cpdf_contentstream_write_utils.h"
 #include "core/fpdfapi/page/cpdf_page.h"
 #include "core/fpdfapi/parser/cpdf_array.h"
 #include "core/fpdfapi/parser/cpdf_dictionary.h"
@@ -27,6 +26,7 @@
 #include "core/fxcrt/fx_safe_types.h"
 #include "core/fxcrt/fx_string_wrappers.h"
 #include "core/fxcrt/span.h"
+#include "core/fxcrt/stream_write_utils.h"
 
 namespace {
 
