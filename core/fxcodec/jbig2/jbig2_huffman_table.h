@@ -10,6 +10,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include <optional>
 #include <vector>
 
 #include "core/fxcodec/jbig2/jbig2_define.h"
@@ -18,8 +19,8 @@
 class CJBig2_BitStream;
 
 struct JBig2HuffmanCode {
-  int32_t codelen;
-  int32_t code;
+  uint32_t codelen;
+  uint32_t code;
 };
 
 struct JBig2TableLine {
@@ -60,12 +61,19 @@ class CJBig2_HuffmanTable {
   const std::vector<int>& GetRANGELOW() const { return RANGELOW; }
   bool IsOK() const { return ok_; }
 
+  unsigned MaxCodeLen() const { return max_codelen_; }
+
+  // Returns the index of the line whose code has `codelen` bits and the value
+  // `code`, if there is one.
+  std::optional<uint32_t> FindLine(unsigned codelen, uint32_t code) const;
+
   static constexpr size_t kNumHuffmanTables = 16;
 
  private:
   bool ParseFromTable(const HuffmanTable& table);
   bool ParseFromCodedBuffer(CJBig2_BitStream* pStream);
   void ExtendBuffers(bool increment);
+  bool AssignCodesAndBuildIndex();
 
   bool ok_ = false;
   bool HTOOB = false;
@@ -73,6 +81,16 @@ class CJBig2_HuffmanTable {
   std::vector<JBig2HuffmanCode> CODES;
   std::vector<int> RANGELEN;
   std::vector<int> RANGELOW;
+
+  // Index for FindLine(). The first three are indexed by code length and have
+  // `max_codelen_` + 1 entries.
+  unsigned max_codelen_ = 0;
+  std::vector<uint32_t> first_codes_;
+  std::vector<uint32_t> code_counts_;
+  std::vector<uint32_t> first_line_indices_;
+  // Line indices ordered by code length, then by line index. Lines without a
+  // code, i.e. with a code length of zero, are not in here.
+  std::vector<uint32_t> lines_by_length_;
 };
 
 #endif  // CORE_FXCODEC_JBIG2_JBIG2_HUFFMAN_TABLE_H_

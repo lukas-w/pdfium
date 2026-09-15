@@ -12,7 +12,6 @@
 #include <limits>
 
 #include "core/fxcodec/jbig2/jbig2_bit_stream.h"
-#include "core/fxcodec/jbig2/jbig2_context.h"
 #include "core/fxcrt/check.h"
 #include "core/fxcrt/check_op.h"
 #include "core/fxcrt/fx_safe_types.h"
@@ -119,35 +118,6 @@ static_assert(CJBig2_HuffmanTable::kNumHuffmanTables ==
                   std::size(kHuffmanTables),
               "kNumHuffmanTables must be equal to the size of kHuffmanTables");
 
-bool HuffmanAssignCode(pdfium::span<JBig2HuffmanCode> symcodes) {
-  int lenmax = 0;
-  for (const auto& symcode : symcodes) {
-    lenmax = std::max(symcode.codelen, lenmax);
-  }
-  std::vector<int> lencounts(lenmax + 1);
-  std::vector<int> firstcodes(lenmax + 1);
-  for (const auto& symcode : symcodes) {
-    ++lencounts[symcode.codelen];
-  }
-  lencounts[0] = 0;
-  for (int i = 1; i <= lenmax; ++i) {
-    FX_SAFE_INT32 shifted = firstcodes[i - 1];
-    shifted += lencounts[i - 1];
-    shifted <<= 1;
-    if (!shifted.IsValid()) {
-      return false;
-    }
-    firstcodes[i] = shifted.ValueOrDie();
-    int curcode = firstcodes[i];
-    for (auto& symcode : symcodes) {
-      if (symcode.codelen == i) {
-        symcode.code = curcode++;
-      }
-    }
-  }
-  return true;
-}
-
 }  // namespace
 
 CJBig2_HuffmanTable::CJBig2_HuffmanTable(size_t idx) {
@@ -181,6 +151,18 @@ CJBig2_HuffmanTable& CJBig2_HuffmanTable::operator=(
     CJBig2_HuffmanTable&&) noexcept = default;
 CJBig2_HuffmanTable::~CJBig2_HuffmanTable() = default;
 
+std::optional<uint32_t> CJBig2_HuffmanTable::FindLine(unsigned codelen,
+                                                      uint32_t code) const {
+  if (codelen > max_codelen_ || code < first_codes_[codelen]) {
+    return std::nullopt;
+  }
+  const uint32_t rank = code - first_codes_[codelen];
+  if (rank >= code_counts_[codelen]) {
+    return std::nullopt;
+  }
+  return lines_by_length_[first_line_indices_[codelen] + rank];
+}
+
 bool CJBig2_HuffmanTable::ParseFromTable(const HuffmanTable& table) {
   HTOOB = table.HTOOB;
   NTEMP = static_cast<uint32_t>(table.lines.size());
@@ -194,7 +176,7 @@ bool CJBig2_HuffmanTable::ParseFromTable(const HuffmanTable& table) {
     RANGELOW[i] = line.RANGELOW;
     ++i;
   }
-  return HuffmanAssignCode(CODES);
+  return AssignCodesAndBuildIndex();
 }
 
 bool CJBig2_HuffmanTable::ParseFromCodedBuffer(CJBig2_BitStream* pStream) {
@@ -268,7 +250,52 @@ bool CJBig2_HuffmanTable::ParseFromCodedBuffer(CJBig2_BitStream* pStream) {
     ++NTEMP;
   }
 
-  return HuffmanAssignCode(pdfium::span(CODES).first(NTEMP));
+  return AssignCodesAndBuildIndex();
+}
+
+bool CJBig2_HuffmanTable::AssignCodesAndBuildIndex() {
+  max_codelen_ = 0;
+  for (const auto& code : CODES) {
+    max_codelen_ = std::max(code.codelen, max_codelen_);
+  }
+  const size_t table_size = static_cast<size_t>(max_codelen_) + 1;
+  code_counts_.assign(table_size, 0);
+  for (const auto& code : CODES) {
+    ++code_counts_[code.codelen];
+  }
+  code_counts_[0] = 0;
+
+  first_codes_.assign(table_size, 0);
+  first_line_indices_.assign(table_size, 0);
+  FX_SAFE_UINT32 first_code = 0;
+  uint32_t next_line_index = 0;
+
+  for (unsigned codelen = 1; codelen <= max_codelen_; ++codelen) {
+    first_code += code_counts_[codelen - 1];
+    first_code <<= 1;
+    if (!first_code.IsValid()) {
+      return false;
+    }
+    first_codes_[codelen] = first_code.ValueOrDie();
+    first_line_indices_[codelen] = next_line_index;
+    next_line_index += code_counts_[codelen];
+  }
+
+  // One pass over the lines assigns the codes and fills the index, with
+  // `filled` as the per length cursor.
+  lines_by_length_.resize(next_line_index);
+  std::vector<uint32_t> filled(table_size);
+  for (size_t i = 0; i < CODES.size(); ++i) {
+    const uint32_t codelen = CODES[i].codelen;
+    if (codelen == 0) {
+      continue;
+    }
+    CODES[i].code = first_codes_[codelen] + filled[codelen];
+    lines_by_length_[first_line_indices_[codelen] + filled[codelen]] =
+        static_cast<uint32_t>(i);
+    ++filled[codelen];
+  }
+  return true;
 }
 
 void CJBig2_HuffmanTable::ExtendBuffers(bool increment) {
