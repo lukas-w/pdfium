@@ -24,8 +24,6 @@ if (pdf_is_standalone) {
     data = [
       ".",
       "../SUPPRESSIONS",
-      "../SUPPRESSIONS_EXACT_MATCHING",
-      "../SUPPRESSIONS_IMAGE_DIFF",
       "../corpus/",
       "../../.vpython3",
       "../../build/skia_gold_common/",

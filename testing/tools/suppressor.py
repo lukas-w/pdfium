@@ -45,29 +45,25 @@ _VALID_COLUMN_VALUES = {
     5: {'*', 'freetype', 'fontations'},
 }
 
-# Legal keywords for the action in column 6, keyed by file.
-_VALID_ACTIONS = {
-    'SUPPRESSIONS': {'diff'},
-    'SUPPRESSIONS_IMAGE_DIFF': {'blank'},
-    'SUPPRESSIONS_EXACT_MATCHING': {'fuzzy'},
-}
+# Legal keywords for the action in column 6.
+_VALID_ACTIONS = {'diff', 'blank', 'fuzzy'}
 
 
-def _ValidatePredicates(suppressions_filename, item):
+def _ValidatePredicates(item):
   """Rejects unknown tokens, which would otherwise silently never match."""
   for column, valid_values in _VALID_COLUMN_VALUES.items():
     for value in item[column].split(','):
       if value not in valid_values:
         raise ValueError(f'Unexpected value "{value}" in column {column} of '
-                         f'{suppressions_filename}: {" ".join(item)}')
+                         f'suppressions: {" ".join(item)}')
 
 
-def _ParseAction(suppressions_filename, token):
-  """Validates an action token and converts it into pdfium_diff flags."""
+def _ParseAction(token):
+  """Validates an action token, returning its keyword and any diff flags."""
   keyword = token.split('=', 1)[0]
-  if keyword not in _VALID_ACTIONS[suppressions_filename]:
-    raise ValueError(f'Unexpected action "{token}" in {suppressions_filename}')
-  return [_ParseFuzzyAction(token)] if keyword == 'fuzzy' else []
+  if keyword not in _VALID_ACTIONS:
+    raise ValueError(f'Unexpected action in suppressions: {token}')
+  return keyword, ([_ParseFuzzyAction(token)] if keyword == 'fuzzy' else [])
 
 
 class Suppressor:
@@ -78,33 +74,35 @@ class Suppressor:
     self.has_xfa = not js_disabled and not xfa_disabled and 'XFA' in features
     self.rendering_option = rendering_option
     self.font_engine = font_engine
-    self.suppression_set = self._LoadSuppressedSet('SUPPRESSIONS', finder)
-    self.image_suppression_set = self._LoadSuppressedSet(
-        'SUPPRESSIONS_IMAGE_DIFF', finder)
-    self.exact_matching_suppression_dict = self._LoadSuppressedDict(
-        'SUPPRESSIONS_EXACT_MATCHING', finder)
+    self.suppression_set = set()
+    self.image_suppression_set = set()
+    self.exact_matching_suppression_dict = {}
+    self._LoadSuppressions(finder)
 
-  def _LoadSuppressedSet(self, suppressions_filename, finder):
-    return set(self._LoadSuppressedDict(suppressions_filename, finder).keys())
-
-  def _LoadSuppressedDict(self, suppressions_filename, finder):
+  def _LoadSuppressions(self, finder):
     v8_option = "v8" if self.has_v8 else "nov8"
     xfa_option = "xfa" if self.has_xfa else "noxfa"
-    with open(os.path.join(finder.TestingDir(), suppressions_filename)) as f:
+    with open(os.path.join(finder.TestingDir(), 'SUPPRESSIONS')) as f:
       os_name = common.os_name()
       mac_platform = common.mac_platform() if os_name == 'mac' else None
-      result = {}
       for item in self._ExtractSuppressions(f):
         if len(item) != 7:
-          raise ValueError(
-              f'Unexpected column count in {suppressions_filename}: {item}')
-        _ValidatePredicates(suppressions_filename, item)
-        flags = _ParseAction(suppressions_filename, item[6])
-        if self._MatchSuppression(item, os_name, mac_platform, v8_option,
-                                  xfa_option, self.rendering_option,
-                                  self.font_engine):
-          result[item[0]] = flags
-      return result
+          raise ValueError(f'Unexpected column count in suppressions: {item}')
+        _ValidatePredicates(item)
+        keyword, flags = _ParseAction(item[6])
+        if not self._MatchSuppression(item, os_name, mac_platform, v8_option,
+                                      xfa_option, self.rendering_option,
+                                      self.font_engine):
+          continue
+        filename = item[0]
+        if keyword == 'diff':
+          self.suppression_set.add(filename)
+        elif keyword == 'blank':
+          self.image_suppression_set.add(filename)
+        elif keyword == 'fuzzy':
+          self.exact_matching_suppression_dict[filename] = flags
+        else:
+          raise AssertionError(f'Unhandled action: {keyword}')
 
   def _ExtractSuppressions(self, f):
     return [
