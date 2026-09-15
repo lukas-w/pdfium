@@ -332,9 +332,6 @@ void FaxG4GetRow(pdfium::span<const uint8_t> src_buf,
 
     int a1;
     int a2;
-    int b1;
-    int b2;
-    FaxG4FindB1B2(ref_buf, columns, a0, a0color, &b1, &b2);
 
     int v_delta = 0;
     if (!NextBit(src_buf, bitpos)) {
@@ -427,6 +424,10 @@ void FaxG4GetRow(pdfium::span<const uint8_t> src_buf,
         }
 
         if (NextBit(src_buf, bitpos)) {
+          int b1;
+          int b2;
+          FaxG4FindB1B2(ref_buf, columns, a0, a0color, &b1, &b2);
+
           // Mode "Pass".
           if (!a0color) {
             FaxFillBits(dest_buf, columns, a0, b2);
@@ -477,6 +478,11 @@ void FaxG4GetRow(pdfium::span<const uint8_t> src_buf,
     } else {
       // Mode "Vertical", V(0).
     }
+
+    int b1;
+    int b2;
+    FaxG4FindB1B2(ref_buf, columns, a0, a0color, &b1, &b2);
+
     a1 = b1 + v_delta;
     if (!a0color) {
       FaxFillBits(dest_buf, columns, a0, a1);
