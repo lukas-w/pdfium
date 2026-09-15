@@ -16,6 +16,7 @@
 #include "core/fpdfapi/parser/cpdf_array.h"
 #include "core/fpdfapi/parser/cpdf_dictionary.h"
 #include "core/fpdfdoc/cpdf_nametree.h"
+#include "core/fxcrt/autorestorer.h"
 #include "core/fxcrt/check.h"
 #include "core/fxcrt/containers/contains.h"
 #include "core/fxcrt/data_vector.h"
@@ -120,6 +121,9 @@ void CPDFSDK_FormFillEnvironment::OutputSelectedRect(
 
   CFX_PointF ptA = pFormField->PWLtoFFL(CFX_PointF(rect.left, rect.bottom));
   CFX_PointF ptB = pFormField->PWLtoFFL(CFX_PointF(rect.right, rect.top));
+
+  AutoRestorer<bool> ffi_restorer(&in_passive_ffi_callback_);
+  in_passive_ffi_callback_ = true;
   info_->FFI_OutputSelectedRect(info_, pPage, ptA.x, ptB.y, ptB.x, ptA.y);
 }
 
@@ -366,6 +370,8 @@ IJS_Runtime* CPDFSDK_FormFillEnvironment::GetIJSRuntime() {
 void CPDFSDK_FormFillEnvironment::Invalidate(IPDF_Page* page,
                                              const FX_RECT& rect) {
   if (info_ && info_->FFI_Invalidate) {
+    AutoRestorer<bool> ffi_restorer(&in_passive_ffi_callback_);
+    in_passive_ffi_callback_ = true;
     info_->FFI_Invalidate(info_, FPDFPageFromIPDFPage(page), rect.left,
                           rect.top, rect.right, rect.bottom);
   }
@@ -374,6 +380,8 @@ void CPDFSDK_FormFillEnvironment::Invalidate(IPDF_Page* page,
 void CPDFSDK_FormFillEnvironment::SetCursor(
     IPWL_FillerNotify::CursorStyle nCursorType) {
   if (info_ && info_->FFI_SetCursor) {
+    AutoRestorer<bool> ffi_restorer(&in_passive_ffi_callback_);
+    in_passive_ffi_callback_ = true;
     info_->FFI_SetCursor(info_, static_cast<int>(nCursorType));
   }
 }
@@ -394,6 +402,8 @@ void CPDFSDK_FormFillEnvironment::KillTimer(int nTimerID) {
 
 void CPDFSDK_FormFillEnvironment::OnChange() {
   if (info_ && info_->FFI_OnChange) {
+    AutoRestorer<bool> ffi_restorer(&in_passive_ffi_callback_);
+    in_passive_ffi_callback_ = true;
     info_->FFI_OnChange(info_);
   }
 }
@@ -416,6 +426,8 @@ void CPDFSDK_FormFillEnvironment::OnSetFieldInputFocusInternal(
     size_t nCharacters = text.GetLength();
     ByteString bsUTFText = text.ToUTF16LE();
     auto* pBuffer = reinterpret_cast<const unsigned short*>(bsUTFText.c_str());
+    AutoRestorer<bool> ffi_restorer(&in_passive_ffi_callback_);
+    in_passive_ffi_callback_ = true;
     info_->FFI_SetTextFieldFocus(
         info_, pBuffer, pdfium::checked_cast<FPDF_DWORD>(nCharacters), bFocus);
   }
@@ -484,6 +496,8 @@ void CPDFSDK_FormFillEnvironment::DisplayCaret(IPDF_Page* page,
                                                double right,
                                                double bottom) {
   if (info_ && info_->version >= 2 && info_->FFI_DisplayCaret) {
+    AutoRestorer<bool> ffi_restorer(&in_passive_ffi_callback_);
+    in_passive_ffi_callback_ = true;
     info_->FFI_DisplayCaret(info_, FPDFPageFromIPDFPage(page), bVisible, left,
                             top, right, bottom);
   }
@@ -901,6 +915,8 @@ void CPDFSDK_FormFillEnvironment::SendOnFocusChange(
   FPDF_ANNOTATION fpdf_annot =
       FPDFAnnotationFromCPDFAnnotContext(focused_annot.get());
 
+  AutoRestorer<bool> ffi_restorer(&in_passive_ffi_callback_);
+  in_passive_ffi_callback_ = true;
   info_->FFI_OnFocusChange(info_, fpdf_annot, pPageView->GetPageIndex());
 }
 
