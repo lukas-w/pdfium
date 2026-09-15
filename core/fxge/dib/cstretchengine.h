@@ -144,6 +144,7 @@ class CStretchEngine {
  private:
   enum class State : uint8_t { kInitial, kHorizontal, kVertical };
 
+  // ToManyBpp means To24OrTo32Bpp here.
   enum class TransformMethod : uint8_t {
     k1BppTo8Bpp,
     k1BppToManyBpp,
@@ -152,6 +153,11 @@ class CStretchEngine {
     kManyBpptoManyBpp,
     kManyBpptoManyBppWithAlpha
   };
+
+  // For 1bpp sources: expands `src_row` to one byte per pixel, 0 or 255, in
+  // `expanded_row_` and returns that.
+  pdfium::span<const uint8_t> Expand1BppRow(
+      pdfium::span<const uint8_t> src_row);
 
   const FXDIB_Format dest_format_;
   const int dest_bpp_;
@@ -167,6 +173,7 @@ class CStretchEngine {
   const FX_RECT dest_clip_;
   DataVector<uint8_t> dest_scanline_;
   FixedSizeDataVector<uint8_t> inter_buf_;
+  FixedSizeDataVector<uint8_t> expanded_row_;
   FX_RECT src_clip_;
   int inter_pitch_;
   int extra_mask_pitch_;

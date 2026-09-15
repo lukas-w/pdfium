@@ -9,6 +9,7 @@
 #include <math.h>
 
 #include <algorithm>
+#include <array>
 #include <type_traits>
 #include <utility>
 
@@ -318,6 +319,19 @@ bool CStretchEngine::StartStretchHorz() {
           src_clip_.left, src_clip_.right, resample_options_)) {
     return false;
   }
+  if (src_width_ > 0 && (trans_method_ == TransformMethod::k1BppTo8Bpp ||
+                         trans_method_ == TransformMethod::k1BppToManyBpp)) {
+    // Eight pixels per source byte, so round up to whole source bytes.
+    FX_SAFE_SIZE_T expanded_size = src_width_;
+    expanded_size += 7;
+    expanded_size /= 8;
+    expanded_size *= 8;
+    expanded_row_ =
+        FixedSizeDataVector<uint8_t>::TryUninit(expanded_size.ValueOrDie());
+    if (expanded_row_.empty()) {
+      return false;
+    }
+  }
   cur_row_ = src_clip_.top;
   state_ = State::kHorizontal;
   return true;
@@ -350,22 +364,8 @@ bool CStretchEngine::ContinueStretchHorz(PauseIndicatorIface* pPause) {
     // TODO(npm): reduce duplicated code here
     switch (trans_method_) {
       case TransformMethod::k1BppTo8Bpp:
-      case TransformMethod::k1BppToManyBpp: {
-        for (int col = dest_clip_.left; col < dest_clip_.right; ++col) {
-          const PixelWeight* pWeights = weight_table_.GetPixelWeight(col);
-          const size_t src_start = pWeights->GetSrcStart();
-          pdfium::span<const uint32_t> weights = pWeights->GetWeights();
-          uint32_t dest_a = 0;
-          for (size_t i = 0; i < weights.size(); ++i) {
-            const size_t src_bit = src_start + i;
-            if (src_row_span[src_bit / 8] & (1 << (7 - src_bit % 8))) {
-              dest_a += weights[i] * 255;
-            }
-          }
-          dest_span[dest_span_index++] = PixelFromFixed(dest_a);
-        }
-        break;
-      }
+        src_row_span = Expand1BppRow(src_row_span);
+        [[fallthrough]];
       case TransformMethod::k8BppTo8Bpp: {
         for (int col = dest_clip_.left; col < dest_clip_.right; ++col) {
           const PixelWeight* pWeights = weight_table_.GetPixelWeight(col);
@@ -395,6 +395,9 @@ bool CStretchEngine::ContinueStretchHorz(PauseIndicatorIface* pPause) {
         }
         break;
       }
+      case TransformMethod::k1BppToManyBpp:
+        src_row_span = Expand1BppRow(src_row_span);
+        [[fallthrough]];
       case TransformMethod::k8BppToManyBpp: {
         // 3 bytes per destination pixel, written contiguously.
         auto dest_pixels =
@@ -694,4 +697,27 @@ void CStretchEngine::StretchVert() {
     }
     dest_bitmap_->ComposeScanline(row - dest_clip_.top, dest_scanline_);
   }
+}
+
+pdfium::span<const uint8_t> CStretchEngine::Expand1BppRow(
+    pdfium::span<const uint8_t> src_row) {
+  // Maps a byte of eight 1bpp pixels, most significant bit first, to eight
+  // bytes that are 0 or 255.
+  static constinit auto kBitsToBytes = [] {
+    std::array<std::array<uint8_t, 8>, 256> table{};
+    for (size_t value = 0; value < table.size(); ++value) {
+      for (size_t bit = 0; bit < 8; ++bit) {
+        table[value][bit] = (value >> (7 - bit)) & 1 ? 255 : 0;
+      }
+    }
+    return table;
+  }();
+
+  pdfium::span<uint8_t> expanded = expanded_row_.span();
+  const size_t src_bytes = expanded.size() / 8;
+  for (size_t i = 0; i < src_bytes; ++i) {
+    fxcrt::spancpy(expanded.subspan(i * 8, 8u),
+                   pdfium::span(kBitsToBytes[src_row[i]]));
+  }
+  return expanded;
 }
