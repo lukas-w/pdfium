@@ -454,6 +454,11 @@ class _PerProcessConfig:
   default_renderer: str = None
   rendering_option: str = None
 
+  @property
+  def font_engine(self):
+    """The font engine to use (freetype or fontations)."""
+    return 'fontations' if self.options.fontations else 'freetype'
+
   def NewFinder(self):
     return common.DirectoryFinder(self.options.build_dir)
 
@@ -508,7 +513,7 @@ class _PerProcessState:
 
     self.test_suppressor = suppressor.Suppressor(
         finder, self.features, self.options.disable_javascript,
-        self.options.disable_xfa, config.rendering_option)
+        self.options.disable_xfa, config.rendering_option, config.font_engine)
     self.image_differ = pngdiffer.PNGDiffer(finder,
                                             self.options.reverse_byte_order,
                                             config.rendering_option,

@@ -97,10 +97,7 @@ class PNGDiffer:
     if self.reverse_byte_order:
       cmd.append('--reverse-byte-order')
     if algorithm == FUZZY_MATCHING:
-      if extra_flags:
-        cmd.extend(extra_flags)
-      else:
-        cmd.append('--fuzzy')
+      cmd.extend(extra_flags)
     cmd.extend([image_diff.actual_path, image_diff.expected_path])
     return self._RunCommand(cmd)
 

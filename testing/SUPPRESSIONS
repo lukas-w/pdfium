@@ -2,8 +2,8 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 #
-# List of tests to be skipped, one per line.
-# There are five space-separated columns per line
+# List of tests whose results are ignored, one per line.
+# There are seven space-separated columns per line
 # Each column (except column 0) can contain a comma-separated list of values.
 #
 # Column 0: test file name
@@ -11,6 +11,10 @@
 # Column 2: v8 support: *, nov8, v8
 # Column 3: xfa support: *, noxfa, xfa
 # Column 4: rendering support: *, agg, gdi, skia
+# Column 5: font engine: *, freetype, fontations
+# Column 6: action: diff (the output differs from the expected images in
+#           a way that no tolerance can bridge, so the test still runs
+#           but never fails, however far off it lands)
 #
 # All columns on a line must match, but filenames may be repeated on subsequent
 # lines to suppress more cases.  Within each column, any one of the
@@ -24,811 +28,811 @@
 #
 # Corpus tests
 #
-12.pdf mac * * agg
-1_1_textbox.pdf * * * *
-1_2_typewriter.pdf * * * *
-1_3_callout.pdf * * * *
-1_matrix.pdf mac * * agg
-1m_diff_lsjdf.pdf mac * * agg
-1m_same_xxxx.pdf mac * * agg
-2_11_stamp3.pdf mac * * agg
-2_6_textbox.pdf * * * *
-2_color_calrgb.pdf mac * * agg
-2_color_indexed.pdf mac * * agg
-3_4_textbox.pdf * * * *
-3_interpolate_image.pdf mac * * agg
-3bigpreview.pdf mac * * agg
-4_35.pdf mac * * agg
-4_39.pdf mac * * agg
-5.1.pdf mac * * agg
-5.2.pdf * * * *
-5.5_simple_font.pdf mac * * agg
-8.2_name_dest_f_dest.pdf mac * * agg
-8.2_outline.pdf mac * * agg
-8.3_presentation.pdf mac * * agg
-FRC_10_8.2.2__T8.3_original_file.pdf * * * *
-FRC_11_8.2.2__T8.3_first_last_exchange.pdf * * * *
-FRC_12_8.2.2__T8.3_first_outline_obj_ID.pdf * * * *
-FRC_13_8.2.2__T8.3_Count_edit300.pdf * * * *
-FRC_14_8.2.2__T8.3_Count_edit0.pdf * * * *
-FRC_15_8.2.2__T8.3_Count_edit1.pdf * * * *
-FRC_16_8.2.2__T8.3_Count_edit_1.pdf * * * *
-FRC_1_8.2.2__T8.3_First_empty.pdf * * * *
-FRC_2_8.2.2__T8.3_Last_empty.pdf * * * *
-FRC_3.5_P__3616_Password_1.pdf * * * *
-FRC_3_8.2.2_Type_empty.pdf * * * *
-FRC_4_8.2.2__T8.3_Count_empty.pdf * * * *
-FRC_5_8.2.2__T8.3_First_remove.pdf * * * *
-FRC_6_8.2.2__T8.3_Last_remove.pdf * * * *
-FRC_7_8.2.2_Type_remove.pdf * * * *
-FRC_8.4.1_Annotations_M.pdf * * * *
-FRC_8.4.1_Annotations_NM.pdf * * * *
-FRC_8.5_Page_C_SubmitForm.pdf * * * *
-FRC_8.5_Page_PI_ResetForm_Phantom.pdf * * * *
-FRC_8.5_Widget_F.pdf * nov8 * *
-FRC_8_8.2.2__T8.3_Count_remove.pdf * * * *
-FRC_9_8.2.2__T8.3_remove_first_item.pdf * * * *
-action.pdf * * * *
-action_execute_a_menu_item.pdf mac * * agg
-action_hide_show_form.pdf mac * * agg
-action_on_focus.pdf mac * * agg
-action_open_a_file.pdf mac * * agg
-action_pdf_save_close.pdf mac * * agg
-action_reset.pdf mac * * agg
-action_run_javascript.pdf mac * * agg
-action_submit_a_form.pdf mac * * agg
-all_trigger_alert.pdf * * * *
-all_trigger_mailmsg.pdf * * * *
-all_trigger_print.pdf * * * *
-all_trigger_run_js_lunchurl.pdf mac * * agg
-all_trigger_run_js_maildoc.pdf mac * * agg
-annotation_highlight_author_content.pdf mac * * agg
-annotation_highlight_long_content.pdf mac * * agg
-annotation_highlight_no_author.pdf mac * * agg
-app_launchurl.pdf mac * * agg
-appstoredescription3.1_en_updated.pdf mac * * agg
-bookmark.pdf * * * *
-bookmarkgetcolor.pdf mac * * agg
-bug_0_length_line.pdf mac * * agg
+12.pdf mac * * agg * diff
+1_1_textbox.pdf * * * * * diff
+1_2_typewriter.pdf * * * * * diff
+1_3_callout.pdf * * * * * diff
+1_matrix.pdf mac * * agg * diff
+1m_diff_lsjdf.pdf mac * * agg * diff
+1m_same_xxxx.pdf mac * * agg * diff
+2_11_stamp3.pdf mac * * agg * diff
+2_6_textbox.pdf * * * * * diff
+2_color_calrgb.pdf mac * * agg * diff
+2_color_indexed.pdf mac * * agg * diff
+3_4_textbox.pdf * * * * * diff
+3_interpolate_image.pdf mac * * agg * diff
+3bigpreview.pdf mac * * agg * diff
+4_35.pdf mac * * agg * diff
+4_39.pdf mac * * agg * diff
+5.1.pdf mac * * agg * diff
+5.2.pdf * * * * * diff
+5.5_simple_font.pdf mac * * agg * diff
+8.2_name_dest_f_dest.pdf mac * * agg * diff
+8.2_outline.pdf mac * * agg * diff
+8.3_presentation.pdf mac * * agg * diff
+FRC_10_8.2.2__T8.3_original_file.pdf * * * * * diff
+FRC_11_8.2.2__T8.3_first_last_exchange.pdf * * * * * diff
+FRC_12_8.2.2__T8.3_first_outline_obj_ID.pdf * * * * * diff
+FRC_13_8.2.2__T8.3_Count_edit300.pdf * * * * * diff
+FRC_14_8.2.2__T8.3_Count_edit0.pdf * * * * * diff
+FRC_15_8.2.2__T8.3_Count_edit1.pdf * * * * * diff
+FRC_16_8.2.2__T8.3_Count_edit_1.pdf * * * * * diff
+FRC_1_8.2.2__T8.3_First_empty.pdf * * * * * diff
+FRC_2_8.2.2__T8.3_Last_empty.pdf * * * * * diff
+FRC_3.5_P__3616_Password_1.pdf * * * * * diff
+FRC_3_8.2.2_Type_empty.pdf * * * * * diff
+FRC_4_8.2.2__T8.3_Count_empty.pdf * * * * * diff
+FRC_5_8.2.2__T8.3_First_remove.pdf * * * * * diff
+FRC_6_8.2.2__T8.3_Last_remove.pdf * * * * * diff
+FRC_7_8.2.2_Type_remove.pdf * * * * * diff
+FRC_8.4.1_Annotations_M.pdf * * * * * diff
+FRC_8.4.1_Annotations_NM.pdf * * * * * diff
+FRC_8.5_Page_C_SubmitForm.pdf * * * * * diff
+FRC_8.5_Page_PI_ResetForm_Phantom.pdf * * * * * diff
+FRC_8.5_Widget_F.pdf * nov8 * * * diff
+FRC_8_8.2.2__T8.3_Count_remove.pdf * * * * * diff
+FRC_9_8.2.2__T8.3_remove_first_item.pdf * * * * * diff
+action.pdf * * * * * diff
+action_execute_a_menu_item.pdf mac * * agg * diff
+action_hide_show_form.pdf mac * * agg * diff
+action_on_focus.pdf mac * * agg * diff
+action_open_a_file.pdf mac * * agg * diff
+action_pdf_save_close.pdf mac * * agg * diff
+action_reset.pdf mac * * agg * diff
+action_run_javascript.pdf mac * * agg * diff
+action_submit_a_form.pdf mac * * agg * diff
+all_trigger_alert.pdf * * * * * diff
+all_trigger_mailmsg.pdf * * * * * diff
+all_trigger_print.pdf * * * * * diff
+all_trigger_run_js_lunchurl.pdf mac * * agg * diff
+all_trigger_run_js_maildoc.pdf mac * * agg * diff
+annotation_highlight_author_content.pdf mac * * agg * diff
+annotation_highlight_long_content.pdf mac * * agg * diff
+annotation_highlight_no_author.pdf mac * * agg * diff
+app_launchurl.pdf mac * * agg * diff
+appstoredescription3.1_en_updated.pdf mac * * agg * diff
+bookmark.pdf * * * * * diff
+bookmarkgetcolor.pdf mac * * agg * diff
+bug_0_length_line.pdf mac * * agg * diff
 
 # TODO(crbug.com/42270825): Remove after associated bug is fixed
-bug_0_length_line.pdf * * * skia
+bug_0_length_line.pdf * * * skia * diff
 
-bug_0_width_line.pdf mac * * agg
-bug_440132.pdf mac * * agg
-bug_white_space.pdf mac * * agg
-calcorderindex_test.pdf * * * *
-calculate_average.pdf mac * * agg
-calculate_order.pdf * * * *
-calculate_sum_a_b_c.pdf mac * * agg
-calculate_validate.pdf mac * * agg
-calculate_validate.pdf * nov8 * *
-ch_1.pdf * * * *
-check_box.pdf * * * *
-color.pdf mac * * agg
-colorspace.pdf mac * * agg
-colorspace_test1.pdf mac * * agg
-combo_box.pdf * * * *
-combo_box_format.pdf mac * * agg
-date.pdf mac * * agg
-edit_transform.pdf mac * * agg
-en_contact.pdf mac * * agg
-en_diy.pdf mac * * agg
-en_foxit.pdf mac * * agg
-en_fqa2.pdf mac * * agg
-en_introduce.pdf mac * * agg
-en_tem.pdf mac * * agg
-en_uicase_.pdf mac * * agg
-event.change.pdf mac * * agg
-event.changeex.pdf mac * * agg
-event.keydown.pdf mac * * agg
-event.keydown_1_.pdf mac * * agg
-event.type_name.pdf mac * * agg
-event.value.pdf mac * * agg
-event_change.pdf mac * * agg
-example_001.pdf mac * * agg
-example_002.pdf mac * * agg
-example_003.pdf mac * * agg
-example_004.pdf mac * * agg
-example_005.pdf mac * * agg
-example_006.pdf mac * * agg
-example_007.pdf mac * * agg
-example_008.pdf mac * * agg
-example_009.pdf mac * * agg
-example_010.pdf mac * * agg
-example_011.pdf mac * * agg
-example_012.pdf mac * * agg
-example_013.pdf mac * * agg
-example_014.pdf mac * * agg
-example_015.pdf mac * * agg
-example_016.pdf mac * * agg
-example_017.pdf mac * * agg
-example_018.pdf mac * * agg
-example_019.pdf mac * * agg
-example_020.pdf mac * * agg
-example_021.pdf mac * * agg
-example_022.pdf mac * * agg
-example_023.pdf mac * * agg
-example_024.pdf mac * * agg
-example_025.pdf mac * * agg
-example_026.pdf mac * * agg
-example_027.pdf mac * * agg
-example_028.pdf mac * * agg
-example_029.pdf mac * * agg
-example_030.pdf mac * * agg
-example_031.pdf mac * * agg
-example_032.pdf mac * * agg
-example_033.pdf mac * * agg
-example_034.pdf mac * * agg
-example_035.pdf mac * * agg
-example_036.pdf mac * * agg
-example_037.pdf mac * * agg
-example_038.pdf mac * * agg
-example_039.pdf mac * * agg
-example_040.pdf mac * * agg
-example_041.pdf mac * * agg
-example_042.pdf mac * * agg
-example_043.pdf mac * * agg
-example_044.pdf mac * * agg
-example_045.pdf mac * * agg
-example_046.pdf mac * * agg
-example_047.pdf mac * * agg
-example_048.pdf mac * * agg
-example_049.pdf mac * * agg
-example_050.pdf mac * * agg
-example_051.pdf mac * * agg
-example_052.pdf mac * * agg
-example_053.pdf mac * * agg
-example_054.pdf mac * * agg
-example_055.pdf mac * * agg
-example_056.pdf mac * * agg
-example_057.pdf mac * * agg
-example_058.pdf mac * * agg
-example_059.pdf mac * * agg
-example_060.pdf mac * * agg
-example_061.pdf mac * * agg
-example_062.pdf mac * * agg
-example_063.pdf mac * * agg
-example_064.pdf mac * * agg
-example_065.pdf mac * * agg
-fillform.pdf * * * *
-form_action_trigger.pdf * * * *
-form_button_sign_url.pdf * * * *
-form_combo_sign_url.pdf * * * *
-form_combobox0.pdf * * * *
-form_combobox_actioin_goto.pdf * * * *
-form_combobox_date.pdf mac * * agg
-form_combobox_date.pdf * nov8 * *
-form_combobox_date1.pdf * * * *
-form_combobox_date2.pdf mac * * agg
-form_combobox_date2.pdf * nov8 * *
-form_combobox_importform.pdf * * * *
-form_combobox_num.pdf mac * * agg
-form_combobox_num.pdf * nov8 * *
-form_combobox_per.pdf mac * * agg
-form_combobox_per.pdf * nov8 * *
-form_combobox_plus.pdf mac * * agg
-form_combobox_plus.pdf * nov8 * *
-form_combobox_product.pdf mac * * agg
-form_combobox_product.pdf * nov8 * *
-form_combobox_resetform.pdf * * * *
-form_combobox_time.pdf mac * * agg
-form_combobox_time.pdf * nov8 * *
-form_list.pdf * * * *
-form_list1.pdf * * * *
-form_same.pdf mac * * agg
-form_text_sign_url.pdf * * * *
-format_combo_box.pdf mac * * agg
-format_combo_box.pdf * nov8 * *
-format_custom_format.pdf * nov8 * *
-format_custom_keystroke.pdf * * * *
-format_date.pdf * nov8 * *
-format_number.pdf mac * * agg
-format_percentage.pdf mac * * agg
-format_special.pdf * nov8 * *
-format_text_color.pdf mac * * agg
-formfield.pdf * * * *
-getarray.pdf mac * * agg
+bug_0_width_line.pdf mac * * agg * diff
+bug_440132.pdf mac * * agg * diff
+bug_white_space.pdf mac * * agg * diff
+calcorderindex_test.pdf * * * * * diff
+calculate_average.pdf mac * * agg * diff
+calculate_order.pdf * * * * * diff
+calculate_sum_a_b_c.pdf mac * * agg * diff
+calculate_validate.pdf mac * * agg * diff
+calculate_validate.pdf * nov8 * * * diff
+ch_1.pdf * * * * * diff
+check_box.pdf * * * * * diff
+color.pdf mac * * agg * diff
+colorspace.pdf mac * * agg * diff
+colorspace_test1.pdf mac * * agg * diff
+combo_box.pdf * * * * * diff
+combo_box_format.pdf mac * * agg * diff
+date.pdf mac * * agg * diff
+edit_transform.pdf mac * * agg * diff
+en_contact.pdf mac * * agg * diff
+en_diy.pdf mac * * agg * diff
+en_foxit.pdf mac * * agg * diff
+en_fqa2.pdf mac * * agg * diff
+en_introduce.pdf mac * * agg * diff
+en_tem.pdf mac * * agg * diff
+en_uicase_.pdf mac * * agg * diff
+event.change.pdf mac * * agg * diff
+event.changeex.pdf mac * * agg * diff
+event.keydown.pdf mac * * agg * diff
+event.keydown_1_.pdf mac * * agg * diff
+event.type_name.pdf mac * * agg * diff
+event.value.pdf mac * * agg * diff
+event_change.pdf mac * * agg * diff
+example_001.pdf mac * * agg * diff
+example_002.pdf mac * * agg * diff
+example_003.pdf mac * * agg * diff
+example_004.pdf mac * * agg * diff
+example_005.pdf mac * * agg * diff
+example_006.pdf mac * * agg * diff
+example_007.pdf mac * * agg * diff
+example_008.pdf mac * * agg * diff
+example_009.pdf mac * * agg * diff
+example_010.pdf mac * * agg * diff
+example_011.pdf mac * * agg * diff
+example_012.pdf mac * * agg * diff
+example_013.pdf mac * * agg * diff
+example_014.pdf mac * * agg * diff
+example_015.pdf mac * * agg * diff
+example_016.pdf mac * * agg * diff
+example_017.pdf mac * * agg * diff
+example_018.pdf mac * * agg * diff
+example_019.pdf mac * * agg * diff
+example_020.pdf mac * * agg * diff
+example_021.pdf mac * * agg * diff
+example_022.pdf mac * * agg * diff
+example_023.pdf mac * * agg * diff
+example_024.pdf mac * * agg * diff
+example_025.pdf mac * * agg * diff
+example_026.pdf mac * * agg * diff
+example_027.pdf mac * * agg * diff
+example_028.pdf mac * * agg * diff
+example_029.pdf mac * * agg * diff
+example_030.pdf mac * * agg * diff
+example_031.pdf mac * * agg * diff
+example_032.pdf mac * * agg * diff
+example_033.pdf mac * * agg * diff
+example_034.pdf mac * * agg * diff
+example_035.pdf mac * * agg * diff
+example_036.pdf mac * * agg * diff
+example_037.pdf mac * * agg * diff
+example_038.pdf mac * * agg * diff
+example_039.pdf mac * * agg * diff
+example_040.pdf mac * * agg * diff
+example_041.pdf mac * * agg * diff
+example_042.pdf mac * * agg * diff
+example_043.pdf mac * * agg * diff
+example_044.pdf mac * * agg * diff
+example_045.pdf mac * * agg * diff
+example_046.pdf mac * * agg * diff
+example_047.pdf mac * * agg * diff
+example_048.pdf mac * * agg * diff
+example_049.pdf mac * * agg * diff
+example_050.pdf mac * * agg * diff
+example_051.pdf mac * * agg * diff
+example_052.pdf mac * * agg * diff
+example_053.pdf mac * * agg * diff
+example_054.pdf mac * * agg * diff
+example_055.pdf mac * * agg * diff
+example_056.pdf mac * * agg * diff
+example_057.pdf mac * * agg * diff
+example_058.pdf mac * * agg * diff
+example_059.pdf mac * * agg * diff
+example_060.pdf mac * * agg * diff
+example_061.pdf mac * * agg * diff
+example_062.pdf mac * * agg * diff
+example_063.pdf mac * * agg * diff
+example_064.pdf mac * * agg * diff
+example_065.pdf mac * * agg * diff
+fillform.pdf * * * * * diff
+form_action_trigger.pdf * * * * * diff
+form_button_sign_url.pdf * * * * * diff
+form_combo_sign_url.pdf * * * * * diff
+form_combobox0.pdf * * * * * diff
+form_combobox_actioin_goto.pdf * * * * * diff
+form_combobox_date.pdf mac * * agg * diff
+form_combobox_date.pdf * nov8 * * * diff
+form_combobox_date1.pdf * * * * * diff
+form_combobox_date2.pdf mac * * agg * diff
+form_combobox_date2.pdf * nov8 * * * diff
+form_combobox_importform.pdf * * * * * diff
+form_combobox_num.pdf mac * * agg * diff
+form_combobox_num.pdf * nov8 * * * diff
+form_combobox_per.pdf mac * * agg * diff
+form_combobox_per.pdf * nov8 * * * diff
+form_combobox_plus.pdf mac * * agg * diff
+form_combobox_plus.pdf * nov8 * * * diff
+form_combobox_product.pdf mac * * agg * diff
+form_combobox_product.pdf * nov8 * * * diff
+form_combobox_resetform.pdf * * * * * diff
+form_combobox_time.pdf mac * * agg * diff
+form_combobox_time.pdf * nov8 * * * diff
+form_list.pdf * * * * * diff
+form_list1.pdf * * * * * diff
+form_same.pdf mac * * agg * diff
+form_text_sign_url.pdf * * * * * diff
+format_combo_box.pdf mac * * agg * diff
+format_combo_box.pdf * nov8 * * * diff
+format_custom_format.pdf * nov8 * * * diff
+format_custom_keystroke.pdf * * * * * diff
+format_date.pdf * nov8 * * * diff
+format_number.pdf mac * * agg * diff
+format_percentage.pdf mac * * agg * diff
+format_special.pdf * nov8 * * * diff
+format_text_color.pdf mac * * agg * diff
+formfield.pdf * * * * * diff
+getarray.pdf mac * * agg * diff
 
 # TODO(crbug.com/42271468): Remove after associated bug is fixed.
-gradient_many_stops.pdf * * * agg
+gradient_many_stops.pdf * * * agg * diff
 
-javascriptaction.pdf * * * *
-jetman_std.pdf mac * * agg
-jetman_std_fixed.pdf mac * * agg
-js_calculate.pdf * * * *
-list_box.pdf * * * *
-negative.pdf mac * * agg
-new_certify1.pdf mac * * agg
-new_signature1.pdf mac * * agg
-new_signature2.pdf mac * * agg
-new_stamp4.pdf mac * * agg
-new_stamp5.pdf mac * * agg
-new_textmarkup1.pdf mac * * agg
-new_textmarkup1_hidden.pdf mac * * agg
-new_textmarkup2.pdf mac * * agg
-new_textmarkup2_hidden.pdf mac * * agg
-new_textmarkup4.pdf mac * * agg
-new_textmarkup4_hidden.pdf mac * * agg
-new_textmarkup5.pdf mac * * agg
-new_textmarkup5_hidden.pdf mac * * agg
-new_textmarkup6.pdf mac * * agg
-new_textmarkup7.pdf mac * * agg
-new_textmarkup7_hidden.pdf mac * * agg
-new_textmarkup8.pdf mac * * agg
-new_textmarkup8_hidden.pdf mac * * agg
-number.pdf * * * *
-octest.pdf mac * * agg
-open_a_weblink.pdf mac * * agg
-path_10_jd.pdf mac * * agg
-path_5_pattern.pdf mac * * agg
-path_6_graphics4.5.5.pdf mac * * agg
-path_7.pdf mac * * agg
-path_9.pdf mac * * agg
-percentage.pdf mac * * agg
-push_button.pdf * * * *
-quick_start_guide.pdf mac * * agg
-radio_button.pdf * * * *
-run_custom_validate_script.pdf * * * *
-show_1.pdf mac * * agg
-signature.pdf * * * *
-signature_4.pdf * * * *
-simplified_field_notation.pdf mac * * agg
-special.pdf mac * * agg
-submit_form.pdf mac * * agg
-test_app_beep.pdf * * * *
-test_control.pdf * * * *
-text_field.pdf * * * *
-text_field_font_input_decimal_point.pdf mac * * agg
-text_field_multiline_line_spacing.pdf mac * * agg
-thread_action.pdf mac * * agg
-time.pdf mac * * agg
-transformation.pdf mac * * agg
-transparent.pdf mac * * agg
-whats_new_in_v3.0.pdf mac * * agg
-widget_javascript.pdf mac * * agg
+javascriptaction.pdf * * * * * diff
+jetman_std.pdf mac * * agg * diff
+jetman_std_fixed.pdf mac * * agg * diff
+js_calculate.pdf * * * * * diff
+list_box.pdf * * * * * diff
+negative.pdf mac * * agg * diff
+new_certify1.pdf mac * * agg * diff
+new_signature1.pdf mac * * agg * diff
+new_signature2.pdf mac * * agg * diff
+new_stamp4.pdf mac * * agg * diff
+new_stamp5.pdf mac * * agg * diff
+new_textmarkup1.pdf mac * * agg * diff
+new_textmarkup1_hidden.pdf mac * * agg * diff
+new_textmarkup2.pdf mac * * agg * diff
+new_textmarkup2_hidden.pdf mac * * agg * diff
+new_textmarkup4.pdf mac * * agg * diff
+new_textmarkup4_hidden.pdf mac * * agg * diff
+new_textmarkup5.pdf mac * * agg * diff
+new_textmarkup5_hidden.pdf mac * * agg * diff
+new_textmarkup6.pdf mac * * agg * diff
+new_textmarkup7.pdf mac * * agg * diff
+new_textmarkup7_hidden.pdf mac * * agg * diff
+new_textmarkup8.pdf mac * * agg * diff
+new_textmarkup8_hidden.pdf mac * * agg * diff
+number.pdf * * * * * diff
+octest.pdf mac * * agg * diff
+open_a_weblink.pdf mac * * agg * diff
+path_10_jd.pdf mac * * agg * diff
+path_5_pattern.pdf mac * * agg * diff
+path_6_graphics4.5.5.pdf mac * * agg * diff
+path_7.pdf mac * * agg * diff
+path_9.pdf mac * * agg * diff
+percentage.pdf mac * * agg * diff
+push_button.pdf * * * * * diff
+quick_start_guide.pdf mac * * agg * diff
+radio_button.pdf * * * * * diff
+run_custom_validate_script.pdf * * * * * diff
+show_1.pdf mac * * agg * diff
+signature.pdf * * * * * diff
+signature_4.pdf * * * * * diff
+simplified_field_notation.pdf mac * * agg * diff
+special.pdf mac * * agg * diff
+submit_form.pdf mac * * agg * diff
+test_app_beep.pdf * * * * * diff
+test_control.pdf * * * * * diff
+text_field.pdf * * * * * diff
+text_field_font_input_decimal_point.pdf mac * * agg * diff
+text_field_multiline_line_spacing.pdf mac * * agg * diff
+thread_action.pdf mac * * agg * diff
+time.pdf mac * * agg * diff
+transformation.pdf mac * * agg * diff
+transparent.pdf mac * * agg * diff
+whats_new_in_v3.0.pdf mac * * agg * diff
+widget_javascript.pdf mac * * agg * diff
 
 # TODO(crbug.com/42270997): Remove after associated bug is fixed
-xfermodes2.pdf * * * agg
+xfermodes2.pdf * * * agg * diff
 
-zh_file1.pdf mac * * agg
-zh_function_list.pdf mac * * agg
-zh_shared_document.pdf mac * * agg
+zh_file1.pdf mac * * agg * diff
+zh_function_list.pdf mac * * agg * diff
+zh_shared_document.pdf mac * * agg * diff
 
 # TODO(hnakashima): These might never have been run. Go over them and fix.
 
-FRC_8.5_E&X.pdf * * * *
-FRC_8.5_O&PO_GoToE.pdf * * * *
-FRC_8.5_OpenAction&O_URI.pdf * * * *
-FRC_8.5_PC&C_GoToE_T_T.pdf * * * *
-FRC_8.5_PC_GoToE_T_R&P&A.pdf * * * *
-FRC_8.5_PO_GoToE_T_R&N.pdf * * * *
+FRC_8.5_E&X.pdf * * * * * diff
+FRC_8.5_O&PO_GoToE.pdf * * * * * diff
+FRC_8.5_OpenAction&O_URI.pdf * * * * * diff
+FRC_8.5_PC&C_GoToE_T_T.pdf * * * * * diff
+FRC_8.5_PC_GoToE_T_R&P&A.pdf * * * * * diff
+FRC_8.5_PO_GoToE_T_R&N.pdf * * * * * diff
 
 # xfa_specific
 
-Choose.pdf * * * *
-data_binding.pdf * * * *
+Choose.pdf * * * * * diff
+data_binding.pdf * * * * * diff
 # TODO(npm): Add proper evt for MouseEvents.
-MouseEvents_enter.pdf * * * *
-MouseEvents_exit.pdf * * * *
-Oneof3.pdf * * * *
-Sum.pdf * * * *
-Test_CheckBox.pdf * * * *
+MouseEvents_enter.pdf * * * * * diff
+MouseEvents_exit.pdf * * * * * diff
+Oneof3.pdf * * * * * diff
+Sum.pdf * * * * * diff
+Test_CheckBox.pdf * * * * * diff
 
 # TODO(crbug.com/459586268): Remove this entry once macOS support for Intel
 # hardware goes away. The test expectation is just different enough from the ARM
 # rendering that fuzzy matching is not enough for it to match.
-2_color_tiling.pdf mac_x86 * * skia
-2_uncolor_tiling.pdf mac_x86 * * skia
-FRC_10_8.2.4_View_C.pdf mac_x86 * * skia
-Test_DateField_locale_zh_HK.pdf mac_x86 * * skia
-TimeField.pdf mac_x86 * * skia
-annotation_circle_hidden.pdf mac_x86 * * skia
-annotation_ellipse_hidden.pdf mac_x86 * * skia
-annotation_highlight.pdf mac_x86 * * skia
-annotation_highlight_empty_content.pdf mac_x86 * * skia
-annotation_highlight_hidden.pdf mac_x86 * * skia
-annotation_highlight_no_author_no_content.pdf mac_x86 * * skia
-annotation_highlight_no_content.pdf mac_x86 * * skia
-annotation_highlight_opacity.pdf mac_x86 * * skia
-annotation_ink_hidden.pdf mac_x86 * * skia
-annotation_polygon.pdf mac_x86 * * skia
-annotation_square_fill_negative_border.pdf mac_x86 * * skia
-annotation_square_hidden.pdf mac_x86 * * skia
-annotation_squiggly_hidden.pdf mac_x86 * * skia
-annotation_stamp.pdf mac_x86 * * skia
-annotation_strikeout_hidden.pdf mac_x86 * * skia
-annotation_strikeout_opacity.pdf mac_x86 * * skia
-annotation_underline.pdf mac_x86 * * skia
-annotation_underline_hidden.pdf mac_x86 * * skia
-annotation_underline_opacity.pdf mac_x86 * * skia
-bug_668762.pdf mac_x86 * * skia
-en_14_foxit_products.pdf mac_x86 * * skia
-en_fqa.pdf mac_x86 * * skia
-example_042.pdf mac_x86 * * skia
-font_1_embedded_font_en_feature.pdf mac_x86 * * skia
-font_2_embedded_font_en_size14.pdf mac_x86 * * skia
-transparent1.pdf mac_x86 * * skia
-xfermodes.pdf mac_x86 * * skia
-xfermodes2.pdf mac_x86 * * skia
-xfermodes3.pdf mac_x86 * * skia
+2_color_tiling.pdf mac_x86 * * skia * diff
+2_uncolor_tiling.pdf mac_x86 * * skia * diff
+FRC_10_8.2.4_View_C.pdf mac_x86 * * skia * diff
+Test_DateField_locale_zh_HK.pdf mac_x86 * * skia * diff
+TimeField.pdf mac_x86 * * skia * diff
+annotation_circle_hidden.pdf mac_x86 * * skia * diff
+annotation_ellipse_hidden.pdf mac_x86 * * skia * diff
+annotation_highlight.pdf mac_x86 * * skia * diff
+annotation_highlight_empty_content.pdf mac_x86 * * skia * diff
+annotation_highlight_hidden.pdf mac_x86 * * skia * diff
+annotation_highlight_no_author_no_content.pdf mac_x86 * * skia * diff
+annotation_highlight_no_content.pdf mac_x86 * * skia * diff
+annotation_highlight_opacity.pdf mac_x86 * * skia * diff
+annotation_ink_hidden.pdf mac_x86 * * skia * diff
+annotation_polygon.pdf mac_x86 * * skia * diff
+annotation_square_fill_negative_border.pdf mac_x86 * * skia * diff
+annotation_square_hidden.pdf mac_x86 * * skia * diff
+annotation_squiggly_hidden.pdf mac_x86 * * skia * diff
+annotation_stamp.pdf mac_x86 * * skia * diff
+annotation_strikeout_hidden.pdf mac_x86 * * skia * diff
+annotation_strikeout_opacity.pdf mac_x86 * * skia * diff
+annotation_underline.pdf mac_x86 * * skia * diff
+annotation_underline_hidden.pdf mac_x86 * * skia * diff
+annotation_underline_opacity.pdf mac_x86 * * skia * diff
+bug_668762.pdf mac_x86 * * skia * diff
+en_14_foxit_products.pdf mac_x86 * * skia * diff
+en_fqa.pdf mac_x86 * * skia * diff
+example_042.pdf mac_x86 * * skia * diff
+font_1_embedded_font_en_feature.pdf mac_x86 * * skia * diff
+font_2_embedded_font_en_size14.pdf mac_x86 * * skia * diff
+transparent1.pdf mac_x86 * * skia * diff
+xfermodes.pdf mac_x86 * * skia * diff
+xfermodes2.pdf mac_x86 * * skia * diff
+xfermodes3.pdf mac_x86 * * skia * diff
 
 # GDI
 
 # TODO(crbug.com/42271066): Remove after associated bug is fixed
-1.pdf * * * gdi
-123.pdf * * * gdi
-1_image.pdf * * * gdi
-3_interpolate_image.pdf * * * gdi
-3bigpreview.pdf * * * gdi
-4_3.pdf * * * gdi
-4_36.pdf * * * gdi
-FRC_10_8.2.4_View_C.pdf * * * gdi
-FRC_8.4.1_Annotations_Type.pdf * * * gdi
-FRC_8.4.3_Border_Stypes_W_different_values.pdf * * * gdi
-FRC_8.5_Screen_Img_D_Launch.pdf * * * gdi
-FRC_8.5_URI_IsMap.pdf * * * gdi
-bug_691967.pdf * * * gdi
-bug_86459.pdf * * * gdi
-bug_880920.pdf * * * gdi
-ch_7_0.pdf * * * gdi
-ch_7_1.pdf * * * gdi
-ch_7_4.pdf * * * gdi
-ch_7_5.pdf * * * gdi
-ch_7_6.pdf * * * gdi
-ch_7_7.pdf * * * gdi
-ch_7_8.pdf * * * gdi
-en_tem.pdf * * * gdi
-example_001.pdf * * * gdi
-example_003.pdf * * * gdi
-example_004.pdf * * * gdi
-example_005.pdf * * * gdi
-example_006.pdf * * * gdi
-example_007.pdf * * * gdi
-example_008.pdf * * * gdi
-example_009.pdf * * * gdi
-example_010.pdf * * * gdi
-example_011.pdf * * * gdi
-example_013.pdf * * * gdi
-example_015.pdf * * * gdi
-example_016.pdf * * * gdi
-example_017.pdf * * * gdi
-example_018.pdf * * * gdi
-example_019.pdf * * * gdi
-example_020.pdf * * * gdi
-example_021.pdf * * * gdi
-example_022.pdf * * * gdi
-example_023.pdf * * * gdi
-example_024.pdf * * * gdi
-example_025.pdf * * * gdi
-example_026.pdf * * * gdi
-example_027.pdf * * * gdi
-example_029.pdf * * * gdi
-example_030.pdf * * * gdi
-example_031.pdf * * * gdi
-example_032.pdf * * * gdi
-example_033.pdf * * * gdi
-example_034.pdf * * * gdi
-example_035.pdf * * * gdi
-example_036.pdf * * * gdi
-example_037.pdf * * * gdi
-example_038.pdf * * * gdi
-example_039.pdf * * * gdi
-example_040.pdf * * * gdi
-example_041.pdf * * * gdi
-example_042.pdf * * * gdi
-example_043.pdf * * * gdi
-example_044.pdf * * * gdi
-example_045.pdf * * * gdi
-example_046.pdf * * * gdi
-example_047.pdf * * * gdi
-example_048.pdf * * * gdi
-example_049.pdf * * * gdi
-example_050.pdf * * * gdi
-example_051.pdf * * * gdi
-example_052.pdf * * * gdi
-example_053.pdf * * * gdi
-example_055.pdf * * * gdi
-example_056.pdf * * * gdi
-example_057.pdf * * * gdi
-example_058.pdf * * * gdi
-example_059.pdf * * * gdi
-example_060.pdf * * * gdi
-example_061.pdf * * * gdi
-example_062.pdf * * * gdi
-example_063.pdf * * * gdi
-example_064.pdf * * * gdi
-example_065.pdf * * * gdi
-image_8bit_devicergb_dctdecode.pdf * * * gdi
-image_bmp.pdf * * * gdi
-image_jpg.pdf * * * gdi
-image_png.pdf * * * gdi
-image_tif.pdf * * * gdi
-mask_array.pdf * * * gdi
-new_stamp2.pdf * * * gdi
-quick_start_guide.pdf * * * gdi
-whats_new_in_v3.0.pdf * * * gdi
+1.pdf * * * gdi * diff
+123.pdf * * * gdi * diff
+1_image.pdf * * * gdi * diff
+3_interpolate_image.pdf * * * gdi * diff
+3bigpreview.pdf * * * gdi * diff
+4_3.pdf * * * gdi * diff
+4_36.pdf * * * gdi * diff
+FRC_10_8.2.4_View_C.pdf * * * gdi * diff
+FRC_8.4.1_Annotations_Type.pdf * * * gdi * diff
+FRC_8.4.3_Border_Stypes_W_different_values.pdf * * * gdi * diff
+FRC_8.5_Screen_Img_D_Launch.pdf * * * gdi * diff
+FRC_8.5_URI_IsMap.pdf * * * gdi * diff
+bug_691967.pdf * * * gdi * diff
+bug_86459.pdf * * * gdi * diff
+bug_880920.pdf * * * gdi * diff
+ch_7_0.pdf * * * gdi * diff
+ch_7_1.pdf * * * gdi * diff
+ch_7_4.pdf * * * gdi * diff
+ch_7_5.pdf * * * gdi * diff
+ch_7_6.pdf * * * gdi * diff
+ch_7_7.pdf * * * gdi * diff
+ch_7_8.pdf * * * gdi * diff
+en_tem.pdf * * * gdi * diff
+example_001.pdf * * * gdi * diff
+example_003.pdf * * * gdi * diff
+example_004.pdf * * * gdi * diff
+example_005.pdf * * * gdi * diff
+example_006.pdf * * * gdi * diff
+example_007.pdf * * * gdi * diff
+example_008.pdf * * * gdi * diff
+example_009.pdf * * * gdi * diff
+example_010.pdf * * * gdi * diff
+example_011.pdf * * * gdi * diff
+example_013.pdf * * * gdi * diff
+example_015.pdf * * * gdi * diff
+example_016.pdf * * * gdi * diff
+example_017.pdf * * * gdi * diff
+example_018.pdf * * * gdi * diff
+example_019.pdf * * * gdi * diff
+example_020.pdf * * * gdi * diff
+example_021.pdf * * * gdi * diff
+example_022.pdf * * * gdi * diff
+example_023.pdf * * * gdi * diff
+example_024.pdf * * * gdi * diff
+example_025.pdf * * * gdi * diff
+example_026.pdf * * * gdi * diff
+example_027.pdf * * * gdi * diff
+example_029.pdf * * * gdi * diff
+example_030.pdf * * * gdi * diff
+example_031.pdf * * * gdi * diff
+example_032.pdf * * * gdi * diff
+example_033.pdf * * * gdi * diff
+example_034.pdf * * * gdi * diff
+example_035.pdf * * * gdi * diff
+example_036.pdf * * * gdi * diff
+example_037.pdf * * * gdi * diff
+example_038.pdf * * * gdi * diff
+example_039.pdf * * * gdi * diff
+example_040.pdf * * * gdi * diff
+example_041.pdf * * * gdi * diff
+example_042.pdf * * * gdi * diff
+example_043.pdf * * * gdi * diff
+example_044.pdf * * * gdi * diff
+example_045.pdf * * * gdi * diff
+example_046.pdf * * * gdi * diff
+example_047.pdf * * * gdi * diff
+example_048.pdf * * * gdi * diff
+example_049.pdf * * * gdi * diff
+example_050.pdf * * * gdi * diff
+example_051.pdf * * * gdi * diff
+example_052.pdf * * * gdi * diff
+example_053.pdf * * * gdi * diff
+example_055.pdf * * * gdi * diff
+example_056.pdf * * * gdi * diff
+example_057.pdf * * * gdi * diff
+example_058.pdf * * * gdi * diff
+example_059.pdf * * * gdi * diff
+example_060.pdf * * * gdi * diff
+example_061.pdf * * * gdi * diff
+example_062.pdf * * * gdi * diff
+example_063.pdf * * * gdi * diff
+example_064.pdf * * * gdi * diff
+example_065.pdf * * * gdi * diff
+image_8bit_devicergb_dctdecode.pdf * * * gdi * diff
+image_bmp.pdf * * * gdi * diff
+image_jpg.pdf * * * gdi * diff
+image_png.pdf * * * gdi * diff
+image_tif.pdf * * * gdi * diff
+mask_array.pdf * * * gdi * diff
+new_stamp2.pdf * * * gdi * diff
+quick_start_guide.pdf * * * gdi * diff
+whats_new_in_v3.0.pdf * * * gdi * diff
 
 # TODO(crbug.com/42271067): Remove after associated bug is fixed
-Date_FormCale.pdf * * * gdi
-FRC_3.5_P__3648_Password_1.pdf * * * gdi
-FRC_8.4.1_Annotations_AP_N_R.D_.pdf * * * gdi
-FRC_8.4.1_Annotations_AS_Off_.pdf * * * gdi
-FRC_8.4.1_Annotations_AS_Yes_.pdf * * * gdi
-FRC_8.5_Bl_Hide.pdf * * * gdi
-FRC_8.5_E_GoTo_D.pdf * * * gdi
-FRC_8.5_Fo_URI_Base.pdf * * * gdi
-FRC_8.5_U_GoToR_NewWindow.pdf * * * gdi
-FRC_8.5_U_GoToR_NewWindow_2.pdf * * * gdi
-FRC_8.5_Widget_C.pdf * * * gdi
-FRC_8.5_Widget_F.pdf * * * gdi
-FRC_8.5_Widget_K.pdf * * * gdi
-FRC_8.5_Widget_V.pdf * * * gdi
-FRC_8.5_X_GoToR_D.pdf * * * gdi
-Line_Stroke.pdf * * * gdi
-Oneof1.pdf * * * gdi
-Oneof2.pdf * * * gdi
-PagePosition_any_rest.pdf * * * gdi
-PagePosition_first.pdf * * * gdi
-PagePosition_last.pdf * * * gdi
-PagePosition_no_any.pdf * * * gdi
-PagePosition_rest.pdf * * * gdi
-PagePosition_rest_any.pdf * * * gdi
-Test_DateField_locale_en_CA.pdf * * * gdi
-Test_DateField_locale_en_GB.pdf * * * gdi
-Test_DateField_locale_en_US.pdf * * * gdi
-Test_DateField_locale_fr_CA.pdf * * * gdi
-Test_DateField_locale_fr_FR.pdf * * * gdi
-Test_DateField_locale_nl_NL.pdf * * * gdi
-Test_DateField_locale_zh_CN.pdf * * * gdi
-Test_DateField_locale_zh_HK.pdf * * * gdi
-Test_Drop_downList.pdf * * * gdi
-Test_NumericField.pdf * * * gdi
-Test_PasswordField.pdf * * * gdi
-Test_RadioButton.pdf * * * gdi
-Test_ResetButton.pdf * * * gdi
-Test_TextField.pdf * * * gdi
-TimeField.pdf * * * gdi
-action_execute_a_menu_item.pdf * * * gdi
-action_hide_show_form.pdf * * * gdi
-action_on_focus.pdf * * * gdi
-action_reset.pdf * * * gdi
-action_run_javascript.pdf * * * gdi
-action_submit_a_form.pdf * * * gdi
-all_trigger_browsefordoc.pdf * * * gdi
-all_trigger_newdoc.pdf * * * gdi
-all_trigger_run_js_lunchurl.pdf * * * gdi
-all_trigger_run_js_maildoc.pdf * * * gdi
-annotation_highlight_author_content.pdf * * * gdi
-annotation_highlight_long_content.pdf * * * gdi
-annotation_highlight_no_author.pdf * * * gdi
-app_launchurl.pdf * * * gdi
-bi.pdf * * * gdi
-bug_434.pdf * * * gdi
-bug_440132.pdf * * * gdi
-calculate_average.pdf * * * gdi
-calculate_sum_a_b_c.pdf * * * gdi
-calculate_validate.pdf * * * gdi
-check_box_no_color.pdf * * * gdi
-combo_box_format.pdf * * * gdi
-date.pdf * * * gdi
-event.change.pdf * * * gdi
-event.changeex.pdf * * * gdi
-event.keydown.pdf * * * gdi
-event.keydown_1_.pdf * * * gdi
-event.shift.pdf * * * gdi
-event.type_name.pdf * * * gdi
-event.value.pdf * * * gdi
-event_change.pdf * * * gdi
-event_fieldfull.pdf * * * gdi
-event_fieldfull_1_.pdf * * * gdi
-example_014.pdf * * * gdi
-example_054.pdf * * * gdi
-form_button0.pdf * * * gdi
-form_button1.pdf * * * gdi
-form_button10.pdf * * * gdi
-form_button2.pdf * * * gdi
-form_button3.pdf * * * gdi
-form_button4.pdf * * * gdi
-form_button5.pdf * * * gdi
-form_button7.pdf * * * gdi
-form_button8.pdf * * * gdi
-form_button9.pdf * * * gdi
-form_checkbox.pdf * * * gdi
-form_checkbox1.pdf * * * gdi
-form_checkbox2.pdf * * * gdi
-form_checkbox3.pdf * * * gdi
-form_combobox_date.pdf * * * gdi
-form_combobox_date2.pdf * * * gdi
-form_combobox_num.pdf * * * gdi
-form_combobox_per.pdf * * * gdi
-form_combobox_plus.pdf * * * gdi
-form_combobox_product.pdf * * * gdi
-form_combobox_time.pdf * * * gdi
-form_radio.pdf * * * gdi
-form_same.pdf * * * gdi
-form_textfield_focused_ltr.in * * * gdi
-form_textfield_focused_rtl.in * * * gdi
-form_textfield_selected_ltr.in * * * gdi
-form_textfield_selected_rtl.in * * * gdi
-format_alert_box.pdf * * * gdi
-format_combo_box.pdf * * * gdi
-format_custom_format.pdf * * * gdi
-format_date.pdf * * * gdi
-format_number.pdf * * * gdi
-format_percentage.pdf * * * gdi
-format_special.pdf * * * gdi
-format_text_color.pdf * * * gdi
-getarray.pdf * * * gdi
-js_value_chack_box.pdf * * * gdi
-negative.pdf * * * gdi
-new_certify1.pdf * * * gdi
-new_signature1.pdf * * * gdi
-new_signature2.pdf * * * gdi
-none.pdf * * * gdi
-open_a_weblink.pdf * * * gdi
-percentage.pdf * * * gdi
-rotate.pdf * * * gdi
-show_1.pdf * * * gdi
-simplified_field_notation.pdf * * * gdi
-special.pdf * * * gdi
-submit_form.pdf * * * gdi
-text_field_font_input_decimal_point.pdf * * * gdi
-text_field_multiline_line_spacing.pdf * * * gdi
-time.pdf * * * gdi
-validate_alert_box.pdf * * * gdi
-widget_javascript.pdf * * * gdi
+Date_FormCale.pdf * * * gdi * diff
+FRC_3.5_P__3648_Password_1.pdf * * * gdi * diff
+FRC_8.4.1_Annotations_AP_N_R.D_.pdf * * * gdi * diff
+FRC_8.4.1_Annotations_AS_Off_.pdf * * * gdi * diff
+FRC_8.4.1_Annotations_AS_Yes_.pdf * * * gdi * diff
+FRC_8.5_Bl_Hide.pdf * * * gdi * diff
+FRC_8.5_E_GoTo_D.pdf * * * gdi * diff
+FRC_8.5_Fo_URI_Base.pdf * * * gdi * diff
+FRC_8.5_U_GoToR_NewWindow.pdf * * * gdi * diff
+FRC_8.5_U_GoToR_NewWindow_2.pdf * * * gdi * diff
+FRC_8.5_Widget_C.pdf * * * gdi * diff
+FRC_8.5_Widget_F.pdf * * * gdi * diff
+FRC_8.5_Widget_K.pdf * * * gdi * diff
+FRC_8.5_Widget_V.pdf * * * gdi * diff
+FRC_8.5_X_GoToR_D.pdf * * * gdi * diff
+Line_Stroke.pdf * * * gdi * diff
+Oneof1.pdf * * * gdi * diff
+Oneof2.pdf * * * gdi * diff
+PagePosition_any_rest.pdf * * * gdi * diff
+PagePosition_first.pdf * * * gdi * diff
+PagePosition_last.pdf * * * gdi * diff
+PagePosition_no_any.pdf * * * gdi * diff
+PagePosition_rest.pdf * * * gdi * diff
+PagePosition_rest_any.pdf * * * gdi * diff
+Test_DateField_locale_en_CA.pdf * * * gdi * diff
+Test_DateField_locale_en_GB.pdf * * * gdi * diff
+Test_DateField_locale_en_US.pdf * * * gdi * diff
+Test_DateField_locale_fr_CA.pdf * * * gdi * diff
+Test_DateField_locale_fr_FR.pdf * * * gdi * diff
+Test_DateField_locale_nl_NL.pdf * * * gdi * diff
+Test_DateField_locale_zh_CN.pdf * * * gdi * diff
+Test_DateField_locale_zh_HK.pdf * * * gdi * diff
+Test_Drop_downList.pdf * * * gdi * diff
+Test_NumericField.pdf * * * gdi * diff
+Test_PasswordField.pdf * * * gdi * diff
+Test_RadioButton.pdf * * * gdi * diff
+Test_ResetButton.pdf * * * gdi * diff
+Test_TextField.pdf * * * gdi * diff
+TimeField.pdf * * * gdi * diff
+action_execute_a_menu_item.pdf * * * gdi * diff
+action_hide_show_form.pdf * * * gdi * diff
+action_on_focus.pdf * * * gdi * diff
+action_reset.pdf * * * gdi * diff
+action_run_javascript.pdf * * * gdi * diff
+action_submit_a_form.pdf * * * gdi * diff
+all_trigger_browsefordoc.pdf * * * gdi * diff
+all_trigger_newdoc.pdf * * * gdi * diff
+all_trigger_run_js_lunchurl.pdf * * * gdi * diff
+all_trigger_run_js_maildoc.pdf * * * gdi * diff
+annotation_highlight_author_content.pdf * * * gdi * diff
+annotation_highlight_long_content.pdf * * * gdi * diff
+annotation_highlight_no_author.pdf * * * gdi * diff
+app_launchurl.pdf * * * gdi * diff
+bi.pdf * * * gdi * diff
+bug_434.pdf * * * gdi * diff
+bug_440132.pdf * * * gdi * diff
+calculate_average.pdf * * * gdi * diff
+calculate_sum_a_b_c.pdf * * * gdi * diff
+calculate_validate.pdf * * * gdi * diff
+check_box_no_color.pdf * * * gdi * diff
+combo_box_format.pdf * * * gdi * diff
+date.pdf * * * gdi * diff
+event.change.pdf * * * gdi * diff
+event.changeex.pdf * * * gdi * diff
+event.keydown.pdf * * * gdi * diff
+event.keydown_1_.pdf * * * gdi * diff
+event.shift.pdf * * * gdi * diff
+event.type_name.pdf * * * gdi * diff
+event.value.pdf * * * gdi * diff
+event_change.pdf * * * gdi * diff
+event_fieldfull.pdf * * * gdi * diff
+event_fieldfull_1_.pdf * * * gdi * diff
+example_014.pdf * * * gdi * diff
+example_054.pdf * * * gdi * diff
+form_button0.pdf * * * gdi * diff
+form_button1.pdf * * * gdi * diff
+form_button10.pdf * * * gdi * diff
+form_button2.pdf * * * gdi * diff
+form_button3.pdf * * * gdi * diff
+form_button4.pdf * * * gdi * diff
+form_button5.pdf * * * gdi * diff
+form_button7.pdf * * * gdi * diff
+form_button8.pdf * * * gdi * diff
+form_button9.pdf * * * gdi * diff
+form_checkbox.pdf * * * gdi * diff
+form_checkbox1.pdf * * * gdi * diff
+form_checkbox2.pdf * * * gdi * diff
+form_checkbox3.pdf * * * gdi * diff
+form_combobox_date.pdf * * * gdi * diff
+form_combobox_date2.pdf * * * gdi * diff
+form_combobox_num.pdf * * * gdi * diff
+form_combobox_per.pdf * * * gdi * diff
+form_combobox_plus.pdf * * * gdi * diff
+form_combobox_product.pdf * * * gdi * diff
+form_combobox_time.pdf * * * gdi * diff
+form_radio.pdf * * * gdi * diff
+form_same.pdf * * * gdi * diff
+form_textfield_focused_ltr.in * * * gdi * diff
+form_textfield_focused_rtl.in * * * gdi * diff
+form_textfield_selected_ltr.in * * * gdi * diff
+form_textfield_selected_rtl.in * * * gdi * diff
+format_alert_box.pdf * * * gdi * diff
+format_combo_box.pdf * * * gdi * diff
+format_custom_format.pdf * * * gdi * diff
+format_date.pdf * * * gdi * diff
+format_number.pdf * * * gdi * diff
+format_percentage.pdf * * * gdi * diff
+format_special.pdf * * * gdi * diff
+format_text_color.pdf * * * gdi * diff
+getarray.pdf * * * gdi * diff
+js_value_chack_box.pdf * * * gdi * diff
+negative.pdf * * * gdi * diff
+new_certify1.pdf * * * gdi * diff
+new_signature1.pdf * * * gdi * diff
+new_signature2.pdf * * * gdi * diff
+none.pdf * * * gdi * diff
+open_a_weblink.pdf * * * gdi * diff
+percentage.pdf * * * gdi * diff
+rotate.pdf * * * gdi * diff
+show_1.pdf * * * gdi * diff
+simplified_field_notation.pdf * * * gdi * diff
+special.pdf * * * gdi * diff
+submit_form.pdf * * * gdi * diff
+text_field_font_input_decimal_point.pdf * * * gdi * diff
+text_field_multiline_line_spacing.pdf * * * gdi * diff
+time.pdf * * * gdi * diff
+validate_alert_box.pdf * * * gdi * diff
+widget_javascript.pdf * * * gdi * diff
 
 # TODO(crbug.com/42271068): Remove after associated bug is fixed
-1_10_watermark.pdf * * * gdi
-1_matrix.pdf * * * gdi
-2_color_tiling.pdf * * * gdi
-2_shading_type_6_00.pdf * * * gdi
-2_shading_type_6_001.pdf * * * gdi
-2_uncolor_tiling.pdf * * * gdi
-FRC_11_8.2.4_View_edit.pdf * * * gdi
-FRC_12_8.2.4_View_remove_all.pdf * * * gdi
-FRC_13_8.2.4_View_remove_value.pdf * * * gdi
-FRC_14_8.2.4_Sort_remove_all.pdf * * * gdi
-FRC_15_8.2.4_Sort_remove_value.pdf * * * gdi
-FRC_1_8.2.4_Type_8.6_.pdf * * * gdi
-FRC_2_8.2.4_Type_8.6__remove_value.pdf * * * gdi
-FRC_3.5_AuthEvent_EFOpen.pdf * * * gdi
-FRC_3.5_CFM_AESV2__EncryptMetadata_F.pdf * * * gdi
-FRC_3.5_CF_EFF_StdCF_Strf_Stmf_Identity.pdf * * * gdi
-FRC_3.5_CF_Strf_stmf_StdCF.pdf * * * gdi
-FRC_3.5_EncryptMetadata_None.pdf * * * gdi
-FRC_3.5_V_4_CFM_V2_.pdf * * * gdi
-FRC_3.5_V_5_CFM_AESV3.pdf * * * gdi
-FRC_3.5_v_1_length_40_Filter_standard.pdf * * * gdi
-FRC_3.5_v_2_length_128_AuthEvent_DocOpen_.pdf * * * gdi
-FRC_3_8.2.4_Type_8.6__edit_.pdf * * * gdi
-FRC_4.5.5_Pattern_shading.pdf * * * gdi
-FRC_4.5.5_Pattern_tiling.pdf * * * gdi
-FRC_4_8.2.4_Schema_8.6__remove_all.pdf * * * gdi
-FRC_5_8.2.4_Schema_8.6__remove_value.pdf * * * gdi
-FRC_6_8.2.4_Schema_8.6__remove_obj.pdf * * * gdi
-FRC_7_8.2.4_View_H.pdf * * * gdi
-FRC_8_8.2.4_View_D.pdf * * * gdi
-FRC_9_8.2.4_View_T.pdf * * * gdi
-annotation_circle_fill_opacity.pdf * * * gdi
-annotation_square_fill_opacity.pdf * * * gdi
-annotation_square_fill_opacity_dash.pdf * * * gdi
-bug_0_length_line.pdf * * * gdi
-bug_883026.pdf * * * gdi
-clipping_text.pdf * * * gdi
-en_fqa.pdf * * * gdi
-en_introduce.pdf * * * gdi
-en_system.pdf * * * gdi
-example_012.pdf * * * gdi
-gradient_many_stops.pdf * * * gdi
-group_xobject.pdf * * * gdi
-image_gif.pdf * * * gdi
-image_ico.pdf * * * gdi
-new_pdfsign1.pdf * * * gdi
-new_pdfsign2.pdf * * * gdi
-new_pdfsign3.pdf * * * gdi
-new_pdfsign4.pdf * * * gdi
-new_stamp3.pdf * * * gdi
-path_10_jd.pdf * * * gdi
-path_5_pattern.pdf * * * gdi
-path_7.pdf * * * gdi
-path_9.pdf * * * gdi
-transformation.pdf * * * gdi
-transparent1.pdf * * * gdi
-xfermodes.pdf * * * gdi
-xfermodes2.pdf * * * gdi
-xfermodes3.pdf * * * gdi
+1_10_watermark.pdf * * * gdi * diff
+1_matrix.pdf * * * gdi * diff
+2_color_tiling.pdf * * * gdi * diff
+2_shading_type_6_00.pdf * * * gdi * diff
+2_shading_type_6_001.pdf * * * gdi * diff
+2_uncolor_tiling.pdf * * * gdi * diff
+FRC_11_8.2.4_View_edit.pdf * * * gdi * diff
+FRC_12_8.2.4_View_remove_all.pdf * * * gdi * diff
+FRC_13_8.2.4_View_remove_value.pdf * * * gdi * diff
+FRC_14_8.2.4_Sort_remove_all.pdf * * * gdi * diff
+FRC_15_8.2.4_Sort_remove_value.pdf * * * gdi * diff
+FRC_1_8.2.4_Type_8.6_.pdf * * * gdi * diff
+FRC_2_8.2.4_Type_8.6__remove_value.pdf * * * gdi * diff
+FRC_3.5_AuthEvent_EFOpen.pdf * * * gdi * diff
+FRC_3.5_CFM_AESV2__EncryptMetadata_F.pdf * * * gdi * diff
+FRC_3.5_CF_EFF_StdCF_Strf_Stmf_Identity.pdf * * * gdi * diff
+FRC_3.5_CF_Strf_stmf_StdCF.pdf * * * gdi * diff
+FRC_3.5_EncryptMetadata_None.pdf * * * gdi * diff
+FRC_3.5_V_4_CFM_V2_.pdf * * * gdi * diff
+FRC_3.5_V_5_CFM_AESV3.pdf * * * gdi * diff
+FRC_3.5_v_1_length_40_Filter_standard.pdf * * * gdi * diff
+FRC_3.5_v_2_length_128_AuthEvent_DocOpen_.pdf * * * gdi * diff
+FRC_3_8.2.4_Type_8.6__edit_.pdf * * * gdi * diff
+FRC_4.5.5_Pattern_shading.pdf * * * gdi * diff
+FRC_4.5.5_Pattern_tiling.pdf * * * gdi * diff
+FRC_4_8.2.4_Schema_8.6__remove_all.pdf * * * gdi * diff
+FRC_5_8.2.4_Schema_8.6__remove_value.pdf * * * gdi * diff
+FRC_6_8.2.4_Schema_8.6__remove_obj.pdf * * * gdi * diff
+FRC_7_8.2.4_View_H.pdf * * * gdi * diff
+FRC_8_8.2.4_View_D.pdf * * * gdi * diff
+FRC_9_8.2.4_View_T.pdf * * * gdi * diff
+annotation_circle_fill_opacity.pdf * * * gdi * diff
+annotation_square_fill_opacity.pdf * * * gdi * diff
+annotation_square_fill_opacity_dash.pdf * * * gdi * diff
+bug_0_length_line.pdf * * * gdi * diff
+bug_883026.pdf * * * gdi * diff
+clipping_text.pdf * * * gdi * diff
+en_fqa.pdf * * * gdi * diff
+en_introduce.pdf * * * gdi * diff
+en_system.pdf * * * gdi * diff
+example_012.pdf * * * gdi * diff
+gradient_many_stops.pdf * * * gdi * diff
+group_xobject.pdf * * * gdi * diff
+image_gif.pdf * * * gdi * diff
+image_ico.pdf * * * gdi * diff
+new_pdfsign1.pdf * * * gdi * diff
+new_pdfsign2.pdf * * * gdi * diff
+new_pdfsign3.pdf * * * gdi * diff
+new_pdfsign4.pdf * * * gdi * diff
+new_stamp3.pdf * * * gdi * diff
+path_10_jd.pdf * * * gdi * diff
+path_5_pattern.pdf * * * gdi * diff
+path_7.pdf * * * gdi * diff
+path_9.pdf * * * gdi * diff
+transformation.pdf * * * gdi * diff
+transparent1.pdf * * * gdi * diff
+xfermodes.pdf * * * gdi * diff
+xfermodes2.pdf * * * gdi * diff
+xfermodes3.pdf * * * gdi * diff
 
 #
 # JavaScript tests
 #
-bug_679642.in * * noxfa *
-bug_679643.in * * noxfa *
-bug_735912.in * * noxfa *
+bug_679642.in * * noxfa * * diff
+bug_679643.in * * noxfa * * diff
+bug_735912.in * * noxfa * * diff
 
 # JS tests in nov8 mode expect empty results. This one will
 # not be empty as the callback is not js-based.
-named_action.in * nov8 * *
+named_action.in * nov8 * * * diff
 
 # xfa_specific
 
 # TODO(crbug.com/42270097): Remove after associated bug is fixed
-resolve_nodes_1.pdf * * * *
+resolve_nodes_1.pdf * * * * * diff
 
 #
 # Pixel tests
 #
 
 # TODO(crbug.com/475874968): Remove after the bug is fixed
-alpha_composite.in * * * gdi
+alpha_composite.in * * * gdi * diff
 
 # TODO(crbug.com/40643646): Remove after associated bug is fixed
-bug_40643646.in * * * *
+bug_40643646.in * * * * * diff
 
 # TODO(crbug.com/40721524): Remove after associated bug is fixed
-bug_40721524.in * * * *
+bug_40721524.in * * * * * diff
 
 # TODO(thestig): Remove after fixing inline image parsing.
-bug_1236805.in * * * *
+bug_1236805.in * * * * * diff
 
 # TODO(crbug.com/42270756): Remove after associated bug is fixed
-bug_1258634.in * * * *
+bug_1258634.in * * * * * diff
 
 # TODO(crbug.com/42270333): Remove after associated bug is fixed
-bug_42270333.in * * * *
+bug_42270333.in * * * * * diff
 
 # TODO(crbug.com/40860237): Remove after associated bug is fixed
-bug_40860237.in mac * * agg
+bug_40860237.in mac * * agg * diff
 
 # This test is intentionally suppressed on Windows. Normally, Windows provides
 # the Symbol font, so this PDF would render correctly. However, in the hermetic
 # test environment, there is no Symbol font and the rendering is incorrect.
-bug_1442723.in win * * *
+bug_1442723.in win * * * * diff
 
 # TODO(crbug.com/42270459): Remove after associated bug is fixed
-bug_42270459_2.in * * * *
+bug_42270459_2.in * * * * * diff
 
 # TODO(crbug.com/42270524): Remove after associated bug is fixed
-bug_42270524.in * * * *
+bug_42270524.in * * * * * diff
 
 # TODO(crbug.com/42270577): Remove after associated bug is fixed
-bug_42270577.in * * * *
+bug_42270577.in * * * * * diff
 
 # TODO(crbug.com/42270732): Remove after associated bug is fixed
-bug_42270732.in * * * *
+bug_42270732.in * * * * * diff
 
 # TODO(crbug.com/42270979): Remove after associated bug is fixed
-bug_42270979_1.in * * * agg
-bug_42270979_2.in * * * agg
-bug_42270979_3.in * * * agg
+bug_42270979_1.in * * * agg * diff
+bug_42270979_2.in * * * agg * diff
+bug_42270979_3.in * * * agg * diff
 
 # TODO(crbug.com/42270980): Remove after associated bug is fixed
-bug_42270980.in * * * *
+bug_42270980.in * * * * * diff
 
 # TODO(crbug.com/42271010): Remove after associated bug is fixed
-bug_42271010.pdf * * * *
+bug_42271010.pdf * * * * * diff
 
 # TODO(crbug.com/41010502): Remove after associated bug is fixed
-bug_41010502_1.in * * * *
+bug_41010502_1.in * * * * * diff
 
 # TODO(crbug.com/346766787): Remove after associated bug is fixed
-bug_346766787.in * * * *
+bug_346766787.in * * * * * diff
 
 # TODO(crbug.com/394767650): Remove after associated bug is fixed
-bug_394767650.in * * * *
+bug_394767650.in * * * * * diff
 
 # TODO(crbug.com/41153500): Remove after associated bug is fixed
-bug_41153500.in * * * agg
+bug_41153500.in * * * agg * diff
 
 # TODO(crbug.com/42271472): Remove after associated bug is fixed
-bug_42271472.in * nov8 * *
+bug_42271472.in * nov8 * * * diff
 
 # TODO(crbug.com/40040570, crbug.com/40040569): Remove after associated bug is
 # fixed
-bug_40040570.in * * * skia
+bug_40040570.in * * * skia * diff
 
 # TODO(crbug.com/41470360): Remove after associated bug is fixed
-bug_41470360.in * * * agg
+bug_41470360.in * * * agg * diff
 
 # TODO(crbug.com/42270756): Remove after associated bug is fixed
-jpxdecode.in * * * *
-jpxdecode_without_bitspercomponent.in * * * *
-jpxdecode_without_colorspace.in * * * *
+jpxdecode.in * * * * * diff
+jpxdecode_without_bitspercomponent.in * * * * * diff
+jpxdecode_without_colorspace.in * * * * * diff
 
 # TODO(crbug.com/40661120): Remove after associated bug is fixed
-reset_button.in * * * *
+reset_button.in * * * * * diff
 
 # TODO(crbug.com/479849565): Remove after associated bug is fixed
-bug_479849565.in * * * agg
+bug_479849565.in * * * agg * diff
 
 # xfa_specific
 
 # TODO(crbug.com/42270088): Remove after associated bug is fixed
-bug_997412.in win * * *
+bug_997412.in win * * * * diff
 # TODO(crbug.com/42270098): Remove after associated bug is fixed
-standard_symbols.pdf * * * *
+standard_symbols.pdf * * * * * diff
 # TODO(crbug.com/42270088): Remove after associated bug is fixed
-xfa_example.in win * * *
+xfa_example.in win * * * * diff
 # TODO(crbug.com/42270088): Remove after associated bug is fixed
-xfa_textfield.in win * * *
+xfa_textfield.in win * * * * diff
 
 # GDI
 
 # TODO(crbug.com/42271066): Remove after associated bug is fixed
-bug_1258968.in * * * gdi
-bug_1383708.in * * * gdi
+bug_1258968.in * * * gdi * diff
+bug_1383708.in * * * gdi * diff
 
 # TODO(crbug.com/42271067): Remove after associated bug is fixed
-barcode_test.pdf * * * gdi
-bug_1072440.in * * * gdi
-bug_113910.in * * * gdi
-bug_1282.in * * * gdi
-bug_1304714.in * * * gdi
-bug_1337.in * * * gdi
-bug_1372651.in * * * gdi
-bug_477200528.in * * * gdi
-bug_725389.in * * * gdi
-bug_733528.in * * * gdi
-bug_736695_1.in * * * gdi
-bug_736695_2.in * * * gdi
-bug_736695_3.in * * * gdi
-bug_736695_4.in * * * gdi
-bug_983137.in * * * gdi
-checkbox_radiobutton.in * * * gdi
-checkbox_radiobutton_hide.in * * * gdi
-checkbox_radiobutton_reset.in * * * gdi
-combobox_form.in * * * gdi
-dynamic_list_box_allow_multiple_selection.pdf * * * gdi
-dynamic_password_field_background_fill.pdf * * * gdi
-dynamic_table_color_and_width.pdf * * * gdi
-password.in * * * gdi
-resolve_nodes_0.pdf * * * gdi
-scrollable_widgets1.in * * * gdi
-scrollable_widgets2.in * * * gdi
-static_list_box_caption.pdf * * * gdi
-static_password_field_rotate.pdf * * * gdi
-text_form_custom_font.in * * * gdi
-text_form_multiline.in * * * gdi
-xfa_bmp_image.in * * * gdi
-xfa_gif_image.in * * * gdi
-xfa_jpg_image.in * * * gdi
-xfa_node_caption.pdf * * * gdi
-xfa_png_image.in * * * gdi
-xfa_rectangle_node.in * * * gdi
-xfa_tiff_image.in * * * gdi
-xfa_tiff_lzw_image.in * * * gdi
-xfa_tiff_packbits_image.in * * * gdi
+barcode_test.pdf * * * gdi * diff
+bug_1072440.in * * * gdi * diff
+bug_113910.in * * * gdi * diff
+bug_1282.in * * * gdi * diff
+bug_1304714.in * * * gdi * diff
+bug_1337.in * * * gdi * diff
+bug_1372651.in * * * gdi * diff
+bug_477200528.in * * * gdi * diff
+bug_725389.in * * * gdi * diff
+bug_733528.in * * * gdi * diff
+bug_736695_1.in * * * gdi * diff
+bug_736695_2.in * * * gdi * diff
+bug_736695_3.in * * * gdi * diff
+bug_736695_4.in * * * gdi * diff
+bug_983137.in * * * gdi * diff
+checkbox_radiobutton.in * * * gdi * diff
+checkbox_radiobutton_hide.in * * * gdi * diff
+checkbox_radiobutton_reset.in * * * gdi * diff
+combobox_form.in * * * gdi * diff
+dynamic_list_box_allow_multiple_selection.pdf * * * gdi * diff
+dynamic_password_field_background_fill.pdf * * * gdi * diff
+dynamic_table_color_and_width.pdf * * * gdi * diff
+password.in * * * gdi * diff
+resolve_nodes_0.pdf * * * gdi * diff
+scrollable_widgets1.in * * * gdi * diff
+scrollable_widgets2.in * * * gdi * diff
+static_list_box_caption.pdf * * * gdi * diff
+static_password_field_rotate.pdf * * * gdi * diff
+text_form_custom_font.in * * * gdi * diff
+text_form_multiline.in * * * gdi * diff
+xfa_bmp_image.in * * * gdi * diff
+xfa_gif_image.in * * * gdi * diff
+xfa_jpg_image.in * * * gdi * diff
+xfa_node_caption.pdf * * * gdi * diff
+xfa_png_image.in * * * gdi * diff
+xfa_rectangle_node.in * * * gdi * diff
+xfa_tiff_image.in * * * gdi * diff
+xfa_tiff_lzw_image.in * * * gdi * diff
+xfa_tiff_packbits_image.in * * * gdi * diff
 
 # TODO(crbug.com/42271068): Remove after associated bug is fixed
-bug_1015233.in * * * gdi
-bug_1099446.in * * * gdi
-bug_1161.in * * * gdi
-bug_1236.in * * * gdi
-bug_1288_1.in * * * gdi
-bug_1330.in * * * gdi
-bug_1395648.in * * * gdi
-bug_1396266.in * * * gdi
-bug_1430333.in * * * gdi
-bug_1822.in * * * gdi
-bug_1847.in * * * gdi
-bug_1949.in * * * gdi
-bug_1995.in * * * gdi
-bug_41153500.in * * * gdi
-bug_42270979_1.in * * * gdi
-bug_42270979_3.in * * * gdi
-bug_632.in * * * gdi
-bug_660850.in * * * gdi
-long_dashed_line.in * * * gdi
-matte.in * * * gdi
+bug_1015233.in * * * gdi * diff
+bug_1099446.in * * * gdi * diff
+bug_1161.in * * * gdi * diff
+bug_1236.in * * * gdi * diff
+bug_1288_1.in * * * gdi * diff
+bug_1330.in * * * gdi * diff
+bug_1395648.in * * * gdi * diff
+bug_1396266.in * * * gdi * diff
+bug_1430333.in * * * gdi * diff
+bug_1822.in * * * gdi * diff
+bug_1847.in * * * gdi * diff
+bug_1949.in * * * gdi * diff
+bug_1995.in * * * gdi * diff
+bug_41153500.in * * * gdi * diff
+bug_42270979_1.in * * * gdi * diff
+bug_42270979_3.in * * * gdi * diff
+bug_632.in * * * gdi * diff
+bug_660850.in * * * gdi * diff
+long_dashed_line.in * * * gdi * diff
+matte.in * * * gdi * diff
 
 # TODO(crbug.com/361002664): Remove after associated bug is fixed
-smask_blend.in * * * gdi
+smask_blend.in * * * gdi * diff
 
 # TODO(crbug.com/459586268): Remove this entry once macOS support for Intel
 # hardware goes away. The test expectation is just different enough from the ARM
 # rendering that fuzzy matching is not enough for it to match. The difference
 # looks like it may be due to several rounding errors combining for a bigger
 # than normal pixel value difference.
-bug_1430333.in mac_x86 * * skia
-bug_1746.in mac_x86 * * skia
+bug_1430333.in mac_x86 * * skia * diff
+bug_1746.in mac_x86 * * skia * diff

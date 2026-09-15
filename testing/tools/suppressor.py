@@ -9,59 +9,85 @@ import common
 import pngdiffer
 
 
-def _ParseExtraOptions(tokens):
-  flags = []
-  for token in tokens:
-    if token in ('*', 'fuzzy'):
-      flags.append('--fuzzy')
-      continue
-    if not token.startswith('fuzzy='):
-      raise ValueError(f'Unexpected option in suppressions: {token}')
-    params = token[len('fuzzy='):].split(',')
-    if not (1 <= len(params) <= 3):
-      raise ValueError(f'Invalid fuzzy option format: {token}')
+def _ParseFuzzyAction(token):
+  """Converts a fuzzy action token into a single pdfium_diff flag."""
+  if token == 'fuzzy':
+    return '--fuzzy'
+  params = token[len('fuzzy='):].split(',')
+  if not (1 <= len(params) <= 3):
+    raise ValueError(f'Invalid fuzzy option format: {token}')
+  try:
+    delta = int(params[0])
+  except ValueError as e:
+    raise ValueError(f'Invalid delta value in fuzzy option: {token}') from e
+  if not (0 <= delta <= 255):
+    raise ValueError(
+        f'Delta value {delta} out of range [0, 255] in fuzzy option: {token}')
+  for p in params[1:]:
     try:
-      delta = int(params[0])
+      val = float(p)
     except ValueError as e:
-      raise ValueError(f'Invalid delta value in fuzzy option: {token}') from e
-    if not (0 <= delta <= 255):
       raise ValueError(
-          f'Delta value {delta} out of range [0, 255] in fuzzy option: {token}')
-    for p in params[1:]:
-      try:
-        val = float(p)
-      except ValueError as e:
-        raise ValueError(
-            f'Invalid float value "{p}" in fuzzy option: {token}') from e
-      if val < 0.0:
-        raise ValueError(
-            f'Negative value {val} not allowed in fuzzy option: {token}')
-    flags.append(f'--{token}')
-  return flags
+          f'Invalid float value "{p}" in fuzzy option: {token}') from e
+    if val < 0.0:
+      raise ValueError(
+          f'Negative value {val} not allowed in fuzzy option: {token}')
+  return f'--{token}'
+
+
+# Legal values for each predicate column, keyed by column index. Column 0 is
+# the test file name, which is unconstrained.
+_VALID_COLUMN_VALUES = {
+    1: {'*', 'win', 'mac', 'mac_arm', 'mac_x86', 'linux'},
+    2: {'*', 'nov8', 'v8'},
+    3: {'*', 'noxfa', 'xfa'},
+    4: {'*', 'agg', 'gdi', 'skia'},
+    5: {'*', 'freetype', 'fontations'},
+}
+
+# Legal keywords for the action in column 6, keyed by file.
+_VALID_ACTIONS = {
+    'SUPPRESSIONS': {'diff'},
+    'SUPPRESSIONS_IMAGE_DIFF': {'blank'},
+    'SUPPRESSIONS_EXACT_MATCHING': {'fuzzy'},
+}
+
+
+def _ValidatePredicates(suppressions_filename, item):
+  """Rejects unknown tokens, which would otherwise silently never match."""
+  for column, valid_values in _VALID_COLUMN_VALUES.items():
+    for value in item[column].split(','):
+      if value not in valid_values:
+        raise ValueError(f'Unexpected value "{value}" in column {column} of '
+                         f'{suppressions_filename}: {" ".join(item)}')
+
+
+def _ParseAction(suppressions_filename, token):
+  """Validates an action token and converts it into pdfium_diff flags."""
+  keyword = token.split('=', 1)[0]
+  if keyword not in _VALID_ACTIONS[suppressions_filename]:
+    raise ValueError(f'Unexpected action "{token}" in {suppressions_filename}')
+  return [_ParseFuzzyAction(token)] if keyword == 'fuzzy' else []
 
 
 class Suppressor:
 
   def __init__(self, finder, features, js_disabled, xfa_disabled,
-               rendering_option):
+               rendering_option, font_engine):
     self.has_v8 = not js_disabled and 'V8' in features
     self.has_xfa = not js_disabled and not xfa_disabled and 'XFA' in features
     self.rendering_option = rendering_option
+    self.font_engine = font_engine
     self.suppression_set = self._LoadSuppressedSet('SUPPRESSIONS', finder)
     self.image_suppression_set = self._LoadSuppressedSet(
         'SUPPRESSIONS_IMAGE_DIFF', finder)
     self.exact_matching_suppression_dict = self._LoadSuppressedDict(
-        'SUPPRESSIONS_EXACT_MATCHING', finder, has_value_column=True)
+        'SUPPRESSIONS_EXACT_MATCHING', finder)
 
   def _LoadSuppressedSet(self, suppressions_filename, finder):
-    return set(
-        self._LoadSuppressedDict(
-            suppressions_filename, finder, has_value_column=False).keys())
+    return set(self._LoadSuppressedDict(suppressions_filename, finder).keys())
 
-  def _LoadSuppressedDict(self,
-                          suppressions_filename,
-                          finder,
-                          has_value_column=False):
+  def _LoadSuppressedDict(self, suppressions_filename, finder):
     v8_option = "v8" if self.has_v8 else "nov8"
     xfa_option = "xfa" if self.has_xfa else "noxfa"
     with open(os.path.join(finder.TestingDir(), suppressions_filename)) as f:
@@ -69,13 +95,15 @@ class Suppressor:
       mac_platform = common.mac_platform() if os_name == 'mac' else None
       result = {}
       for item in self._ExtractSuppressions(f):
-        assert len(item) >= 5 if has_value_column else len(item) == 5, (
-            f'Unexpected column count in {suppressions_filename}: {item}')
+        if len(item) != 7:
+          raise ValueError(
+              f'Unexpected column count in {suppressions_filename}: {item}')
+        _ValidatePredicates(suppressions_filename, item)
+        flags = _ParseAction(suppressions_filename, item[6])
         if self._MatchSuppression(item, os_name, mac_platform, v8_option,
-                                  xfa_option, self.rendering_option):
-          filename = item[0]
-          result[filename] = _ParseExtraOptions(
-              item[5:]) if has_value_column else []
+                                  xfa_option, self.rendering_option,
+                                  self.font_engine):
+          result[item[0]] = flags
       return result
 
   def _ExtractSuppressions(self, f):
@@ -93,16 +121,18 @@ class Suppressor:
     return False
 
   def _MatchSuppression(self, item, os_name, mac_platform, js, xfa,
-                        rendering_option):
+                        rendering_option, font_engine):
     os_column = item[1].split(",")
     js_column = item[2].split(",")
     xfa_column = item[3].split(",")
     rendering_option_column = item[4].split(",")
+    font_engine_column = item[5].split(",")
     return (Suppressor._MatchOs(os_name, mac_platform, os_column) and
             ('*' in js_column or js in js_column) and
             ('*' in xfa_column or xfa in xfa_column) and
             ('*' in rendering_option_column or
-             rendering_option in rendering_option_column))
+             rendering_option in rendering_option_column) and
+            ('*' in font_engine_column or font_engine in font_engine_column))
 
   def IsResultSuppressed(self, input_filename):
     if input_filename in self.suppression_set:
