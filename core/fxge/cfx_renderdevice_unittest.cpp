@@ -17,6 +17,11 @@
 
 #if BUILDFLAG(IS_WIN)
 #include <windows.h>
+
+#include <memory>
+#include <type_traits>
+
+#include "core/fxge/cfx_gemodule.h"
 #include "core/fxge/win32/cfx_psfonttracker.h"
 #endif
 
@@ -90,6 +95,31 @@ TEST(CFXRenderDeviceTest, GetClipBoxEmpty) {
 namespace {
 
 constexpr CFX_Matrix kIdentityMatrix;
+
+class ScopedPrintMode {
+ public:
+  explicit ScopedPrintMode(WindowsPrintMode mode)
+      : old_mode_(CFX_GEModule::GetPrintMode()) {
+    CFX_GEModule::SetPrintMode(mode);
+  }
+  ~ScopedPrintMode() { CFX_GEModule::SetPrintMode(old_mode_); }
+
+ private:
+  const WindowsPrintMode old_mode_;
+};
+
+struct EnhMetaFileDCDeleter {
+  void operator()(HDC dc) const { ::DeleteEnhMetaFile(::CloseEnhMetaFile(dc)); }
+};
+using ScopedEnhMetaFileDC =
+    std::unique_ptr<std::remove_pointer_t<HDC>, EnhMetaFileDCDeleter>;
+
+struct GdiObjectDeleter {
+  void operator()(HGDIOBJ object) const { ::DeleteObject(object); }
+};
+template <typename T>
+using ScopedGdiObject =
+    std::unique_ptr<std::remove_pointer_t<T>, GdiObjectDeleter>;
 
 }  // namespace
 
@@ -170,4 +200,49 @@ TEST_F(CFXWindowsRenderDeviceTest, GargantuanClipRectWithBaseClip) {
   EXPECT_TRUE(device_->SetClip_PathFill(
       path_data, &kIdentityMatrix, CFX_FillRenderOptions::WindingOptions()));
 }
-#endif
+
+TEST(CFXRenderDeviceTest, WindowsEmfPostScriptClipBox) {
+  ScopedPrintMode scoped_print_mode(WindowsPrintMode::kPostScript2);
+  ScopedEnhMetaFileDC dc_handle(
+      ::CreateEnhMetaFile(nullptr, nullptr, nullptr, nullptr));
+  ASSERT_TRUE(dc_handle);
+
+  const int horz_res = ::GetDeviceCaps(dc_handle.get(), HORZRES);
+  const int vert_res = ::GetDeviceCaps(dc_handle.get(), VERTRES);
+  const FX_RECT large_clip_rect(0, 0, horz_res * 2, vert_res * 2);
+
+  CFX_PSFontTracker font_tracker;
+  std::unique_ptr<CFX_RenderDevice> device =
+      CFX_RenderDevice::CreateForWindowsDC(dc_handle.get(), &font_tracker);
+  ASSERT_TRUE(device);
+  EXPECT_TRUE(device->SetClip_Rect(large_clip_rect));
+
+  // TODO(crbug.com/553140224): Clip box should be `large_clip_rect`.
+  EXPECT_EQ(FX_RECT(0, 2 * vert_res, 2 * horz_res, 0), device->GetClipBox());
+}
+
+TEST(CFXRenderDeviceTest, WindowsEmfPostScriptClipRgn) {
+  ScopedPrintMode scoped_print_mode(WindowsPrintMode::kPostScript2);
+  ScopedEnhMetaFileDC dc_handle(
+      ::CreateEnhMetaFile(nullptr, nullptr, nullptr, nullptr));
+  ASSERT_TRUE(dc_handle);
+
+  const int horz_res = ::GetDeviceCaps(dc_handle.get(), HORZRES);
+  const int vert_res = ::GetDeviceCaps(dc_handle.get(), VERTRES);
+  const FX_RECT large_clip_rect(0, 0, horz_res * 2, vert_res * 2);
+
+  ScopedGdiObject<HRGN> clip_rgn(
+      ::CreateRectRgn(large_clip_rect.left, large_clip_rect.top,
+                      large_clip_rect.right, large_clip_rect.bottom));
+  ASSERT_TRUE(clip_rgn);
+  EXPECT_NE(ERROR, ::SelectClipRgn(dc_handle.get(), clip_rgn.get()));
+
+  CFX_PSFontTracker font_tracker;
+  std::unique_ptr<CFX_RenderDevice> device =
+      CFX_RenderDevice::CreateForWindowsDC(dc_handle.get(), &font_tracker);
+  ASSERT_TRUE(device);
+
+  // TODO(crbug.com/553140224): Clip box should be `large_clip_rect`.
+  EXPECT_EQ(FX_RECT(0, 2 * vert_res, 2 * horz_res, 0), device->GetClipBox());
+}
+#endif  // BUILDFLAG(IS_WIN)
