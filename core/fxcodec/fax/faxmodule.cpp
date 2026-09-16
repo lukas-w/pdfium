@@ -39,20 +39,6 @@ namespace fxcodec {
 
 namespace {
 
-constexpr std::array<const uint8_t, 256> kOneLeadPos = {{
-    8, 7, 6, 6, 5, 5, 5, 5, 4, 4, 4, 4, 4, 4, 4, 4, 3, 3, 3, 3, 3, 3, 3, 3,
-    3, 3, 3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-    2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1,
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-    1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-}};
-
 // Limit of image dimension. Use the same limit as the JBIG2 codecs.
 constexpr int kFaxMaxImageDimension = 65535;
 
@@ -74,7 +60,7 @@ int FindBit(pdfium::span<const uint8_t> data_buf,
     const int byte_pos = start_pos / 8;
     uint8_t data = (data_buf[byte_pos] ^ bit_xor) & (0xff >> bit_offset);
     if (data) {
-      return byte_pos * 8 + kOneLeadPos[data];
+      return byte_pos * 8 + std::countl_zero(data);
     }
     start_pos += 7;
   }
@@ -97,7 +83,7 @@ int FindBit(pdfium::span<const uint8_t> data_buf,
   while (byte_pos < max_byte) {
     uint8_t data = data_buf[byte_pos] ^ bit_xor;
     if (data) {
-      return std::min(byte_pos * 8 + kOneLeadPos[data], max_pos);
+      return std::min(byte_pos * 8 + std::countl_zero(data), max_pos);
     }
     ++byte_pos;
   }
