@@ -10,6 +10,7 @@
 
 #include <algorithm>
 #include <array>
+#include <bit>
 #include <iterator>
 #include <memory>
 #include <optional>
@@ -18,6 +19,7 @@
 #include "build/build_config.h"
 #include "core/fxcodec/scanlinedecoder.h"
 #include "core/fxcrt/binary_buffer.h"
+#include "core/fxcrt/byteorder.h"
 #include "core/fxcrt/check_op.h"
 #include "core/fxcrt/compiler_specific.h"
 #include "core/fxcrt/data_vector.h"
@@ -80,20 +82,16 @@ int FindBit(pdfium::span<const uint8_t> data_buf,
   const int max_byte = (max_pos + 7) / 8;
   int byte_pos = start_pos / 8;
 
-  // Try reading in bigger chunks in case there are long runs to be skipped.
-  static constexpr int kBulkReadSize = 8;
-  if (max_byte >= kBulkReadSize && byte_pos < max_byte - kBulkReadSize) {
-    static constexpr uint8_t skip_block_0[kBulkReadSize] = {
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-    static constexpr uint8_t skip_block_1[kBulkReadSize] = {
-        0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
-    const auto skip_block =
-        bit ? pdfium::span(skip_block_0) : pdfium::span(skip_block_1);
-    while (byte_pos < max_byte - kBulkReadSize &&
-           data_buf.subspan(static_cast<size_t>(byte_pos),
-                            static_cast<size_t>(kBulkReadSize)) == skip_block) {
-      byte_pos += kBulkReadSize;
+  const uint32_t word_xor = bit ? 0x00000000 : 0xffffffff;
+  while (byte_pos + 4 <= max_byte) {
+    const uint32_t word =
+        fxcrt::GetUInt32MSBFirst(
+            data_buf.subspan(static_cast<size_t>(byte_pos), 4u).first<4u>()) ^
+        word_xor;
+    if (word) {
+      return std::min(byte_pos * 8 + std::countl_zero(word), max_pos);
     }
+    byte_pos += 4;
   }
 
   while (byte_pos < max_byte) {
