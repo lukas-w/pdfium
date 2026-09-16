@@ -43,17 +43,6 @@ void VerifyFloatRectNear(float left,
   EXPECT_NEAR_FIVE_PLACES(right, rect.right);
 }
 
-void VerifyFXRect(int left,
-                  int bottom,
-                  int right,
-                  int top,
-                  const FX_RECT& rect) {
-  EXPECT_EQ(left, rect.left);
-  EXPECT_EQ(bottom, rect.bottom);
-  EXPECT_EQ(right, rect.right);
-  EXPECT_EQ(top, rect.top);
-}
-
 void VerifyMatrixExact(const CFX_Matrix& expected, const CFX_Matrix& actual) {
   EXPECT_FLOAT_EQ(expected.a, actual.a);
   EXPECT_FLOAT_EQ(expected.b, actual.b);
@@ -122,21 +111,21 @@ TEST(CFXFloatRectTest, GetInnerRect) {
   CFX_FloatRect rect;
 
   inner_rect = rect.GetInnerRect();
-  VerifyFXRect(0, 0, 0, 0, inner_rect);
+  EXPECT_EQ(FX_RECT(0, 0, 0, 0), inner_rect);
 
   // Function converts from float to int using floor() for top and right, and
   // ceil() for left and bottom.
   rect = CFX_FloatRect(-1.1f, 3.6f, 4.4f, -5.7f);
   inner_rect = rect.GetInnerRect();
-  VerifyFXRect(-1, 4, 4, -6, inner_rect);
+  EXPECT_EQ(FX_RECT(-1, -6, 4, 4), inner_rect);
 
   rect = CFX_FloatRect(kMinFloat, kMinFloat, kMinFloat, kMinFloat);
   inner_rect = rect.GetInnerRect();
-  VerifyFXRect(0, 1, 1, 0, inner_rect);
+  EXPECT_EQ(FX_RECT(0, 0, 1, 1), inner_rect);
 
   rect = CFX_FloatRect(-kMinFloat, -kMinFloat, -kMinFloat, -kMinFloat);
   inner_rect = rect.GetInnerRect();
-  VerifyFXRect(-1, 0, 0, -1, inner_rect);
+  EXPECT_EQ(FX_RECT(-1, -1, 0, 0), inner_rect);
 
   // Check at limits of integer range. When saturated would expect to get values
   // that are clamped to the limits of integers, but instead it is returning all
@@ -145,12 +134,12 @@ TEST(CFXFloatRectTest, GetInnerRect) {
   rect = CFX_FloatRect(kMinIntAsFloat, kMinIntAsFloat, kMaxIntAsFloat,
                        kMaxIntAsFloat);
   inner_rect = rect.GetInnerRect();
-  VerifyFXRect(kMinInt, kMaxInt, kMaxInt, kMinInt, inner_rect);
+  EXPECT_EQ(FX_RECT(kMinInt, kMinInt, kMaxInt, kMaxInt), inner_rect);
 
   rect = CFX_FloatRect(kMinIntAsFloat - 1.0f, kMinIntAsFloat - 1.0f,
                        kMaxIntAsFloat + 1.0f, kMaxIntAsFloat + 1.0f);
   inner_rect = rect.GetInnerRect();
-  VerifyFXRect(kMinInt, kMaxInt, kMaxInt, kMinInt, inner_rect);
+  EXPECT_EQ(FX_RECT(kMinInt, kMinInt, kMaxInt, kMaxInt), inner_rect);
 }
 
 TEST(CFXFloatRectTest, GetOuterRect) {
@@ -158,33 +147,33 @@ TEST(CFXFloatRectTest, GetOuterRect) {
   CFX_FloatRect rect;
 
   outer_rect = rect.GetOuterRect();
-  VerifyFXRect(0, 0, 0, 0, outer_rect);
+  EXPECT_EQ(FX_RECT(0, 0, 0, 0), outer_rect);
 
   // Function converts from float to int using floor() for left and bottom, and
   // ceil() for right and top.
   rect = CFX_FloatRect(-1.1f, 3.6f, 4.4f, -5.7f);
   outer_rect = rect.GetOuterRect();
-  VerifyFXRect(-2, 3, 5, -5, outer_rect);
+  EXPECT_EQ(FX_RECT(-2, -5, 5, 3), outer_rect);
 
   rect = CFX_FloatRect(kMinFloat, kMinFloat, kMinFloat, kMinFloat);
   outer_rect = rect.GetOuterRect();
-  VerifyFXRect(0, 1, 1, 0, outer_rect);
+  EXPECT_EQ(FX_RECT(0, 0, 1, 1), outer_rect);
 
   rect = CFX_FloatRect(-kMinFloat, -kMinFloat, -kMinFloat, -kMinFloat);
   outer_rect = rect.GetOuterRect();
-  VerifyFXRect(-1, 0, 0, -1, outer_rect);
+  EXPECT_EQ(FX_RECT(-1, -1, 0, 0), outer_rect);
 
   // Check at limits of integer range. When saturated would expect to get values
   // that are clamped to the limits of integers.
   rect = CFX_FloatRect(kMinIntAsFloat, kMinIntAsFloat, kMaxIntAsFloat,
                        kMaxIntAsFloat);
   outer_rect = rect.GetOuterRect();
-  VerifyFXRect(kMinInt, kMaxInt, kMaxInt, kMinInt, outer_rect);
+  EXPECT_EQ(FX_RECT(kMinInt, kMinInt, kMaxInt, kMaxInt), outer_rect);
 
   rect = CFX_FloatRect(kMinIntAsFloat - 1.0f, kMinIntAsFloat - 1.0f,
                        kMaxIntAsFloat + 1.0f, kMaxIntAsFloat + 1.0f);
   outer_rect = rect.GetOuterRect();
-  VerifyFXRect(kMinInt, kMaxInt, kMaxInt, kMinInt, outer_rect);
+  EXPECT_EQ(FX_RECT(kMinInt, kMinInt, kMaxInt, kMaxInt), outer_rect);
 }
 
 TEST(CFXFloatRectTest, Normalize) {
@@ -287,6 +276,18 @@ TEST(CFXRectFTest, Print) {
   rect = CFX_RectF(10.5, 20.5, 4.25, 3.25);
   os << rect;
   EXPECT_EQ("rect[w 4.25 x h 3.25 (left 10.5, top 20.5)]", os.str());
+}
+
+TEST(FXRectTest, Print) {
+  std::ostringstream os;
+  FX_RECT rect;
+  os << rect;
+  EXPECT_EQ("rect[w 0 x h 0 (left 0, top 0)]", os.str());
+
+  os.str("");
+  rect = FX_RECT(10, 20, 14, 23);
+  os << rect;
+  EXPECT_EQ("rect[w 4 x h 3 (left 10, top 20)]", os.str());
 }
 
 TEST(CFXMatrixTest, ReverseIdentity) {

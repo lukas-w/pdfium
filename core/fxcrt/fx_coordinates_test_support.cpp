@@ -19,3 +19,9 @@ std::ostream& operator<<(std::ostream& os, const CFX_RectF& rect) {
      << rect.left << ", top " << rect.top << ")]";
   return os;
 }
+
+std::ostream& operator<<(std::ostream& os, const FX_RECT& rect) {
+  os << "rect[w " << rect.Width() << " x h " << rect.Height() << " (left "
+     << rect.left << ", top " << rect.top << ")]";
+  return os;
+}
