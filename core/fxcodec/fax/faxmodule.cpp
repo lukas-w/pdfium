@@ -49,7 +49,7 @@ int FindBit(pdfium::span<const uint8_t> data_buf,
             int max_pos,
             int start_pos,
             bool bit) {
-  DCHECK_GE(start_pos, 0);
+  CHECK_GE(start_pos, 0);
   if (start_pos >= max_pos) {
     return max_pos;
   }
@@ -72,7 +72,7 @@ int FindBit(pdfium::span<const uint8_t> data_buf,
   while (byte_pos + 4 <= max_byte) {
     const uint32_t word =
         fxcrt::GetUInt32MSBFirst(
-            data_buf.subspan(static_cast<size_t>(byte_pos), 4u).first<4u>()) ^
+            data_buf.subspan(static_cast<size_t>(byte_pos)).first<4u>()) ^
         word_xor;
     if (word) {
       return std::min(byte_pos * 8 + std::countl_zero(word), max_pos);
