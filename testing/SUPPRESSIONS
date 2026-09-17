@@ -845,10 +845,6 @@ bug_679642.in * * noxfa * * diff
 bug_679643.in * * noxfa * * diff
 bug_735912.in * * noxfa * * diff
 
-# JS tests in nov8 mode expect empty results. This one will
-# not be empty as the callback is not js-based.
-named_action.in * nov8 * * * diff
-
 # xfa_specific
 
 # TODO(crbug.com/42270097): Remove after associated bug is fixed

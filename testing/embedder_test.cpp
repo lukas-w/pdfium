@@ -113,6 +113,12 @@ void OnFocusChangeTrampoline(FPDF_FORMFILLINFO* info,
   return delegate->OnFocusChange(info, annot, page_index);
 }
 
+void ExecuteNamedActionTrampoline(FPDF_FORMFILLINFO* info,
+                                  FPDF_BYTESTRING name) {
+  auto* delegate = static_cast<EmbedderTest*>(info)->GetDelegate();
+  return delegate->ExecuteNamedAction(name);
+}
+
 void DoURIActionWithKeyboardModifierTrampoline(FPDF_FORMFILLINFO* info,
                                                FPDF_BYTESTRING uri,
                                                int modifiers) {
@@ -150,8 +156,6 @@ FPDF_PAGE GetCurrentPageStub(FPDF_FORMFILLINFO* pThis, FPDF_DOCUMENT document) {
 int GetRotationStub(FPDF_FORMFILLINFO* pThis, FPDF_PAGE page) {
   return 0;
 }
-
-void ExecuteNamedActionStub(FPDF_FORMFILLINFO* pThis, FPDF_BYTESTRING name) {}
 
 void SetTextFieldFocusStub(FPDF_FORMFILLINFO* pThis,
                            FPDF_WIDESTRING value,
@@ -729,7 +733,7 @@ FPDF_FORMHANDLE EmbedderTest::SetupFormFillEnvironment(
   formfillinfo->FFI_GetPage = GetPageTrampoline;
   formfillinfo->FFI_GetCurrentPage = GetCurrentPageStub;
   formfillinfo->FFI_GetRotation = GetRotationStub;
-  formfillinfo->FFI_ExecuteNamedAction = ExecuteNamedActionStub;
+  formfillinfo->FFI_ExecuteNamedAction = ExecuteNamedActionTrampoline;
   formfillinfo->FFI_SetTextFieldFocus = SetTextFieldFocusStub;
   formfillinfo->FFI_DoURIAction = DoURIActionTrampoline;
   formfillinfo->FFI_DoGoToAction = DoGoToActionTrampoline;

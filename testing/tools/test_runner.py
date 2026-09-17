@@ -703,9 +703,7 @@ class _TestCaseRunner:
       return self._VerifyEmptyText(txt_path)
 
     # If JavaScript is disabled, the output should be empty.
-    # However, if the test is suppressed and JavaScript is disabled, do not
-    # verify that the text is empty so the suppressed test does not surprise.
-    if self.options.disable_javascript and not self.IsResultSuppressed():
+    if self.options.disable_javascript:
       return self._VerifyEmptyText(txt_path)
 
     return self.RunCommand([

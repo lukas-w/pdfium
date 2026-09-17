@@ -96,6 +96,9 @@ class EmbedderTest : public ::testing::Test,
     virtual void DoURIActionWithKeyboardModifier(FPDF_FORMFILLINFO* info,
                                                  FPDF_BYTESTRING uri,
                                                  int modifiers) {}
+
+    // Equivalent to FPDF_FORMFILLINFO::FFI_ExecuteNamedAction().
+    virtual void ExecuteNamedAction(FPDF_BYTESTRING name) {}
   };
 
   class ScopedSavedDoc {

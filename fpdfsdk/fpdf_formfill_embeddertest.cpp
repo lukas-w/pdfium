@@ -618,9 +618,19 @@ TEST_F(FPDFFormFillEmbedderTest, FirstTest) {
   EXPECT_CALL(mock, DoURIAction(_)).Times(0);
   EXPECT_CALL(mock, DoURIActionWithKeyboardModifier(_, _, _)).Times(0);
   EXPECT_CALL(mock, DoGoToAction(_, _, _, _, _)).Times(0);
+  EXPECT_CALL(mock, ExecuteNamedAction(_)).Times(0);
   ASSERT_TRUE(OpenDocument("hello_world.pdf"));
   ScopedPage page = LoadScopedPage(0);
   EXPECT_TRUE(page);
+}
+
+TEST_F(FPDFFormFillEmbedderTest, OpenActionNamedAction) {
+  auto& mock = SetOwnedDelegate<EmbedderTestMockDelegate>();
+  EXPECT_CALL(mock, ExecuteNamedAction(StrEq("Print")));
+  ASSERT_TRUE(OpenDocument("named_action.pdf"));
+  ScopedPage page = LoadScopedPage(0);
+  EXPECT_TRUE(page);
+  DoOpenActions();
 }
 
 TEST_F(FPDFFormFillEmbedderTest, Bug487928) {

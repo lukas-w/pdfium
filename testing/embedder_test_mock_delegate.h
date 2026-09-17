@@ -33,6 +33,7 @@ class EmbedderTestMockDelegate : public EmbedderTest::Delegate {
   MOCK_METHOD(void,
               DoURIActionWithKeyboardModifier,
               (FPDF_FORMFILLINFO * info, FPDF_BYTESTRING uri, int modifiers));
+  MOCK_METHOD(void, ExecuteNamedAction, (FPDF_BYTESTRING name));
 };
 
 #endif  // TESTING_EMBEDDER_TEST_MOCK_DELEGATE_H_
