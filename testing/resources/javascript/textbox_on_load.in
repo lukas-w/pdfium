@@ -1,0 +1,74 @@
+{{header}}
+{{object 1 0}} <<
+  /Type /Catalog
+  /Pages 2 0 R
+  /AcroForm <<
+    /Fields [4 0 R 6 0 R]
+    /DR <<
+      /Font <<
+        /F1 7 0 R
+      >>
+    >>
+  >>
+  /OpenAction 8 0 R
+>>
+endobj
+{{object 2 0}} <<
+  /Type /Pages
+  /Count 1
+  /Kids [3 0 R]
+>>
+endobj
+{{object 3 0}} <<
+  /Type /Page
+  /Parent 2 0 R
+  /Annots [4 0 R 6 0 R]
+  /MediaBox [0 0 400 400]
+>>
+endobj
+{{object 4 0}} <<
+  /Type /Annot
+  /Subtype /Widget
+  /T (SubmitFormButton)
+  /FT /Btn
+  /Ff 65536
+  /Rect [150 150 250 250]
+  /AA <<
+    /D 5 0 R
+  >>
+>>
+endobj
+{{object 5 0}} <<
+  /Type /Action
+  /S /JavaScript
+  /JS (app.alert('done'))
+>>
+endobj
+{{object 6 0}} <<
+  /Type /Annot
+  /Subtype /Widget
+  /T (Field1)
+  /FT /Tx
+  /DA (0 0 0 rg /F1 12 Tf)
+  /Rect [50 300 350 340]
+  /AA <<
+    /K 5 0 R
+  >>
+>>
+endobj
+{{object 7 0}} <<
+  /Type /Font
+  /Subtype /Type1
+  /BaseFont /Helvetica
+>>
+endobj
+{{object 8 0}} <<
+  /Type /Action
+  /S /JavaScript
+  /JS (this.getField\('Field1'\).value = 'A';)
+>>
+endobj
+{{xref}}
+{{trailer}}
+{{startxref}}
+%%EOF
