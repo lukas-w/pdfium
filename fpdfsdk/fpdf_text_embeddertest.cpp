@@ -2529,10 +2529,11 @@ TEST_F(FPDFTextEmbedderTest, ActualTextRtl) {
        // שלום (logical order):
        0x05e9, 0x05dc, 0x05d5, 0x05dd, '\r', '\n',
        // Predominantly RTL case:
-       // שלום (logical order):
-       0x05e9, 0x05dc, 0x05d5, 0x05dd, ' ', 'H', 'a', ' ',
+       // TODO(crbug.com/525087036): The two RTL segments should trade places.
        // מים (logical order):
-       0x05de, 0x05d9, 0x05dd, '\r', '\n',
+       0x05de, 0x05d9, 0x05dd, ' ', 'H', 'a', ' ',
+       // שלום (logical order):
+       0x05e9, 0x05dc, 0x05d5, 0x05dd, '\r', '\n',
        // Tie-Breaker case:
        'H', 'e', ' ',
        // שלום (logical order):
@@ -2585,13 +2586,9 @@ TEST_F(FPDFTextEmbedderTest, Arabic) {
   ScopedFPDFTextPage text_page(FPDFText_LoadPage(page.get()));
   ASSERT_TRUE(text_page);
 
-  // TODO(crbug.com/561066233): This array is reversed at the word level.
-  // It should be:
-  //  {0x0627, 0x0644, 0x0628, 0x062d, 0x0631, ' ', 0x0627, 0x0644, 0x0623,
-  //   0x0632, 0x0631, 0x0642, '\0'}
   static constexpr auto kExpectedText = std::to_array<unsigned short>(
-      {0x0627, 0x0644, 0x0623, 0x0632, 0x0631, 0x0642, ' ', 0x0627, 0x0644,
-       0x0628, 0x062d, 0x0631, '\0'});
+      {0x0627, 0x0644, 0x0628, 0x062d, 0x0631, ' ', 0x0627, 0x0644, 0x0623,
+       0x0632, 0x0631, 0x0642, '\0'});
   static constexpr int kExpectedTextSize = std::size(kExpectedText);
 
   unsigned short buffer[256] = {};
