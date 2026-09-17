@@ -232,6 +232,7 @@ int CheckPDFiumCApi() {
     CHK(FPDFPageObj_GetMark);
     CHK(FPDFPageObj_GetMarkedContentID);
     CHK(FPDFPageObj_GetMatrix);
+    CHK(FPDFPageObj_GetRenderedFillPattern);
     CHK(FPDFPageObj_GetRenderedStrokePattern);
     CHK(FPDFPageObj_GetRotatedBounds);
     CHK(FPDFPageObj_GetStrokeColor);

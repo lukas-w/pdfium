@@ -199,7 +199,8 @@ ByteString FormatPDFDate(time_t current_time, const tm& local_time) {
 
 FPDF_BITMAP RenderTilingPatternToBitmap(CPDF_Pattern* pattern,
                                         CPDF_Document* doc,
-                                        CPDF_PageObject* page_obj) {
+                                        CPDF_PageObject* page_obj,
+                                        bool use_stroke_color) {
   CPDF_TilingPattern* tiling_pattern = pattern->AsTilingPattern();
   if (!tiling_pattern) {
     return nullptr;
@@ -228,10 +229,13 @@ FPDF_BITMAP RenderTilingPatternToBitmap(CPDF_Pattern* pattern,
     return FPDFBitmapFromCFXDIBitmap(cell_bitmap.Leak());
   }
 
-  // An uncolored pattern gets its color from the stroke color operands.
-  const FX_COLORREF stroke_colorref =
-      page_obj->color_state().GetStrokeColorRef();
-  if (stroke_colorref == 0xFFFFFFFF) {
+  // An uncolored pattern gets its color from the stroke/fill color operands.
+  const CPDF_ColorState& color_state = page_obj->color_state();
+  const FX_COLORREF colorref =
+      use_stroke_color ? color_state.GetStrokeColorRef()
+                       : color_state.GetFillColorRef();
+  // 0xFFFFFFFF is the unusable color, see FX_COLORREF.
+  if (colorref == 0xFFFFFFFF) {
     return nullptr;
   }
 
@@ -240,11 +244,14 @@ FPDF_BITMAP RenderTilingPatternToBitmap(CPDF_Pattern* pattern,
                              FXDIB_Format::kBgra)) {
     return nullptr;
   }
-  const int stroke_alpha =
-      static_cast<int>(page_obj->general_state().GetStrokeAlpha() * 255);
+  const CPDF_GeneralState& general_state = page_obj->general_state();
+  const float float_alpha = use_stroke_color
+                                ? general_state.GetStrokeAlpha()
+                                : general_state.GetFillAlpha();
+  const int alpha = static_cast<int>(float_alpha * 255);
   if (!result_bitmap->CompositeMask(
           /*dest_left=*/0, /*dest_top=*/0, rect.Width(), rect.Height(),
-          cell_bitmap, AlphaAndColorRefToArgb(stroke_alpha, stroke_colorref),
+          cell_bitmap, AlphaAndColorRefToArgb(alpha, colorref),
           /*src_left=*/0, /*src_top=*/0, BlendMode::kNormal)) {
     return nullptr;
   }
@@ -253,6 +260,36 @@ FPDF_BITMAP RenderTilingPatternToBitmap(CPDF_Pattern* pattern,
 
   // Caller takes ownership.
   return FPDFBitmapFromCFXDIBitmap(result_bitmap.Leak());
+}
+
+FPDF_BITMAP GetRenderedPattern(FPDF_DOCUMENT document,
+                               FPDF_PAGEOBJECT page_object,
+                               bool use_stroke_color) {
+  CPDF_Document* doc = CPDFDocumentFromFPDFDocument(document);
+  if (!doc) {
+    return nullptr;
+  }
+
+  CPDF_PageObject* object = CPDFPageObjectFromFPDFPageObject(page_object);
+  if (!object) {
+    return nullptr;
+  }
+
+  const CPDF_ColorState& color_state = object->color_state();
+  const CPDF_Color* color = use_stroke_color
+                                ? color_state.GetStrokeColor()
+                                : color_state.GetFillColor();
+  if (!color || !color->IsPattern()) {
+    return nullptr;
+  }
+
+  RetainPtr<CPDF_Pattern> pattern = color->GetPattern();
+  if (!pattern) {
+    return nullptr;
+  }
+
+  return RenderTilingPatternToBitmap(pattern.Get(), doc, object,
+                                     use_stroke_color);
 }
 
 }  // namespace
@@ -1261,27 +1298,13 @@ FPDFPageObj_SetDashArray(FPDF_PAGEOBJECT page_object,
 FPDF_EXPORT FPDF_BITMAP FPDF_CALLCONV
 FPDFPageObj_GetRenderedStrokePattern(FPDF_DOCUMENT document,
                                      FPDF_PAGEOBJECT page_object) {
-  CPDF_Document* doc = CPDFDocumentFromFPDFDocument(document);
-  if (!doc) {
-    return nullptr;
-  }
+  return GetRenderedPattern(document, page_object, /*use_stroke_color=*/true);
+}
 
-  CPDF_PageObject* object = CPDFPageObjectFromFPDFPageObject(page_object);
-  if (!object) {
-    return nullptr;
-  }
-
-  const CPDF_Color* stroke = object->color_state().GetStrokeColor();
-  if (!stroke || !stroke->IsPattern()) {
-    return nullptr;
-  }
-
-  RetainPtr<CPDF_Pattern> pattern = stroke->GetPattern();
-  if (!pattern) {
-    return nullptr;
-  }
-
-  return RenderTilingPatternToBitmap(pattern.Get(), doc, object);
+FPDF_EXPORT FPDF_BITMAP FPDF_CALLCONV
+FPDFPageObj_GetRenderedFillPattern(FPDF_DOCUMENT document,
+                                   FPDF_PAGEOBJECT page_object) {
+  return GetRenderedPattern(document, page_object, /*use_stroke_color=*/false);
 }
 
 FPDF_EXPORT int FPDF_CALLCONV
