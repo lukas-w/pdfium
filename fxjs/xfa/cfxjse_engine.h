@@ -110,7 +110,7 @@ class CFXJSE_Engine final : public CFX_IsolateWrapper {
                                                   ByteStringView szPropName,
                                                   bool bQueryIn);
 
-  CFXJSE_Engine(CXFA_Document* document, CJS_Runtime* fxjs_runtime);
+  CFXJSE_Engine(CXFA_Document* document, v8::Isolate* isolate);
   ~CFXJSE_Engine() override;
 
   class EventParamScope {
@@ -171,6 +171,7 @@ class CFXJSE_Engine final : public CFX_IsolateWrapper {
   CFXJSE_Context* GetJseContextForTest() const { return GetJseContext(); }
 
  private:
+  CJS_Runtime* GetCJSRuntime() const;
   CFXJSE_Context* GetJseContext() const { return js_context_.get(); }
   CFXJSE_Context* CreateVariablesContext(CXFA_Script* pScriptNode,
                                          CXFA_Node* pSubform);
@@ -195,7 +196,6 @@ class CFXJSE_Engine final : public CFX_IsolateWrapper {
                            v8::Local<v8::Value> pValue);
   void RunVariablesScript(CXFA_Script* pScriptNode);
 
-  UnownedPtr<CJS_Runtime> const subordinate_runtime_;
   cppgc::WeakPersistent<CXFA_Document> const document_;
   std::unique_ptr<CFXJSE_Context> js_context_;
   UnownedPtr<CFXJSE_Class> js_class_;

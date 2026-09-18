@@ -143,11 +143,10 @@ CXFA_Object* CFXJSE_Engine::ToObject(CFXJSE_HostObject* pHostObj) {
   return pJSObject ? pJSObject->GetXFAObject() : nullptr;
 }
 
-CFXJSE_Engine::CFXJSE_Engine(CXFA_Document* document, CJS_Runtime* fxjs_runtime)
-    : CFX_IsolateWrapper(fxjs_runtime->GetIsolate()),
-      subordinate_runtime_(fxjs_runtime),
+CFXJSE_Engine::CFXJSE_Engine(CXFA_Document* document, v8::Isolate* isolate)
+    : CFX_IsolateWrapper(isolate),
       document_(document),
-      js_context_(CFXJSE_Context::Create(fxjs_runtime->GetIsolate(),
+      js_context_(CFXJSE_Context::Create(isolate,
                                          &kGlobalClassDescriptor,
                                          document->GetRoot()->JSObject(),
                                          nullptr)),
@@ -192,6 +191,17 @@ CFXJSE_Engine::EventParamScope::~EventParamScope() {
   engine_->event_param_ = prev_event_param_;
 }
 
+// The runtime belongs to the form fill environment, which may depart before
+// this object does, so look it up rather than holding it.
+CJS_Runtime* CFXJSE_Engine::GetCJSRuntime() const {
+  CXFA_FFNotify* notify = document_ ? document_->GetNotify() : nullptr;
+  if (!notify) {
+    return nullptr;
+  }
+  IJS_Runtime* runtime = notify->GetFFDoc()->GetIJSRuntime();
+  return runtime ? runtime->AsCJSRuntime() : nullptr;
+}
+
 CFXJSE_Context::ExecutionResult CFXJSE_Engine::RunScript(
     CXFA_Script::Type eScriptType,
     WideStringView wsScript,
@@ -225,7 +235,12 @@ CFXJSE_Context::ExecutionResult CFXJSE_Engine::RunScript(
     pThisBinding = GetOrCreateJSBindingFromMap(pThisObject);
   }
 
-  IJS_Runtime::ScopedEventContext ctx(subordinate_runtime_);
+  CJS_Runtime* runtime = GetCJSRuntime();
+  if (!runtime) {
+    return CFXJSE_Context::ExecutionResult();
+  }
+
+  IJS_Runtime::ScopedEventContext ctx(runtime);
   return js_context_->ExecuteScript(btScript.AsStringView(), pThisBinding);
 }
 
@@ -309,13 +324,7 @@ void CFXJSE_Engine::GlobalPropertySetter(v8::Isolate* pIsolate,
                                               pObject, szPropName);
     return;
   }
-  CXFA_FFNotify* pNotify = doc->GetNotify();
-  if (!pNotify) {
-    return;
-  }
-
-  CXFA_FFDoc* hDoc = pNotify->GetFFDoc();
-  auto* pCJSRuntime = static_cast<CJS_Runtime*>(hDoc->GetIJSRuntime());
+  CJS_Runtime* pCJSRuntime = pScriptContext->GetCJSRuntime();
   if (!pCJSRuntime) {
     return;
   }
@@ -380,13 +389,7 @@ v8::Local<v8::Value> CFXJSE_Engine::GlobalPropertyGetter(
     return pValue;
   }
 
-  CXFA_FFNotify* pNotify = doc->GetNotify();
-  if (!pNotify) {
-    return pValue;
-  }
-
-  CXFA_FFDoc* hDoc = pNotify->GetFFDoc();
-  auto* pCJSRuntime = static_cast<CJS_Runtime*>(hDoc->GetIJSRuntime());
+  CJS_Runtime* pCJSRuntime = pScriptContext->GetCJSRuntime();
   if (!pCJSRuntime) {
     return pValue;
   }
@@ -477,13 +480,7 @@ v8::Local<v8::Value> CFXJSE_Engine::NormalPropertyGetter(
     return pReturnValue;
   }
 
-  CXFA_FFNotify* pNotify = pObject->GetDocument()->GetNotify();
-  if (!pNotify) {
-    return pReturnValue;
-  }
-
-  CXFA_FFDoc* hDoc = pNotify->GetFFDoc();
-  auto* pCJSRuntime = static_cast<CJS_Runtime*>(hDoc->GetIJSRuntime());
+  CJS_Runtime* pCJSRuntime = pScriptContext->GetCJSRuntime();
   if (!pCJSRuntime) {
     return pReturnValue;
   }

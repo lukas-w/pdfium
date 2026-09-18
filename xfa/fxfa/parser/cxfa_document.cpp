@@ -16,6 +16,7 @@
 #include "core/fxcrt/stl_util.h"
 #include "core/fxcrt/xml/cfx_xmldocument.h"
 #include "core/fxcrt/xml/cfx_xmlelement.h"
+#include "fxjs/cjs_runtime.h"
 #include "fxjs/gc/container_trace.h"
 #include "fxjs/xfa/cfxjse_engine.h"
 #include "fxjs/xfa/cfxjse_resolveprocessor.h"
@@ -1534,7 +1535,8 @@ FXGC_Heap* CXFA_Document::GetHeap() const {
 
 CFXJSE_Engine* CXFA_Document::InitScriptContext(CJS_Runtime* fxjs_runtime) {
   DCHECK(!script_context_);
-  script_context_ = std::make_unique<CFXJSE_Engine>(this, fxjs_runtime);
+  script_context_ =
+      std::make_unique<CFXJSE_Engine>(this, fxjs_runtime->GetIsolate());
   return script_context_.get();
 }
 
