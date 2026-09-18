@@ -158,26 +158,6 @@ class PNGDiffer:
 
     return False, f'Unknown algorithm {algorithm}'
 
-  # TODO(tsepez): Remove along with the shadow validation once the Python
-  # decision logic is trusted.
-  def _CheckMetricsParity(self, cmd, metrics_stdout, metrics_line, c_pass):
-    """Verifies that `--metrics` leaves the legacy comparison untouched."""
-    legacy_cmd = [arg for arg in cmd if arg != '--metrics']
-    legacy = subprocess.run(
-        legacy_cmd, capture_output=True, text=True, check=False)
-
-    # Without `--metrics`, the result comes back as the exit code, and the
-    # output is the metrics output less the metrics line itself.
-    assert (legacy.returncode == 0) == c_pass, (
-        f'Metrics parity mismatch on {legacy_cmd}!\n'
-        f'Exit code {legacy.returncode} disagrees with c_result '
-        f'({"PASS" if c_pass else "FAIL"})')
-    assert legacy.stdout == metrics_stdout.replace(
-        f'{metrics_line}\n', '',
-        1), (f'Metrics parity mismatch on {legacy_cmd}!\n'
-             f'Without --metrics: {legacy.stdout}'
-             f'With --metrics: {metrics_stdout}')
-
   def _RunImageCompareCommand(self, image_diff, image_matching_algorithm):
     algorithm = image_matching_algorithm
     extra_flags = []
@@ -233,8 +213,6 @@ class PNGDiffer:
         c_result=kv['c_result'])
     image_diff.metrics = metrics
     c_pass = (metrics.c_result == 'PASS')
-
-    self._CheckMetricsParity(cmd, result.stdout, metrics_line, c_pass)
 
     # Evaluate decision in Python.
     python_pass, failure_reason = self.EvaluateMatch(metrics,
