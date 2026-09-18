@@ -11,11 +11,11 @@
 #include <vector>
 
 #include "core/fxcrt/css/cfx_css.h"
+#include "core/fxcrt/css/cfx_csscolorvalue.h"
 #include "core/fxcrt/css/cfx_csscustomproperty.h"
 #include "core/fxcrt/mask.h"
 #include "core/fxcrt/retain_ptr.h"
 #include "core/fxcrt/widestring.h"
-#include "core/fxge/dib/fx_dib.h"
 
 class CFX_CSSValueList;
 
@@ -32,7 +32,7 @@ class CFX_CSSComputedStyle final : public Retainable {
     RetainPtr<CFX_CSSValueList> font_family_;
     float ffont_size_ = 12.0f;
     float fline_height_ = 14.0f;
-    FX_ARGB font_color_ = 0xFF000000;
+    CFX_CSSColor font_color_ = 0xFF000000;
     uint16_t wfont_weight_ = 400;
     CFX_CSSFontVariant font_variant_ = CFX_CSSFontVariant::Normal;
     CFX_CSSFontStyle font_style_ = CFX_CSSFontStyle::Normal;
@@ -66,12 +66,12 @@ class CFX_CSSComputedStyle final : public Retainable {
   CFX_CSSFontVariant GetFontVariant() const;
   CFX_CSSFontStyle GetFontStyle() const;
   float GetFontSize() const;
-  FX_ARGB GetColor() const;
+  CFX_CSSColor GetColor() const;
   void SetFontWeight(uint16_t wFontWeight);
   void SetFontVariant(CFX_CSSFontVariant eFontVariant);
   void SetFontStyle(CFX_CSSFontStyle eFontStyle);
   void SetFontSize(float fFontSize);
-  void SetColor(FX_ARGB dwFontColor);
+  void SetColor(CFX_CSSColor dwFontColor);
 
   const CFX_CSSRect* GetBorderWidth() const;
   const CFX_CSSRect* GetMarginWidth() const;

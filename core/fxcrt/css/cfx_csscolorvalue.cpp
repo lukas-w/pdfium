@@ -6,7 +6,7 @@
 
 #include "core/fxcrt/css/cfx_csscolorvalue.h"
 
-CFX_CSSColorValue::CFX_CSSColorValue(FX_ARGB value)
+CFX_CSSColorValue::CFX_CSSColorValue(CFX_CSSColor value)
     : CFX_CSSValue(PrimitiveType::kRGB), value_(value) {}
 
 CFX_CSSColorValue::~CFX_CSSColorValue() = default;

@@ -7,18 +7,32 @@
 #ifndef CORE_FXCRT_CSS_CFX_CSSCOLORVALUE_H_
 #define CORE_FXCRT_CSS_CFX_CSSCOLORVALUE_H_
 
+#include <stdint.h>
+
 #include "core/fxcrt/css/cfx_cssvalue.h"
-#include "core/fxge/dib/fx_dib.h"
+
+// ARGB color packed as 0xAARRGGBB.
+using CFX_CSSColor = uint32_t;
+
+// Explicit ARGB byte packing avoids an upward layering dependency on FX_ARGB
+// and fxge pixel-packing functions/macros (such as ArgbEncode()).
+constexpr CFX_CSSColor CFX_CSSColorPack(uint8_t a,
+                                        uint8_t r,
+                                        uint8_t g,
+                                        uint8_t b) {
+  return (static_cast<uint32_t>(a) << 24) | (static_cast<uint32_t>(r) << 16) |
+         (static_cast<uint32_t>(g) << 8) | static_cast<uint32_t>(b);
+}
 
 class CFX_CSSColorValue final : public CFX_CSSValue {
  public:
-  explicit CFX_CSSColorValue(FX_ARGB color);
+  explicit CFX_CSSColorValue(CFX_CSSColor color);
   ~CFX_CSSColorValue() override;
 
-  FX_ARGB Value() const { return value_; }
+  CFX_CSSColor Value() const { return value_; }
 
  private:
-  FX_ARGB value_;
+  CFX_CSSColor value_;
 };
 
 #endif  // CORE_FXCRT_CSS_CFX_CSSCOLORVALUE_H_

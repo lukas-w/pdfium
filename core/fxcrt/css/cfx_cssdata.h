@@ -8,10 +8,10 @@
 #define CORE_FXCRT_CSS_CFX_CSSDATA_H_
 
 #include "core/fxcrt/css/cfx_css.h"
+#include "core/fxcrt/css/cfx_csscolorvalue.h"
 #include "core/fxcrt/css/cfx_cssnumbervalue.h"
 #include "core/fxcrt/css/cfx_cssvalue.h"
 #include "core/fxcrt/widestring.h"
-#include "core/fxge/dib/fx_dib.h"
 
 class CFX_CSSData {
  public:
@@ -33,7 +33,7 @@ class CFX_CSSData {
 
   struct Color {
     const char* name;  // Raw, POD struct.
-    FX_ARGB value;
+    CFX_CSSColor value;
   };
 
   static const Property* GetPropertyByName(WideStringView name);

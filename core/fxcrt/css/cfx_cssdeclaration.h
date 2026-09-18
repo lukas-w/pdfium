@@ -11,6 +11,7 @@
 #include <optional>
 #include <vector>
 
+#include "core/fxcrt/css/cfx_css.h"
 #include "core/fxcrt/css/cfx_cssdata.h"
 #include "core/fxcrt/retain_ptr.h"
 #include "core/fxcrt/widestring.h"
@@ -26,7 +27,7 @@ class CFX_CSSDeclaration {
       std::vector<std::unique_ptr<CFX_CSSCustomProperty>>::const_iterator;
 
   static std::optional<WideStringView> ParseCSSString(WideStringView value);
-  static std::optional<FX_ARGB> ParseCSSColor(WideStringView value);
+  static std::optional<CFX_CSSColor> ParseCSSColor(WideStringView value);
 
   CFX_CSSDeclaration();
   ~CFX_CSSDeclaration();
@@ -47,7 +48,7 @@ class CFX_CSSDeclaration {
   void AddProperty(const WideString& prop, const WideString& value);
   size_t PropertyCountForTesting() const;
 
-  std::optional<FX_ARGB> ParseColorForTest(WideStringView value);
+  std::optional<CFX_CSSColor> ParseColorForTest(WideStringView value);
 
  private:
   void ParseFontProperty(WideStringView value, bool bImportant);

@@ -73,20 +73,21 @@ std::optional<WideStringView> CFX_CSSDeclaration::ParseCSSString(
 }
 
 // static.
-std::optional<FX_ARGB> CFX_CSSDeclaration::ParseCSSColor(WideStringView value) {
+std::optional<CFX_CSSColor> CFX_CSSDeclaration::ParseCSSColor(
+    WideStringView value) {
   if (value.Front() == '#') {  // Note: empty-tolerant Front().
     switch (value.GetLength()) {
       case 4: {
         uint8_t red = Hex2Dec((uint8_t)value[1], (uint8_t)value[1]);
         uint8_t green = Hex2Dec((uint8_t)value[2], (uint8_t)value[2]);
         uint8_t blue = Hex2Dec((uint8_t)value[3], (uint8_t)value[3]);
-        return ArgbEncode(255, red, green, blue);
+        return CFX_CSSColorPack(255, red, green, blue);
       }
       case 7: {
         uint8_t red = Hex2Dec((uint8_t)value[1], (uint8_t)value[2]);
         uint8_t green = Hex2Dec((uint8_t)value[3], (uint8_t)value[4]);
         uint8_t blue = Hex2Dec((uint8_t)value[5], (uint8_t)value[6]);
-        return ArgbEncode(255, red, green, blue);
+        return CFX_CSSColorPack(255, red, green, blue);
       }
       default:
         return std::nullopt;
@@ -113,7 +114,7 @@ std::optional<FX_ARGB> CFX_CSSDeclaration::ParseCSSColor(WideStringView value) {
                       ? FXSYS_roundf(maybe_number.value().value * 2.55f)
                       : FXSYS_roundf(maybe_number.value().value);
     }
-    return ArgbEncode(255, rgb[0], rgb[1], rgb[2]);
+    return CFX_CSSColorPack(255, rgb[0], rgb[1], rgb[2]);
   }
 
   const CFX_CSSData::Color* pColor = CFX_CSSData::GetColorByName(value);
@@ -340,7 +341,7 @@ void CFX_CSSDeclaration::ParseValueListProperty(
         break;
       case CFX_CSSValue::PrimitiveType::kRGB:
         if (dwType & CFX_CSSVALUETYPE_MaybeColor) {
-          FX_ARGB color =
+          CFX_CSSColor color =
               ParseCSSColor(maybe_next.value().string_view).value_or(0);
           list.push_back(pdfium::MakeRetain<CFX_CSSColorValue>(color));
         }

@@ -53,7 +53,7 @@ float CFX_CSSComputedStyle::GetFontSize() const {
   return inherited_data_.ffont_size_;
 }
 
-FX_ARGB CFX_CSSComputedStyle::GetColor() const {
+CFX_CSSColor CFX_CSSComputedStyle::GetColor() const {
   return inherited_data_.font_color_;
 }
 
@@ -73,7 +73,7 @@ void CFX_CSSComputedStyle::SetFontSize(float fFontSize) {
   inherited_data_.ffont_size_ = fFontSize;
 }
 
-void CFX_CSSComputedStyle::SetColor(FX_ARGB dwFontColor) {
+void CFX_CSSComputedStyle::SetColor(CFX_CSSColor dwFontColor) {
   inherited_data_.font_color_ = dwFontColor;
 }
 
