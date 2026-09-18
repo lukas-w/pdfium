@@ -46,6 +46,7 @@ pdfium_embeddertest_source_set("embeddertests") {
   sources = [
     "cpdfxfa_context_embeddertest.cpp",
     "cpdfxfa_docenvironment_embeddertest.cpp",
+    "cpdfxfa_formfillenv_embeddertest.cpp",
   ]
   configs = [ "//v8:external_startup_data" ]
   deps = [
