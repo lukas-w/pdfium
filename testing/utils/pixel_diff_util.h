@@ -9,7 +9,9 @@
 
 #include "core/fxcrt/span.h"
 
-// Standard fuzzy matching limits.
+// Standard fuzzy matching limits, duplicated in testing/tools/pngdiffer.py.
+// Change one without the other and fuzzy tests silently judge by the wrong
+// limits.
 inline constexpr uint8_t kMaxFuzzyPixelDelta = 3;
 inline constexpr double kMaxFuzzyMeanSquaredError = 0.05;
 inline constexpr int kMaxFuzzyWindowSize = 8;

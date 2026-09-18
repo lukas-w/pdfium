@@ -957,9 +957,11 @@ bug_1383708.in mac * * skia * fuzzy
 
 # TODO(crbug.com/42271067): Remove after associated bug is fixed
 barcode_test.pdf * * * gdi * diff
+bug_1026918.in * * * gdi * diff
 bug_1072440.in * * * gdi * diff
 bug_113910.in * * * gdi * diff
 bug_1282.in * * * gdi * diff
+bug_1286970.in * * * gdi * diff
 bug_1304714.in * * * gdi * diff
 bug_1337.in * * * gdi * diff
 bug_1372651.in * * * gdi * diff

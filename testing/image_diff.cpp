@@ -40,6 +40,8 @@ constexpr uint32_t RGBA_ALPHA = 0xff000000;
 class Image {
  public:
   Image() = default;
+  Image(int w, int h)
+      : w_(w), h_(h), data_(static_cast<size_t>(w) * h * 4, 0) {}
   Image(const Image& image) = default;
   Image& operator=(const Image& other) = default;
 
@@ -150,16 +152,29 @@ void CountImageSizeMismatchAsPixelDifference(const Image& baseline,
   *pixels_different += (max_h - h) * max_w;
 }
 
+// Optional per-comparison measurements, reported by `--metrics`.
+struct DiffMetrics {
+  int raw_diff_pixels = 0;
+  uint8_t max_delta = 0;
+  double mse = 0.0;
+  double win_mse = 0.0;
+};
+
+// Computes the number of pixels considered different under the given limits.
+// When `out_metrics` is non-null, the underlying measurements are gathered as
+// well, which requires computing values that the limits alone may not need.
 int PixelsDifferent(const Image& baseline,
                     const Image& actual,
                     uint8_t max_pixel_per_channel_delta,
                     double max_mean_squared_error,
                     int window_size,
-                    double max_window_mean_squared_error) {
+                    double max_window_mean_squared_error,
+                    DiffMetrics* out_metrics) {
   int w = std::min(baseline.w(), actual.w());
   int h = std::min(baseline.h(), actual.h());
 
-  // Compute pixels different in the overlap.
+  int raw_diff_pixels = 0;
+  uint8_t max_delta = 0;
   int pixels_different = 0;
   uint64_t total_squared_error = 0;
   for (int y = 0; y < h; ++y) {
@@ -170,23 +185,29 @@ int PixelsDifferent(const Image& baseline,
         continue;
       }
 
-      if (MaxPixelPerChannelDelta(baseline_pixel, actual_pixel) >
-          max_pixel_per_channel_delta) {
+      ++raw_diff_pixels;
+      uint8_t delta = MaxPixelPerChannelDelta(baseline_pixel, actual_pixel);
+      max_delta = std::max(max_delta, delta);
+
+      if (delta > max_pixel_per_channel_delta) {
         ++pixels_different;
       }
       total_squared_error += PixelSquaredError(baseline_pixel, actual_pixel);
     }
   }
 
-  if (w > 0 && h > 0 && max_mean_squared_error > 0.0) {
-    double mse = static_cast<double>(total_squared_error) / (3.0 * w * h);
-    if (mse > max_mean_squared_error) {
+  double mse = 0.0;
+  if (w > 0 && h > 0 && (max_mean_squared_error > 0.0 || out_metrics)) {
+    mse = static_cast<double>(total_squared_error) / (3.0 * w * h);
+    if (max_mean_squared_error > 0.0 && mse > max_mean_squared_error) {
       ++pixels_different;
     }
   }
 
-  if (w > 0 && h > 0 && window_size > 0 &&
-      max_window_mean_squared_error > 0.0) {
+  double win_mse = 0.0;
+  if (w > 0 && h > 0 &&
+      ((window_size > 0 && max_window_mean_squared_error > 0.0) ||
+       out_metrics)) {
     std::vector<uint32_t> baseline_overlap(w * h);
     std::vector<uint32_t> actual_overlap(w * h);
     for (int y = 0; y < h; ++y) {
@@ -195,15 +216,25 @@ int PixelsDifferent(const Image& baseline,
         actual_overlap[y * w + x] = actual.pixel_at(x, y);
       }
     }
-    double win_mse = CalculateMaxWindowMSE(
-        baseline_overlap, static_cast<size_t>(w), actual_overlap,
-        static_cast<size_t>(w), w, h, window_size);
-    if (win_mse > max_window_mean_squared_error) {
+    int eff_win_size = window_size > 0 ? window_size : kMaxFuzzyWindowSize;
+    win_mse = CalculateMaxWindowMSE(baseline_overlap, static_cast<size_t>(w),
+                                    actual_overlap, static_cast<size_t>(w), w,
+                                    h, eff_win_size);
+    if (max_window_mean_squared_error > 0.0 &&
+        win_mse > max_window_mean_squared_error) {
       ++pixels_different;
     }
   }
 
   CountImageSizeMismatchAsPixelDifference(baseline, actual, &pixels_different);
+
+  if (out_metrics) {
+    out_metrics->raw_diff_pixels = raw_diff_pixels;
+    out_metrics->max_delta = max_delta;
+    out_metrics->mse = mse;
+    out_metrics->win_mse = win_mse;
+  }
+
   return pixels_different;
 }
 
@@ -253,7 +284,12 @@ void PrintHelp(const std::string& binary_name) {
       "    Passing \"--reverse-byte-order\" additionally assumes the\n"
       "    compare file has BGRA byte ordering.\n"
       "    Passing \"--fuzzy[=delta,mse,win_mse]\" additionally allows\n"
-      "    individual pixels and windows to differ within specified limits.\n\n"
+      "    individual pixels and windows to differ within specified limits.\n"
+      "    Passing \"--metrics\" additionally prints a machine-readable line\n"
+      "    of measurements.\n"
+      "    Under \"--histogram\" or \"--metrics\", the comparison result is\n"
+      "    reported in the output rather than through the exit code, which\n"
+      "    then indicates only whether the comparison could be performed.\n\n"
       "  %s --diff <compare_file> <reference_file> <output_file>\n"
       "    Compares two files on disk, and if they differ, outputs an image\n"
       "    to <output_file> that visualizes the differing pixels as red\n"
@@ -270,6 +306,7 @@ int CompareImages(const std::string& binary_name,
                   const std::string& file2,
                   bool compare_histograms,
                   bool reverse_byte_order,
+                  bool report_metrics,
                   uint8_t max_pixel_per_channel_delta,
                   double max_mean_squared_error,
                   int window_size,
@@ -303,14 +340,41 @@ int CompareImages(const std::string& binary_name,
   }
 
   const char* const diff_name = compare_histograms ? "exact diff" : "diff";
+  DiffMetrics metrics;
   int pixels_different = PixelsDifferent(
       actual_image, baseline_image, max_pixel_per_channel_delta,
-      max_mean_squared_error, window_size, max_window_mean_squared_error);
+      max_mean_squared_error, window_size, max_window_mean_squared_error,
+      report_metrics ? &metrics : nullptr);
+
   float percent = CalculateDifferencePercentage(actual_image, pixels_different);
   const char* const passed = percent > 0.0 ? "failed" : "passed";
+
+  if (report_metrics) {
+    int overlap_w = std::min(actual_image.w(), baseline_image.w());
+    int overlap_h = std::min(actual_image.h(), baseline_image.h());
+    const size_t last_separator = file1.rfind(PATH_SEPARATOR);
+    std::string base_name = last_separator != std::string::npos
+                                ? file1.substr(last_separator + 1)
+                                : file1;
+
+    printf(
+        "%s: actual_w=%d actual_h=%d expected_w=%d expected_h=%d pixels=%d "
+        "total=%d max_delta=%u mse=%.6f win_mse=%.6f c_result=%s\n",
+        base_name.c_str(), actual_image.w(), actual_image.h(),
+        baseline_image.w(), baseline_image.h(), metrics.raw_diff_pixels,
+        overlap_w * overlap_h, metrics.max_delta, metrics.mse, metrics.win_mse,
+        percent > 0.0 ? "FAIL" : "PASS");
+  }
+
   UNSAFE_TODO(printf("%s: %01.2f%% %s (%d pixels differ)\n", diff_name, percent,
                      passed, pixels_different));
 
+  if (compare_histograms || report_metrics) {
+    // Measurement modes: the result is reported in the output above, leaving
+    // the exit code to indicate only whether the comparison could be
+    // performed at all.
+    return kStatusSame;
+  }
   if (percent > 0.0) {
     // failure: The WebKit version also writes the difference image to
     // stdout, which seems excessive for our needs.
@@ -321,25 +385,31 @@ int CompareImages(const std::string& binary_name,
 }
 
 bool CreateImageDiff(const Image& image1, const Image& image2, Image* out) {
-  int w = std::min(image1.w(), image2.w());
-  int h = std::min(image1.h(), image2.h());
-  *out = Image(image1);
+  int union_w = std::max(image1.w(), image2.w());
+  int union_h = std::max(image1.h(), image2.h());
+  int inter_w = std::min(image1.w(), image2.w());
+  int inter_h = std::min(image1.h(), image2.h());
+  *out = Image(union_w, union_h);
   bool same = (image1.w() == image2.w()) && (image1.h() == image2.h());
 
-  // TODO(estade): do something with the extra pixels if the image sizes
-  // are different.
-  for (int y = 0; y < h; ++y) {
-    for (int x = 0; x < w; ++x) {
-      uint32_t base_pixel = image1.pixel_at(x, y);
-      if (base_pixel != image2.pixel_at(x, y)) {
-        // Set differing pixels red.
+  for (int y = 0; y < union_h; ++y) {
+    for (int x = 0; x < union_w; ++x) {
+      if (x < inter_w && y < inter_h) {
+        uint32_t base_pixel = image1.pixel_at(x, y);
+        if (base_pixel != image2.pixel_at(x, y)) {
+          // Set differing pixels red.
+          out->set_pixel_at(x, y, RGBA_RED | RGBA_ALPHA);
+          same = false;
+        } else {
+          // Set same pixels as faded.
+          uint32_t alpha = base_pixel & RGBA_ALPHA;
+          uint32_t new_pixel = base_pixel - ((alpha / 2) & RGBA_ALPHA);
+          out->set_pixel_at(x, y, new_pixel);
+        }
+      } else {
+        // Set out-of-bounds pixels red.
         out->set_pixel_at(x, y, RGBA_RED | RGBA_ALPHA);
         same = false;
-      } else {
-        // Set same pixels as faded.
-        uint32_t alpha = base_pixel & RGBA_ALPHA;
-        uint32_t new_pixel = base_pixel - ((alpha / 2) & RGBA_ALPHA);
-        out->set_pixel_at(x, y, new_pixel);
       }
     }
   }
@@ -348,37 +418,44 @@ bool CreateImageDiff(const Image& image1, const Image& image2, Image* out) {
 }
 
 bool SubtractImages(const Image& image1, const Image& image2, Image* out) {
-  int w = std::min(image1.w(), image2.w());
-  int h = std::min(image1.h(), image2.h());
-  *out = Image(image1);
+  int union_w = std::max(image1.w(), image2.w());
+  int union_h = std::max(image1.h(), image2.h());
+  int inter_w = std::min(image1.w(), image2.w());
+  int inter_h = std::min(image1.h(), image2.h());
+  *out = Image(union_w, union_h);
   bool same = (image1.w() == image2.w()) && (image1.h() == image2.h());
 
-  for (int y = 0; y < h; ++y) {
-    for (int x = 0; x < w; ++x) {
-      uint32_t pixel1 = image1.pixel_at(x, y);
-      int32_t r1 = pixel1 & 0xff;
-      int32_t g1 = (pixel1 >> 8) & 0xff;
-      int32_t b1 = (pixel1 >> 16) & 0xff;
+  for (int y = 0; y < union_h; ++y) {
+    for (int x = 0; x < union_w; ++x) {
+      if (x < inter_w && y < inter_h) {
+        uint32_t pixel1 = image1.pixel_at(x, y);
+        int32_t r1 = pixel1 & 0xff;
+        int32_t g1 = (pixel1 >> 8) & 0xff;
+        int32_t b1 = (pixel1 >> 16) & 0xff;
 
-      uint32_t pixel2 = image2.pixel_at(x, y);
-      int32_t r2 = pixel2 & 0xff;
-      int32_t g2 = (pixel2 >> 8) & 0xff;
-      int32_t b2 = (pixel2 >> 16) & 0xff;
+        uint32_t pixel2 = image2.pixel_at(x, y);
+        int32_t r2 = pixel2 & 0xff;
+        int32_t g2 = (pixel2 >> 8) & 0xff;
+        int32_t b2 = (pixel2 >> 16) & 0xff;
 
-      int32_t delta_r = r1 - r2;
-      int32_t delta_g = g1 - g2;
-      int32_t delta_b = b1 - b2;
-      same &= (delta_r == 0 && delta_g == 0 && delta_b == 0);
+        int32_t delta_r = r1 - r2;
+        int32_t delta_g = g1 - g2;
+        int32_t delta_b = b1 - b2;
+        same &= (delta_r == 0 && delta_g == 0 && delta_b == 0);
 
-      delta_r = std::clamp(128 + delta_r * 8, 0, 255);
-      delta_g = std::clamp(128 + delta_g * 8, 0, 255);
-      delta_b = std::clamp(128 + delta_b * 8, 0, 255);
+        delta_r = std::clamp(128 + delta_r * 8, 0, 255);
+        delta_g = std::clamp(128 + delta_g * 8, 0, 255);
+        delta_b = std::clamp(128 + delta_b * 8, 0, 255);
 
-      uint32_t new_pixel = RGBA_ALPHA;
-      new_pixel |= delta_r;
-      new_pixel |= (delta_g << 8);
-      new_pixel |= (delta_b << 16);
-      out->set_pixel_at(x, y, new_pixel);
+        uint32_t new_pixel = RGBA_ALPHA;
+        new_pixel |= delta_r;
+        new_pixel |= (delta_g << 8);
+        new_pixel |= (delta_b << 16);
+        out->set_pixel_at(x, y, new_pixel);
+      } else {
+        out->set_pixel_at(x, y, RGBA_RED | RGBA_ALPHA);
+        same = false;
+      }
     }
   }
   return same;
@@ -435,11 +512,67 @@ int DiffImages(const std::string& binary_name,
   return kStatusDifferent;
 }
 
+// Parses `str` as a whole into `value`, returning false if it contains
+// anything the conversion does not consume.
+bool ParseUnsigned(const std::string& str, unsigned int* value) {
+  int consumed = 0;
+  return UNSAFE_TODO(sscanf(str.c_str(), "%u%n", value, &consumed)) == 1 &&
+         static_cast<size_t>(consumed) == str.size();
+}
+
+bool ParseDouble(const std::string& str, double* value) {
+  int consumed = 0;
+  return UNSAFE_TODO(sscanf(str.c_str(), "%lf%n", value, &consumed)) == 1 &&
+         static_cast<size_t>(consumed) == str.size();
+}
+
+// Parses the limits in a "--fuzzy=<delta>,<mse>,<win_mse>" argument. Each
+// field may be omitted, leaving the corresponding limit unchanged. Returns
+// false if a field is present but malformed or out of range. Must agree with
+// the parsing that `testing/tools/pngdiffer.py` performs on the same flag.
+bool ParseFuzzyOption(const std::string& arg,
+                      uint8_t* max_pixel_per_channel_delta,
+                      double* max_mean_squared_error,
+                      double* max_window_mean_squared_error) {
+  const std::string value = arg.substr(strlen("--fuzzy="));
+  std::vector<std::string> fields;
+  for (size_t start = 0;;) {
+    size_t comma = value.find(',', start);
+    if (comma == std::string::npos) {
+      fields.push_back(value.substr(start));
+      break;
+    }
+    fields.push_back(value.substr(start, comma - start));
+    start = comma + 1;
+  }
+  if (fields.size() > 3) {
+    return false;
+  }
+
+  if (!fields[0].empty()) {
+    unsigned int delta = 0;
+    if (!ParseUnsigned(fields[0], &delta) || delta > 255) {
+      return false;
+    }
+    *max_pixel_per_channel_delta = static_cast<uint8_t>(delta);
+  }
+  if (fields.size() > 1 && !fields[1].empty() &&
+      !ParseDouble(fields[1], max_mean_squared_error)) {
+    return false;
+  }
+  if (fields.size() > 2 && !fields[2].empty() &&
+      !ParseDouble(fields[2], max_window_mean_squared_error)) {
+    return false;
+  }
+  return true;
+}
+
 int main(int argc, const char* argv[]) {
   bool histograms = false;
   bool produce_diff_image = false;
   bool produce_image_subtraction = false;
   bool reverse_byte_order = false;
+  bool report_metrics = false;
   uint8_t max_pixel_per_channel_delta = 0;
   double max_mean_squared_error = 0.0;
   int window_size = 0;
@@ -467,6 +600,8 @@ int main(int argc, const char* argv[]) {
       produce_image_subtraction = true;
     } else if (UNSAFE_TODO(strcmp(arg, "--reverse-byte-order")) == 0) {
       reverse_byte_order = true;
+    } else if (UNSAFE_TODO(strcmp(arg, "--metrics")) == 0) {
+      report_metrics = true;
     } else if (UNSAFE_TODO(strcmp(arg, "--fuzzy")) == 0) {
       max_pixel_per_channel_delta = kMaxFuzzyPixelDelta;
       max_mean_squared_error = kMaxFuzzyMeanSquaredError;
@@ -477,9 +612,14 @@ int main(int argc, const char* argv[]) {
       max_mean_squared_error = kMaxFuzzyMeanSquaredError;
       window_size = kMaxFuzzyWindowSize;
       max_window_mean_squared_error = kMaxFuzzyWindowMeanSquaredError;
-      UNSAFE_TODO(sscanf(arg, "--fuzzy=%hhu,%lf,%lf",
-                         &max_pixel_per_channel_delta, &max_mean_squared_error,
-                         &max_window_mean_squared_error));
+      const std::string fuzzy_arg = arg;
+      if (!ParseFuzzyOption(fuzzy_arg, &max_pixel_per_channel_delta,
+                            &max_mean_squared_error,
+                            &max_window_mean_squared_error)) {
+        fprintf(stderr, "%s: Invalid fuzzy option \"%s\"\n",
+                binary_name.c_str(), fuzzy_arg.c_str());
+        return kStatusError;
+      }
     }
   }
   if (i < argc) {
@@ -499,9 +639,9 @@ int main(int argc, const char* argv[]) {
     }
   } else if (!filename2.empty()) {
     return CompareImages(binary_name, filename1, filename2, histograms,
-                         reverse_byte_order, max_pixel_per_channel_delta,
-                         max_mean_squared_error, window_size,
-                         max_window_mean_squared_error);
+                         reverse_byte_order, report_metrics,
+                         max_pixel_per_channel_delta, max_mean_squared_error,
+                         window_size, max_window_mean_squared_error);
   }
 
   PrintHelp(binary_name);

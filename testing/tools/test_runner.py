@@ -800,7 +800,10 @@ class _TestCaseRunner:
         diff_log = []
         for diff in image_diffs:
           diff_map[diff.actual_path] = diff
-          diff_log.append(f'{os.path.basename(diff.actual_path)} vs. ')
+          if os.path.exists(diff.actual_path):
+            diff_log.append(f'{os.path.basename(diff.actual_path)} vs. ')
+          else:
+            diff_log.append('missing actual file vs. ')
           if diff.expected_path:
             diff_log.append(f'{os.path.basename(diff.expected_path)}\n')
           else:
