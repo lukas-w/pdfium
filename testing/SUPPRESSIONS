@@ -319,7 +319,7 @@ form_same.pdf mac * * agg * diff
 form_text_sign_url.pdf * * * * * diff
 format_combo_box.pdf mac * * agg * diff
 format_combo_box.pdf * nov8 * * * diff
-format_custom_format.pdf * nov8 * * * diff
+format_custom_format.pdf * nov8 * agg * diff
 format_custom_keystroke.pdf * * * * * diff
 format_date.pdf * nov8 * * * diff
 format_number.pdf mac * * agg * diff
@@ -842,7 +842,6 @@ xfermodes3.pdf * * * gdi * diff
 # JavaScript tests
 #
 bug_679642.in * * noxfa * * diff
-bug_679643.in * * noxfa * * diff
 bug_735912.in * * noxfa * * diff
 
 # xfa_specific
