@@ -34,7 +34,6 @@ class DiffMetrics:
   max_delta: int
   mse: float
   win_mse: float
-  c_result: str
 
   @property
   def dims_match(self):
@@ -154,21 +153,15 @@ class PNGDiffer:
         return True, None
       return False, (
           f'exceeds fuzzy: max_delta={metrics.max_delta} (max {delta}), '
-          f'mse={metrics.mse:.6f} (max {mse})')
+          f'mse={metrics.mse:.6f} (max {mse}), '
+          f'win_mse={metrics.win_mse:.6f} (max {win_mse})')
 
     return False, f'Unknown algorithm {algorithm}'
 
   def _RunImageCompareCommand(self, image_diff, image_matching_algorithm):
-    algorithm = image_matching_algorithm
-    extra_flags = []
-    if isinstance(image_matching_algorithm, (tuple, list)):
-      algorithm, extra_flags = image_matching_algorithm
-
     cmd = [self.pdfium_diff_path, '--metrics']
     if self.reverse_byte_order:
       cmd.append('--reverse-byte-order')
-    if algorithm == FUZZY_MATCHING:
-      cmd.extend(extra_flags)
     cmd.extend([image_diff.actual_path, image_diff.expected_path])
 
     # Failure to run the binary at all is fatal, and is left to propagate.
@@ -209,27 +202,12 @@ class PNGDiffer:
         total=int(kv['total']),
         max_delta=int(kv['max_delta']),
         mse=float(kv['mse']),
-        win_mse=float(kv['win_mse']),
-        c_result=kv['c_result'])
+        win_mse=float(kv['win_mse']))
     image_diff.metrics = metrics
-    c_pass = (metrics.c_result == 'PASS')
 
-    # Evaluate decision in Python.
-    python_pass, failure_reason = self.EvaluateMatch(metrics,
-                                                     image_matching_algorithm)
-
-    # SHADOW VALIDATION: Verify Python's decision matches C++'s decision!
-    assert python_pass == c_pass, (
-        f'Shadow check decision mismatch on {image_diff.actual_path} vs '
-        f'{image_diff.expected_path}!\n'
-        f'Python decision: {python_pass} (failure_reason: {failure_reason})\n'
-        f'C++ decision: {c_pass} (c_result={metrics.c_result})\n'
-        f'Metrics: {metrics}')
-
-    if python_pass:
-      return None
-
-    return failure_reason
+    matched, failure_reason = self.EvaluateMatch(metrics,
+                                                 image_matching_algorithm)
+    return None if matched else failure_reason
 
   def _RunImageDiffCommand(self, image_diff):
     # TODO(crbug.com/42270934): Diff mode ignores --reverse-byte-order.
