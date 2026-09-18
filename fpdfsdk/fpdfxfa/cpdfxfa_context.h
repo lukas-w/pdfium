@@ -19,6 +19,7 @@
 #include "core/fxcrt/unowned_ptr.h"
 #include "fpdfsdk/cpdfsdk_formfillenvironment.h"
 #include "fpdfsdk/fpdfxfa/cpdfxfa_page.h"
+#include "fxjs/cfx_isolate_wrapper.h"
 #include "fxjs/gc/heap.h"
 #include "v8/include/cppgc/persistent.h"
 #include "xfa/fxfa/cxfa_ffapp.h"
@@ -55,6 +56,7 @@ class CPDFXFA_Context final : public CPDF_Document::Extension,
   }
 
   CPDF_Document* GetPDFDoc() const { return pdfdoc_; }
+  v8::Isolate* GetIsolate() const { return isolate_.get(); }
   CFX_XMLDocument* GetXMLDoc() { return xml_.get(); }
   CXFA_FFDoc* GetXFADoc() { return xfadoc_; }
   CXFA_FFDocView* GetXFADocView() const { return xfadoc_view_.Get(); }
@@ -124,13 +126,18 @@ class CPDFXFA_Context final : public CPDF_Document::Extension,
   ObservedPtr<CPDFSDK_FormFillEnvironment> form_fill_env_;
   std::vector<RetainPtr<CPDFXFA_Page>> xfa_page_list_;
 
-  // Can't outlive |form_fill_env_|.
+  // Can't outlive `form_fill_env_`.
   std::unique_ptr<CPDFXFA_DocEnvironment> doc_env_;
 
+  // `gc_heap_` must outlive `isolate_`: destroying `isolate_` terminates its
+  // attached CppHeap and runs finalizers on any remaining XFA objects, which
+  // hold UnownedPtr<FXGC_Heap> back to `gc_heap_`. In standalone mode,
+  // `isolate_` is null and ~FXGC_Heap() collects before `gc_heap_` dies.
   FXGCScopedHeap gc_heap_;
-  cppgc::Persistent<CXFA_FFApp> xfaapp_;           // can't outlive |gc_heap_|
-  cppgc::Persistent<CXFA_FFDoc> xfadoc_;           // Can't outlive |gc_heap_|
-  cppgc::Persistent<CXFA_FFDocView> xfadoc_view_;  // Can't outlive |gc_heap_|
+  std::unique_ptr<v8::Isolate, CFX_V8IsolateDeleter> isolate_;
+  cppgc::Persistent<CXFA_FFApp> xfaapp_;           // can't outlive `gc_heap_`
+  cppgc::Persistent<CXFA_FFDoc> xfadoc_;           // Can't outlive `gc_heap_`
+  cppgc::Persistent<CXFA_FFDocView> xfadoc_view_;  // Can't outlive `gc_heap_`
 };
 
 #endif  // FPDFSDK_FPDFXFA_CPDFXFA_CONTEXT_H_

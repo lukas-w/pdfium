@@ -33,6 +33,7 @@
 #include "fxjs/ijs_runtime.h"
 
 #ifdef PDF_ENABLE_XFA
+#include "fpdfsdk/fpdfxfa/cpdfxfa_context.h"
 #include "fpdfsdk/fpdfxfa/cpdfxfa_widget.h"
 #endif
 
@@ -359,6 +360,17 @@ void CPDFSDK_FormFillEnvironment::SubmitForm(
       js_platform, const_cast<uint8_t*>(form_data.data()),
       fxcrt::CollectionSize<int>(form_data), AsFPDFWideString(&bsUrl));
 }
+
+#ifdef PDF_ENABLE_V8
+v8::Isolate* CPDFSDK_FormFillEnvironment::GetIsolate() const {
+#ifdef PDF_ENABLE_XFA
+  auto* context = static_cast<CPDFXFA_Context*>(GetDocExtension());
+  return context ? context->GetIsolate() : nullptr;
+#else
+  return nullptr;
+#endif  // PDF_ENABLE_XFA
+}
+#endif  // PDF_ENABLE_V8
 
 IJS_Runtime* CPDFSDK_FormFillEnvironment::GetIJSRuntime() {
   if (!ijs_runtime_) {

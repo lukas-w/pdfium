@@ -8,7 +8,7 @@
 #include <memory>
 #include <variant>
 
-#include "core/fxcrt/unowned_ptr.h"
+#include "core/fxcrt/unowned_ptr_exclusion.h"
 #include "v8/include/cppgc/allocation.h"
 
 namespace cppgc {
@@ -27,7 +27,7 @@ class Platform;
 class FXGC_Heap {
  public:
   explicit FXGC_Heap(std::unique_ptr<cppgc::Heap> heap);
-  explicit FXGC_Heap(v8::CppHeap* attached_heap);
+  explicit FXGC_Heap(v8::Isolate* isolate);
   FXGC_Heap(const FXGC_Heap&) = delete;
   FXGC_Heap& operator=(const FXGC_Heap&) = delete;
   ~FXGC_Heap();
@@ -40,13 +40,16 @@ class FXGC_Heap {
     return standalone ? standalone->get() : nullptr;
   }
   v8::CppHeap* GetAttachedHeap() const {
-    auto* attached = std::get_if<UnownedPtr<v8::CppHeap>>(&heap_);
-    return attached ? attached->get() : nullptr;
+    auto* attached = std::get_if<v8::CppHeap*>(&heap_);
+    return attached ? *attached : nullptr;
   }
+  v8::Isolate* GetIsolate() const { return isolate_; }
 
  private:
-  std::variant<std::unique_ptr<cppgc::Heap>, UnownedPtr<v8::CppHeap>> const
-      heap_;
+  // Non-owning pointers; outlived by this wrapper because GC objects finalized
+  // during isolate/heap teardown hold UnownedPtrs back to this FXGC_Heap.
+  std::variant<std::unique_ptr<cppgc::Heap>, v8::CppHeap*> const heap_;
+  UNOWNED_PTR_EXCLUSION v8::Isolate* const isolate_ = nullptr;
 };
 
 using FXGCScopedHeap = std::unique_ptr<FXGC_Heap>;

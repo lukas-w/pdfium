@@ -55,6 +55,7 @@ class CFXJS_PerIsolateData {
 
   static CFXJS_PerIsolateData* GetOrCreate(v8::Isolate* isolate);
   static CFXJS_PerIsolateData* Get(v8::Isolate* isolate);
+  static void Release(v8::Isolate* isolate);
 
   CFXJS_ObjDefinition* ObjDefinitionForID(uint32_t id) const;
   void InstallObjDefinitionForID(uint32_t id,

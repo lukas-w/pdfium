@@ -16,6 +16,7 @@
 #include "fxjs/cfx_v8_array_buffer_allocator.h"
 #include "fxjs/cjs_object.h"
 #include "fxjs/fxv8.h"
+#include "fxjs/ijs_runtime.h"
 #include "fxjs/xfa/cfxjse_runtimedata.h"
 #include "v8/include/v8-context.h"
 #include "v8/include/v8-exception.h"
@@ -369,6 +370,21 @@ CFXJS_PerIsolateData* CFXJS_PerIsolateData::Get(v8::Isolate* isolate) {
   return result;
 }
 
+// static
+void CFXJS_PerIsolateData::Release(v8::Isolate* isolate) {
+  if (!isolate) {
+    return;
+  }
+  auto* isolate_data = Get(isolate);
+  if (!isolate_data) {
+    return;
+  }
+  v8::Isolate::Scope isolate_scope(isolate);
+  v8::HandleScope handle_scope(isolate);
+  delete isolate_data;
+  isolate->SetData(g_embedderDataSlot, nullptr);
+}
+
 CFXJS_PerIsolateData::CFXJS_PerIsolateData(v8::Isolate* isolate)
     : tag_(kPerIsolateDataTag),
       dynamic_objs_map_(std::make_unique<V8TemplateMap>(isolate)) {}
@@ -601,6 +617,10 @@ void CFXJS_Engine::ReleaseEngine() {
   v8_context_.Reset();
 
   if (isolate_data->DecrementEngineRefCount() > 0) {
+    return;
+  }
+
+  if (IJS_Runtime::IsIsolatePerDocument()) {
     return;
   }
 

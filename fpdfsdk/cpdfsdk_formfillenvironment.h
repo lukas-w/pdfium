@@ -39,6 +39,12 @@ class IJS_Runtime;
 class IPDF_Page;
 struct CFFL_FieldAction;
 
+#ifdef PDF_ENABLE_V8
+namespace v8 {
+class Isolate;
+}  // namespace v8
+#endif  // PDF_ENABLE_V8
+
 // NOTE: |bsUTF16LE| must outlive the use of the result. Care must be taken
 // since modifying the result would impact |bsUTF16LE|.
 FPDF_WIDESTRING AsFPDFWideString(ByteString* bsUTF16LE);
@@ -113,6 +119,9 @@ class CPDFSDK_FormFillEnvironment final
   CPDF_Document::Extension* GetDocExtension() const {
     return cpdfdoc_->GetExtension();
   }
+#ifdef PDF_ENABLE_V8
+  v8::Isolate* GetIsolate() const;
+#endif  // PDF_ENABLE_V8
 
   bool IsJSPlatformPresent() const { return info_ && info_->m_pJsPlatform; }
   IPDF_JSPLATFORM* GetJSPlatform() const {

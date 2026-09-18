@@ -23,14 +23,19 @@
 #include "core/fxcrt/xml/cfx_xmldocument.h"
 #include "core/fxcrt/xml/cfx_xmlparser.h"
 #include "fpdfsdk/cpdfsdk_formfillenvironment.h"
+#include "fpdfsdk/cpdfsdk_helpers.h"
 #include "fpdfsdk/cpdfsdk_pageview.h"
 #include "fpdfsdk/fpdfxfa/cpdfxfa_docenvironment.h"
 #include "fpdfsdk/fpdfxfa/cpdfxfa_page.h"
 #include "fxbarcode/BC_Library.h"
+#include "fxjs/cfxjs_engine.h"
 #include "fxjs/cjs_runtime.h"
 #include "fxjs/ijs_runtime.h"
 #include "public/fpdf_formfill.h"
+#include "public/fpdfview.h"
 #include "v8/include/cppgc/allocation.h"
+#include "v8/include/v8-cppgc.h"
+#include "v8/include/v8-isolate.h"
 #include "xfa/fgas/font/cfgas_gemodule.h"
 #include "xfa/fxfa/cxfa_eventparam.h"
 #include "xfa/fxfa/cxfa_ffapp.h"
@@ -110,9 +115,20 @@ void CPDFXFA_ModuleDestroy() {
 
 CPDFXFA_Context::CPDFXFA_Context(CPDF_Document* pPDFDoc)
     : pdfdoc_(pPDFDoc),
-      doc_env_(std::make_unique<CPDFXFA_DocEnvironment>(this)),
-      gc_heap_(FXGC_CreateHeap(nullptr)) {
+      doc_env_(std::make_unique<CPDFXFA_DocEnvironment>(this)) {
   DCHECK(pdfdoc_);
+
+  if (IJS_Runtime::IsIsolatePerDocument()) {
+    v8::Isolate::CreateParams params;
+    params.array_buffer_allocator = static_cast<v8::ArrayBuffer::Allocator*>(
+        FPDF_GetArrayBufferAllocatorSharedInstance());
+    params.cpp_heap = FXGC_CreateCppHeap(nullptr).release();
+    isolate_.reset(v8::Isolate::New(params));
+    CFXJS_PerIsolateData::GetOrCreate(isolate_.get());
+    gc_heap_ = FXGC_CreateHeap(isolate_.get());
+  } else {
+    gc_heap_ = FXGC_CreateHeap(nullptr);
+  }
 
   // There might not be a heap when JS not initialized.
   if (gc_heap_) {
@@ -126,13 +142,21 @@ CPDFXFA_Context::~CPDFXFA_Context() {
   if (form_fill_env_) {
     form_fill_env_->ClearAllFocusedAnnots();
   }
+  if (xfadoc_ && xfadoc_->GetXFADoc()) {
+    xfadoc_->GetXFADoc()->ClearLayoutData();
+  }
 }
 
 void CPDFXFA_Context::SetFormFillEnv(
     CPDFSDK_FormFillEnvironment* pFormFillEnv) {
-  // The layout data can have pointers back into the script context. That
-  // context will be different if the form fill environment closes, so, force
-  // the layout data to clear.
+  // The layout data can have pointers back into the script context, which
+  // will be different if the form fill environment closes, so the XFA object
+  // graph must go. Clearing the layout data destroys that script context,
+  // whose cppgc::Persistent members otherwise root the very graph being
+  // discarded, leaving the collection below nothing to do. All of it has to
+  // happen here, while the outgoing environment and its CJS_Runtime are
+  // still alive for the finalizers to reach; waiting until context teardown
+  // comes far too late because the environment may be long gone by then.
   if (xfadoc_ && xfadoc_->GetXFADoc()) {
     xfadoc_->GetXFADoc()->ClearLayoutData();
     xfadoc_view_.Clear();
@@ -192,7 +216,12 @@ bool CPDFXFA_Context::LoadXFADoc() {
   xfadoc_view_ = xfadoc_->CreateDocView();
 
   if (xfadoc_view_->StartLayout() < 0) {
+    // Drop every root before collecting: the script context holds the graph
+    // alive, and the AutoNullers above do not fire until this function
+    // returns, so the collection would otherwise find nothing to do.
     xfadoc_->GetXFADoc()->ClearLayoutData();
+    xfadoc_view_.Clear();
+    xfadoc_.Clear();
     FXGC_ForceGarbageCollection(gc_heap_.get());
     FXSYS_SetLastError(FPDF_ERR_XFALAYOUT);
     return false;

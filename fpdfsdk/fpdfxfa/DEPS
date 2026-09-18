@@ -1,5 +1,6 @@
 include_rules = [
   '+fxjs',
   '+fxbarcode',
+  '+v8',
   '+xfa/fgas/font',
 ]

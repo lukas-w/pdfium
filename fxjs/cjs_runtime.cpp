@@ -46,25 +46,29 @@
 
 CJS_Runtime::CJS_Runtime(CPDFSDK_FormFillEnvironment* pFormFillEnv)
     : form_fill_env_(pFormFillEnv) {
-  v8::Isolate* pIsolate = nullptr;
-  IPDF_JSPLATFORM* pPlatform = form_fill_env_->GetJSPlatform();
-  if (pPlatform->version <= 2) {
-    // Backwards compatibility - JS now initialized earlier in more modern
-    // JSPLATFORM versions.
-    unsigned int embedderDataSlot = 0;
-    v8::Isolate* pExternalIsolate = nullptr;
-    if (pPlatform->version == 2) {
-      pExternalIsolate = static_cast<v8::Isolate*>(pPlatform->m_isolate);
-      embedderDataSlot = pPlatform->m_v8EmbedderSlot;
+  v8::Isolate* pIsolate = form_fill_env_->GetIsolate();
+  const bool isolate_from_env = pIsolate != nullptr;
+  if (!pIsolate) {
+    IPDF_JSPLATFORM* pPlatform = form_fill_env_->GetJSPlatform();
+    if (pPlatform->version <= 2) {
+      // Backwards compatibility - JS now initialized earlier in more modern
+      // JSPLATFORM versions.
+      unsigned int embedderDataSlot = 0;
+      v8::Isolate* pExternalIsolate = nullptr;
+      if (pPlatform->version == 2) {
+        pExternalIsolate = static_cast<v8::Isolate*>(pPlatform->m_isolate);
+        embedderDataSlot = pPlatform->m_v8EmbedderSlot;
+      }
+      FXJS_Initialize(embedderDataSlot, pExternalIsolate);
     }
-    FXJS_Initialize(embedderDataSlot, pExternalIsolate);
+    isolate_managed_ = FXJS_GetIsolate(&pIsolate);
   }
-  isolate_managed_ = FXJS_GetIsolate(&pIsolate);
   SetIsolate(pIsolate);
 
   v8::Isolate::Scope isolate_scope(pIsolate);
   v8::HandleScope handle_scope(pIsolate);
-  if (isolate_managed_ || FXJS_GlobalIsolateRefCount() == 0) {
+  if (isolate_managed_ || isolate_from_env ||
+      FXJS_GlobalIsolateRefCount() == 0) {
     DefineJSObjects();
   }
 

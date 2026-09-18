@@ -6,6 +6,7 @@
 
 #include "fxjs/cfx_isolate_wrapper.h"
 
+#include "fxjs/cfxjs_engine.h"
 #include "fxjs/fxv8.h"
 #include "v8/include/v8-isolate.h"
 
@@ -136,5 +137,8 @@ v8::Local<v8::Array> CFX_IsolateWrapper::ToArrayReentrant(
 }
 
 void CFX_V8IsolateDeleter::operator()(v8::Isolate* ptr) {
-  ptr->Dispose();
+  if (ptr) {
+    CFXJS_PerIsolateData::Release(ptr);
+    ptr->Dispose();
+  }
 }
