@@ -16,7 +16,7 @@ class JSEmbedderTest : public EmbedderTest {
   JSEmbedderTest();
   ~JSEmbedderTest() override;
 
-  v8::Isolate* isolate() const;
+  virtual v8::Isolate* isolate() const;
 };
 
 #endif  // TESTING_JS_EMBEDDER_TEST_H_

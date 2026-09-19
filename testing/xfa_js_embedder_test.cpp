@@ -23,6 +23,17 @@ XFAJSEmbedderTest::XFAJSEmbedderTest() = default;
 
 XFAJSEmbedderTest::~XFAJSEmbedderTest() = default;
 
+v8::Isolate* XFAJSEmbedderTest::isolate() const {
+  auto* doc = CPDFDocumentFromFPDFDocument(document());
+  if (doc) {
+    auto* context = static_cast<CPDFXFA_Context*>(doc->GetExtension());
+    if (context && context->GetIsolate()) {
+      return context->GetIsolate();
+    }
+  }
+  return JSEmbedderTest::isolate();
+}
+
 void XFAJSEmbedderTest::SetUp() {
   JSEmbedderTest::SetUp();
 }

@@ -21,6 +21,9 @@ class XFAJSEmbedderTest : public JSEmbedderTest {
   XFAJSEmbedderTest();
   ~XFAJSEmbedderTest() override;
 
+  // JSEmbedderTest:
+  v8::Isolate* isolate() const override;
+
   // EmbedderTest:
   void SetUp() override;
   void TearDown() override;
