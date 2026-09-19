@@ -103,6 +103,11 @@
 #include "v8/include/v8-snapshot.h"
 #endif  // PDF_ENABLE_V8
 
+#ifdef PDF_ENABLE_XFA
+#include "fpdfsdk/cpdfsdk_formfillenvironment.h"
+#include "fpdfsdk/cpdfsdk_helpers.h"
+#endif  // PDF_ENABLE_XFA
+
 #ifdef _WIN32
 #define access _access
 #define snprintf _snprintf
@@ -879,21 +884,22 @@ FPDF_BOOL NeedToPauseNow(IFSDK_PAUSE* p) {
 
 class Processor final {
  public:
-  Processor(const Options* options, const std::function<void()>* idler)
+  Processor(const Options* options,
+            const std::function<void(FPDF_FORMHANDLE)>* idler)
       : options_(options), idler_(idler) {
     DCHECK(options_);
     DCHECK(idler_);
   }
 
   const Options& options() const { return *options_; }
-  const std::function<void()>& idler() const { return *idler_; }
+  const std::function<void(FPDF_FORMHANDLE)>& idler() const { return *idler_; }
 
 #ifdef _WIN32
   ComFactory& com_factory() { return com_factory_; }
 #endif  // _WIN32
 
   // Invokes `idler()`.
-  void Idle() const { idler()(); }
+  void Idle(FPDF_FORMHANDLE form) const { idler()(form); }
 
   void ProcessPdf(const std::string& name,
                   pdfium::span<const uint8_t> data,
@@ -901,7 +907,7 @@ class Processor final {
 
  private:
   const Options* options_;
-  const std::function<void()>* idler_;
+  const std::function<void(FPDF_FORMHANDLE)>* idler_;
 
 #ifdef _WIN32
   ComFactory com_factory_;
@@ -935,7 +941,6 @@ class PdfProcessor final {
  private:
   // Per processor state.
   const Options& options() const { return processor_->options(); }
-  const std::function<void()>& idler() const { return processor_->idler(); }
 
 #ifdef _WIN32
   ComFactory& com_factory() { return processor_->com_factory(); }
@@ -947,8 +952,7 @@ class PdfProcessor final {
   FPDF_DOCUMENT doc() const { return doc_; }
   FPDF_FORMHANDLE form() const { return form_; }
 
-  // Invokes `idler()`.
-  void Idle() const { idler()(); }
+  void Idle() const { processor_->Idle(form_); }
 
   FPDF_PAGE GetPage(int page_index) const {
     return GetPageForIndex(form_fill_info_, doc_, page_index);
@@ -1474,8 +1478,10 @@ bool PdfProcessor::ProcessPage(const int page_index) {
     return false;
   }
 
+  const std::function<void()> page_idler = [this]() { Idle(); };
+
   if (options().send_events) {
-    SendPageEvents(form(), page, events(), idler());
+    SendPageEvents(form(), page, events(), page_idler);
   }
   if (options().save_images) {
     WriteImages(page, name().c_str(), page_index);
@@ -1601,7 +1607,7 @@ bool PdfProcessor::ProcessPage(const int page_index) {
 #ifdef _WIN32
   if (!renderer && options().use_renderer_type == RendererType::kGdi) {
     renderer = std::make_unique<GdiDisplayPageRenderer>(
-        page, /*width=*/width, /*height=*/height, /*flags=*/flags, idler(),
+        page, /*width=*/width, /*height=*/height, /*flags=*/flags, page_idler,
         std::move(writer));
   }
 #endif  // _WIN32
@@ -1619,11 +1625,11 @@ bool PdfProcessor::ProcessPage(const int page_index) {
     // Use a rasterizing page renderer by default.
     if (options().render_oneshot) {
       renderer = std::make_unique<OneShotBitmapPageRenderer>(
-          page, /*width=*/width, /*height=*/height, /*flags=*/flags, idler(),
+          page, /*width=*/width, /*height=*/height, /*flags=*/flags, page_idler,
           options().render_premultiplied_alpha, std::move(writer));
     } else {
       renderer = std::make_unique<ProgressiveBitmapPageRenderer>(
-          page, /*width=*/width, /*height=*/height, /*flags=*/flags, idler(),
+          page, /*width=*/width, /*height=*/height, /*flags=*/flags, page_idler,
           options().render_premultiplied_alpha, std::move(writer),
           options().forced_color ? &kColorScheme : nullptr);
     }
@@ -1816,12 +1822,12 @@ void Processor::ProcessPdf(const std::string& name,
       } else {
         ++bad_pages;
       }
-      Idle();
+      Idle(form.get());
     }
   }
 
   FORM_DoDocumentAAction(form.get(), FPDFDOC_AACTION_WC);
-  Idle();
+  Idle(form.get());
 
   fprintf(stderr, "Processed %d pages.\n", processed_pages);
   if (bad_pages) {
@@ -2014,7 +2020,7 @@ int main(int argc, const char* argv[]) {
   }
 
   FPDF_LIBRARY_CONFIG config;
-  config.version = 6;
+  config.version = 7;
   config.m_pUserFontPaths = nullptr;
   config.m_pIsolate = nullptr;
   config.m_v8EmbedderSlot = 0;
@@ -2025,6 +2031,12 @@ int main(int argc, const char* argv[]) {
 #else
   config.m_BrotliEnabled = false;
 #endif  // PDF_ENABLE_BROTLI
+#if defined(PDF_ENABLE_V8) && defined(PDF_ENABLE_XFA)
+  config.m_IsolatePerDocument =
+      !options.disable_javascript && !options.disable_xfa;
+#else
+  config.m_IsolatePerDocument = false;
+#endif
 
   switch (options.use_renderer_type) {
     case RendererType::kDefault:
@@ -2064,7 +2076,7 @@ int main(int argc, const char* argv[]) {
 #endif  // defined(BUILD_WITH_CHROMIUM)
 #endif  // defined(PDF_ENABLE_SKIA)
 
-  std::function<void()> idler = []() {};
+  std::function<void(FPDF_FORMHANDLE)> idler = [](FPDF_FORMHANDLE) {};
 #ifdef PDF_ENABLE_V8
 #ifdef V8_USE_EXTERNAL_STARTUP_DATA
   v8::StartupData snapshot;
@@ -2084,16 +2096,31 @@ int main(int argc, const char* argv[]) {
     }
     config.m_pPlatform = platform.get();
 
-    v8::Isolate::CreateParams params;
-    params.array_buffer_allocator = static_cast<v8::ArrayBuffer::Allocator*>(
-        FPDF_GetArrayBufferAllocatorSharedInstance());
-    isolate.reset(v8::Isolate::New(params));
-    config.m_pIsolate = isolate.get();
+    if (!config.m_IsolatePerDocument) {
+      v8::Isolate::CreateParams params;
+      params.array_buffer_allocator = static_cast<v8::ArrayBuffer::Allocator*>(
+          FPDF_GetArrayBufferAllocatorSharedInstance());
+      isolate.reset(v8::Isolate::New(params));
+      config.m_pIsolate = isolate.get();
+    }
 
-    idler = [&platform, &isolate]() {
-      v8::Isolate::Scope isolate_scope(isolate.get());
+    idler = [&platform, &isolate](FPDF_FORMHANDLE form) {
+      v8::Isolate* target_isolate = isolate.get();
+#ifdef PDF_ENABLE_XFA
+      if (!target_isolate && form) {
+        auto* form_fill_env =
+            CPDFSDKFormFillEnvironmentFromFPDFFormHandle(form);
+        if (form_fill_env) {
+          target_isolate = form_fill_env->GetIsolate();
+        }
+      }
+#endif  // PDF_ENABLE_XFA
+      if (!target_isolate) {
+        return;
+      }
+      v8::Isolate::Scope isolate_scope(target_isolate);
       int task_count = 0;
-      while (v8::platform::PumpMessageLoop(platform.get(), isolate.get())) {
+      while (v8::platform::PumpMessageLoop(platform.get(), target_isolate)) {
         ++task_count;
       }
       if (task_count) {
