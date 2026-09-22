@@ -70,13 +70,18 @@ class TestRunner:
   def HandleResult(self, test_case, test_result):
     input_filename = os.path.basename(test_case.input_path)
 
-    test_result.status = self._SuppressStatus(input_filename,
-                                              test_result.status)
-    if test_result.status == result_types.UNKNOWN:
+    unexpected_success = False
+    if self.IsResultSuppressed(input_filename) and test_result.IsSuppressible():
       self.result_suppressed_cases.append(input_filename)
-      self.surprises.append(test_case.input_path)
-    elif test_result.status == result_types.SKIP:
-      self.result_suppressed_cases.append(input_filename)
+      unexpected_success = test_result.IsPass()
+      if unexpected_success:
+        self.surprises.append(test_case.input_path)
+
+      # There is no status for ignored, so report both succeeded-but-ignored
+      # and failed-but-ignored as skipped. Anything else is recorded as an
+      # unexpected result, which turns the build red mid-run over a
+      # non-failure and pollutes the "abort" status used by real timeouts.
+      test_result.status = result_types.SKIP
     elif not test_result.IsPass():
       self.failures.append(test_case.input_path)
 
@@ -111,6 +116,9 @@ class TestRunner:
         only_artifacts = only.GetDiffArtifacts()
         if only.GetDiffReason():
           only_failure_reason += f': {only.GetDiffReason()}'
+      tags = None
+      if unexpected_success:
+        tags = [('pdfium_suppression', 'unexpected_success')]
       self.resultdb.Post(
           test_id=test_result.test_id,
           status=test_result.status,
@@ -118,7 +126,8 @@ class TestRunner:
           test_log=test_result.log,
           test_file=None,
           artifacts=only_artifacts,
-          failure_reason=only_failure_reason)
+          failure_reason=only_failure_reason,
+          tags=tags)
 
       # Milo only supports a single diff per test, so if we have multiple pages,
       # report each page as its own "test."
@@ -133,21 +142,6 @@ class TestRunner:
               test_file=None,
               artifacts=artifact.GetDiffArtifacts(),
               failure_reason=artifact.GetDiffReason())
-
-  def _SuppressStatus(self, input_filename, status):
-    if not self.IsResultSuppressed(input_filename):
-      return status
-
-    if status == result_types.PASS:
-      # There isn't an actual status for succeeded-but-ignored, so use the
-      # "abort" status to differentiate this from failed-but-ignored.
-      #
-      # Note that this appears as a preliminary failure in Gerrit.
-      return result_types.UNKNOWN
-
-    # There isn't an actual status for failed-but-ignored, so use the "skip"
-    # status to differentiate this from succeeded-but-ignored.
-    return result_types.SKIP
 
   def _SuppressArtifactStatus(self, test_result, status):
     if status != result_types.FAIL:
@@ -635,10 +629,12 @@ class _TestCaseRunner:
     if not test_result.IsPass():
       # On failure, report captured output to the test log.
       if stderr == subprocess.STDOUT:
-        test_result.log = run_result.stdout
+        log = run_result.stdout
       else:
-        test_result.log = run_result.stderr
-      test_result.log = test_result.log.decode(errors='backslashreplace')
+        log = run_result.stderr
+      # There is nothing captured on timeout, because `subprocess.run()` only
+      # kills and reaps the process before re-raising.
+      test_result.log = (log or b'').decode(errors='backslashreplace')
     return test_result
 
   def GenerateAndTest(self, test_function):
@@ -706,10 +702,13 @@ class _TestCaseRunner:
     if self.options.disable_javascript:
       return self._VerifyEmptyText(txt_path)
 
-    return self.RunCommand([
+    test_result = self.RunCommand([
         sys.executable, _per_process_state.text_diff_path, expected_txt_path,
         txt_path
     ])
+    # The differ does nothing but compare, so a plain failure is a mismatch.
+    test_result.comparison_failure = test_result.status == result_types.FAIL
+    return test_result
 
   def _VerifyEmptyText(self, txt_path):
     with open(txt_path, 'rb') as txt_file:
@@ -719,7 +718,8 @@ class _TestCaseRunner:
       return self.test_case.NewResult(
           result_types.FAIL,
           log=txt_data.decode(errors='backslashreplace'),
-          reason=f'{txt_path} should be empty')
+          reason=f'{txt_path} should be empty',
+          comparison_failure=True)
 
     return self.test_case.NewResult(result_types.PASS)
 
@@ -794,6 +794,7 @@ class _TestCaseRunner:
       if image_diffs:
         test_result.status = result_types.FAIL
         test_result.reason = 'Images differ'
+        test_result.comparison_failure = True
 
         # Merge image diffs into test result.
         diff_map = {}
@@ -817,6 +818,7 @@ class _TestCaseRunner:
       if not self.IsImageDiffSuppressed():
         test_result.status = result_types.FAIL
         test_result.reason = 'Missing expected images'
+        test_result.comparison_failure = True
 
     if not test_result.IsPass():
       self._RegenerateIfNeeded()
@@ -871,6 +873,9 @@ class TestResult:
     log: Optional log of the test's output.
     image_artfacts: Optional list of image artifacts.
     reason: Optional reason why the test failed.
+    comparison_failure: Whether the failure came from comparing output
+        against expectations, rather than from the test failing to run to
+        completion.
   """
   test_id: str
   status: str
@@ -878,10 +883,20 @@ class TestResult:
   log: str = None
   image_artifacts: list = field(default_factory=list)
   reason: str = None
+  comparison_failure: bool = False
 
   def IsPass(self):
     """Whether the test passed."""
     return self.status == result_types.PASS
+
+  def IsSuppressible(self):
+    """Whether a suppression is allowed to ignore this result.
+
+    Suppressions excuse output that does not match expectations. A crash,
+    a timeout or a missing result is a defect in its own right, and is
+    reported however far off the expectations are allowed to be.
+    """
+    return self.IsPass() or self.comparison_failure
 
 
 @dataclass

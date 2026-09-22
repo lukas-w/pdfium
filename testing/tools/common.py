@@ -47,7 +47,8 @@ def RunCommandPropagateErr(cmd,
     exit_status_on_error: If specified, upon an error in the subprocess the
         caller script exits immediately with the given status.
   """
-  p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+  p = subprocess.Popen(
+      cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
   output, err = p.communicate()
 
   if p.returncode:

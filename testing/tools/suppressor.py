@@ -46,7 +46,7 @@ _VALID_COLUMN_VALUES = {
 }
 
 # Legal keywords for the action in column 6.
-_VALID_ACTIONS = {'diff', 'blank', 'fuzzy'}
+_VALID_ACTIONS = {'diff', 'blank', 'fuzzy', 'skip'}
 
 
 def _ValidatePredicates(item):
@@ -75,6 +75,7 @@ class Suppressor:
     self.rendering_option = rendering_option
     self.font_engine = font_engine
     self.suppression_set = set()
+    self.execution_suppression_set = set()
     self.image_suppression_set = set()
     self.exact_matching_suppression_dict = {}
     self._LoadSuppressions(finder)
@@ -97,6 +98,8 @@ class Suppressor:
         filename = item[0]
         if keyword == 'diff':
           self.suppression_set.add(filename)
+        elif keyword == 'skip':
+          self.execution_suppression_set.add(filename)
         elif keyword == 'blank':
           self.image_suppression_set.add(filename)
         elif keyword == 'fuzzy':
@@ -139,7 +142,8 @@ class Suppressor:
     return False
 
   def IsExecutionSuppressed(self, input_filepath):
-    if "xfa_specific" in input_filepath and not self.has_xfa:
+    if (('xfa_specific' in input_filepath and not self.has_xfa) or
+        os.path.basename(input_filepath) in self.execution_suppression_set):
       print("%s execution is suppressed" % input_filepath)
       return True
     return False

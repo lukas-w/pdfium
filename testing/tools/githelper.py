@@ -46,6 +46,21 @@ class GitHelper:
     return RunCommandPropagateErr(['git', 'rev-parse', 'HEAD'],
                                   exit_status_on_error=1).strip()
 
+  def GetGerritIssue(self, branch=None):
+    """Returns the Gerrit issue number for the branch or current issue."""
+    if branch:
+      issue = RunCommandPropagateErr(
+          ['git', 'config', '--default', '', f'branch.{branch}.gerritissue'])
+      if issue and issue.strip():
+        return issue.strip()
+
+    output = RunCommandPropagateErr(['git', 'cl', 'issue'])
+    if output and 'Issue number:' in output:
+      issue = output.split('Issue number:')[1].split('(')[0].strip()
+      if issue and issue != 'None':
+        return issue
+    return None
+
   def IsCurrentBranchClean(self):
     output = RunCommandPropagateErr(['git', 'status', '--porcelain'],
                                     exit_status_on_error=1)

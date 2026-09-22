@@ -19,6 +19,12 @@
 #   blank - skip the image comparison entirely
 #   fuzzy - compare with a tolerance, either the defaults or the explicit
 #           fuzzy=<delta>,<mse>,<win_mse> (e.g. fuzzy=3,0.05,15.0)
+#   skip  - the test is expected to crash, so do not run it at all
+#
+# Apart from "skip", every action excuses mismatching output and nothing
+# else. A crash, an ASan report, a CHECK failure or a timeout is reported
+# as a failure no matter what is listed here, even when the test managed
+# to write output that matches.
 #
 # All columns on a line must match, but filenames may be repeated on subsequent
 # lines to suppress more cases.  Within each column, any one of the
