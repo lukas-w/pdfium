@@ -139,11 +139,15 @@ CPDFXFA_Context::CPDFXFA_Context(CPDF_Document* pPDFDoc)
 
 CPDFXFA_Context::~CPDFXFA_Context() {
   load_status_ = LoadStatus::kClosing;
-  if (form_fill_env_) {
-    form_fill_env_->ClearAllFocusedAnnots();
-  }
   if (xfadoc_ && xfadoc_->GetXFADoc()) {
     xfadoc_->GetXFADoc()->ClearLayoutData();
+    xfadoc_view_.Clear();
+    xfadoc_.Clear();
+    xfaapp_.Clear();
+    FXGC_ForceGarbageCollection(gc_heap_.get());
+  }
+  if (form_fill_env_) {
+    form_fill_env_->OnDetachFromDocument();
   }
 }
 
@@ -165,6 +169,10 @@ void CPDFXFA_Context::SetFormFillEnv(
     FXGC_ForceGarbageCollection(gc_heap_.get());
   }
   form_fill_env_.Reset(pFormFillEnv);
+  if (form_fill_env_ && gc_heap_ && !xfaapp_) {
+    xfaapp_ = cppgc::MakeGarbageCollected<CXFA_FFApp>(
+        gc_heap_->GetAllocationHandle(), this);
+  }
 }
 
 bool CPDFXFA_Context::LoadXFADoc() {

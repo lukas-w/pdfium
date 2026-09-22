@@ -58,6 +58,7 @@ class CFXJS_PerIsolateData {
   static void Release(v8::Isolate* isolate);
 
   CFXJS_ObjDefinition* ObjDefinitionForID(uint32_t id) const;
+  bool HasObjectDefinitions() const;
   void InstallObjDefinitionForID(uint32_t id,
                                  std::unique_ptr<CFXJS_ObjDefinition> defn);
   V8TemplateMap* GetDynamicObjsMap() { return dynamic_objs_map_.get(); }

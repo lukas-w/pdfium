@@ -67,8 +67,16 @@ CJS_Runtime::CJS_Runtime(CPDFSDK_FormFillEnvironment* pFormFillEnv)
 
   v8::Isolate::Scope isolate_scope(pIsolate);
   v8::HandleScope handle_scope(pIsolate);
-  if (isolate_managed_ || isolate_from_env ||
-      FXJS_GlobalIsolateRefCount() == 0) {
+  bool needs_define_js_objects;
+  if (isolate_from_env) {
+    auto* isolate_data = CFXJS_PerIsolateData::Get(pIsolate);
+    needs_define_js_objects =
+        !isolate_data || !isolate_data->HasObjectDefinitions();
+  } else {
+    needs_define_js_objects =
+        isolate_managed_ || FXJS_GlobalIsolateRefCount() == 0;
+  }
+  if (needs_define_js_objects) {
     DefineJSObjects();
   }
 

@@ -397,6 +397,10 @@ CFXJS_ObjDefinition* CFXJS_PerIsolateData::ObjDefinitionForID(
                                         : nullptr;
 }
 
+bool CFXJS_PerIsolateData::HasObjectDefinitions() const {
+  return !!object_defn_array_[1];
+}
+
 void CFXJS_PerIsolateData::InstallObjDefinitionForID(
     uint32_t id,
     std::unique_ptr<CFXJS_ObjDefinition> defn) {
@@ -444,6 +448,9 @@ void CFXJS_Engine::SetBinding(
 // static
 void CFXJS_Engine::FreePerObjectData(v8::Local<v8::Object> obj) {
   CFXJS_PerObjectData* data = CFXJS_PerObjectData::GetFromObject(obj);
+  if (!data) {
+    return;
+  }
   obj->SetAlignedPointerInInternalField(0, nullptr, fxv8::kPDFiumSentinelTag);
   obj->SetAlignedPointerInInternalField(1, nullptr,
                                         fxv8::kFXJSPerObjectDataTag);
@@ -603,7 +610,9 @@ void CFXJS_Engine::ReleaseEngine() {
     }
     v8::Local<v8::Object> obj;
     if (obj_defn->GetObjType() == FXJSOBJTYPE_GLOBAL) {
-      obj = context->Global();
+      if (GetObjDefnID(context->Global()) == i) {
+        obj = context->Global();
+      }
     } else if (!static_objects_[i].IsEmpty()) {
       obj = v8::Local<v8::Object>::New(GetIsolate(), static_objects_[i]);
       static_objects_[i].Reset();

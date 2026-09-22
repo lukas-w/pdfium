@@ -99,6 +99,7 @@ class CPDFSDK_FormFillEnvironment final
 
   bool KillFocusAnnot(Mask<FWL_EVENTFLAG> nFlags);
   void ClearAllFocusedAnnots();
+  void OnDetachFromDocument();
 
   int GetPageCount() const;
 
@@ -115,9 +116,9 @@ class CPDFSDK_FormFillEnvironment final
                     int zoomMode,
                     pdfium::span<float> fPosArray);
 
-  CPDF_Document* GetPDFDocument() const { return cpdfdoc_; }
+  CPDF_Document* GetPDFDocument() const { return cpdfdoc_.Get(); }
   CPDF_Document::Extension* GetDocExtension() const {
-    return cpdfdoc_->GetExtension();
+    return cpdfdoc_ ? cpdfdoc_->GetExtension() : nullptr;
   }
 #ifdef PDF_ENABLE_V8
   v8::Isolate* GetIsolate() const;
@@ -294,7 +295,7 @@ class CPDFSDK_FormFillEnvironment final
 
   std::unique_ptr<CPDFSDK_InteractiveForm> interactive_form_;
   ObservedPtr<CPDFSDK_Annot> focus_annot_;
-  UnownedPtr<CPDF_Document> const cpdfdoc_;
+  ObservedPtr<CPDF_Document> cpdfdoc_;
   std::unique_ptr<CFFL_InteractiveFormFiller> interactive_form_filler_;
   bool change_mask_ = false;
   bool being_destroyed_ = false;

@@ -13,8 +13,7 @@
 
 class CPDFXFAFormFillEnvEmbedderTest : public XFAJSEmbedderTest {};
 
-// TODO(crbug.com/563426171): Fix crash and re-enable.
-TEST_F(CPDFXFAFormFillEnvEmbedderTest, DISABLED_ReinitFormFillEnvironment) {
+TEST_F(CPDFXFAFormFillEnvEmbedderTest, ReinitFormFillEnvironment) {
   ASSERT_FALSE(IJS_Runtime::IsIsolatePerDocument());
 
   std::string file_path = PathService::GetTestFilePath("simple_xfa.pdf");
@@ -43,8 +42,7 @@ TEST_F(CPDFXFAFormFillEnvEmbedderTest, DISABLED_ReinitFormFillEnvironment) {
   EXPECT_TRUE(page);
 }
 
-// TODO(crbug.com/563426171): Fix crash and re-enable.
-TEST_F(CPDFXFAFormFillEnvEmbedderTest, DISABLED_CloseDocumentBeforeExit) {
+TEST_F(CPDFXFAFormFillEnvEmbedderTest, CloseDocumentBeforeExit) {
   ASSERT_FALSE(IJS_Runtime::IsIsolatePerDocument());
 
   std::string file_path = PathService::GetTestFilePath("simple_xfa.pdf");

@@ -76,11 +76,7 @@ CPDFSDK_FormFillEnvironment::CPDFSDK_FormFillEnvironment(
 
 CPDFSDK_FormFillEnvironment::~CPDFSDK_FormFillEnvironment() {
   being_destroyed_ = true;
-  ClearAllFocusedAnnots();
-
-  // |page_map_| will try to access |interactive_form_| when it cleans itself
-  // up. Make sure it is deleted before |interactive_form_|.
-  page_map_.clear();
+  OnDetachFromDocument();
 
   // Must destroy the |interactive_form_filler_| before the environment (|this|)
   // because any created form widgets hold a pointer to the environment.
@@ -141,7 +137,7 @@ CPDFSDK_PageView* CPDFSDK_FormFillEnvironment::GetCurrentView() {
 IPDF_Page* CPDFSDK_FormFillEnvironment::GetCurrentPage() const {
   if (info_ && info_->FFI_GetCurrentPage) {
     return IPDFPageFromFPDFPage(info_->FFI_GetCurrentPage(
-        info_, FPDFDocumentFromCPDFDocument(cpdfdoc_)));
+        info_, FPDFDocumentFromCPDFDocument(cpdfdoc_.Get())));
   }
   return nullptr;
 }
@@ -519,15 +515,15 @@ int CPDFSDK_FormFillEnvironment::GetCurrentPageIndex() const {
   if (!info_ || info_->version < 2 || !info_->FFI_GetCurrentPageIndex) {
     return -1;
   }
-  return info_->FFI_GetCurrentPageIndex(info_,
-                                        FPDFDocumentFromCPDFDocument(cpdfdoc_));
+  return info_->FFI_GetCurrentPageIndex(
+      info_, FPDFDocumentFromCPDFDocument(cpdfdoc_.Get()));
 }
 
 void CPDFSDK_FormFillEnvironment::SetCurrentPage(int iCurPage) {
   if (!info_ || info_->version < 2 || !info_->FFI_SetCurrentPage) {
     return;
   }
-  info_->FFI_SetCurrentPage(info_, FPDFDocumentFromCPDFDocument(cpdfdoc_),
+  info_->FFI_SetCurrentPage(info_, FPDFDocumentFromCPDFDocument(cpdfdoc_.Get()),
                             iCurPage);
 }
 
@@ -537,7 +533,7 @@ void CPDFSDK_FormFillEnvironment::GotoURL(const WideString& wsURL) {
   }
 
   ByteString bsTo = wsURL.ToUTF16LE();
-  info_->FFI_GotoURL(info_, FPDFDocumentFromCPDFDocument(cpdfdoc_),
+  info_->FFI_GotoURL(info_, FPDFDocumentFromCPDFDocument(cpdfdoc_.Get()),
                      AsFPDFWideString(&bsTo));
 }
 
@@ -671,6 +667,9 @@ void CPDFSDK_FormFillEnvironment::PageEvent(int iPageCount,
 #endif  // PDF_ENABLE_XFA
 
 void CPDFSDK_FormFillEnvironment::ClearAllFocusedAnnots() {
+  if (!cpdfdoc_) {
+    return;
+  }
   for (auto& it : page_map_) {
     if (it.second->IsValidSDKAnnot(GetFocusAnnot())) {
       ObservedPtr<CPDFSDK_PageView> pObserved(it.second.get());
@@ -680,6 +679,14 @@ void CPDFSDK_FormFillEnvironment::ClearAllFocusedAnnots() {
       }
     }
   }
+}
+
+void CPDFSDK_FormFillEnvironment::OnDetachFromDocument() {
+  ClearAllFocusedAnnots();
+  page_map_.clear();
+  interactive_form_.reset();
+  ijs_runtime_.reset();
+  cpdfdoc_.Reset();
 }
 
 CPDFSDK_PageView* CPDFSDK_FormFillEnvironment::GetOrCreatePageView(
@@ -714,7 +721,7 @@ CPDFSDK_PageView* CPDFSDK_FormFillEnvironment::GetPageViewAtIndex(int nIndex) {
 }
 
 void CPDFSDK_FormFillEnvironment::ProcJavascriptAction() {
-  auto name_tree = CPDF_NameTree::Create(cpdfdoc_, "JavaScript");
+  auto name_tree = CPDF_NameTree::Create(cpdfdoc_.Get(), "JavaScript");
   if (!name_tree) {
     return;
   }
@@ -788,7 +795,7 @@ IPDF_Page* CPDFSDK_FormFillEnvironment::GetPage(int nIndex) const {
     return nullptr;
   }
   return IPDFPageFromFPDFPage(info_->FFI_GetPage(
-      info_, FPDFDocumentFromCPDFDocument(cpdfdoc_), nIndex));
+      info_, FPDFDocumentFromCPDFDocument(cpdfdoc_.Get()), nIndex));
 }
 
 CPDFSDK_InteractiveForm* CPDFSDK_FormFillEnvironment::GetInteractiveForm() {
