@@ -11,7 +11,7 @@
 # Column 1: platform: *, win, mac, mac_arm, mac_x86, linux
 # Column 2: v8 support: *, nov8, v8
 # Column 3: xfa support: *, noxfa, xfa
-# Column 4: rendering support: *, agg, gdi, skia
+# Column 4: rendering support: *, agg, gdi, gdi_agg, gdi_skia, skia
 # Column 5: font engine: *, freetype, fontations
 # Column 6: action, one of:
 #   diff  - the output differs in a way that no tolerance can bridge, so
@@ -30,8 +30,9 @@
 # lines to suppress more cases.  Within each column, any one of the
 # comma-separated values must match in order for the column to "match".
 # The filenames and keywords are case-sensitive.
-# One exception is the column 1, where "mac" is a shorthand that matches either
-# "mac_arm" or "mac_x86".
+# One exception is column 1, where "mac" is a shorthand that matches either
+# "mac_arm" or "mac_x86". Similarly, "gdi" in column 4 is a shorthand that
+# matches either "gdi_agg" or "gdi_skia".
 #
 # Try to keep the file alphabetized within each category of test.
 
@@ -490,7 +491,7 @@ FRC_8.5_Screen_Img_D_Launch.pdf mac * * skia * fuzzy
 FRC_8.5_URI_IsMap.pdf * * * gdi * diff
 FRC_8.5_URI_IsMap.pdf * * * * * fuzzy
 FRC_8.5_URI_IsMap.pdf mac * * skia * fuzzy
-bug_691967.pdf * * * gdi * diff
+bug_691967.pdf * * * gdi_skia * diff
 bug_691967.pdf * * * * * fuzzy
 bug_691967.pdf mac * * skia * fuzzy
 bug_86459.pdf * * * gdi * diff
@@ -734,12 +735,12 @@ validate_alert_box.pdf * * * gdi * diff
 widget_javascript.pdf * * * gdi * diff
 
 # TODO(crbug.com/42271068): Remove after associated bug is fixed
-1_10_watermark.pdf * * * gdi * diff
+1_10_watermark.pdf * * * gdi_skia * diff
 1_10_watermark.pdf * * * skia * fuzzy
 1_matrix.pdf * * * gdi * diff
 2_color_tiling.pdf * * * gdi * diff
-2_shading_type_6_00.pdf * * * gdi * diff
-2_shading_type_6_001.pdf * * * gdi * diff
+2_shading_type_6_00.pdf * * * gdi_skia * diff
+2_shading_type_6_001.pdf * * * gdi_skia * diff
 2_uncolor_tiling.pdf * * * gdi * diff
 FRC_11_8.2.4_View_edit.pdf * * * gdi * diff
 FRC_11_8.2.4_View_edit.pdf * * * * * fuzzy
@@ -785,7 +786,7 @@ FRC_3_8.2.4_Type_8.6__edit_.pdf * * * * * fuzzy
 FRC_3_8.2.4_Type_8.6__edit_.pdf mac * * skia * fuzzy
 FRC_4.5.5_Pattern_shading.pdf * * * gdi * diff
 FRC_4.5.5_Pattern_shading.pdf mac * * skia * fuzzy
-FRC_4.5.5_Pattern_tiling.pdf * * * gdi * diff
+FRC_4.5.5_Pattern_tiling.pdf * * * gdi_skia * diff
 FRC_4_8.2.4_Schema_8.6__remove_all.pdf * * * gdi * diff
 FRC_4_8.2.4_Schema_8.6__remove_all.pdf * * * * * fuzzy
 FRC_4_8.2.4_Schema_8.6__remove_all.pdf mac * * skia * fuzzy
@@ -804,31 +805,31 @@ FRC_8_8.2.4_View_D.pdf mac * * skia * fuzzy
 FRC_9_8.2.4_View_T.pdf * * * gdi * diff
 FRC_9_8.2.4_View_T.pdf * * * * * fuzzy
 FRC_9_8.2.4_View_T.pdf mac * * skia * fuzzy
-annotation_circle_fill_opacity.pdf * * * gdi * diff
+annotation_circle_fill_opacity.pdf * * * gdi_skia * diff
 annotation_circle_fill_opacity.pdf mac * * skia * fuzzy
-annotation_square_fill_opacity.pdf * * * gdi * diff
+annotation_square_fill_opacity.pdf * * * gdi_skia * diff
 annotation_square_fill_opacity.pdf mac * * skia * fuzzy
-annotation_square_fill_opacity_dash.pdf * * * gdi * diff
+annotation_square_fill_opacity_dash.pdf * * * gdi_skia * diff
 annotation_square_fill_opacity_dash.pdf mac * * skia * fuzzy
 bug_0_length_line.pdf * * * gdi * diff
-bug_883026.pdf * * * gdi * diff
+bug_883026.pdf * * * gdi_skia * diff
 clipping_text.pdf * * * gdi * diff
-en_fqa.pdf * * * gdi * diff
-en_introduce.pdf * * * gdi * diff
+en_fqa.pdf * * * gdi_skia * diff
+en_introduce.pdf * * * gdi_skia * diff
 en_system.pdf * * * gdi * diff
 en_system.pdf mac * * skia * fuzzy
 example_012.pdf * * * gdi * diff
 gradient_many_stops.pdf * * * gdi * diff
 group_xobject.pdf * * * gdi * diff
-image_gif.pdf * * * gdi * diff
+image_gif.pdf * * * gdi_skia * diff
 image_gif.pdf mac * * skia * fuzzy
-image_ico.pdf * * * gdi * diff
-new_pdfsign1.pdf * * * gdi * diff
-new_pdfsign2.pdf * * * gdi * diff
-new_pdfsign3.pdf * * * gdi * diff
+image_ico.pdf * * * gdi_skia * diff
+new_pdfsign1.pdf * * * gdi_skia * diff
+new_pdfsign2.pdf * * * gdi_skia * diff
+new_pdfsign3.pdf * * * gdi_skia * diff
 new_pdfsign3.pdf * * * * * fuzzy
-new_pdfsign4.pdf * * * gdi * diff
-new_stamp3.pdf * * * gdi * diff
+new_pdfsign4.pdf * * * gdi_skia * diff
+new_stamp3.pdf * * * gdi_skia * diff
 new_stamp3.pdf * * * * * fuzzy
 new_stamp3.pdf mac * * skia * fuzzy
 path_10_jd.pdf * * * gdi * diff
@@ -836,10 +837,10 @@ path_5_pattern.pdf * * * gdi * diff
 path_7.pdf * * * gdi * diff
 path_9.pdf * * * gdi * diff
 transformation.pdf * * * gdi * diff
-transparent1.pdf * * * gdi * diff
-xfermodes.pdf * * * gdi * diff
+transparent1.pdf * * * gdi_skia * diff
+xfermodes.pdf * * * gdi_skia * diff
 xfermodes2.pdf * * * gdi * diff
-xfermodes3.pdf * * * gdi * diff
+xfermodes3.pdf * * * gdi_skia * diff
 
 #
 # JavaScript tests
@@ -1008,23 +1009,23 @@ xfa_tiff_packbits_image.in * * * gdi * diff
 bug_1015233.in * * * gdi * diff
 bug_1099446.in * * * gdi * diff
 bug_1161.in * * * gdi * diff
-bug_1236.in * * * gdi * diff
-bug_1288_1.in * * * gdi * diff
+bug_1236.in * * * gdi_skia * diff
+bug_1288_1.in * * * gdi_skia * diff
 bug_1330.in * * * gdi * diff
-bug_1395648.in * * * gdi * diff
-bug_1396266.in * * * gdi * diff
-bug_1430333.in * * * gdi * diff
+bug_1395648.in * * * gdi_skia * diff
+bug_1396266.in * * * gdi_skia * diff
+bug_1430333.in * * * gdi_skia * diff
 bug_1822.in * * * gdi * diff
-bug_1847.in * * * gdi * diff
-bug_1949.in * * * gdi * diff
-bug_1995.in * * * gdi * diff
+bug_1847.in * * * gdi_skia * diff
+bug_1949.in * * * gdi_skia * diff
+bug_1995.in * * * gdi_skia * diff
 bug_41153500.in * * * gdi * diff
 bug_42270979_1.in * * * gdi * diff
 bug_42270979_3.in * * * gdi * diff
 bug_632.in * * * gdi * diff
 bug_660850.in * * * gdi * diff
 long_dashed_line.in * * * gdi * diff
-matte.in * * * gdi * diff
+matte.in * * * gdi_skia * diff
 
 # TODO(crbug.com/361002664): Remove after associated bug is fixed
 smask_blend.in * * * gdi * diff

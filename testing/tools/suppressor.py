@@ -41,7 +41,7 @@ _VALID_COLUMN_VALUES = {
     1: {'*', 'win', 'mac', 'mac_arm', 'mac_x86', 'linux'},
     2: {'*', 'nov8', 'v8'},
     3: {'*', 'noxfa', 'xfa'},
-    4: {'*', 'agg', 'gdi', 'skia'},
+    4: {'*', 'agg', 'gdi', 'gdi_agg', 'gdi_skia', 'skia'},
     5: {'*', 'freetype', 'fontations'},
 }
 
@@ -72,7 +72,10 @@ class Suppressor:
                rendering_option, font_engine):
     self.has_v8 = not js_disabled and 'V8' in features
     self.has_xfa = not js_disabled and not xfa_disabled and 'XFA' in features
-    self.rendering_option = rendering_option
+    if rendering_option == 'gdi':
+      self.rendering_option = 'gdi_skia' if 'SKIA' in features else 'gdi_agg'
+    else:
+      self.rendering_option = rendering_option
     self.font_engine = font_engine
     self.suppression_set = set()
     self.execution_suppression_set = set()
@@ -121,6 +124,15 @@ class Suppressor:
       return f'{os_name}_{mac_platform}' in os_column
     return False
 
+  @staticmethod
+  def _MatchRenderer(rendering_option, rendering_option_column):
+    if ('*' in rendering_option_column or
+        rendering_option in rendering_option_column):
+      return True
+    if rendering_option.startswith('gdi_'):
+      return 'gdi' in rendering_option_column
+    return False
+
   def _MatchSuppression(self, item, os_name, mac_platform, js, xfa,
                         rendering_option, font_engine):
     os_column = item[1].split(",")
@@ -131,8 +143,8 @@ class Suppressor:
     return (Suppressor._MatchOs(os_name, mac_platform, os_column) and
             ('*' in js_column or js in js_column) and
             ('*' in xfa_column or xfa in xfa_column) and
-            ('*' in rendering_option_column or
-             rendering_option in rendering_option_column) and
+            Suppressor._MatchRenderer(rendering_option,
+                                      rendering_option_column) and
             ('*' in font_engine_column or font_engine in font_engine_column))
 
   def IsResultSuppressed(self, input_filename):
