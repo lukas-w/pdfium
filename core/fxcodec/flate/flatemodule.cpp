@@ -21,6 +21,7 @@
 #include "core/fxcrt/check.h"
 #include "core/fxcrt/data_vector.h"
 #include "core/fxcrt/fixed_size_data_vector.h"
+#include "core/fxcrt/fx_ceil_div.h"
 #include "core/fxcrt/fx_extension.h"
 #include "core/fxcrt/fx_safe_types.h"
 #include "core/fxcrt/notreached.h"
@@ -122,7 +123,7 @@ class CLZWDecoder {
   CLZWDecoder(pdfium::span<const uint8_t> src_span, bool early_change);
 
   bool Decode();
-  uint32_t GetSrcSize() const { return (src_bit_pos_ + 7) / 8; }
+  uint32_t GetSrcSize() const { return fxcrt::CeilDiv(src_bit_pos_, 8); }
   DataVector<uint8_t> TakeDestBuf() {
     dest_buf_.resize(dest_byte_pos_);
     return std::move(dest_buf_);
@@ -516,7 +517,8 @@ void FlatePredictorScanlineDecoder::GetNextLineWithPredictedPitch() {
     case PredictorType::kPng: {
       const uint32_t row_size =
           fxge::CalculatePitch8OrDie(bits_per_component_, colors_, columns_);
-      const uint32_t bytes_per_pixel = (bits_per_component_ * colors_ + 7) / 8;
+      const uint32_t bytes_per_pixel =
+          fxcrt::CeilDiv(bits_per_component_ * colors_, 8);
       FlateOutput(flate_.get(), predict_raw_);
       PngPredictLine(scanline_, predict_raw_, last_line_, row_size,
                      bytes_per_pixel);
@@ -547,7 +549,8 @@ void FlatePredictorScanlineDecoder::GetNextLineWithoutPredictedPitch() {
   }
   const uint32_t row_size =
       fxge::CalculatePitch8OrDie(bits_per_component_, colors_, columns_);
-  const uint32_t bytes_per_pixel = (bits_per_component_ * colors_ + 7) / 8;
+  const uint32_t bytes_per_pixel =
+      fxcrt::CeilDiv(bits_per_component_ * colors_, 8);
   switch (predictor_) {
     case PredictorType::kPng: {
       while (bytes_to_go) {

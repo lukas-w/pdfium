@@ -17,6 +17,7 @@
 #include "core/fxcrt/bytestring.h"
 #include "core/fxcrt/check_op.h"
 #include "core/fxcrt/compiler_specific.h"
+#include "core/fxcrt/fx_ceil_div.h"
 #include "core/fxcrt/fx_extension.h"
 #include "core/fxcrt/fx_memcpy_wrappers.h"
 #include "core/fxcrt/fx_memory.h"
@@ -95,8 +96,7 @@ ByteString GenerateType42FontDictionary(const ByteString& psname,
   CHECK_GT(glyphs_per_descendant_font, 0u);
 
   const size_t descendant_font_count =
-      (num_glyphs + glyphs_per_descendant_font - 1) /
-      glyphs_per_descendant_font;
+      fxcrt::CeilDiv(num_glyphs, glyphs_per_descendant_font);
 
   fxcrt::ostringstream output;
   for (size_t i = 0; i < descendant_font_count; ++i) {

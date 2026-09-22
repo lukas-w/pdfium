@@ -9,6 +9,7 @@
 #include "core/fpdfapi/page/cpdf_colorspace.h"
 #include "core/fxcodec/jpx/cjpx_decoder.h"
 #include "core/fxcrt/check_op.h"
+#include "core/fxcrt/fx_ceil_div.h"
 #include "core/fxcrt/notreached.h"
 #include "core/fxcrt/retain_ptr.h"
 #include "core/fxge/dib/fx_dib.h"
@@ -214,7 +215,7 @@ std::optional<JpxDecodeConversion> JpxDecodeConversion::Create(
     conversion.width_ = jpx_info.width;
   } else {
     conversion.format_ = FXDIB_Format::kBgr;
-    conversion.width_ = (jpx_info.width * jpx_info.channels + 2) / 3;
+    conversion.width_ = fxcrt::CeilDiv(jpx_info.width * jpx_info.channels, 3);
   }
 
   return conversion;

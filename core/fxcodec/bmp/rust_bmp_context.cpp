@@ -13,6 +13,7 @@
 #include "core/fxcodec/progressive_decoder_context_delegate.h"
 #include "core/fxcrt/byteorder.h"
 #include "core/fxcrt/check.h"
+#include "core/fxcrt/fx_ceil_div.h"
 #include "core/fxcrt/fx_safe_types.h"
 #include "core/fxcrt/span.h"
 #include "core/fxge/dib/fx_dib.h"
@@ -160,8 +161,7 @@ ProgressiveDecoderContext::Status RustBmpContext::ContinueDecode() {
 
   FX_SAFE_SIZE_T safe_row_bytes = width_;
   safe_row_bytes *= components_;
-  safe_row_bytes += 3;
-  safe_row_bytes /= 4;
+  safe_row_bytes = fxcrt::CeilDiv(safe_row_bytes, 4);
   safe_row_bytes *= 4;
   if (!safe_row_bytes.IsValid()) {
     return ProgressiveDecoderContext::Status::kError;

@@ -16,6 +16,7 @@
 #include "core/fxcrt/check.h"
 #include "core/fxcrt/check_op.h"
 #include "core/fxcrt/fx_2d_size.h"
+#include "core/fxcrt/fx_ceil_div.h"
 #include "core/fxcrt/fx_safe_types.h"
 #include "core/fxcrt/fx_system.h"
 #include "core/fxcrt/pauseindicator_iface.h"
@@ -323,8 +324,7 @@ bool CStretchEngine::StartStretchHorz() {
                          trans_method_ == TransformMethod::k1BppToManyBpp)) {
     // Eight pixels per source byte, so round up to whole source bytes.
     FX_SAFE_SIZE_T expanded_size = src_width_;
-    expanded_size += 7;
-    expanded_size /= 8;
+    expanded_size = fxcrt::CeilDiv(expanded_size, 8);
     expanded_size *= 8;
     expanded_row_ =
         FixedSizeDataVector<uint8_t>::TryUninit(expanded_size.ValueOrDie());

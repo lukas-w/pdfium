@@ -15,6 +15,7 @@
 #include "core/fpdfapi/parser/cpdf_stream_acc.h"
 #include "core/fxcrt/cfx_bitstream.h"
 #include "core/fxcrt/compiler_specific.h"
+#include "core/fxcrt/fx_ceil_div.h"
 #include "core/fxcrt/fx_memory_wrappers.h"
 #include "core/fxcrt/fx_safe_types.h"
 #include "third_party/abseil-cpp/absl/container/inlined_vector.h"
@@ -82,7 +83,7 @@ bool CPDF_SampledFunc::v_Init(const CPDF_Object* pObj, VisitedSet* pVisited) {
           encode_info_[i].sizes == 1 ? 1 : encode_info_[i].sizes - 1;
     }
   }
-  FX_SAFE_UINT32 nTotalSampleBytes = (nTotalSampleBits + 7) / 8;
+  FX_SAFE_UINT32 nTotalSampleBytes = fxcrt::CeilDiv(nTotalSampleBits, 8);
   if (!nTotalSampleBytes.IsValid() || nTotalSampleBytes.ValueOrDie() == 0) {
     return false;
   }

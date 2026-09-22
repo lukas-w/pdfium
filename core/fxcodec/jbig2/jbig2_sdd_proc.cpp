@@ -20,6 +20,7 @@
 #include "core/fxcodec/jbig2/jbig2_huffman_table.h"
 #include "core/fxcodec/jbig2/jbig2_symbol_dict.h"
 #include "core/fxcodec/jbig2/jbig2_trd_proc.h"
+#include "core/fxcrt/fx_ceil_div.h"
 #include "core/fxcrt/fx_ceil_log2.h"
 #include "core/fxcrt/fx_safe_types.h"
 #include "core/fxcrt/span_util.h"
@@ -413,9 +414,7 @@ std::unique_ptr<CJBig2_SymbolDict> CJBig2_SDDProc::DecodeHuffman(
           return nullptr;
         }
 
-        // OK to not use FX_SAFE_UINT32 to calculate `stride` because
-        // `kJBig2MaxImageSize` is limiting the size.
-        const uint32_t stride = (TOTWIDTH + 7) / 8;
+        const uint32_t stride = fxcrt::CeilDiv(TOTWIDTH, 8);
         FX_SAFE_UINT32 safe_image_size = stride;
         safe_image_size *= HCHEIGHT;
         if (!safe_image_size.IsValid() ||

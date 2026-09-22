@@ -17,6 +17,7 @@
 #include "core/fxcrt/check.h"
 #include "core/fxcrt/check_op.h"
 #include "core/fxcrt/fx_2d_size.h"
+#include "core/fxcrt/fx_ceil_div.h"
 #include "core/fxcrt/fx_coordinates.h"
 #include "core/fxcrt/fx_safe_types.h"
 #include "core/fxcrt/notreached.h"
@@ -39,7 +40,7 @@ uint32_t BitIndexToAlignedUint32(uint32_t index) {
 }
 
 size_t GetMiddleElementCount(int xd0, int xd1) {
-  return pdfium::checked_cast<size_t>((xd1 / 32) - ((xd0 + 31) / 32));
+  return pdfium::checked_cast<size_t>((xd1 / 32) - fxcrt::CeilDiv(xd0, 32));
 }
 
 uint32_t DoCompose(JBig2ComposeOp op, uint32_t val1, uint32_t val2) {

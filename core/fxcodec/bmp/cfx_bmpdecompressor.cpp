@@ -19,6 +19,7 @@
 #include "core/fxcrt/byteorder.h"
 #include "core/fxcrt/compiler_specific.h"
 #include "core/fxcrt/data_vector.h"
+#include "core/fxcrt/fx_ceil_div.h"
 #include "core/fxcrt/fx_safe_types.h"
 #include "core/fxcrt/numerics/safe_math.h"
 #include "core/fxcrt/span_util.h"
@@ -51,8 +52,7 @@ constexpr uint32_t kBmpBitfields = 3L;
 constexpr uint32_t kBmpMaxImageDimension = 65535;
 
 uint8_t HalfRoundUp(uint8_t value) {
-  uint16_t value16 = value;
-  return static_cast<uint8_t>((value16 + 1) / 2);
+  return fxcrt::CeilDiv(value, 2);
 }
 
 }  // namespace

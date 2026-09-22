@@ -12,6 +12,7 @@
 #include "core/fxcodec/jpeg/rust_jpeg_ffi.rs.h"
 #include "core/fxcrt/check.h"
 #include "core/fxcrt/check_op.h"
+#include "core/fxcrt/fx_ceil_div.h"
 #include "core/fxcrt/fx_safe_types.h"
 #include "core/fxcrt/span_util.h"
 
@@ -35,7 +36,7 @@ pdfium::span<const uint8_t> JpegScanSOI(pdfium::span<const uint8_t> src_span) {
 }
 
 uint32_t ScaledJpegSize(uint32_t dim, uint32_t scale_denom) {
-  return (dim + scale_denom - 1) / scale_denom;
+  return fxcrt::CeilDiv(dim, scale_denom);
 }
 
 bool IsSofSegment(pdfium::span<const uint8_t> src_span, size_t marker_offset) {
@@ -202,9 +203,7 @@ uint32_t RustJpegScanlineDecoder::GetSrcOffset() {
 void RustJpegScanlineDecoder::CalcPitch() {
   DCHECK_GT(output_width_, 0);
   pitch_ = static_cast<uint32_t>(output_width_) * comps_;
-  pitch_ += 3;
-  pitch_ /= 4;
-  pitch_ *= 4;
+  pitch_ = fxcrt::CeilDiv(pitch_, 4) * 4;
 }
 
 // static

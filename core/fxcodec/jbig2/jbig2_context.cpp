@@ -24,6 +24,7 @@
 #include "core/fxcodec/jbig2/jbig2_trd_proc.h"
 #include "core/fxcrt/check_op.h"
 #include "core/fxcrt/fixed_size_data_vector.h"
+#include "core/fxcrt/fx_ceil_div.h"
 #include "core/fxcrt/fx_ceil_log2.h"
 #include "core/fxcrt/fx_memory_wrappers.h"
 #include "core/fxcrt/fx_safe_types.h"
@@ -240,7 +241,7 @@ JBig2_Result CJBig2_Context::ParseSegmentHeader(CJBig2_Segment* pSegment) {
     }
 
     int number_of_bits_to_skip = 1 + pSegment->referred_to_segment_count_;
-    stream_->addOffset((number_of_bits_to_skip + 7) / 8);
+    stream_->addOffset(fxcrt::CeilDiv(number_of_bits_to_skip, 8));
   } else {
     if (stream_->read1Byte(&cTemp) != 0) {
       return JBig2_Result::kFailure;

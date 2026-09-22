@@ -4,6 +4,7 @@
 
 #include "core/fxge/calculate_pitch.h"
 
+#include "core/fxcrt/fx_ceil_div.h"
 #include "core/fxcrt/fx_safe_types.h"
 #include "core/fxge/dib/fx_dib.h"
 
@@ -16,17 +17,14 @@ FX_SAFE_UINT32 CalculatePitch8Safely(uint32_t bpc,
   FX_SAFE_UINT32 pitch = bpc;
   pitch *= components;
   pitch *= width;
-  pitch += 7;
-  pitch /= 8;
-  return pitch;
+  return fxcrt::CeilDiv(pitch, 8);
 }
 
 FX_SAFE_UINT32 CalculatePitch32Safely(int bpp, int width) {
   FX_SAFE_UINT32 pitch = bpp;
   pitch *= width;
-  pitch += 31;
-  pitch /= 32;  // quantized to number of 32-bit words.
-  pitch *= 4;   // and then back to bytes, (not just /8 in one step).
+  pitch = fxcrt::CeilDiv(pitch, 32);  // quantized to 32-bit word count.
+  pitch *= 4;  // and then back to bytes, (not just /8 in one step).
   return pitch;
 }
 

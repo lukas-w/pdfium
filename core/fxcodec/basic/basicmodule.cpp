@@ -13,6 +13,7 @@
 #include "core/fxcrt/byteorder.h"
 #include "core/fxcrt/check_op.h"
 #include "core/fxcrt/data_vector.h"
+#include "core/fxcrt/fx_ceil_div.h"
 #include "core/fxcrt/fx_safe_types.h"
 #include "core/fxcrt/numerics/safe_conversions.h"
 #include "core/fxcrt/raw_span.h"
@@ -100,15 +101,14 @@ bool RLScanlineDecoder::Create(pdfium::span<const uint8_t> src_buf,
   FX_SAFE_UINT32 pitch = width;
   pitch *= nComps;
   pitch *= bpc;
-  pitch += 31;
-  pitch /= 32;
+  pitch = fxcrt::CeilDiv(pitch, 32);
   pitch *= 4;
   if (!pitch.IsValid()) {
     return false;
   }
   pitch_ = pitch.ValueOrDie();
   // Overflow should already have been checked before this is called.
-  line_bytes_ = (static_cast<uint32_t>(width) * nComps * bpc + 7) / 8;
+  line_bytes_ = fxcrt::CeilDiv(static_cast<uint32_t>(width) * nComps * bpc, 8);
   scanline_.resize(pitch_);
   return CheckDestSize();
 }
@@ -242,8 +242,7 @@ DataVector<uint8_t> BasicModule::RunLengthEncode(
   // 4 output chars for every 3 input, plus up to 4 more for the 1-2 chars
   // rounded off plus the terminating character.
   FX_SAFE_SIZE_T estimated_size = src_span.size();
-  estimated_size += 2;
-  estimated_size /= 3;
+  estimated_size = fxcrt::CeilDiv(estimated_size, 3);
   estimated_size *= 4;
   estimated_size += 1;
   DataVector<uint8_t> result(estimated_size.ValueOrDie());

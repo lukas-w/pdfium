@@ -8,8 +8,10 @@
 
 #include <algorithm>
 #include <optional>
+#include <utility>
 
 #include "core/fxcrt/fx_2d_size.h"
+#include "core/fxcrt/fx_ceil_div.h"
 #include "core/fxcrt/fx_extension.h"
 #include "core/fxcrt/notreached.h"
 #include "core/fxcrt/numerics/safe_conversions.h"
@@ -63,7 +65,8 @@ std::optional<DataVector<uint8_t>> PngPredictor(
   pdfium::span<const uint8_t> remaining_src_span = src_span;
   pdfium::span<uint8_t> remaining_dest_span = pdfium::span(dest_buf);
   pdfium::span<uint8_t> prev_dest_span;
-  const uint32_t bytes_per_pixel = (colors * bits_per_component + 7) / 8;
+  const uint32_t bytes_per_pixel =
+      fxcrt::CeilDiv(colors * bits_per_component, 8);
   for (size_t row = 0; row < row_count; row++) {
     const size_t remaining_row_size =
         std::min<size_t>(row_size, remaining_src_span.size() - 1);

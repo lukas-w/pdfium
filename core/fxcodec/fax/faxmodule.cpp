@@ -24,6 +24,7 @@
 #include "core/fxcrt/compiler_specific.h"
 #include "core/fxcrt/data_vector.h"
 #include "core/fxcrt/fx_2d_size.h"
+#include "core/fxcrt/fx_ceil_div.h"
 #include "core/fxcrt/fx_memory.h"
 #include "core/fxcrt/numerics/safe_conversions.h"
 #include "core/fxcrt/raw_span.h"
@@ -65,7 +66,7 @@ int FindBit(pdfium::span<const uint8_t> data_buf,
     start_pos += 7;
   }
 
-  const int max_byte = (max_pos + 7) / 8;
+  const int max_byte = fxcrt::CeilDiv(max_pos, 8);
   int byte_pos = start_pos / 8;
 
   const uint32_t word_xor = bit ? 0x00000000 : 0xffffffff;
@@ -664,7 +665,7 @@ pdfium::span<uint8_t> FaxDecoder::GetNextLine() {
 
 uint32_t FaxDecoder::GetSrcOffset() {
   return pdfium::checked_cast<uint32_t>(
-      std::min<size_t>((bitpos_ + 7) / 8, src_span_.size()));
+      std::min<size_t>(fxcrt::CeilDiv(bitpos_, 8), src_span_.size()));
 }
 
 void FaxDecoder::InvertBuffer() {

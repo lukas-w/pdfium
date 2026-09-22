@@ -16,6 +16,7 @@
 #include "core/fpdfapi/font/cpdf_fontglobals.h"
 #include "core/fpdfapi/parser/cpdf_simple_parser.h"
 #include "core/fxcrt/check.h"
+#include "core/fxcrt/fx_ceil_div.h"
 #include "core/fxcrt/notreached.h"
 
 namespace {
@@ -421,7 +422,7 @@ size_t CPDF_CMap::CountChar(ByteStringView pString) const {
     case OneByte:
       return pString.GetLength();
     case TwoBytes:
-      return (pString.GetLength() + 1) / 2;
+      return fxcrt::CeilDiv(pString.GetLength(), 2);
     case MixedTwoBytes: {
       size_t count = 0;
       for (size_t i = 0; i < pString.GetLength(); i++) {

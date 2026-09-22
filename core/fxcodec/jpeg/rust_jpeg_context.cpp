@@ -12,6 +12,7 @@
 #include "core/fxcrt/check.h"
 #include "core/fxcrt/check_op.h"
 #include "core/fxcrt/data_vector.h"
+#include "core/fxcrt/fx_ceil_div.h"
 #include "core/fxcrt/fx_safe_types.h"
 #include "core/fxcrt/span.h"
 #include "core/fxge/dib/cfx_dibitmap.h"
@@ -92,8 +93,7 @@ bool RustJpegContext::ProcessData() {
 
   FX_SAFE_SIZE_T row_bytes = width_;
   row_bytes *= num_components_;
-  row_bytes += 3;
-  row_bytes /= 4;
+  row_bytes = fxcrt::CeilDiv(row_bytes, 4);
   row_bytes *= 4;
   if (!row_bytes.IsValid()) {
     state_ = State::kError;

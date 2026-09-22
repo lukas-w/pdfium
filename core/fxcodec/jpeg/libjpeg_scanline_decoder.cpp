@@ -16,6 +16,7 @@
 #include "core/fxcrt/check_op.h"
 #include "core/fxcrt/compiler_specific.h"
 #include "core/fxcrt/data_vector.h"
+#include "core/fxcrt/fx_ceil_div.h"
 #include "core/fxcrt/fx_safe_types.h"
 #include "core/fxcrt/raw_span.h"
 
@@ -43,7 +44,7 @@ pdfium::span<const uint8_t> JpegScanSOI(pdfium::span<const uint8_t> src_span) {
 // power-of-two scalings (scale_denom of 1, 2, 4, 8), which reduce to
 // ceil(dim / scale_denom).
 uint32_t ScaledJpegSize(uint32_t dim, uint32_t scale_denom) {
-  return (dim + scale_denom - 1) / scale_denom;
+  return fxcrt::CeilDiv(dim, scale_denom);
 }
 
 }  // namespace
@@ -277,9 +278,7 @@ void LibjpegScanlineDecoder::CalcPitch() {
   // `InitDecode()`.
   DCHECK_GT(output_width_, 0);
   pitch_ = static_cast<uint32_t>(output_width_) * common_.cinfo.num_components;
-  pitch_ += 3;
-  pitch_ /= 4;
-  pitch_ *= 4;
+  pitch_ = fxcrt::CeilDiv(pitch_, 4) * 4;
 }
 
 void LibjpegScanlineDecoder::InitDecompressSrc() {

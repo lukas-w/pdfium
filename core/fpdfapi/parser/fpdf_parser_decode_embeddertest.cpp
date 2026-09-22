@@ -24,12 +24,14 @@ TEST_F(FPDFParserDecodeEmbedderTest, Bug552046) {
 
 TEST_F(FPDFParserDecodeEmbedderTest, Bug555784) {
   // Tests bad input to the run length decoder that caused a heap overflow.
-  // Should not cause a crash when rendered.
+  // Should not cause a crash when rendered. The image is 81915 pixels wide
+  // with 3277 DeviceN components at 16 bits each, which is a valid but
+  // enourmous pitch, so its one scanline does get decoded and drawn.
   ASSERT_TRUE(OpenDocument("bug_555784.pdf"));
   ScopedPage page = LoadScopedPage(0);
   ASSERT_TRUE(page);
   ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-  CompareBitmap(bitmap.get(), pdfium::kBlankPage612By792Png);
+  CompareBitmap(bitmap.get(), "bug_555784");
 }
 
 TEST_F(FPDFParserDecodeEmbedderTest, Bug455199) {
