@@ -32,6 +32,7 @@ class EmbedderTestEnvironment : public testing::Environment {
   void AddFlags(int argc, char** argv);
 
   bool write_pngs() const { return write_pngs_; }
+  bool fontations() const { return fontations_; }
 
  private:
   void AddFlag(const std::string& flag);

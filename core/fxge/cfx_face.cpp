@@ -9,6 +9,7 @@
 #include <cmath>
 #include <limits>
 #include <memory>
+#include <optional>
 #include <utility>
 #include <vector>
 
@@ -45,6 +46,7 @@
 
 #if defined(PDF_ENABLE_FONTATIONS)
 #include "core/fxge/skrifa/src/main.rs.h"
+#include "third_party/abseil-cpp/absl/cleanup/cleanup.h"
 #include "third_party/rust/cxx/v1/cxx.h"
 #endif
 
@@ -165,6 +167,180 @@ int Outline_CubicTo(const FT_Vector* control1,
   param->cur_y_ = to->y;
   return 0;
 }
+
+#if defined(PDF_ENABLE_FONTATIONS)
+constexpr float kFixedPpem = 64.0f;
+
+CFX_PointF ToCFXPointF(const skrifa::Point& pt) {
+  return CFX_PointF(pt.x, pt.y);
+}
+
+std::unique_ptr<CFX_Path> ConvertOutline(const skrifa::Outline& outline) {
+  if (outline.verbs.empty() || outline.points.empty()) {
+    return nullptr;
+  }
+  auto skrifa_path = std::make_unique<CFX_Path>();
+  size_t point_idx = 0;
+  CFX_PointF current_point(0, 0);
+  for (auto verb : outline.verbs) {
+    switch (verb) {
+      case skrifa::PathVerb::MoveTo: {
+        if (point_idx >= outline.points.size()) {
+          return nullptr;
+        }
+        current_point = ToCFXPointF(outline.points[point_idx++]);
+        skrifa_path->AppendPoint(current_point, CFX_Path::Point::Type::kMove);
+        break;
+      }
+      case skrifa::PathVerb::LineTo: {
+        if (point_idx >= outline.points.size()) {
+          return nullptr;
+        }
+        current_point = ToCFXPointF(outline.points[point_idx++]);
+        skrifa_path->AppendPoint(current_point, CFX_Path::Point::Type::kLine);
+        break;
+      }
+      case skrifa::PathVerb::QuadTo: {
+        if (point_idx + 1 >= outline.points.size()) {
+          return nullptr;
+        }
+        CFX_PointF c0 = ToCFXPointF(outline.points[point_idx++]);
+        skrifa_path->AppendPoint(
+            CFX_PointF(current_point.x + (c0.x - current_point.x) * 2 / 3,
+                       current_point.y + (c0.y - current_point.y) * 2 / 3),
+            CFX_Path::Point::Type::kBezier);
+        current_point = ToCFXPointF(outline.points[point_idx++]);
+        skrifa_path->AppendPoint(
+            CFX_PointF(c0.x + (current_point.x - c0.x) / 3,
+                       c0.y + (current_point.y - c0.y) / 3),
+            CFX_Path::Point::Type::kBezier);
+        skrifa_path->AppendPoint(current_point, CFX_Path::Point::Type::kBezier);
+        break;
+      }
+      case skrifa::PathVerb::CurveTo: {
+        if (point_idx + 2 >= outline.points.size()) {
+          return nullptr;
+        }
+        CFX_PointF c0 = ToCFXPointF(outline.points[point_idx++]);
+        CFX_PointF c1 = ToCFXPointF(outline.points[point_idx++]);
+        current_point = ToCFXPointF(outline.points[point_idx++]);
+        skrifa_path->AppendPoint(c0, CFX_Path::Point::Type::kBezier);
+        skrifa_path->AppendPoint(c1, CFX_Path::Point::Type::kBezier);
+        skrifa_path->AppendPoint(current_point, CFX_Path::Point::Type::kBezier);
+        break;
+      }
+      case skrifa::PathVerb::Close:
+        skrifa_path->ClosePath();
+        break;
+    }
+  }
+  return skrifa_path;
+}
+
+// Backing store for an FT_Outline built from a skrifa outline. FreeType does
+// not take ownership of these, so they must outlive the FT_Outline itself.
+struct FtOutlineData {
+  std::vector<FT_Vector> points;
+  std::vector<uint8_t> tags;
+  std::vector<uint16_t> contours;
+};
+
+bool AppendFtPoint(FtOutlineData& data,
+                   const skrifa::Point& point,
+                   uint8_t tag) {
+  float sx = std::round(point.x * kFixedPpem);
+  float sy = std::round(point.y * kFixedPpem);
+  if (!std::isfinite(sx) || !std::isfinite(sy) ||
+      !pdfium::IsValueInRangeForNumericType<FT_Pos>(sx) ||
+      !pdfium::IsValueInRangeForNumericType<FT_Pos>(sy)) {
+    return false;
+  }
+  data.points.push_back({static_cast<FT_Pos>(sx), static_cast<FT_Pos>(sy)});
+  data.tags.push_back(tag);
+  return true;
+}
+
+// Converts `outline`, whose points are in pixels, into the 26.6 fixed point
+// form that FreeType's rasterizer expects. Returns nullopt if `outline` is
+// empty, is malformed, or does not fit within FreeType's 16-bit counts.
+std::optional<FtOutlineData> BuildFtOutline(const skrifa::Outline& outline) {
+  // FT_Outline::n_points and n_contours are signed 16-bit quantities.
+  static constexpr size_t kMaxPoints = std::numeric_limits<int16_t>::max();
+
+  FtOutlineData data;
+  auto end_contour = [&data] {
+    if (data.points.empty()) {
+      return;
+    }
+    const uint16_t last =
+        pdfium::checked_cast<uint16_t>(data.points.size() - 1);
+    if (data.contours.empty() || data.contours.back() != last) {
+      data.contours.push_back(last);
+    }
+  };
+
+  size_t point_idx = 0;
+  for (auto verb : outline.verbs) {
+    switch (verb) {
+      case skrifa::PathVerb::MoveTo:
+        if (outline.points.size() - point_idx < 1 ||
+            data.points.size() + 1 > kMaxPoints) {
+          return std::nullopt;
+        }
+        end_contour();
+        if (!AppendFtPoint(data, outline.points[point_idx++],
+                           FT_CURVE_TAG_ON)) {
+          return std::nullopt;
+        }
+        break;
+      case skrifa::PathVerb::LineTo:
+        if (outline.points.size() - point_idx < 1 ||
+            data.points.size() + 1 > kMaxPoints) {
+          return std::nullopt;
+        }
+        if (!AppendFtPoint(data, outline.points[point_idx++],
+                           FT_CURVE_TAG_ON)) {
+          return std::nullopt;
+        }
+        break;
+      case skrifa::PathVerb::QuadTo:
+        if (outline.points.size() - point_idx < 2 ||
+            data.points.size() + 2 > kMaxPoints) {
+          return std::nullopt;
+        }
+        if (!AppendFtPoint(data, outline.points[point_idx++],
+                           FT_CURVE_TAG_CONIC) ||
+            !AppendFtPoint(data, outline.points[point_idx++],
+                           FT_CURVE_TAG_ON)) {
+          return std::nullopt;
+        }
+        break;
+      case skrifa::PathVerb::CurveTo:
+        if (outline.points.size() - point_idx < 3 ||
+            data.points.size() + 3 > kMaxPoints) {
+          return std::nullopt;
+        }
+        if (!AppendFtPoint(data, outline.points[point_idx++],
+                           FT_CURVE_TAG_CUBIC) ||
+            !AppendFtPoint(data, outline.points[point_idx++],
+                           FT_CURVE_TAG_CUBIC) ||
+            !AppendFtPoint(data, outline.points[point_idx++],
+                           FT_CURVE_TAG_ON)) {
+          return std::nullopt;
+        }
+        break;
+      case skrifa::PathVerb::Close:
+        end_contour();
+        break;
+    }
+  }
+  end_contour();
+  if (data.points.empty()) {
+    return std::nullopt;
+  }
+  return data;
+}
+#endif  // defined(PDF_ENABLE_FONTATIONS)
 
 FT_Encoding ToFTEncoding(fxge::FontEncoding encoding) {
   switch (encoding) {
@@ -318,6 +494,13 @@ RetainPtr<CFX_Face> CFX_Face::New(RetainPtr<Retainable> cache_entry,
   auto raw_font = skrifa::new_font(rust::Slice(data), face_index);
   if (raw_font->is_ok()) {
     skrifa_font = std::make_unique<SkrifaFontHolder>(std::move(raw_font));
+  } else if (font_mgr->GetFontBackend() ==
+             CFX_FontMgr::FontBackend::kFontations) {
+    // Everything guarded by IsFontations() dereferences `skrifa_font_`, and
+    // this backend does not fall back to FreeType, so a font that Fontations
+    // cannot parse is of no use. Reject it rather than keeping a face that
+    // only FreeType can read.
+    return nullptr;
   }
 #endif  // defined(PDF_ENABLE_FONTATIONS)
 
@@ -329,9 +512,10 @@ RetainPtr<CFX_Face> CFX_Face::New(RetainPtr<Retainable> cache_entry,
 
 #if defined(PDF_ENABLE_FONTATIONS)
 bool CFX_Face::IsFontations() const {
-  return skrifa_font_ && skrifa_font_->font->is_ok() &&
-         CFX_GEModule::Get()->GetFontMgr()->GetFontBackend() ==
-             CFX_FontMgr::FontBackend::kFontations;
+  // New() guarantees a non-null `skrifa_font_` whenever this is true, and the
+  // backend is fixed for the lifetime of the process.
+  return CFX_GEModule::Get()->GetFontMgr()->GetFontBackend() ==
+         CFX_FontMgr::FontBackend::kFontations;
 }
 #endif  // defined(PDF_ENABLE_FONTATIONS)
 
@@ -589,8 +773,6 @@ std::unique_ptr<CFX_GlyphBitmap> CFX_Face::RenderGlyph(
     int dest_width,
     FontAntiAliasingMode anti_alias,
     const CFX_SubstFont* subst_font) {
-  // TODO(https://crbug.com/42271123): Implement glyph rendering in
-  // Skia/Fontations.
   FT_Matrix ft_matrix;
   ft_matrix.xx = matrix.a / 64 * 65536;
   ft_matrix.xy = matrix.c / 64 * 65536;
@@ -610,47 +792,96 @@ std::unique_ptr<CFX_GlyphBitmap> CFX_Face::RenderGlyph(
     }
   }
 
-  ScopedFaceTransform scoped_transform(GetRec(), &ft_matrix);
-  int load_flags = FT_LOAD_NO_BITMAP | FT_LOAD_PEDANTIC;
-  if (!IsTtOt()) {
-    load_flags |= FT_LOAD_NO_HINTING;
-  }
-  FT_FaceRec* rec = GetRec();
-  int error = FT_Load_Glyph(rec, glyph_index, load_flags);
-  if (error) {
-    // if an error is returned, try to reload glyphs without hinting.
-    if (load_flags & FT_LOAD_NO_HINTING) {
-      return nullptr;
-    }
-
-    load_flags |= FT_LOAD_NO_HINTING;
-    load_flags &= ~FT_LOAD_PEDANTIC;
-    error = FT_Load_Glyph(rec, glyph_index, load_flags);
-    if (error) {
-      return nullptr;
-    }
-  }
-
-  auto* glyph = rec->glyph;
+  int embolden_level = 0;
   if (subst_font) {
-    int level = subst_font->GetEmboldenLevelForRender(
+    embolden_level = subst_font->GetEmboldenLevelForRender(
         is_cid_font, static_cast<int32_t>(ft_matrix.xx),
         static_cast<int32_t>(ft_matrix.xy));
-    if (level < 0) {
+    if (embolden_level < 0) {
       return nullptr;
     }
-    if (level > 0) {
-      FT_Outline_Embolden(&glyph->outline, level);
+  }
+
+  FT_FaceRec* rec = GetRec();
+  auto* glyph = rec->glyph;
+  glyph->format = FT_GLYPH_FORMAT_OUTLINE;
+
+  bool loaded_fontations_outline = false;
+#if defined(PDF_ENABLE_FONTATIONS)
+  // Backing store for `glyph->outline`; must outlive FT_Render_Glyph().
+  std::optional<FtOutlineData> ft_outline;
+  if (CFX_GEModule::Get()->GetFontMgr()->GetFontBackend() ==
+      CFX_FontMgr::FontBackend::kFontations) {
+    absl::Cleanup outline_cleaner = [glyph] { glyph->outline = FT_Outline{}; };
+    if (skrifa_font_ && skrifa_font_->font->is_ok()) {
+      skrifa::Outline outline;
+      bool has_outline = false;
+      if (IsTtOt()) {
+        has_outline = skrifa_font_->font->hinted_outline(
+            glyph_index, kFixedPpem, /*is_pedantic=*/false, outline);
+      }
+      if (!has_outline) {
+        has_outline = skrifa_font_->font->scaled_outline(glyph_index,
+                                                         kFixedPpem, outline);
+      }
+      if (has_outline) {
+        ft_outline = BuildFtOutline(outline);
+      }
+      if (ft_outline.has_value()) {
+        std::move(outline_cleaner).Cancel();
+        glyph->outline.n_points =
+            pdfium::checked_cast<short>(ft_outline->points.size());
+        glyph->outline.n_contours =
+            pdfium::checked_cast<short>(ft_outline->contours.size());
+        glyph->outline.points = ft_outline->points.data();
+        glyph->outline.tags = ft_outline->tags.data();
+        glyph->outline.contours = ft_outline->contours.data();
+        glyph->outline.flags = FT_OUTLINE_SMART_DROPOUTS;
+        FT_Outline_Transform(&glyph->outline, &ft_matrix);
+      }
     }
+    loaded_fontations_outline = true;
+  }
+#endif  // defined(PDF_ENABLE_FONTATIONS)
+
+  if (!loaded_fontations_outline) {
+    ScopedFaceTransform scoped_transform(GetRec(), &ft_matrix);
+    int load_flags = FT_LOAD_NO_BITMAP | FT_LOAD_PEDANTIC;
+    if (!IsTtOt()) {
+      load_flags |= FT_LOAD_NO_HINTING;
+    }
+    int error = FT_Load_Glyph(rec, glyph_index, load_flags);
+    if (error) {
+      if (load_flags & FT_LOAD_NO_HINTING) {
+        return nullptr;
+      }
+      load_flags |= FT_LOAD_NO_HINTING;
+      load_flags &= ~FT_LOAD_PEDANTIC;
+      error = FT_Load_Glyph(rec, glyph_index, load_flags);
+      if (error) {
+        return nullptr;
+      }
+    }
+  }
+
+#if defined(PDF_ENABLE_FONTATIONS)
+  absl::Cleanup restorer = [glyph, loaded_fontations_outline] {
+    if (loaded_fontations_outline) {
+      glyph->outline = FT_Outline{};
+    }
+  };
+#endif  // defined(PDF_ENABLE_FONTATIONS)
+
+  if (embolden_level > 0) {
+    FT_Outline_Embolden(&glyph->outline, embolden_level);
   }
   CFX_FontMgr* font_mgr = CFX_GEModule::Get()->GetFontMgr();
   FT_Library_SetLcdFilter(font_mgr->GetFTLibrary(), FT_LCD_FILTER_DEFAULT);
-  error =
+  int error =
       FT_Render_Glyph(glyph, FtRenderModeFromFontAntiAliasingMode(anti_alias));
   if (error) {
     return nullptr;
   }
-
   const FT_Bitmap& ft_bitmap = glyph->bitmap;
   if (ft_bitmap.width > kMaxGlyphDimension ||
       ft_bitmap.rows > kMaxGlyphDimension) {
@@ -664,13 +895,15 @@ std::unique_ptr<CFX_GlyphBitmap> CFX_Face::RenderGlyph(
   if (!new_bitmap->Create(dib_width, ft_bitmap.rows, format)) {
     return nullptr;
   }
-  auto pGlyphBitmap = std::make_unique<CFX_GlyphBitmap>(
+  auto glyph_bitmap = std::make_unique<CFX_GlyphBitmap>(
       CFX_Point(glyph->bitmap_left, glyph->bitmap_top), new_bitmap);
 
   const uint32_t src_pitch = abs(ft_bitmap.pitch);
+  // SAFETY: `ft_bitmap.buffer` contains `src_pitch * ft_bitmap.rows` bytes
+  // allocated and rendered by FreeType.
   pdfium::span<const uint8_t> src_span =
-      UNSAFE_TODO(pdfium::span<const uint8_t>(ft_bitmap.buffer,
-                                              src_pitch * ft_bitmap.rows));
+      UNSAFE_BUFFERS(pdfium::span<const uint8_t>(ft_bitmap.buffer,
+                                                 src_pitch * ft_bitmap.rows));
 
   if (anti_alias != FontAntiAliasingMode::kMono &&
       ft_bitmap.pixel_mode == FT_PIXEL_MODE_MONO) {
@@ -678,7 +911,7 @@ std::unique_ptr<CFX_GlyphBitmap> CFX_Face::RenderGlyph(
   } else {
     new_bitmap->PopulateFromSpan(src_span, src_pitch);
   }
-  return pGlyphBitmap;
+  return glyph_bitmap;
 }
 
 std::unique_ptr<CFX_Path> CFX_Face::LoadGlyphPath(
@@ -686,6 +919,37 @@ std::unique_ptr<CFX_Path> CFX_Face::LoadGlyphPath(
     int dest_width,
     bool is_vertical,
     const CFX_SubstFont* subst_font) {
+#if defined(PDF_ENABLE_FONTATIONS)
+  if (CFX_GEModule::Get()->GetFontMgr()->GetFontBackend() ==
+      CFX_FontMgr::FontBackend::kFontations) {
+    if (skrifa_font_ && skrifa_font_->font->is_ok()) {
+      skrifa::Outline outline;
+      if (skrifa_font_->font->unscaled_outline(glyph_index, outline)) {
+        int upem = skrifa_font_->font->units_per_em();
+        if (upem > 0) {
+          float scale = 1.0f / static_cast<float>(upem);
+          CFX_Matrix matrix(scale, 0, 0, scale, 0, 0);
+          if (subst_font) {
+            int skew = subst_font->GetSkew();
+            if (skew) {
+              if (is_vertical) {
+                matrix.b += matrix.d * skew / 100.0f;
+              } else {
+                matrix.c -= matrix.a * skew / 100.0f;
+              }
+            }
+          }
+          auto path = ConvertOutline(outline);
+          if (path) {
+            path->Transform(matrix);
+            return path;
+          }
+        }
+      }
+    }
+    return nullptr;
+  }
+#endif  // defined(PDF_ENABLE_FONTATIONS)
   FT_FaceRec* rec = GetRec();
   FT_Set_Pixel_Sizes(rec, 0, 64);
   FT_Matrix ft_matrix = {65536, 0, 0, 65536};

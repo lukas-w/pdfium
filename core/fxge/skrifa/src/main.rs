@@ -21,7 +21,7 @@ use skrifa::{
     charmap::Charmap,
     instance::{LocationRef, Size},
     metrics::Metrics,
-    outline::OutlineGlyphFormat,
+    outline::{DrawSettings, Engine, HintingInstance, HintingOptions, OutlineGlyphFormat},
     string::StringId,
     FontRef, GlyphNameSource, GlyphNames, MetadataProvider, OutlineGlyphCollection,
 };
@@ -133,6 +133,13 @@ mod skrifa_ffi {
         fn glyph_name(&self, gid: u32) -> String;
         fn scaled_outline(&self, gid: u32, ppem: f32, outline: &mut Outline) -> bool;
         fn unscaled_outline(&self, gid: u32, outline: &mut Outline) -> bool;
+        fn hinted_outline(
+            &self,
+            gid: u32,
+            ppem: f32,
+            is_pedantic: bool,
+            outline: &mut Outline,
+        ) -> bool;
         fn has_outline(&self, gid: u32) -> bool;
 
         fn get_os2_code_page_range(&self, range: &mut CodePageRange) -> bool;
@@ -168,6 +175,11 @@ pub enum SkrifaFont<'a> {
     Error,
 }
 
+struct HinterCache {
+    size: Size,
+    instance: Option<HintingInstance>,
+}
+
 pub struct Sfnt<'a> {
     font: FontRef<'a>,
     metrics: Metrics,
@@ -178,6 +190,7 @@ pub struct Sfnt<'a> {
     charmap: Charmap<'a>,
     outlines: OutlineGlyphCollection<'a>,
     is_tricky: bool,
+    hinter: core::cell::RefCell<Option<HinterCache>>,
 }
 
 impl<'a> Sfnt<'a> {
@@ -204,6 +217,7 @@ impl<'a> Sfnt<'a> {
             charmap,
             outlines,
             is_tricky,
+            hinter: core::cell::RefCell::new(None),
         })
     }
 }
@@ -446,6 +460,22 @@ impl SkrifaFont<'_> {
         }
     }
 
+    fn hinted_outline(
+        &self,
+        gid: u32,
+        ppem: f32,
+        is_pedantic: bool,
+        outline: &mut Outline,
+    ) -> bool {
+        outline.clear();
+        if let Some(width) = self.hinted_outline_impl(gid, ppem, is_pedantic, outline) {
+            outline.advance_width = width.unwrap_or_default();
+            true
+        } else {
+            false
+        }
+    }
+
     fn has_outline(&self, gid: u32) -> bool {
         match self {
             Self::Sfnt(sfnt) => sfnt.outlines.get(GlyphId::new(gid)).is_some(),
@@ -492,6 +522,42 @@ impl SkrifaFont<'_> {
             }
             Self::Error => None,
         }
+    }
+
+    fn hinted_outline_impl(
+        &self,
+        gid: u32,
+        ppem: f32,
+        is_pedantic: bool,
+        outline: &mut impl OutlinePen,
+    ) -> Option<Option<f32>> {
+        let Self::Sfnt(sfnt) = self else {
+            return None;
+        };
+        if !sfnt.outlines.prefer_interpreter() {
+            return self.outline_impl(gid, Some(ppem), outline);
+        }
+        let gid = GlyphId::new(gid);
+        let size = Size::new(ppem);
+        let glyph = sfnt.outlines.get(gid)?;
+        let mut hinter_borrow = sfnt.hinter.borrow_mut();
+        if hinter_borrow.as_ref().map(|c| c.size) != Some(size) {
+            let instance = HintingInstance::new(
+                &sfnt.outlines,
+                size,
+                LocationRef::default(),
+                HintingOptions { engine: Engine::Interpreter, target: Default::default() },
+            )
+            .ok();
+            *hinter_borrow = Some(HinterCache { size, instance });
+        }
+        let hinter = hinter_borrow.as_ref()?.instance.as_ref()?;
+        let metrics = glyph.draw(DrawSettings::hinted(hinter, is_pedantic), outline).ok()?;
+        Some(
+            metrics.advance_width.or_else(|| {
+                sfnt.font.glyph_metrics(size, LocationRef::default()).advance_width(gid)
+            }),
+        )
     }
 }
 

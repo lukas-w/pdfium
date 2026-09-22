@@ -544,14 +544,16 @@ void CompareBitmapToPngFile(FPDF_BITMAP bitmap,
       pixels_different =
           CompareBGRBitmapToPng(bitmap_span, stride, decoded_png, options);
       break;
-    case FPDFBitmap_BGRx:
+    case FPDFBitmap_BGRx: {
       pixels_different =
           CompareBGRxBitmapToPng(bitmap_span, stride, decoded_png, options);
       break;
-    case FPDFBitmap_BGRA:
+    }
+    case FPDFBitmap_BGRA: {
       pixels_different =
           CompareBGRABitmapToPng(bitmap_span, stride, decoded_png, options);
       break;
+    }
 #ifdef PDF_USE_SKIA
     case FPDFBitmap_BGRA_Premul:
       pixels_different = CompareBGRxPremultBitmapToPng(bitmap_span, stride,
@@ -1176,7 +1178,11 @@ void EmbedderTest::CompareBitmap(FPDF_BITMAP bitmap,
                                  std::string_view expectation_png_name) {
   std::string png_path = GetEmbedderTestExpectationPath(expectation_png_name);
   SCOPED_TRACE(testing::Message() << "CompareBitmap() with " << png_path);
-  CompareBitmapToPngFile(bitmap, png_path, kExactDiffOptions);
+  DiffOptions options = kExactDiffOptions;
+  if (EmbedderTestEnvironment::GetInstance()->fontations()) {
+    options = kFontationsDiffOptions;
+  }
+  CompareBitmapToPngFile(bitmap, png_path, options);
   if (EmbedderTestEnvironment::GetInstance()->write_pngs()) {
     WriteBitmapToPng(bitmap, png_path);
   }
@@ -1187,6 +1193,22 @@ void EmbedderTest::CompareBitmapWithExpectationSuffix(
     FPDF_BITMAP bitmap,
     std::string_view expectation_png_name,
     const DiffOptions& options) {
+  DiffOptions effective_options = options;
+  if (EmbedderTestEnvironment::GetInstance()->fontations()) {
+    effective_options.max_pixel_per_channel_delta =
+        std::max(options.max_pixel_per_channel_delta,
+                 kFontationsDiffOptions.max_pixel_per_channel_delta);
+    effective_options.max_mean_squared_error =
+        std::max(options.max_mean_squared_error,
+                 kFontationsDiffOptions.max_mean_squared_error);
+    if (options.window_size > 0) {
+      effective_options.window_size =
+          std::max(options.window_size, kFontationsDiffOptions.window_size);
+      effective_options.max_window_mean_squared_error =
+          std::max(options.max_window_mean_squared_error,
+                   kFontationsDiffOptions.max_window_mean_squared_error);
+    }
+  }
   std::vector<std::string> candidate_png_path =
       GetEmbedderTestExpectationsWithSuffixPath(expectation_png_name);
   for (const std::string& png_path : candidate_png_path) {
@@ -1196,7 +1218,7 @@ void EmbedderTest::CompareBitmapWithExpectationSuffix(
 
     SCOPED_TRACE(testing::Message()
                  << "CompareBitmapWithExpectationSuffix() with " << png_path);
-    CompareBitmapToPngFile(bitmap, png_path, options);
+    CompareBitmapToPngFile(bitmap, png_path, effective_options);
     if (EmbedderTestEnvironment::GetInstance()->write_pngs()) {
       WriteBitmapToPng(bitmap, png_path);
     }

@@ -98,6 +98,10 @@ TEST_F(CFDETextOutTest, DrawLogicTextBasic) {
       return "bc1f736237b08d13db06c09f6becc9f7";
     }
 #endif
+    if (CFX_GEModule::Get()->GetFontMgr()->GetFontBackend() ==
+        CFX_FontMgr::FontBackend::kFontations) {
+      return "59f4a2cfb7938032f144954642babe58";
+    }
     return "c143f8450f661a489cc9423de7cc1acc";
   }();
   EXPECT_EQ(checksum, GetBitmapChecksum());
@@ -136,6 +140,10 @@ class CFDETextOutLargeBitmapTest : public CFDETextOutTest {
       return "e9aaffff1ea680bd5dc40a7b8904788d";
     }
 #endif
+    if (CFX_GEModule::Get()->GetFontMgr()->GetFontBackend() ==
+        CFX_FontMgr::FontBackend::kFontations) {
+      return "89adff3e02833425d42a2f89ef8fd7e3";
+    }
     return "add7cf2819b3e1397d8a60a9ec436a86";
   }
 };

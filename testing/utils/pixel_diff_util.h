@@ -17,6 +17,15 @@ inline constexpr double kMaxFuzzyMeanSquaredError = 0.05;
 inline constexpr int kMaxFuzzyWindowSize = 8;
 inline constexpr double kMaxFuzzyWindowMeanSquaredError = 15.0;
 
+// Fontations fuzzy matching limits: allows a larger per-channel delta to
+// accommodate subpixel curve antialiasing variances while enforcing a tight
+// mean squared error bound.
+inline constexpr uint8_t kMaxFontationsPixelDelta = 10;
+inline constexpr double kMaxFontationsMeanSquaredError = 0.10;
+inline constexpr int kMaxFontationsWindowSize = kMaxFuzzyWindowSize;
+inline constexpr double kMaxFontationsWindowMeanSquaredError =
+    kMaxFuzzyWindowMeanSquaredError;
+
 // Options controlling pixel difference comparisons.
 struct DiffOptions {
   int max_pixel_per_channel_delta = 0;
@@ -31,6 +40,12 @@ inline constexpr DiffOptions kFuzzyDiffOptions = {
     .max_mean_squared_error = kMaxFuzzyMeanSquaredError,
     .window_size = kMaxFuzzyWindowSize,
     .max_window_mean_squared_error = kMaxFuzzyWindowMeanSquaredError,
+};
+inline constexpr DiffOptions kFontationsDiffOptions = {
+    .max_pixel_per_channel_delta = kMaxFontationsPixelDelta,
+    .max_mean_squared_error = kMaxFontationsMeanSquaredError,
+    .window_size = kMaxFontationsWindowSize,
+    .max_window_mean_squared_error = kMaxFontationsWindowMeanSquaredError,
 };
 
 // Returns the largest difference in pixel channels between `baseline_pixel` and

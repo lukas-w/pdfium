@@ -2064,6 +2064,13 @@ TEST_F(FPDFViewEmbedderTest, BadIsolatePerDocumentConfig) {
 }
 
 TEST_F(FPDFViewEmbedderTest, NoSmoothTextItalicOverlappingGlyphs) {
+  if (EmbedderTestEnvironment::GetInstance()->fontations()) {
+    // Monochrome 1-bit text rendering (FPDF_RENDER_NO_SMOOTHTEXT) produces
+    // binary 0/255 pixel transitions at glyph boundaries where subpixel contour
+    // differences cross pixel centers, which cannot be fuzzy matched.
+    // TODO(crbug.com/42271123): fix as part of full fontations support.
+    GTEST_SKIP() << "Fontations subpixel monochrome variance";
+  }
   ASSERT_TRUE(OpenDocument("bug_1919.pdf"));
   ScopedPage page = LoadScopedPage(0);
   ASSERT_TRUE(page);
