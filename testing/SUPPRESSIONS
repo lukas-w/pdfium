@@ -451,7 +451,6 @@ annotation_square_hidden.pdf mac_x86 * * skia * diff
 annotation_squiggly_hidden.pdf mac_x86 * * skia * diff
 annotation_stamp.pdf mac_x86 * * skia * diff
 annotation_strikeout_hidden.pdf mac_x86 * * skia * diff
-annotation_strikeout_opacity.pdf mac_x86 * * skia * diff
 annotation_strikeout_opacity.pdf mac * * skia * fuzzy
 annotation_underline.pdf mac_x86 * * skia * diff
 annotation_underline_hidden.pdf mac_x86 * * skia * diff
@@ -459,14 +458,12 @@ annotation_underline_opacity.pdf mac_x86 * * skia * diff
 bug_668762.pdf mac_x86 * * skia * diff
 en_14_foxit_products.pdf mac_x86 * * skia * diff
 en_fqa.pdf mac_x86 * * skia * diff
-example_042.pdf mac_x86 * * skia * diff
 font_1_embedded_font_en_feature.pdf mac_x86 * * skia * diff
 font_2_embedded_font_en_size14.pdf mac_x86 * * skia * diff
 transparent1.pdf mac_x86 * * skia * diff
 xfermodes.pdf mac_x86 * * skia * diff
 xfermodes.pdf * * * skia * fuzzy
 xfermodes2.pdf mac_x86 * * skia * diff
-xfermodes3.pdf mac_x86 * * skia * diff
 xfermodes3.pdf * * * skia * fuzzy
 
 # GDI
