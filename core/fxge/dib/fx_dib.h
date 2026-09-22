@@ -242,6 +242,7 @@ UNSAFE_BUFFER_USAGE inline void ReverseCopy3Bytes(uint8_t* dest,
 
 #if defined(PDF_USE_SKIA)
 SkBlendMode GetSkiaBlendMode(BlendMode blend_type);
+#endif  // defined(PDF_USE_SKIA)
 
 template <typename T>
 T PreMultiplyColor(const T& input) {
@@ -276,7 +277,6 @@ T UnPreMultiplyColor(const T& input) {
   }
   return output;
 }
-#endif  // defined(PDF_USE_SKIA)
 
 }  // namespace fxge
 
@@ -307,12 +307,12 @@ using fxge::FXSYS_GetBValue;
 using fxge::FXSYS_GetGValue;
 using fxge::FXSYS_GetRValue;
 using fxge::FXSYS_GetUnsignedAlpha;
+using fxge::PreMultiplyColor;
 using fxge::ReverseCopy3Bytes;
+using fxge::UnPreMultiplyColor;
 
 #if defined(PDF_USE_SKIA)
 using fxge::GetSkiaBlendMode;
-using fxge::PreMultiplyColor;
-using fxge::UnPreMultiplyColor;
 #endif
 
 #endif  // CORE_FXGE_DIB_FX_DIB_H_

@@ -451,6 +451,46 @@ int CompareBGRBitmapToPng(pdfium::span<const uint8_t> bitmap_span,
   return CompareBGRxBitmapToPng(bgrx_buffer, bgrx_stride, decoded_png, options);
 }
 
+int CompareBGRABitmapToPng(pdfium::span<const uint8_t> bitmap_span,
+                           size_t bitmap_stride,
+                           const DecodedPng& decoded_png,
+                           const DiffOptions& options) {
+  const int width = decoded_png.width;
+  const size_t dest_row_width = static_cast<size_t>(width);
+  const int height = decoded_png.height;
+  const size_t bgra_stride = width * sizeof(FX_BGRA_STRUCT<uint8_t>);
+
+  // Premultiply both decoded PNG and actual bitmap so unweighted color
+  // channels in transparent or near-transparent pixels do not trigger
+  // false-positive differences.
+  std::vector<uint8_t> actual_premult(bgra_stride * height);
+  auto actual_span = fxcrt::reinterpret_span<FX_BGRA_STRUCT<uint8_t>>(
+      pdfium::span<uint8_t>(actual_premult));
+  for (int h = 0; h < height; ++h) {
+    auto src_row = fxcrt::reinterpret_span<const FX_BGRA_STRUCT<uint8_t>>(
+        bitmap_span.subspan(h * bitmap_stride, bitmap_stride));
+    auto dest_row = actual_span.take_first(dest_row_width);
+    for (size_t w = 0; w < dest_row_width; ++w) {
+      dest_row[w] = PreMultiplyColor(src_row[w]);
+    }
+  }
+
+  std::vector<uint8_t> expected_premult(decoded_png.pixel_data);
+  auto expected_span = fxcrt::reinterpret_span<FX_BGRA_STRUCT<uint8_t>>(
+      pdfium::span<uint8_t>(expected_premult));
+  for (auto& pixel : expected_span) {
+    pixel = PreMultiplyColor(pixel);
+  }
+
+  DecodedPng premult_png;
+  premult_png.width = width;
+  premult_png.height = height;
+  premult_png.pixel_data = std::move(expected_premult);
+
+  return CompareBGRxBitmapToPng(actual_premult, bgra_stride, premult_png,
+                                options);
+}
+
 std::string EncodeBase64(pdfium::span<const uint8_t> png) {
   std::string base64_png(simdutf::base64_length_from_binary(png.size()), '\0');
   size_t base64_len = simdutf::binary_to_base64(png, base64_png);
@@ -505,11 +545,13 @@ void CompareBitmapToPngFile(FPDF_BITMAP bitmap,
           CompareBGRBitmapToPng(bitmap_span, stride, decoded_png, options);
       break;
     case FPDFBitmap_BGRx:
-    case FPDFBitmap_BGRA: {
       pixels_different =
           CompareBGRxBitmapToPng(bitmap_span, stride, decoded_png, options);
       break;
-    }
+    case FPDFBitmap_BGRA:
+      pixels_different =
+          CompareBGRABitmapToPng(bitmap_span, stride, decoded_png, options);
+      break;
 #ifdef PDF_USE_SKIA
     case FPDFBitmap_BGRA_Premul:
       pixels_different = CompareBGRxPremultBitmapToPng(bitmap_span, stride,
