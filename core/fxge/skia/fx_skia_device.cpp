@@ -770,18 +770,29 @@ bool CFX_SkiaDeviceDriver::DrawDeviceText(
     const CFX_TextRenderOptions& options) {
   // `SkTextBlob` is built from `pFont`'s font data. If `pFont` doesn't contain
   // any font data, each text blob will have zero area to be drawn and the
-  // drawing command will be rejected. In this case, we fall back to drawing
-  // characters by their glyph bitmaps.
+  // drawing command will be rejected. In this case, fall back to drawing
+  // characters by their glyph bitmaps. Note this is the last text case that
+  // still depends on the fallbacks in CFX_RenderDevice::DrawNormalText().
   if (pFont->GetFontSpan().empty()) {
     return false;
+  }
+
+  // Skia cannot create an `SkTypeface` for every font, e.g. Fontations only
+  // supports SFNT formats and rejects bare Type 1 or CFF font streams. Draw
+  // the glyph outlines directly for such fonts.
+  SkTypeface* skia_typeface =
+      pFont->HasFace() ? pFont->GetFace()->GetOrCreateSkTypeface() : nullptr;
+  if (!skia_typeface) {
+    DrawDeviceTextAsPath(pCharPos, pFont, mtObject2Device, font_size, color,
+                         options);
+    return true;
   }
 
   if (TryDrawText(pCharPos, pFont, mtObject2Device, font_size, color,
                   options)) {
     return true;
   }
-  sk_sp<SkTypeface> typeface(
-      SkSafeRef(pFont->GetFace()->GetOrCreateSkTypeface()));
+  sk_sp<SkTypeface> typeface(SkSafeRef(skia_typeface));
   SkPaint paint;
   paint.setAntiAlias(true);
   paint.setColor(color);
@@ -844,6 +855,37 @@ bool CFX_SkiaDeviceDriver::DrawDeviceText(
     }
   }
   return true;
+}
+
+void CFX_SkiaDeviceDriver::DrawDeviceTextAsPath(
+    pdfium::span<const TextCharPos> char_pos,
+    const CFX_Font* font,
+    const CFX_Matrix& matrix,
+    float font_size,
+    uint32_t color,
+    const CFX_TextRenderOptions& options) {
+  SkPaint paint;
+  paint.setAntiAlias(options.aliasing_type != CFX_TextRenderOptions::kAliasing);
+  paint.setColor(color);
+  paint.setStyle(SkPaint::kFill_Style);
+
+  for (const auto& cp : char_pos) {
+    const CFX_Path* glyph_path =
+        font->LoadGlyphPath(cp.glyph_index_, cp.font_char_width_);
+    if (!glyph_path) {
+      continue;
+    }
+
+    CFX_Matrix char_matrix(font_size, 0, 0, font_size, cp.origin_.x,
+                           cp.origin_.y);
+    char_matrix = cp.GetEffectiveMatrix(char_matrix);
+    char_matrix.Concat(matrix);
+
+    SkPathBuilder sk_path_builder = BuildPath(*glyph_path);
+    sk_path_builder.setFillType(SkPathFillType::kWinding);
+    sk_path_builder.transform(ToSkMatrix(char_matrix));
+    DrawPathImpl(sk_path_builder.detach(), paint);
+  }
 }
 
 // TODO(crbug.com/42271005): Merge with `DrawDeviceText()` and refactor

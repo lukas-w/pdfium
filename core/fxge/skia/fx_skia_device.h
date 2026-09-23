@@ -182,6 +182,15 @@ class CFX_SkiaDeviceDriver final : public RenderDeviceDriverIface {
                    uint32_t color,
                    const CFX_TextRenderOptions& options);
 
+  // Fills the glyph outlines for `char_pos` directly, for fonts that Skia
+  // cannot render as text, e.g. those without an `SkTypeface`.
+  void DrawDeviceTextAsPath(pdfium::span<const TextCharPos> char_pos,
+                            const CFX_Font* font,
+                            const CFX_Matrix& matrix,
+                            float font_size,
+                            uint32_t color,
+                            const CFX_TextRenderOptions& options);
+
   bool StartDIBitsSkia(RetainPtr<const CFX_DIBBase> bitmap,
                        const FX_RECT& src_rect,
                        float alpha,
