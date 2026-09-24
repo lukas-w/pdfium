@@ -2564,9 +2564,8 @@ TEST_F(FPDFTextEmbedderTest, ActualTextRtl) {
        // מים (logical order):
        0x05de, 0x05d9, 0x05dd, '\r', '\n',
        // Literal RTL text followed by RTL /ActualText case:
-       // TODO(crbug.com/525087036): Should be in logical order.
-       // םולש (/ActualText):
-       0x05dd, 0x05d5, 0x05dc, 0x05e9,
+       // שלום (/ActualText, logical order):
+       0x05e9, 0x05dc, 0x05d5, 0x05dd,
        // בן (literal text):
        0x05d1, 0x05df, '\0'});
   static constexpr int kExpectedTextSize = std::size(kExpectedText);
