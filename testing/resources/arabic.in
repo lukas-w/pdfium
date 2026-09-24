@@ -1,0 +1,96 @@
+{{header}}
+{{object 1 0}} <<
+  /Type /Catalog
+  /Pages 2 0 R
+>>
+endobj
+{{object 2 0}} <<
+  /Type /Pages
+  /Count 1
+  /Kids [3 0 R]
+>>
+endobj
+{{object 3 0}} <<
+  /Type /Page
+  /Parent 2 0 R
+  /Contents 4 0 R
+  /MediaBox [0 0 200 200]
+  /Resources <<
+    /Font <<
+      /F1 5 0 R
+    >>
+  >>
+>>
+endobj
+{{object 4 0}} <<
+  {{streamlen}}
+>>
+stream
+BT
+/F1 12 Tf
+20 100 Td
+<090608020A03010705040A03> Tj
+ET
+endstream
+endobj
+{{object 5 0}} <<
+  /Type /Font
+  /Subtype /TrueType
+  /BaseFont /AAAAAA+Arabic
+  /FirstChar 1
+  /FontDescriptor 6 0 R
+  /LastChar 10
+  /ToUnicode 7 0 R
+  /Widths [318 305 278 302 646 483 552 483 776 305]
+>>
+endobj
+{{object 6 0}} <<
+  /Type /FontDescriptor
+  /Ascent 760
+  /CapHeight 342
+  /Descent -240
+  /Flags 32
+  /FontBBox [-42 -244 755 1028]
+  /FontName /AAAAAA+Arabic
+  /ItalicAngle 0
+  /StemV 80
+>>
+endobj
+{{object 7 0}} <<
+  {{streamlen}}
+>>
+stream
+/CIDInit /ProcSet findresource begin
+12 dict begin
+begincmap
+/CIDSystemInfo <<
+/Registry (Adobe)
+/Ordering (UCS)
+/Supplement 0
+>> def
+/CMapName /AAAA-Arabic def
+/CMapType 2 def
+1 begincodespacerange
+<00> <FF> endcodespacerange
+10 beginbfchar
+<01> <0020>
+<02> <FE84>
+<03> <FE8D>
+<04> <FE92>
+<05> <FEA4>
+<06> <FEAD>
+<07> <FEAE>
+<08> <FEAF>
+<09> <FED5>
+<0A> <FEDF>
+endbfchar
+endcmap
+CMapName currentdict /CMap defineresource pop
+end
+end
+endstream
+endobj
+{{xref}}
+{{trailer}}
+{{startxref}}
+%%EOF

@@ -2579,3 +2579,27 @@ TEST_F(FPDFTextEmbedderTest, ActualTextRtl) {
   EXPECT_THAT(pdfium::span(buffer).first<kExpectedTextSize>(),
               ElementsAreArray(kExpectedText));
 }
+
+TEST_F(FPDFTextEmbedderTest, Arabic) {
+  ASSERT_TRUE(OpenDocument("arabic.pdf"));
+  ScopedPage page = LoadScopedPage(0);
+  ASSERT_TRUE(page);
+
+  ScopedFPDFTextPage text_page(FPDFText_LoadPage(page.get()));
+  ASSERT_TRUE(text_page);
+
+  // TODO(crbug.com/561066233): This array is reversed at the word level.
+  // It should be:
+  //  {0x0627, 0x0644, 0x0628, 0x062d, 0x0631, ' ', 0x0627, 0x0644, 0x0623,
+  //   0x0632, 0x0631, 0x0642, '\0'}
+  static constexpr auto kExpectedText = std::to_array<unsigned short>(
+      {0x0627, 0x0644, 0x0623, 0x0632, 0x0631, 0x0642, ' ', 0x0627, 0x0644,
+       0x0628, 0x062d, 0x0631, '\0'});
+  static constexpr int kExpectedTextSize = std::size(kExpectedText);
+
+  unsigned short buffer[256] = {};
+  EXPECT_EQ(kExpectedTextSize,
+            FPDFText_GetText(text_page.get(), 0, std::size(buffer), buffer));
+  EXPECT_THAT(pdfium::span(buffer).first<kExpectedTextSize>(),
+              ElementsAreArray(kExpectedText));
+}
