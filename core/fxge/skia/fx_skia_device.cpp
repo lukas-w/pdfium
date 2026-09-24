@@ -649,7 +649,8 @@ SkFont SkFontFromCFXFont(const CFX_Font* cfx_font,
                          const CFX_TextRenderOptions& options) {
   SkFont font;
   font.setEmbolden(cfx_font->IsSubstFontBold());
-  font.setHinting(SkFontHinting::kNone);
+  font.setHinting(cfx_font->IsTTFont() ? SkFontHinting::kNormal
+                                       : SkFontHinting::kNone);
   font.setSkewX(tanf(cfx_font->GetSubstFontItalicAngle() * FXSYS_PI / 180.0));
   font.setSize(SkTAbs(font_size));
   font.setSubpixel(true);

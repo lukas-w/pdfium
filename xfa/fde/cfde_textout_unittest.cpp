@@ -95,7 +95,7 @@ TEST_F(CFDETextOutTest, DrawLogicTextBasic) {
   const char* checksum = []() {
 #if defined(PDF_USE_SKIA) && BUILDFLAG(IS_WIN)
     if (CFX_GEModule::Get()->UseSkiaRenderer()) {
-      return "bc1f736237b08d13db06c09f6becc9f7";
+      return "02c55ce12d3c31ae32fa08fe59c38996";
     }
 #endif
     if (CFX_GEModule::Get()->GetFontMgr()->GetFontBackend() ==
