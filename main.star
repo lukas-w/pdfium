@@ -34,7 +34,7 @@ _LINUX_NOBLE_DIMENSIONS = {
 }
 _MACOS_INTEL_DIMENSIONS = {
     "cpu": "x86-64",
-    "os": "Mac-14",
+    "os": "Mac-15",
 }
 _MACOS_ARM_DIMENSIONS = {
     "cpu": "arm64",
