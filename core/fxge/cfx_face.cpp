@@ -21,6 +21,7 @@
 #include "core/fxcrt/numerics/clamped_math.h"
 #include "core/fxcrt/numerics/safe_conversions.h"
 #include "core/fxcrt/numerics/safe_math.h"
+#include "core/fxcrt/stl_util.h"
 #include "core/fxcrt/to_underlying.h"
 #include "core/fxcrt/unowned_ptr.h"
 #include "core/fxge/cfx_cttgsubtable.h"
@@ -983,10 +984,13 @@ std::unique_ptr<CFX_GlyphBitmap> CFX_Face::RenderGlyph(
     int bitmap_left;
     int bitmap_top = y_top;
     if (is_lcd) {
+      // Pad by 2/3 of a pixel (2 subpixels, or 128 in 3x 26.6 fixed-point) on
+      // each side to accommodate the 5-tap LCD filter, matching FreeType's
+      // ft_lcd_padding() and ft_glyphslot_preset_bitmap().
       int normal_left =
-          static_cast<int>(std::floor(static_cast<float>(x_left) / 3.0f));
+          static_cast<int>(std::floor((cbox.xMin - 128) / 192.0f));
       int normal_right =
-          static_cast<int>(std::ceil(static_cast<float>(x_right) / 3.0f));
+          static_cast<int>(std::floor((cbox.xMax + 128 + 191) / 192.0f));
       int normal_width = normal_right - normal_left;
       if (normal_width <= 0) {
         return nullptr;
@@ -1028,6 +1032,35 @@ std::unique_ptr<CFX_GlyphBitmap> CFX_Face::RenderGlyph(
                                       &ft_bitmap);
     if (error) {
       return nullptr;
+    }
+
+    if (is_lcd) {
+      // Apply FreeType's FT_LCD_FILTER_DEFAULT 5-tap filter across each
+      // scanline, matching ft_smooth_lcd_spans().
+      static constexpr std::array<uint8_t, 5> kLcdFilterWeights = {8, 77, 86,
+                                                                   77, 8};
+      std::vector<uint8_t> raw_row(dib_width);
+      for (int row = 0; row < height; ++row) {
+        pdfium::span<uint8_t> scanline =
+            new_bitmap->GetWritableScanline(row).first(
+                static_cast<size_t>(dib_width));
+        fxcrt::Copy(scanline, raw_row);
+        std::ranges::fill(scanline, 0);
+        for (int x = 0; x < dib_width; ++x) {
+          uint8_t coverage = raw_row[x];
+          if (coverage == 0) {
+            continue;
+          }
+          for (int i = 0; i < static_cast<int>(kLcdFilterWeights.size()); ++i) {
+            int dst_x = x + i - 2;
+            if (dst_x >= 0 && dst_x < dib_width) {
+              scanline[dst_x] = pdfium::saturated_cast<uint8_t>(
+                  scanline[dst_x] +
+                  ((coverage * kLcdFilterWeights[i] + 85) >> 8));
+            }
+          }
+        }
+      }
     }
 
     return std::make_unique<CFX_GlyphBitmap>(CFX_Point(bitmap_left, bitmap_top),
