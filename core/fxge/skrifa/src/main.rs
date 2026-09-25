@@ -151,7 +151,7 @@ mod skrifa_ffi {
         fn glyph_bounds(&self, glyph_index: u32) -> BoundingBox;
 
         fn agl_name_to_unicode(name: &str, unicode: &mut u32) -> bool;
-        fn agl_unicode_to_name(unicode: u32, name: &mut [u8]) -> bool;
+        fn agl_unicode_to_name(unicode: u32, name: &mut [u8]) -> &[u8];
         fn get_num_faces(data: &[u8]) -> u32;
     }
 
@@ -676,8 +676,8 @@ fn agl_name_to_unicode(name: &str, unicode: &mut u32) -> bool {
     }
 }
 
-fn agl_unicode_to_name(unicode: u32, name: &mut [u8]) -> bool {
-    read_fonts::ps::agl::char_to_name(unicode, name).is_some()
+fn agl_unicode_to_name(unicode: u32, name: &mut [u8]) -> &[u8] {
+    read_fonts::ps::agl::char_to_name(unicode, name).map(str::as_bytes).unwrap_or_default()
 }
 
 impl SkrifaFont<'_> {

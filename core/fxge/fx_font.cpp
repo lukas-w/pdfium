@@ -15,9 +15,9 @@
 #include "core/fxcrt/fx_string.h"
 #include "core/fxcrt/numerics/safe_conversions.h"
 #include "core/fxcrt/widestring.h"
+#include "core/fxge/cfx_face.h"
 #include "core/fxge/cfx_glyphbitmap.h"
 #include "core/fxge/dib/cfx_dibitmap.h"
-#include "core/fxge/freetype/fx_freetype.h"
 #include "core/fxge/text_glyph_pos.h"
 
 namespace {
@@ -196,13 +196,11 @@ uint16_t GetGlyphCountFromMaxp(pdfium::span<const uint8_t> maxp_table) {
 }
 
 wchar_t UnicodeFromAdobeName(const char* name) {
-  return (wchar_t)(FXFT_unicode_from_adobe_name(name) & 0x7FFFFFFF);
+  return CFX_Face::UnicodeFromAdobeName(name);
 }
 
 ByteString AdobeNameFromUnicode(wchar_t unicode) {
-  char glyph_name[64];
-  FXFT_adobe_name_from_unicode(glyph_name, unicode);
-  return ByteString(glyph_name);
+  return CFX_Face::AdobeNameFromUnicode(unicode);
 }
 
 int NormalizeFontMetric(int64_t value, uint16_t upem) {

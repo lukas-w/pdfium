@@ -76,10 +76,10 @@ void skrifa::run(rust::Str font_path) {
 
   // Convert unicode to glyph name
   uint8_t period_name[64] = {};
-  assert(
-      skrifa::agl_unicode_to_name('.', rust::Slice<uint8_t>(period_name, 40)));
-  assert(std::string_view(reinterpret_cast<const char*>(&period_name[0])) ==
-         "period");
+  auto period_slice =
+      skrifa::agl_unicode_to_name('.', rust::Slice<uint8_t>(period_name, 40));
+  assert(std::string_view(reinterpret_cast<const char*>(period_slice.data()),
+                          period_slice.size()) == "period");
 }
 
 void dump_outline(skrifa::Outline& outline) {

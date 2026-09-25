@@ -414,6 +414,7 @@ example_064.pdf * * * * fontations diff
 example_064.pdf * * * * * fuzzy
 example_064.pdf mac * * skia * fuzzy
 example_065.pdf mac * * agg * diff
+example_065.pdf * * * * fontations diff
 example_065.pdf * * * * * fuzzy
 fillform.pdf * * * * * diff
 form_action_trigger.pdf * * * * * diff

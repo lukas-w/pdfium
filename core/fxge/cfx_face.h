@@ -21,6 +21,7 @@
 #include "core/fxcrt/span.h"
 #include "core/fxge/freetype/fx_freetype.h"
 #include "core/fxge/fx_font.h"
+#include "core/fxge/fx_fontencoding.h"
 
 #if defined(PDF_USE_SKIA)
 #include "third_party/skia/include/core/SkRefCnt.h"  // nogncheck
@@ -75,6 +76,8 @@ class CFX_Face final : public Retainable, public Observable {
   static RetainPtr<CFX_Face> New(RetainPtr<Retainable> cache_entry,
                                  RetainPtr<CFX_ReadOnlySpanStream> font_stream,
                                  uint32_t face_index);
+  static wchar_t UnicodeFromAdobeName(const char* name);
+  static ByteString AdobeNameFromUnicode(wchar_t unicode);
 
   bool HasGlyphNames() const;
   bool IsTtOt() const;
@@ -93,7 +96,6 @@ class CFX_Face final : public Retainable, public Observable {
   int16_t GetDescender() const;
 
   pdfium::span<const uint8_t> GetData() const;
-
 
   std::unique_ptr<CFX_CTTGSUBTable> ParseGSUBTable();
 
@@ -205,6 +207,7 @@ class CFX_Face final : public Retainable, public Observable {
 #if defined(PDF_ENABLE_FONTATIONS)
   std::unique_ptr<SkrifaFontHolder> const skrifa_font_;
 #endif  // defined(PDF_ENABLE_FONTATIONS)
+  fxge::FontEncoding selected_encoding_ = fxge::FontEncoding::kNone;
 };
 
 #endif  // CORE_FXGE_CFX_FACE_H_

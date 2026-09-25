@@ -3,12 +3,20 @@
 // found in the LICENSE file.
 
 #include <algorithm>
+#include <memory>
 #include <string>
 #include <vector>
 
+#include "core/fxcrt/cfx_read_only_span_stream.h"
 #include "core/fxcrt/compiler_specific.h"
 #include "core/fxge/cfx_font.h"
+#include "core/fxge/cfx_gemodule.h"
+#include "core/fxge/cfx_glyphbitmap.h"
+#include "core/fxge/cfx_path.h"
+#include "core/fxge/dib/cfx_dibitmap.h"
+#include "core/fxge/fontdata/chromefontdata/chromefontdata.h"
 #include "core/fxge/fx_font.h"
+#include "core/fxge/fx_fontencoding.h"
 #include "core/fxge/skrifa/src/main.rs.h"
 #include "core/fxge/skrifa/src/outlines.h"
 #include "testing/gtest/include/gtest/gtest.h"
@@ -234,4 +242,66 @@ TEST(FxSkrifaTest, TestRobotoGlyph2344Bounds) {
   EXPECT_EQ(ft_y_min, skrifa_bbox.y_min);
   EXPECT_EQ(ft_x_max, skrifa_bbox.x_max);
   EXPECT_EQ(ft_y_max, skrifa_bbox.y_max);
+}
+
+TEST(FxSkrifaTest, TestType1Face) {
+  EXPECT_EQ(UnicodeFromAdobeName("period"), L'.');
+  EXPECT_EQ(UnicodeFromAdobeName("A"), L'A');
+  EXPECT_EQ(AdobeNameFromUnicode(L'.'), "period");
+  EXPECT_EQ(AdobeNameFromUnicode(L'A'), "A");
+
+  if (!CFX_GEModule::IsFontations()) {
+    return;
+  }
+
+  auto stream =
+      pdfium::MakeRetain<CFX_ReadOnlySpanStream>(kFoxitSansMMFontData);
+  auto face = CFX_Face::New(nullptr, stream, 0);
+  ASSERT_TRUE(face);
+
+  EXPECT_EQ(face->GetFTFaceForTesting(), nullptr);
+  EXPECT_EQ(face->GetFontFormat(), "Type 1");
+  EXPECT_EQ(face->GetFamilyName(), "Chrome Sans MM");
+  EXPECT_EQ(face->GetPostscriptName(), "ChromeSansMM");
+  EXPECT_EQ(face->GetGlyphCount(), 230);
+  EXPECT_EQ(face->GetUnitsPerEm(), 1000);
+
+  EXPECT_TRUE(face->SelectCharMap(fxge::FontEncoding::kAdobeCustom));
+  int gid_x = face->GetCharIndex(120);
+  EXPECT_EQ(gid_x, 103);
+
+  EXPECT_TRUE(face->SelectCharMap(fxge::FontEncoding::kUnicode));
+  EXPECT_EQ(face->GetCharIndex(L'x'), gid_x);
+
+  std::unique_ptr<CFX_Path> path =
+      face->LoadGlyphPath(gid_x, 0, false, nullptr);
+  ASSERT_TRUE(path);
+  EXPECT_EQ(path->GetPoints().size(), 12u);
+
+  auto glyph_bitmap =
+      face->RenderGlyph(gid_x, /*is_cid_font=*/false, /*is_vertical=*/false,
+                        CFX_Matrix(12.0f, 0, 0, 12.0f, 0, 0), /*dest_width=*/0,
+                        FontAntiAliasingMode::kNormal, /*subst_font=*/nullptr);
+  ASSERT_TRUE(glyph_bitmap);
+  EXPECT_TRUE(glyph_bitmap->GetBitmap());
+  EXPECT_EQ(glyph_bitmap->GetBitmap()->GetWidth(), 6);
+  EXPECT_EQ(glyph_bitmap->GetBitmap()->GetHeight(), 7);
+
+  auto glyph_lcd =
+      face->RenderGlyph(gid_x, /*is_cid_font=*/false, /*is_vertical=*/false,
+                        CFX_Matrix(12.0f, 0, 0, 12.0f, 0, 0), /*dest_width=*/0,
+                        FontAntiAliasingMode::kLcd, /*subst_font=*/nullptr);
+  ASSERT_TRUE(glyph_lcd);
+  EXPECT_TRUE(glyph_lcd->GetBitmap());
+  EXPECT_EQ(glyph_lcd->GetBitmap()->GetWidth(), 18);
+  EXPECT_EQ(glyph_lcd->GetBitmap()->GetHeight(), 7);
+
+  auto glyph_mono =
+      face->RenderGlyph(gid_x, /*is_cid_font=*/false, /*is_vertical=*/false,
+                        CFX_Matrix(12.0f, 0, 0, 12.0f, 0, 0), /*dest_width=*/0,
+                        FontAntiAliasingMode::kMono, /*subst_font=*/nullptr);
+  ASSERT_TRUE(glyph_mono);
+  EXPECT_TRUE(glyph_mono->GetBitmap());
+  EXPECT_EQ(glyph_mono->GetBitmap()->GetWidth(), 6);
+  EXPECT_EQ(glyph_mono->GetBitmap()->GetHeight(), 7);
 }

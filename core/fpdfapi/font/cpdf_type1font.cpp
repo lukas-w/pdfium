@@ -51,6 +51,13 @@ const char* GlyphNameRemap(const char* pStrAdobe) {
 #endif  // BUILDFLAG(IS_APPLE)
 
 bool UseType1Charmap(const RetainPtr<CFX_Face>& face) {
+#if defined(PDF_ENABLE_FONTATIONS)
+  if (CFX_GEModule::IsFontations()) {
+    // TODO(crbug.com/42271123): properly support charmaps.
+    return face->SelectCharMap(fxge::FontEncoding::kAdobeCustom);
+  }
+#endif
+
   size_t num_charmaps = face->GetCharMapCount();
   if (num_charmaps == 0) {
     return false;
