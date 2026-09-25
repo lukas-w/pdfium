@@ -608,9 +608,19 @@ Test_CheckBox.pdf * * * * * diff
 # TODO(crbug.com/459586268): Remove this entry once macOS support for Intel
 # hardware goes away. The test expectation is just different enough from the ARM
 # rendering that fuzzy matching is not enough for it to match.
+2_color_calrgb.pdf mac_x86 * * skia * diff
 2_color_tiling.pdf mac_x86 * * skia * diff
 2_color_tiling.pdf * * * * fontations fuzzy=10,0.1,15
 2_uncolor_tiling.pdf mac_x86 * * skia * diff
+3bigpreview.pdf mac_x86 * * skia * diff
+FRC_4.5.3_DeviceRGB_rg.pdf mac_x86 * * skia * diff
+FRC_4.5.4_CalGray_gamma.pdf mac_x86 * * skia * diff
+FRC_4.5.4_CalGray_whitepoint.pdf mac_x86 * * skia * diff
+FRC_4.5.4_CalRGB_gamma.pdf mac_x86 * * skia * diff
+FRC_4.5.4_CalRGB_matrix.pdf mac_x86 * * skia * diff
+FRC_4.5.4_CalRGB_whitepoint.pdf mac_x86 * * skia * diff
+FRC_4.5.4_Lab.pdf mac_x86 * * skia * diff
+FRC_4.5.4_RI_Relative.pdf mac_x86 * * skia * diff
 FRC_10_8.2.4_View_C.pdf mac_x86 * * skia * diff
 FRC_10_8.2.4_View_C.pdf * * * * fontations fuzzy=10,0.1,15
 Test_DateField_locale_zh_HK.pdf mac_x86 * * skia * diff
@@ -655,19 +665,33 @@ annotation_underline_opacity.pdf mac_x86 * * skia * diff
 annotation_underline_opacity.pdf * * * * fontations fuzzy=10,0.1,15
 bug_668762.pdf mac_x86 * * skia * diff
 bug_668762.pdf * * * * fontations fuzzy=10,0.1,15
+edit_transform.pdf mac_x86 * * skia * diff
 en_14_foxit_products.pdf mac_x86 * * skia * diff
 en_14_foxit_products.pdf * * * * fontations fuzzy=10,0.1,15
+en_contact.pdf mac_x86 * * skia * diff
+en_foxit.pdf mac_x86 * * skia * diff
 en_fqa.pdf mac_x86 * * skia * diff
 en_fqa.pdf * * * * fontations fuzzy=10,0.1,15
+example_002.pdf mac_x86 * * skia * diff
+example_004.pdf mac_x86 * * skia * diff
+example_028.pdf mac_x86 * * skia * diff
+example_055.pdf mac_x86 * * skia * diff
 font_1_embedded_font_en_feature.pdf mac_x86 * * skia * diff
 font_1_embedded_font_en_feature.pdf * * * * fontations fuzzy=10,0.1,15
 font_2_embedded_font_en_size14.pdf mac_x86 * * skia * diff
 font_2_embedded_font_en_size14.pdf * * * * fontations fuzzy=10,0.1,15
+new_stamp4.pdf mac_x86 * * skia * diff
+octest.pdf mac_x86 * * skia * diff
+path_5_pattern.pdf mac_x86 * * skia * diff
+path_6_graphics4.5.5.pdf mac_x86 * * skia * diff
+path_7.pdf mac_x86 * * skia * diff
+quick_start_guide.pdf mac_x86 * * skia * diff
 transparent1.pdf mac_x86 * * skia * diff
 xfermodes.pdf mac_x86 * * skia * diff
 xfermodes.pdf * * * skia * fuzzy
 xfermodes2.pdf mac_x86 * * skia * diff
 xfermodes3.pdf * * * skia * fuzzy
+zh_function_list.pdf mac_x86 * * skia * diff
 
 # GDI
 
