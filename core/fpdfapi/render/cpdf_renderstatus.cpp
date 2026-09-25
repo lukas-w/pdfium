@@ -136,7 +136,7 @@ FXDIB_Format GetFormatForLuminosity(bool is_luminosity) {
   return FXDIB_Format::kBgrx;
 #else  // BUILDFLAG(IS_APPLE)
 #if defined(PDF_USE_SKIA)
-  if (CFX_GEModule::Get()->UseSkiaRenderer()) {
+  if (CFX_GEModule::IsSkiaRenderer()) {
     return FXDIB_Format::kBgrx;
   }
 #endif  // defined(PDF_USE_SKIA)
@@ -1325,7 +1325,7 @@ void CPDF_RenderStatus::CompositeDIBitmap(
     } else {
       if (alpha != 1.0f) {
 #if defined(PDF_USE_SKIA)
-        if (CFX_GEModule::Get()->UseSkiaRenderer()) {
+        if (CFX_GEModule::IsSkiaRenderer()) {
           CFX_Matrix matrix = CFX_RenderDevice::GetFlipMatrix(
               bitmap->GetWidth(), bitmap->GetHeight(), left, top);
           device_->StartDIBits(std::move(bitmap), alpha, /*argb=*/0, matrix,

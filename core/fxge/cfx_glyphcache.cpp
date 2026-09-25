@@ -163,7 +163,7 @@ const CFX_GlyphBitmap* CFX_GlyphCache::LoadGlyphBitmap(
 #if BUILDFLAG(IS_APPLE)
   bool bDoLookUp = !text_options->native_text;
 #if defined(PDF_USE_SKIA)
-  bDoLookUp = bDoLookUp || CFX_GEModule::Get()->UseSkiaRenderer();
+  bDoLookUp = bDoLookUp || CFX_GEModule::IsSkiaRenderer();
 #endif  // defined(PDF_USE_SKIA)
 #else   // BUILDFLAG(IS_APPLE)
   const bool bDoLookUp = true;
@@ -175,7 +175,7 @@ const CFX_GlyphBitmap* CFX_GlyphCache::LoadGlyphBitmap(
 
 #if BUILDFLAG(IS_APPLE)
 #if defined(PDF_USE_SKIA)
-  DCHECK(!CFX_GEModule::Get()->UseSkiaRenderer());
+  DCHECK(!CFX_GEModule::IsSkiaRenderer());
 #endif  // defined(PDF_USE_SKIA)
 
   auto it = size_map_.find(FaceGlyphsKey);

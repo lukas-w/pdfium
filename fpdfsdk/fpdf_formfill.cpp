@@ -236,7 +236,7 @@ void FFLCommon(FPDF_FORMHANDLE hHandle,
     CHECK(holder);
   } else {
 #if defined(PDF_USE_SKIA)
-    if (!CFX_GEModule::Get()->UseSkiaRenderer()) {
+    if (!CFX_GEModule::IsSkiaRenderer()) {
       return;
     }
 

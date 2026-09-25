@@ -586,12 +586,11 @@ RetainPtr<CFX_Face> CFX_Face::New(RetainPtr<Retainable> cache_entry,
   auto raw_font = skrifa::new_font(rust::Slice(data), face_index);
   if (raw_font->is_ok()) {
     skrifa_font = std::make_unique<SkrifaFontHolder>(std::move(raw_font));
-  } else if (font_mgr->GetFontBackend() ==
-             CFX_FontMgr::FontBackend::kFontations) {
-    // Everything guarded by IsFontations() dereferences `skrifa_font_`, and
-    // this backend does not fall back to FreeType, so a font that Fontations
-    // cannot parse is of no use. Reject it rather than keeping a face that
-    // only FreeType can read.
+  } else if (CFX_GEModule::IsFontations()) {
+    // Everything guarded by CFX_GEModule::IsFontations() dereferences
+    // `skrifa_font_`, and this backend does not fall back to FreeType, so a
+    // font that Fontations cannot parse is of no use. Reject it rather than
+    // keeping a face that only FreeType can read.
     return nullptr;
   }
 #endif  // defined(PDF_ENABLE_FONTATIONS)
@@ -602,18 +601,9 @@ RetainPtr<CFX_Face> CFX_Face::New(RetainPtr<Retainable> cache_entry,
                                          std::move(skrifa_font)));
 }
 
-#if defined(PDF_ENABLE_FONTATIONS)
-bool CFX_Face::IsFontations() const {
-  // New() guarantees a non-null `skrifa_font_` whenever this is true, and the
-  // backend is fixed for the lifetime of the process.
-  return CFX_GEModule::Get()->GetFontMgr()->GetFontBackend() ==
-         CFX_FontMgr::FontBackend::kFontations;
-}
-#endif  // defined(PDF_ENABLE_FONTATIONS)
-
 bool CFX_Face::HasGlyphNames() const {
 #if defined(PDF_ENABLE_FONTATIONS)
-  if (IsFontations()) {
+  if (CFX_GEModule::IsFontations()) {
     return skrifa_font_->font->has_glyph_names();
   }
 #endif  // defined(PDF_ENABLE_FONTATIONS)
@@ -626,7 +616,7 @@ bool CFX_Face::IsTtOt() const {
 
 ByteString CFX_Face::GetFontFormat() {
 #if defined(PDF_ENABLE_FONTATIONS)
-  if (IsFontations()) {
+  if (CFX_GEModule::IsFontations()) {
     switch (skrifa_font_->font->font_type()) {
       case skrifa::FaceFormat::TrueType:
         return "TrueType";
@@ -644,7 +634,7 @@ ByteString CFX_Face::GetFontFormat() {
 
 bool CFX_Face::IsTricky() const {
 #if defined(PDF_ENABLE_FONTATIONS)
-  if (IsFontations()) {
+  if (CFX_GEModule::IsFontations()) {
     return skrifa_font_->font->is_tricky();
   }
 #endif  // defined(PDF_ENABLE_FONTATIONS)
@@ -653,7 +643,7 @@ bool CFX_Face::IsTricky() const {
 
 bool CFX_Face::IsFixedWidth() const {
 #if defined(PDF_ENABLE_FONTATIONS)
-  if (IsFontations()) {
+  if (CFX_GEModule::IsFontations()) {
     return skrifa_font_->font->is_fixed_pitch();
   }
 #endif  // defined(PDF_ENABLE_FONTATIONS)
@@ -663,7 +653,7 @@ bool CFX_Face::IsFixedWidth() const {
 #if defined(PDF_ENABLE_XFA)
 bool CFX_Face::IsScalable() const {
 #if defined(PDF_ENABLE_FONTATIONS)
-  if (IsFontations()) {
+  if (CFX_GEModule::IsFontations()) {
     return skrifa_font_->font->is_scalable();
   }
 #endif  // defined(PDF_ENABLE_FONTATIONS)
@@ -681,7 +671,7 @@ bool CFX_Face::IsBold() const {
 
 ByteString CFX_Face::GetFamilyName() const {
 #if defined(PDF_ENABLE_FONTATIONS)
-  if (IsFontations()) {
+  if (CFX_GEModule::IsFontations()) {
     rust::Str skrifa_result = skrifa_font_->font->family_name();
     return ByteString(ByteStringView(skrifa_result));
   }
@@ -691,7 +681,7 @@ ByteString CFX_Face::GetFamilyName() const {
 
 ByteString CFX_Face::GetStyleName() const {
 #if defined(PDF_ENABLE_FONTATIONS)
-  if (IsFontations()) {
+  if (CFX_GEModule::IsFontations()) {
     rust::String skrifa_result = skrifa_font_->font->style_name();
     return ByteString(skrifa_result.c_str());
   }
@@ -708,7 +698,7 @@ FX_RECT CFX_Face::GetBBox() const {
 
 uint16_t CFX_Face::GetUnitsPerEm() const {
 #if defined(PDF_ENABLE_FONTATIONS)
-  if (IsFontations()) {
+  if (CFX_GEModule::IsFontations()) {
     return pdfium::checked_cast<uint16_t>(skrifa_font_->font->units_per_em());
   }
 #endif  // defined(PDF_ENABLE_FONTATIONS)
@@ -721,7 +711,7 @@ int CFX_Face::EmAdjust(int value) const {
 
 int16_t CFX_Face::GetAscender() const {
 #if defined(PDF_ENABLE_FONTATIONS)
-  if (IsFontations()) {
+  if (CFX_GEModule::IsFontations()) {
     return static_cast<int16_t>(std::round(skrifa_font_->font->ascent()));
   }
 #endif  // defined(PDF_ENABLE_FONTATIONS)
@@ -730,7 +720,7 @@ int16_t CFX_Face::GetAscender() const {
 
 int16_t CFX_Face::GetDescender() const {
 #if defined(PDF_ENABLE_FONTATIONS)
-  if (IsFontations()) {
+  if (CFX_GEModule::IsFontations()) {
     return static_cast<int16_t>(std::round(skrifa_font_->font->descent()));
   }
 #endif  // defined(PDF_ENABLE_FONTATIONS)
@@ -790,7 +780,7 @@ std::unique_ptr<CFX_CTTNameTable> CFX_Face::ParseNameTable() {
 
 std::optional<std::array<uint32_t, 4>> CFX_Face::GetOs2UnicodeRange() {
 #if defined(PDF_ENABLE_FONTATIONS)
-  if (IsFontations()) {
+  if (CFX_GEModule::IsFontations()) {
     skrifa::UnicodeRange range;
     if (skrifa_font_->font->get_os2_unicode_range(range)) {
       return std::array<uint32_t, 4>{range.range1, range.range2, range.range3,
@@ -813,7 +803,7 @@ std::optional<std::array<uint32_t, 4>> CFX_Face::GetOs2UnicodeRange() {
 #if defined(PDF_ENABLE_XFA) || BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_LINUX)
 std::optional<std::array<uint32_t, 2>> CFX_Face::GetOs2CodePageRange() {
 #if defined(PDF_ENABLE_FONTATIONS)
-  if (IsFontations()) {
+  if (CFX_GEModule::IsFontations()) {
     skrifa::CodePageRange range;
     if (skrifa_font_->font->get_os2_code_page_range(range)) {
       return std::array<uint32_t, 2>{range.range1, range.range2};
@@ -831,7 +821,7 @@ std::optional<std::array<uint32_t, 2>> CFX_Face::GetOs2CodePageRange() {
 
 std::optional<std::array<uint8_t, 2>> CFX_Face::GetOs2Panose() {
 #if defined(PDF_ENABLE_FONTATIONS)
-  if (IsFontations()) {
+  if (CFX_GEModule::IsFontations()) {
     skrifa::Os2Panose panose;
     if (skrifa_font_->font->get_os2_panose(panose)) {
       return std::array<uint8_t, 2>{panose.b0, panose.b1};
@@ -850,7 +840,7 @@ std::optional<std::array<uint8_t, 2>> CFX_Face::GetOs2Panose() {
 
 int CFX_Face::GetGlyphCount() const {
 #if defined(PDF_ENABLE_FONTATIONS)
-  if (IsFontations()) {
+  if (CFX_GEModule::IsFontations()) {
     return static_cast<int>(skrifa_font_->font->num_glyphs());
   }
 #endif  // defined(PDF_ENABLE_FONTATIONS)
@@ -866,7 +856,7 @@ std::unique_ptr<CFX_GlyphBitmap> CFX_Face::RenderGlyph(
     FontAntiAliasingMode anti_alias,
     const CFX_SubstFont* subst_font) {
 #if defined(PDF_ENABLE_FONTATIONS)
-  if (IsFontations() && !GetRec()) {
+  if (CFX_GEModule::IsFontations() && !GetRec()) {
     skrifa::Outline outline;
     if (!skrifa_font_->font->unscaled_outline(glyph_index, outline)) {
       return nullptr;
@@ -1030,8 +1020,7 @@ std::unique_ptr<CFX_GlyphBitmap> CFX_Face::RenderGlyph(
 #if defined(PDF_ENABLE_FONTATIONS)
   // Backing store for `glyph->outline`; must outlive FT_Render_Glyph().
   std::optional<FtOutlineData> ft_outline;
-  if (CFX_GEModule::Get()->GetFontMgr()->GetFontBackend() ==
-      CFX_FontMgr::FontBackend::kFontations) {
+  if (CFX_GEModule::IsFontations()) {
     absl::Cleanup outline_cleaner = [glyph] { glyph->outline = FT_Outline{}; };
     if (skrifa_font_ && skrifa_font_->font->is_ok()) {
       skrifa::Outline outline;
@@ -1140,8 +1129,7 @@ std::unique_ptr<CFX_Path> CFX_Face::LoadGlyphPath(
     bool is_vertical,
     const CFX_SubstFont* subst_font) {
 #if defined(PDF_ENABLE_FONTATIONS)
-  if (CFX_GEModule::Get()->GetFontMgr()->GetFontBackend() ==
-      CFX_FontMgr::FontBackend::kFontations) {
+  if (CFX_GEModule::IsFontations()) {
     if (skrifa_font_ && skrifa_font_->font->is_ok()) {
       skrifa::Outline outline;
       if (skrifa_font_->font->unscaled_outline(glyph_index, outline)) {
@@ -1229,7 +1217,7 @@ std::unique_ptr<CFX_Path> CFX_Face::LoadGlyphPath(
 
 int CFX_Face::GetGlyphTTWidth(uint32_t glyph_index) const {
 #if defined(PDF_ENABLE_FONTATIONS)
-  if (IsFontations()) {
+  if (CFX_GEModule::IsFontations()) {
     skrifa::Outline outline;
     if (skrifa_font_->font->unscaled_outline(glyph_index, outline)) {
       return NormalizeFontMetric(
@@ -1269,7 +1257,7 @@ int CFX_Face::GetGlyphWidth(uint32_t glyph_index,
 
 ByteString CFX_Face::GetGlyphName(uint32_t glyph_index) {
 #if defined(PDF_ENABLE_FONTATIONS)
-  if (IsFontations()) {
+  if (CFX_GEModule::IsFontations()) {
     rust::String skrifa_result = skrifa_font_->font->glyph_name(glyph_index);
     return ByteString(skrifa_result.c_str());
   }
@@ -1282,7 +1270,7 @@ ByteString CFX_Face::GetGlyphName(uint32_t glyph_index) {
 
 int CFX_Face::GetCharIndex(uint32_t code) {
 #if defined(PDF_ENABLE_FONTATIONS)
-  if (IsFontations()) {
+  if (CFX_GEModule::IsFontations()) {
     FT_CharMap charmap = GetRec()->charmap;
     if (charmap) {
       if (charmap->encoding == FT_ENCODING_UNICODE) {
@@ -1306,7 +1294,7 @@ int CFX_Face::GetCharIndex(uint32_t code) {
 
 int CFX_Face::GetNameIndex(const char* name) {
 #if defined(PDF_ENABLE_FONTATIONS)
-  if (IsFontations()) {
+  if (CFX_GEModule::IsFontations()) {
     return static_cast<int>(skrifa_font_->font->name_index(name));
   }
 #endif  // defined(PDF_ENABLE_FONTATIONS)
@@ -1315,7 +1303,7 @@ int CFX_Face::GetNameIndex(const char* name) {
 
 int CFX_Face::LoadGlyph(uint32_t glyph_index, bool scale) {
 #if defined(PDF_ENABLE_FONTATIONS)
-  if (IsFontations()) {
+  if (CFX_GEModule::IsFontations()) {
     return skrifa_font_->font->has_outline(glyph_index) ? 0 : -1;
   }
 #endif  // defined(PDF_ENABLE_FONTATIONS)
@@ -1328,7 +1316,7 @@ int CFX_Face::LoadGlyph(uint32_t glyph_index, bool scale) {
 
 ByteString CFX_Face::GetPostscriptName() {
 #if defined(PDF_ENABLE_FONTATIONS)
-  if (IsFontations()) {
+  if (CFX_GEModule::IsFontations()) {
     rust::Str skrifa_result = skrifa_font_->font->postscript_name();
     return ByteString(ByteStringView(skrifa_result));
   }
@@ -1344,7 +1332,7 @@ CFX_Size CFX_Face::GetPixelSize() const {
 
 std::optional<FX_RECT> CFX_Face::GetFontGlyphBBox(uint32_t glyph_index) {
 #if defined(PDF_ENABLE_FONTATIONS)
-  if (IsFontations()) {
+  if (CFX_GEModule::IsFontations()) {
     if (!skrifa_font_->font->has_outline(glyph_index)) {
       return std::nullopt;
     }
@@ -1441,7 +1429,7 @@ FX_RECT CFX_Face::GetCharBBox(uint32_t code, int glyph_index) {
 
 FX_RECT CFX_Face::GetGlyphBBox(uint32_t glyph_index) const {
 #if defined(PDF_ENABLE_FONTATIONS)
-  if (IsFontations()) {
+  if (CFX_GEModule::IsFontations()) {
     skrifa::BoundingBox bbox = skrifa_font_->font->glyph_bounds(glyph_index);
     const uint16_t upem = GetUnitsPerEm();
     return FX_RECT(NormalizeFontMetric(bbox.x_min, upem),
@@ -1465,7 +1453,7 @@ FX_RECT CFX_Face::GetGlyphBBox(uint32_t glyph_index) const {
 std::vector<CharCodeAndIndex> CFX_Face::GetCharCodesAndIndices(
     char32_t max_char) {
 #if defined(PDF_ENABLE_FONTATIONS)
-  if (IsFontations()) {
+  if (CFX_GEModule::IsFontations()) {
     auto skrifa_result =
         skrifa_font_->font->get_char_codes_and_indices(max_char);
     std::vector<CharCodeAndIndex> results;
@@ -1578,7 +1566,7 @@ bool CFX_Face::SelectCharMap(fxge::FontEncoding encoding) {
 #if defined(PDF_ENABLE_XFA)
 int CFX_Face::GetNumFaces() const {
 #if defined(PDF_ENABLE_FONTATIONS)
-  if (IsFontations()) {
+  if (CFX_GEModule::IsFontations()) {
     pdfium::span<const uint8_t> data = GetData();
     return static_cast<int>(
         skrifa::get_num_faces(rust::Slice<const uint8_t>(data)));
@@ -1591,7 +1579,7 @@ int CFX_Face::GetNumFaces() const {
 #if BUILDFLAG(IS_WIN)
 bool CFX_Face::CanEmbed() {
 #if defined(PDF_ENABLE_FONTATIONS)
-  if (IsFontations()) {
+  if (CFX_GEModule::IsFontations()) {
     uint16_t fs_type = 0;
     if (skrifa_font_->font->get_os2_fs_type(fs_type)) {
       return (fs_type &

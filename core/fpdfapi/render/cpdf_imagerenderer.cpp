@@ -410,7 +410,7 @@ bool CPDF_ImageRenderer::DrawMaskedImage() {
   }
 
 #if defined(PDF_USE_SKIA)
-  if (CFX_GEModule::Get()->UseSkiaRenderer() &&
+  if (CFX_GEModule::IsSkiaRenderer() &&
       render_status_->GetRenderDevice()->SetBitsWithMask(
           bitmap_device->GetBitmap(), mask_bitmap, rect.left, rect.top, alpha_,
           blend_type_)) {

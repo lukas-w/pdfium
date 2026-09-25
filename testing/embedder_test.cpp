@@ -316,7 +316,7 @@ std::vector<std::string> GetEmbedderTestExpectationsWithSuffixPath(
 
   std::string renderer = "_agg";
 #if defined(PDF_USE_SKIA)
-  if (CFX_GEModule::Get()->UseSkiaRenderer()) {
+  if (CFX_GEModule::IsSkiaRenderer()) {
     renderer = "_skia";
   }
 #endif

@@ -170,7 +170,7 @@ void CFX_DIBitmap::Clear(uint32_t color) {
     }
     case FXDIB_Format::kBgrx:
 #if defined(PDF_USE_SKIA)
-      if (CFX_GEModule::Get()->UseSkiaRenderer()) {
+      if (CFX_GEModule::IsSkiaRenderer()) {
         // TODO(crbug.com/42271025): This is not reliable because alpha may
         // be modified outside of this operation.
         color |= 0xFF000000;
@@ -184,7 +184,7 @@ void CFX_DIBitmap::Clear(uint32_t color) {
       break;
 #if defined(PDF_USE_SKIA)
     case FXDIB_Format::kBgraPremul: {
-      CHECK(CFX_GEModule::Get()->UseSkiaRenderer());
+      CHECK(CFX_GEModule::IsSkiaRenderer());
       const FX_BGRA_STRUCT<uint8_t> bgra =
           PreMultiplyColor(ArgbToBGRAStruct(color));
       for (int row = 0; row < GetHeight(); row++) {
@@ -1031,7 +1031,7 @@ CFX_DIBitmap::ScopedPremultiplier::~ScopedPremultiplier() {
 }
 
 bool CFX_DIBitmap::ScopedPremultiplier::NeedToPremultiplyBitmap() const {
-  return CFX_GEModule::Get()->UseSkiaRenderer() &&
+  return CFX_GEModule::IsSkiaRenderer() &&
          bitmap_->GetFormat() == FXDIB_Format::kBgra;
 }
 

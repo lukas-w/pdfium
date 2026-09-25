@@ -102,7 +102,7 @@ class CachedImage final : public CFX_DIBBase {
 RetainPtr<CFX_DIBBase> MakeCachedImage(RetainPtr<CFX_DIBBase> image,
                                        bool realize_hint) {
 #if defined(PDF_USE_SKIA)
-  if (CFX_GEModule::Get()->UseSkiaRenderer()) {
+  if (CFX_GEModule::IsSkiaRenderer()) {
     // Ignore `realize_hint`, as `RealizeSkImage()` doesn't benefit from it.
     return pdfium::MakeRetain<CachedImage>(std::move(image));
   }

@@ -1493,7 +1493,7 @@ RenderDeviceDriverIface::StartResult CFX_SkiaDeviceDriver::StartDIBits(
 }
 
 void CFX_DIBitmap::PreMultiply() {
-  CHECK(CFX_GEModule::Get()->UseSkiaRenderer());
+  CHECK(CFX_GEModule::IsSkiaRenderer());
   if (GetFormat() != FXDIB_Format::kBgra) {
     return;
   }
@@ -1517,7 +1517,7 @@ void CFX_DIBitmap::PreMultiply() {
 }
 
 void CFX_DIBitmap::UnPreMultiply() {
-  CHECK(CFX_GEModule::Get()->UseSkiaRenderer());
+  CHECK(CFX_GEModule::IsSkiaRenderer());
   if (GetFormat() != FXDIB_Format::kBgraPremul) {
     return;
   }

@@ -806,7 +806,7 @@ bool CFX_RenderDevice::DrawPath(const CFX_Path& path,
   if (fill && fill_alpha && stroke_alpha < 0xff && fill_options.stroke) {
 #if defined(PDF_USE_SKIA)
     if (render_cap_fillstroke_path_) {
-      const bool using_skia = CFX_GEModule::Get()->UseSkiaRenderer();
+      const bool using_skia = CFX_GEModule::IsSkiaRenderer();
       if (using_skia) {
         device_driver_->SetGroupKnockout(true);
       }
@@ -1178,7 +1178,7 @@ bool CFX_RenderDevice::DrawNormalText(pdfium::span<const TextCharPos> pCharPos,
         // instead fall back on NORMAL anti-aliasing.
         anti_alias = FontAntiAliasingMode::kNormal;
 #if defined(PDF_USE_SKIA)
-        if (CFX_GEModule::Get()->UseSkiaRenderer()) {
+        if (CFX_GEModule::IsSkiaRenderer()) {
           // Since |anti_alias| doesn't affect Skia rendering, and Skia only
           // follows strictly to the options provided by |text_options|, we need
           // to update |text_options| so that Skia falls back on normal
@@ -1663,7 +1663,7 @@ bool CFX_RenderDevice::AttachImpl(RetainPtr<CFX_DIBitmap> pBitmap,
                                   RetainPtr<CFX_DIBitmap> pBackdropBitmap,
                                   bool bGroupKnockout) {
 #if defined(PDF_USE_SKIA)
-  if (CFX_GEModule::Get()->UseSkiaRenderer()) {
+  if (CFX_GEModule::IsSkiaRenderer()) {
     return AttachSkiaImpl(std::move(pBitmap), bRgbByteOrder,
                           std::move(pBackdropBitmap), bGroupKnockout);
   }
@@ -1685,7 +1685,7 @@ bool CFX_RenderDevice::CreateWithBackdrop(int width,
                                           FXDIB_Format format,
                                           RetainPtr<CFX_DIBitmap> backdrop) {
 #if defined(PDF_USE_SKIA)
-  if (CFX_GEModule::Get()->UseSkiaRenderer()) {
+  if (CFX_GEModule::IsSkiaRenderer()) {
     return CreateSkia(width, height, format, backdrop);
   }
 #endif

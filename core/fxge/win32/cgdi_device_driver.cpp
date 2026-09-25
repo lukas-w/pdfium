@@ -337,7 +337,7 @@ unsigned LineClip(float w,
                   float* x,
                   float* y) {
 #if defined(PDF_USE_SKIA)
-  if (CFX_GEModule::Get()->UseSkiaRenderer()) {
+  if (CFX_GEModule::IsSkiaRenderer()) {
     // TODO(caryclark) temporary replacement of antigrain in line function to
     // permit removing antigrain altogether
     rect_base rect = {0.0f, 0.0f, w, h};

@@ -94,14 +94,15 @@ TEST_F(CFDETextOutTest, DrawLogicTextBasic) {
   text_out().DrawLogicText(device(), L"foo", CFX_RectF(0, 0, 2100, 100));
   const char* checksum = []() {
 #if defined(PDF_USE_SKIA) && BUILDFLAG(IS_WIN)
-    if (CFX_GEModule::Get()->UseSkiaRenderer()) {
+    if (CFX_GEModule::IsSkiaRenderer()) {
       return "02c55ce12d3c31ae32fa08fe59c38996";
     }
 #endif
-    if (CFX_GEModule::Get()->GetFontMgr()->GetFontBackend() ==
-        CFX_FontMgr::FontBackend::kFontations) {
+#if defined(PDF_ENABLE_FONTATIONS)
+    if (CFX_GEModule::IsFontations()) {
       return "59f4a2cfb7938032f144954642babe58";
     }
+#endif
     return "c143f8450f661a489cc9423de7cc1acc";
   }();
   EXPECT_EQ(checksum, GetBitmapChecksum());
@@ -136,14 +137,15 @@ class CFDETextOutLargeBitmapTest : public CFDETextOutTest {
 
   const char* GetLargeTextBlobChecksum() {
 #if defined(PDF_USE_SKIA)
-    if (CFX_GEModule::Get()->UseSkiaRenderer()) {
+    if (CFX_GEModule::IsSkiaRenderer()) {
       return "e9aaffff1ea680bd5dc40a7b8904788d";
     }
 #endif
-    if (CFX_GEModule::Get()->GetFontMgr()->GetFontBackend() ==
-        CFX_FontMgr::FontBackend::kFontations) {
+#if defined(PDF_ENABLE_FONTATIONS)
+    if (CFX_GEModule::IsFontations()) {
       return "89adff3e02833425d42a2f89ef8fd7e3";
     }
+#endif
     return "add7cf2819b3e1397d8a60a9ec436a86";
   }
 };

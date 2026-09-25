@@ -1593,7 +1593,7 @@ TEST_F(FPDFViewEmbedderTest, RenderManyRectanglesWithAndWithoutExternalMemory) {
                                                     pdfium::kManyRectanglesPng);
 
 #if defined(PDF_USE_SKIA)
-  if (CFX_GEModule::Get()->UseSkiaRenderer()) {
+  if (CFX_GEModule::IsSkiaRenderer()) {
     TestRenderPageBitmapWithInternalMemory(page.get(), FPDFBitmap_BGRA_Premul,
                                            pdfium::kManyRectanglesPng);
     TestRenderPageBitmapWithInternalMemoryAndStride(
@@ -1969,7 +1969,7 @@ TEST_F(FPDFViewEmbedderTest, RenderXfaPage) {
 
 #if defined(PDF_USE_SKIA)
 TEST_F(FPDFViewEmbedderTest, RenderPageToSkp) {
-  if (!CFX_GEModule::Get()->UseSkiaRenderer()) {
+  if (!CFX_GEModule::IsSkiaRenderer()) {
     GTEST_SKIP() << "FPDF_RenderPageSkp() only makes sense with Skia";
   }
 
@@ -1982,7 +1982,7 @@ TEST_F(FPDFViewEmbedderTest, RenderPageToSkp) {
 }
 
 TEST_F(FPDFViewEmbedderTest, RenderXfaPageToSkp) {
-  if (!CFX_GEModule::Get()->UseSkiaRenderer()) {
+  if (!CFX_GEModule::IsSkiaRenderer()) {
     GTEST_SKIP() << "FPDF_RenderPageSkp() only makes sense with Skia";
   }
 
@@ -2163,7 +2163,7 @@ TEST_F(FPDFViewEmbedderTest, BitmapBGRAPremulFormat) {
   ScopedFPDFBitmap bitmap(
       FPDFBitmap_CreateEx(kWidth, kHeight, FPDFBitmap_BGRA_Premul, nullptr, 0));
 #if defined(PDF_USE_SKIA)
-  if (CFX_GEModule::Get()->UseSkiaRenderer()) {
+  if (CFX_GEModule::IsSkiaRenderer()) {
     ASSERT_TRUE(bitmap);
     EXPECT_EQ(FPDFBitmap_BGRA_Premul, FPDFBitmap_GetFormat(bitmap.get()));
     return;

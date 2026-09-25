@@ -81,7 +81,7 @@ class CFX_GEModule {
   static void Create(
       std::optional<pdfium::span<const char* const>> user_font_paths,
       RendererType renderer_type,
-      CFX_FontMgr::FontBackend backend);
+      CFX_FontMgr::FontBackend font_backend);
 
   static void Destroy();
   static CFX_GEModule* Get();
@@ -104,17 +104,27 @@ class CFX_GEModule {
 
 #if defined(PDF_USE_SKIA)
   // Runtime check to see if Skia is the renderer variant in use.
-  bool UseSkiaRenderer() const { return renderer_type_ == RendererType::kSkia; }
+  static bool IsSkiaRenderer() {
+    return Get()->renderer_type_ == RendererType::kSkia;
+  }
+#endif
+
+#if defined(PDF_ENABLE_FONTATIONS)
+  static bool IsFontations() {
+    return Get()->font_backend_ == CFX_FontMgr::FontBackend::kFontations;
+  }
 #endif
 
  private:
   CFX_GEModule(std::optional<pdfium::span<const char* const>> user_font_paths,
                RendererType renderer_type,
-               CFX_FontMgr::FontBackend backend);
+               CFX_FontMgr::FontBackend font_backend);
   ~CFX_GEModule();
 
   const RendererType renderer_type_;
-
+#if defined(PDF_ENABLE_FONTATIONS)
+  const CFX_FontMgr::FontBackend font_backend_;
+#endif
   std::unique_ptr<PlatformIface> const platform_;  // Must outlive `font_mgr_`.
   std::unique_ptr<CFX_FontMgr> const font_mgr_;
   std::optional<pdfium::span<const char* const>> user_font_paths_;

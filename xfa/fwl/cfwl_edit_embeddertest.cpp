@@ -77,7 +77,7 @@ TEST_F(CFWLEditEmbedderTest, LeftClickMouseSelection) {
 TEST_F(CFWLEditEmbedderTest, DragMouseSelection) {
 #if defined(PDF_USE_SKIA)
   // TODO(crbug.com/40096188): Fix this test and enable for Skia variants.
-  if (CFX_GEModule::Get()->UseSkiaRenderer()) {
+  if (CFX_GEModule::IsSkiaRenderer()) {
     return;
   }
 #endif
@@ -113,7 +113,7 @@ TEST_F(CFWLEditEmbedderTest, DragMouseSelection) {
 TEST_F(CFWLEditEmbedderTest, SimpleFill) {
 #if defined(PDF_USE_SKIA)
   // TODO(crbug.com/40096188): Fix this test and enable for Skia variants.
-  if (CFX_GEModule::Get()->UseSkiaRenderer()) {
+  if (CFX_GEModule::IsSkiaRenderer()) {
     return;
   }
 #endif
@@ -142,7 +142,7 @@ TEST_F(CFWLEditEmbedderTest, SimpleFill) {
 TEST_F(CFWLEditEmbedderTest, FillWithNewLineWithoutMultiline) {
 #if defined(PDF_USE_SKIA)
   // TODO(crbug.com/40096188): Fix this test and enable for Skia variants.
-  if (CFX_GEModule::Get()->UseSkiaRenderer()) {
+  if (CFX_GEModule::IsSkiaRenderer()) {
     return;
   }
 #endif
@@ -219,7 +219,7 @@ TEST_F(CFWLEditEmbedderTest, FillWithNewLineWithMultiline) {
 TEST_F(CFWLEditEmbedderTest, DateTimePickerTest) {
 #if defined(PDF_USE_SKIA)
   // TODO(crbug.com/40096188): Fix this test and enable for Skia variants.
-  if (CFX_GEModule::Get()->UseSkiaRenderer()) {
+  if (CFX_GEModule::IsSkiaRenderer()) {
     return;
   }
 #endif

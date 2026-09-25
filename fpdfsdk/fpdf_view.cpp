@@ -669,7 +669,7 @@ FPDF_EXPORT FPDF_BOOL FPDF_CALLCONV FPDF_RenderPage(HDC dc,
     return false;
   }
 #if defined(PDF_USE_SKIA)
-  if (!CFX_GEModule::Get()->UseSkiaRenderer()) {
+  if (!CFX_GEModule::IsSkiaRenderer()) {
     // Not needed by Skia. Call it for AGG to preserve pre-existing behavior.
     pBitmap->Clear(0x00ffffff);
   }
@@ -1016,8 +1016,8 @@ FPDF_EXPORT int FPDF_CALLCONV FPDFBitmap_GetFormat(FPDF_BITMAP bitmap) {
       return FPDFBitmap_BGRA;
 #if defined(PDF_USE_SKIA)
     case FXDIB_Format::kBgraPremul:
-      return CFX_GEModule::Get()->UseSkiaRenderer() ? FPDFBitmap_BGRA_Premul
-                                                    : FPDFBitmap_Unknown;
+      return CFX_GEModule::IsSkiaRenderer() ? FPDFBitmap_BGRA_Premul
+                                            : FPDFBitmap_Unknown;
 #endif
     default:
       return FPDFBitmap_Unknown;

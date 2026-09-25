@@ -46,7 +46,6 @@ class CFX_FontMgr {
 
   FXFT_LibraryRec* GetFTLibrary() const { return ft_library_.get(); }
 
-  FontBackend GetFontBackend() const { return font_backend_; }
   bool FTLibrarySupportsHinting() const { return ft_library_supports_hinting_; }
 
 #if defined(PDF_USE_SKIA)
@@ -56,8 +55,8 @@ class CFX_FontMgr {
  private:
   // Must come before `builtin_mapper_`.
   ScopedFXFTLibraryRec const ft_library_;
-  const FontBackend font_backend_;
 #if defined(PDF_USE_SKIA)
+  const FontBackend font_backend_;
   sk_sp<SkFontMgr> skia_fontmgr_;
   sk_sp<SkFontMgr> skia_fontmgr_fallback_;
 #endif

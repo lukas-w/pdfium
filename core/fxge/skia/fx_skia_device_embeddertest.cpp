@@ -213,14 +213,14 @@ using FxgeSkiaEmbedderTest = EmbedderTest;
 }  // namespace
 
 TEST(fxge, SkiaStateEmpty) {
-  if (!CFX_GEModule::Get()->UseSkiaRenderer()) {
+  if (!CFX_GEModule::IsSkiaRenderer()) {
     return;
   }
   Harness(&EmptyTest, {});
 }
 
 TEST(fxge, SkiaStatePath) {
-  if (!CFX_GEModule::Get()->UseSkiaRenderer()) {
+  if (!CFX_GEModule::IsSkiaRenderer()) {
     return;
   }
   Harness(&CommonTest, {State::Change::kNo, State::Save::kYes,
@@ -237,7 +237,7 @@ TEST(fxge, SkiaStatePath) {
 }
 
 TEST(fxge, SkiaStateText) {
-  if (!CFX_GEModule::Get()->UseSkiaRenderer()) {
+  if (!CFX_GEModule::IsSkiaRenderer()) {
     return;
   }
 
@@ -249,7 +249,7 @@ TEST(fxge, SkiaStateText) {
 }
 
 TEST(fxge, SkiaStateOOSClip) {
-  if (!CFX_GEModule::Get()->UseSkiaRenderer()) {
+  if (!CFX_GEModule::IsSkiaRenderer()) {
     return;
   }
   Harness(&OutOfSequenceClipTest, {});
@@ -265,7 +265,7 @@ TEST_F(FxgeSkiaEmbedderTest, RenderBigImageTwice) {
   static constexpr int kPageWidth = kImageWidth / kPageToImageFactor;
   static constexpr int kPageHeight = kImageHeight / kPageToImageFactor;
 
-  if (!CFX_GEModule::Get()->UseSkiaRenderer()) {
+  if (!CFX_GEModule::IsSkiaRenderer()) {
     GTEST_SKIP() << "Skia is not the default renderer";
   }
 
