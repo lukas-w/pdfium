@@ -6,7 +6,6 @@
 
 #include <algorithm>
 #include <memory>
-#include <numeric>
 #include <string>
 #include <utility>
 
@@ -174,67 +173,37 @@ TEST_F(CFXFontMapperSystemFontInfoTest, GetCachedTTCFaceFailToGetData) {
   static constexpr size_t kTtcSize = 1024;
   static constexpr size_t kDataSize = 2;
 
-  {
-    InSequence s;
-    EXPECT_CALL(system_font_info(),
-                GetFontData(kFontHandle, SystemFontInfoIface::kTableTTCF, _))
-        .WillOnce(DoAll(WithArg<2>([&](pdfium::span<uint8_t> buffer) {
-                          EXPECT_EQ(kTtcSize, buffer.size());
-                          std::iota(buffer.begin(), buffer.end(), 0);
-                        }),
-                        Return(kTtcSize)));
-    EXPECT_CALL(system_font_info(),
-                GetFontData(kFontHandle, SystemFontInfoIface::kTableTTCF, _))
-        .WillOnce(Return(0));
-  }
+  EXPECT_CALL(system_font_info(),
+              GetFontData(kFontHandle, SystemFontInfoIface::kTableTTCF, _))
+      .WillOnce(Return(0));
 
   EXPECT_FALSE(
       font_mapper().GetCachedTTCFace(kFontHandle, kTtcSize, kDataSize));
 }
 
 // Regression test for crbug.com/565837689 - should not crash.
-// TODO(crbug.com/565837689): Fix MSAN issue and enable this test case.
-#if defined(MEMORY_SANITIZER)
-#define MAYBE_GetCachedTTCFaceWithLargeTtc DISABLED_GetCachedTTCFaceWithLargeTtc
-#else
-#define MAYBE_GetCachedTTCFaceWithLargeTtc GetCachedTTCFaceWithLargeTtc
-#endif
-TEST_F(CFXFontMapperSystemFontInfoTest, MAYBE_GetCachedTTCFaceWithLargeTtc) {
+TEST_F(CFXFontMapperSystemFontInfoTest, GetCachedTTCFaceWithLargeTtc) {
   void* const kFontHandle = reinterpret_cast<void*>(12345);
-  static constexpr size_t kExpectedBufferSize = 1024;
-  // A value larger than the buffer that GetChecksumFromTT() uses. As such,
-  // GetFontData() should not write into the buffer.
   static constexpr size_t kTtcSize = 2048;
   static constexpr size_t kDataSize = 2;
 
   for (int i = 0; i < 2; ++i) {
-    {
-      InSequence s;
-      // GetChecksumFromTT() requests data with a `kExpectedBufferSize` buffer,
-      // which is too small to hold `kTtcSize` bytes.
-      EXPECT_CALL(system_font_info(),
-                  GetFontData(kFontHandle, SystemFontInfoIface::kTableTTCF, _))
-          .WillOnce([](void*, uint32_t, pdfium::span<uint8_t> buffer) {
-            EXPECT_EQ(kExpectedBufferSize, buffer.size());
-            return kTtcSize;
-          });
-
-      // Iteration 1:
-      // GetCachedTTCFace() reads `kTtcSize` bytes of test data and inserts an
-      // entry into `ttc_face_map_`. CFX_Face::New() then fails on the test
-      // data, destroying the FontCacheEntry while leaving the key in
-      // `ttc_face_map_` with a null ObservedPtr.
-      // Iteration 2:
-      // GetTTCFontCacheEntry() looks up the key in `ttc_face_map_` and returns
-      // nullptr, so GetCachedTTCFace() requests the TTC data again.
-      EXPECT_CALL(system_font_info(),
-                  GetFontData(kFontHandle, SystemFontInfoIface::kTableTTCF, _))
-          .WillOnce([](void*, uint32_t, pdfium::span<uint8_t> buffer) {
-            EXPECT_EQ(kTtcSize, buffer.size());
-            std::ranges::fill(buffer, 0);
-            return kTtcSize;
-          });
-    }
+    // Iteration 1:
+    // GetCachedTTCFace() reads `kTtcSize` bytes of test data and inserts an
+    // entry into `ttc_face_map_`. CFX_Face::New() then fails on the test data,
+    // destroying the FontCacheEntry while leaving the key in `ttc_face_map_`
+    // with a null ObservedPtr.
+    // Iteration 2:
+    // GetCachedTTCFace() reads `kTtcSize` bytes of test data again, and
+    // GetTTCFontCacheEntry() looks up the key in the non-empty `ttc_face_map_`,
+    // forcing a key comparison on the checksum.
+    EXPECT_CALL(system_font_info(),
+                GetFontData(kFontHandle, SystemFontInfoIface::kTableTTCF, _))
+        .WillOnce([](void*, uint32_t, pdfium::span<uint8_t> buffer) {
+          EXPECT_EQ(kTtcSize, buffer.size());
+          std::ranges::fill(buffer, 0);
+          return kTtcSize;
+        });
 
     // Iteration 1:
     // Inserts the checksum into `ttc_face_map_` without comparing keys because

@@ -13,6 +13,7 @@
 #include <utility>
 
 #include "build/build_config.h"
+#include "core/fxcrt/byteorder.h"
 #include "core/fxcrt/cfx_read_only_span_stream.h"
 #include "core/fxcrt/check_op.h"
 #include "core/fxcrt/containers/adapters.h"
@@ -297,6 +298,16 @@ bool IsNarrowFontName(const ByteString& name) {
   return false;
 }
 
+uint32_t GetChecksumFromTT(pdfium::span<const uint8_t> font_data) {
+  uint32_t checksum = 0;
+  auto span = font_data.first(std::min<size_t>(font_data.size(), 1024));
+  while (span.size() >= 4) {
+    checksum += fxcrt::GetUInt32MSBFirst(span.first<4u>());
+    span = span.subspan<4u>();
+  }
+  return checksum;
+}
+
 class ScopedFontDeleter {
  public:
   FX_STACK_ALLOCATED();
@@ -328,18 +339,6 @@ void CFX_FontMapper::SetSystemFontInfo(
 
 std::unique_ptr<SystemFontInfoIface> CFX_FontMapper::TakeSystemFontInfo() {
   return std::move(font_info_);
-}
-
-uint32_t CFX_FontMapper::GetChecksumFromTT(void* font_handle) {
-  uint32_t buffer[256];
-  font_info_->GetFontData(font_handle, SystemFontInfoIface::kTableTTCF,
-                          pdfium::as_writable_byte_span(buffer));
-
-  uint32_t checksum = 0;
-  for (auto x : buffer) {
-    checksum += x;
-  }
-  return checksum;
 }
 
 ByteString CFX_FontMapper::GetPSNameFromTT(void* font_handle) {
@@ -785,17 +784,17 @@ RetainPtr<CFX_Face> CFX_FontMapper::GetCachedTTCFace(void* font_handle,
                                                      size_t ttc_size,
                                                      size_t data_size) {
   CHECK_GE(ttc_size, data_size);
-  uint32_t checksum = GetChecksumFromTT(font_handle);
+  auto font_data = FixedSizeDataVector<uint8_t>::Uninit(ttc_size);
+  size_t size = font_info_->GetFontData(
+      font_handle, SystemFontInfoIface::kTableTTCF, font_data.span());
+  if (size != ttc_size) {
+    return nullptr;
+  }
+
+  uint32_t checksum = GetChecksumFromTT(font_data);
   RetainPtr<FontCacheEntry> cache_entry =
       GetTTCFontCacheEntry(ttc_size, checksum);
   if (!cache_entry) {
-    auto font_data = FixedSizeDataVector<uint8_t>::Uninit(ttc_size);
-    size_t size = font_info_->GetFontData(
-        font_handle, SystemFontInfoIface::kTableTTCF, font_data.span());
-    if (size != ttc_size) {
-      return nullptr;
-    }
-
     cache_entry =
         AddTTCFontCacheEntry(ttc_size, checksum, std::move(font_data));
   }

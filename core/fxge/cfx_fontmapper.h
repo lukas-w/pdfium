@@ -91,7 +91,6 @@ class CFX_FontMapper {
  private:
   friend class TestFontMapper;
 
-  uint32_t GetChecksumFromTT(void* font_handle);
   ByteString GetPSNameFromTT(void* font_handle);
   ByteString MatchInstalledFonts(const ByteString& norm_name);
   RetainPtr<CFX_Face> UseInternalSubst(
