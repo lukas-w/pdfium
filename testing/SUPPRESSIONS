@@ -414,8 +414,8 @@ example_064.pdf * * * * fontations diff
 example_064.pdf * * * * * fuzzy
 example_064.pdf mac * * skia * fuzzy
 example_065.pdf mac * * agg * diff
-example_065.pdf * * * * * fuzzy
 example_065.pdf * * * * fontations fuzzy=15,0.05,15
+example_065.pdf * * * * * fuzzy
 fillform.pdf * * * * * diff
 form_action_trigger.pdf * * * * * diff
 form_button_sign_url.pdf * * * * * diff
@@ -898,7 +898,7 @@ action_reset.pdf * * * gdi * diff
 action_run_javascript.pdf * * * gdi * diff
 action_submit_a_form.pdf * * * gdi * diff
 all_trigger_browsefordoc.pdf * * * gdi * diff
-all_trigger_browsefordoc.pdf * * * * fontations diff
+all_trigger_browsefordoc.pdf linux,win * * * fontations diff
 all_trigger_browsefordoc.pdf * * * * * fuzzy
 all_trigger_browsefordoc.pdf mac * * skia * fuzzy
 all_trigger_newdoc.pdf * * * gdi * diff
@@ -1421,7 +1421,7 @@ zh_webdav.pdf * * * * fontations fuzzy=10,0.1,15
 2_color_lab.pdf * * * * fontations diff
 FRC_4.5.3_DeviceCMYK_K1.pdf * * * * fontations diff
 FRC_4.5.3_DeviceRGB_RG1.pdf * * * * fontations diff
-FRC_8.5_Catalog_OpenAction.pdf * * * * fontations diff
+FRC_8.5_Catalog_OpenAction.pdf linux,win * * * fontations diff
 FRC_8.5_Page_O_URI.pdf * * * * fontations diff
 bug_1021762.in * * * * fontations fuzzy
 bug_601362.in * * * * fontations diff

@@ -66,6 +66,11 @@ def _ParseAction(token):
   return keyword, ([_ParseFuzzyAction(token)] if keyword == 'fuzzy' else [])
 
 
+def _SuppressionSpecificity(item):
+  """Scores columns 1-5 as a little-endian specificity bitmask."""
+  return sum((item[col] != '*') << (col - 1) for col in range(1, 6))
+
+
 class Suppressor:
 
   def __init__(self, finder, features, js_disabled, xfa_disabled,
@@ -89,6 +94,7 @@ class Suppressor:
     with open(os.path.join(finder.TestingDir(), 'SUPPRESSIONS')) as f:
       os_name = common.os_name()
       mac_platform = common.mac_platform() if os_name == 'mac' else None
+      fuzzy_specificity = {}
       for item in self._ExtractSuppressions(f):
         if len(item) != 7:
           raise ValueError(f'Unexpected column count in suppressions: {item}')
@@ -106,7 +112,10 @@ class Suppressor:
         elif keyword == 'blank':
           self.image_suppression_set.add(filename)
         elif keyword == 'fuzzy':
-          self.exact_matching_suppression_dict[filename] = flags
+          specificity = _SuppressionSpecificity(item)
+          if specificity >= fuzzy_specificity.get(filename, -1):
+            fuzzy_specificity[filename] = specificity
+            self.exact_matching_suppression_dict[filename] = flags
         else:
           raise AssertionError(f'Unhandled action: {keyword}')
 
