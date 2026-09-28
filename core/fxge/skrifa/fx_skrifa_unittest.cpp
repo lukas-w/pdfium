@@ -293,7 +293,7 @@ TEST(FxSkrifaTest, TestType1Face) {
                         FontAntiAliasingMode::kLcd, /*subst_font=*/nullptr);
   ASSERT_TRUE(glyph_lcd);
   EXPECT_TRUE(glyph_lcd->GetBitmap());
-  EXPECT_EQ(glyph_lcd->GetBitmap()->GetWidth(), 18);
+  EXPECT_EQ(glyph_lcd->GetBitmap()->GetWidth(), 24);
   EXPECT_EQ(glyph_lcd->GetBitmap()->GetHeight(), 7);
 
   auto glyph_mono =
