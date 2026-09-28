@@ -10,7 +10,12 @@
 #include <ostream>
 
 #include "core/fxcrt/span.h"
+
+#if defined(USE_SYSTEM_DRAGONBOX)
+#include <dragonbox/dragonbox.h>
+#else
 #include "third_party/dragonbox/src/include/dragonbox/dragonbox.h"
+#endif
 
 namespace {
 
