@@ -263,3 +263,25 @@ TEST(FxSkrifaTest, TestType1Face) {
   EXPECT_EQ(glyph_mono->GetBitmap()->GetWidth(), 6);
   EXPECT_EQ(glyph_mono->GetBitmap()->GetHeight(), 7);
 }
+
+TEST(FxSkrifaTest, TestGetSfntTable) {
+  std::string font_path = PathService::GetTestFilePath("fonts/ahem/Ahem.ttf");
+  std::vector<uint8_t> bytes = GetFileContents(font_path.c_str());
+
+  auto font = skrifa::new_font(rust::Slice<const uint8_t>(bytes), 0);
+  ASSERT_TRUE(font->is_ok());
+
+  // 'head' table (0x68656164) is 54 bytes in TrueType fonts.
+  constexpr uint32_t kHeadTag = 0x68656164;
+  size_t length = font->get_sfnt_table(kHeadTag, rust::Slice<uint8_t>());
+  ASSERT_EQ(54u, length);
+
+  std::vector<uint8_t> head_data(length);
+  size_t read_bytes =
+      font->get_sfnt_table(kHeadTag, rust::Slice<uint8_t>(head_data));
+  EXPECT_EQ(54u, read_bytes);
+
+  // Missing table tag returns 0.
+  constexpr uint32_t kMissingTag = 0x78797a77;
+  EXPECT_EQ(0u, font->get_sfnt_table(kMissingTag, rust::Slice<uint8_t>()));
+}

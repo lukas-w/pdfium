@@ -16,7 +16,7 @@ use read_fonts::{
         type1::Type1Font,
     },
     tables::{head::MacStyle, os2::SelectionFlags},
-    types::{Fixed, GlyphId},
+    types::{Fixed, GlyphId, Tag},
     TableProvider,
 };
 use skrifa::{
@@ -155,6 +155,7 @@ mod skrifa_ffi {
         fn name_index(&self, name: &str) -> u32;
         fn glyph_bounds(&self, glyph_index: u32) -> BoundingBox;
         fn get_font_bbox(&self, bbox: &mut BoundingBox) -> bool;
+        fn get_sfnt_table(&self, table: u32, buffer: &mut [u8]) -> usize;
 
         fn agl_name_to_unicode(name: &str, unicode: &mut u32) -> bool;
         fn agl_unicode_to_name(unicode: u32, name: &mut [u8]) -> &[u8];
@@ -845,6 +846,23 @@ impl SkrifaFont<'_> {
         } else {
             false
         }
+    }
+
+    fn get_sfnt_table(&self, table: u32, buffer: &mut [u8]) -> usize {
+        let Some(data) = (match self {
+            Self::Sfnt(sfnt) => sfnt.font.table_data(Tag::from_u32(table)),
+            _ => None,
+        }) else {
+            return 0;
+        };
+        if buffer.is_empty() {
+            return data.len();
+        }
+        if buffer.len() != data.len() {
+            return 0;
+        }
+        buffer.copy_from_slice(data.as_bytes());
+        buffer.len()
     }
 
     fn is_fixed_pitch(&self) -> bool {

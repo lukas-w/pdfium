@@ -804,6 +804,12 @@ pdfium::span<const uint8_t> CFX_Face::GetData() const {
 }
 
 size_t CFX_Face::GetSfntTable(uint32_t table, pdfium::span<uint8_t> buffer) {
+#if defined(PDF_ENABLE_FONTATIONS)
+  if (CFX_GEModule::IsFontations()) {
+    return skrifa_font_->font->get_sfnt_table(table,
+                                              rust::Slice<uint8_t>(buffer));
+  }
+#endif  // defined(PDF_ENABLE_FONTATIONS)
   if (!GetRec()) {
     return 0;
   }
