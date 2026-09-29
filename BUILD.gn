@@ -29,6 +29,7 @@ config("pdfium_common_config") {
   cflags_cc = []
   ldflags = []
   include_dirs = [ "." ]
+  inputs = [ "unsafe_buffers_paths.txt" ]
   defines = []
 
   if (!use_system_libopenjpeg2) {
