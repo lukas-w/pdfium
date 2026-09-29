@@ -1535,11 +1535,28 @@ std::optional<FX_RECT> CFX_Face::GetFontGlyphBBox(uint32_t glyph_index) {
 FX_RECT CFX_Face::GetCharBBox(uint32_t code, int glyph_index) {
   FX_RECT rect;
 #if defined(PDF_ENABLE_FONTATIONS)
-  if (!GetRec() && !CFX_GEModule::IsFontations()) {
+  if (CFX_GEModule::IsFontations()) {
+    if (glyph_index < 0 || LoadGlyph(glyph_index, /*scale=*/false) != 0) {
+      return rect;
+    }
+    rect = GetGlyphBBox(glyph_index);
+    if (IsTricky()) {
+      rect.top = std::min(rect.top, static_cast<int>(GetAscender()));
+      rect.bottom = std::max(rect.bottom, static_cast<int>(GetDescender()));
+    } else {
+      if (rect.top <= kMaxRectTop) {
+        rect.top += rect.top / 64;
+      } else {
+        rect.top = std::numeric_limits<int>::max();
+      }
+    }
     return rect;
   }
-#endif
+#endif  // defined(PDF_ENABLE_FONTATIONS)
   FT_FaceRec* rec = GetRec();
+  if (!rec) {
+    return rect;
+  }
   if (IsTricky()) {
     int err =
         FT_Load_Glyph(rec, glyph_index, FT_LOAD_IGNORE_GLOBAL_ADVANCE_WIDTH);
