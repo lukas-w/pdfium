@@ -26,6 +26,11 @@ asan_suppressions_file = "//build/sanitizers/asan_suppressions.cc"
 lsan_suppressions_file = "//build/sanitizers/lsan_suppressions.cc"
 tsan_suppressions_file = "//build/sanitizers/tsan_suppressions.cc"
 
+vpython_spec_files = [
+  "//vpython.toml",
+  "//vpython.toml.uv.lock",
+]
+
 declare_args() {
   # Android 32-bit non-component, non-clang builds cannot have symbol_level=2
   # due to 4GiB file size limit, see https://crbug.com/648948.

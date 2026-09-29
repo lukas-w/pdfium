@@ -1,0 +1,13 @@
+# Copyright 2026 The PDFium Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+requires-python = '>=3.11,<3.12'
+dependencies = [
+  'certifi==2023.7.22',
+  'charset-normalizer==3.1.0',
+  'idna==3.4',
+  'pyfakefs==3.7.2',
+  'requests==2.31.0',
+  'urllib3==2.0.3',
+]

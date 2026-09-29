@@ -25,12 +25,13 @@ if (pdf_is_standalone) {
       ".",
       "../SUPPRESSIONS",
       "../corpus/",
-      "../../.vpython3",
       "../../build/skia_gold_common/",
       "../../build/util/lib/",
       "../../third_party/test_fonts/",
       "../../tools/resultdb/",
       "../../tools/skia_goldctl/",
+      "../../vpython.toml",
+      "../../vpython.toml.uv.lock",
     ]
 
     # Built runtime dependencies.
