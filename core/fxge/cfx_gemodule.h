@@ -115,6 +115,14 @@ class CFX_GEModule {
   }
 #endif
 
+  static bool IsFreetype() {
+#if defined(PDF_ENABLE_FONTATIONS)
+    return Get()->font_backend_ == CFX_FontMgr::FontBackend::kFreeType;
+#else
+    return true;
+#endif
+  }
+
  private:
   CFX_GEModule(std::optional<pdfium::span<const char* const>> user_font_paths,
                RendererType renderer_type,

@@ -648,6 +648,11 @@ bool CFX_Face::HasGlyphNames() const {
 }
 
 bool CFX_Face::IsTtOt() const {
+#if defined(PDF_ENABLE_FONTATIONS)
+  if (CFX_GEModule::IsFontations()) {
+    return skrifa_font_->font->is_sfnt();
+  }
+#endif  // defined(PDF_ENABLE_FONTATIONS)
   const FT_FaceRec* rec = GetRec();
   return rec && (rec->face_flags & FT_FACE_FLAG_SFNT);
 }
@@ -700,11 +705,21 @@ bool CFX_Face::IsScalable() const {
 #endif  // defined(PDF_ENABLE_XFA)
 
 bool CFX_Face::IsItalic() const {
+#if defined(PDF_ENABLE_FONTATIONS)
+  if (CFX_GEModule::IsFontations()) {
+    return skrifa_font_->font->is_italic();
+  }
+#endif  // defined(PDF_ENABLE_FONTATIONS)
   const FT_FaceRec* rec = GetRec();
   return rec && (rec->style_flags & FT_STYLE_FLAG_ITALIC);
 }
 
 bool CFX_Face::IsBold() const {
+#if defined(PDF_ENABLE_FONTATIONS)
+  if (CFX_GEModule::IsFontations()) {
+    return skrifa_font_->font->is_bold();
+  }
+#endif  // defined(PDF_ENABLE_FONTATIONS)
   const FT_FaceRec* rec = GetRec();
   return rec && (rec->style_flags & FT_STYLE_FLAG_BOLD);
 }
@@ -730,13 +745,27 @@ ByteString CFX_Face::GetStyleName() const {
 }
 
 FX_RECT CFX_Face::GetBBox() const {
-  if (!GetRec()) {
-    return FX_RECT(-1000, -1000, 1000, 1000);
+#if defined(PDF_ENABLE_FONTATIONS)
+  if (CFX_GEModule::IsFontations()) {
+    skrifa::BoundingBox bbox;
+    if (skrifa_font_->font->get_font_bbox(bbox)) {
+      return FX_RECT(pdfium::checked_cast<int32_t>(std::round(bbox.x_min)),
+                     pdfium::checked_cast<int32_t>(std::round(bbox.y_min)),
+                     pdfium::checked_cast<int32_t>(std::round(bbox.x_max)),
+                     pdfium::checked_cast<int32_t>(std::round(bbox.y_max)));
+    }
   }
-  return FX_RECT(pdfium::checked_cast<int32_t>(GetRec()->bbox.xMin),
-                 pdfium::checked_cast<int32_t>(GetRec()->bbox.yMin),
-                 pdfium::checked_cast<int32_t>(GetRec()->bbox.xMax),
-                 pdfium::checked_cast<int32_t>(GetRec()->bbox.yMax));
+#endif  // defined(PDF_ENABLE_FONTATIONS)
+  if (CFX_GEModule::IsFreetype()) {
+    const FT_FaceRec* rec = GetRec();
+    if (rec) {
+      return FX_RECT(pdfium::checked_cast<int32_t>(rec->bbox.xMin),
+                     pdfium::checked_cast<int32_t>(rec->bbox.yMin),
+                     pdfium::checked_cast<int32_t>(rec->bbox.xMax),
+                     pdfium::checked_cast<int32_t>(rec->bbox.yMax));
+    }
+  }
+  return FX_RECT(-1000, -1000, 1000, 1000);
 }
 
 uint16_t CFX_Face::GetUnitsPerEm() const {

@@ -122,6 +122,16 @@ TEST(FxSkrifaTest, TestRobotoGlyph167Bounds) {
   EXPECT_EQ(skrifa_bbox.y_min, -21.0f);
   EXPECT_EQ(skrifa_bbox.x_max, 1135.0f);
   EXPECT_EQ(skrifa_bbox.y_max, 1477.0f);
+
+  EXPECT_TRUE(skrifa_font->is_sfnt());
+  EXPECT_FALSE(skrifa_font->is_italic());
+  EXPECT_FALSE(skrifa_font->is_bold());
+  skrifa::BoundingBox font_bbox;
+  EXPECT_TRUE(skrifa_font->get_font_bbox(font_bbox));
+  EXPECT_EQ(font_bbox.x_min, -1825.0f);
+  EXPECT_EQ(font_bbox.y_min, -555.0f);
+  EXPECT_EQ(font_bbox.x_max, 4188.0f);
+  EXPECT_EQ(font_bbox.y_max, 2163.0f);
 }
 
 TEST(FxSkrifaTest, TestMinionCff) {
@@ -162,6 +172,16 @@ TEST(FxSkrifaTest, TestTimesBoldGlyph104Bounds) {
   EXPECT_EQ(skrifa_bbox.y_min, -32.0f);
   EXPECT_EQ(skrifa_bbox.x_max, 1444.0f);
   EXPECT_EQ(skrifa_bbox.y_max, 1756.0f);
+
+  EXPECT_TRUE(skrifa_font->is_sfnt());
+  EXPECT_FALSE(skrifa_font->is_italic());
+  EXPECT_TRUE(skrifa_font->is_bold());
+  skrifa::BoundingBox font_bbox;
+  EXPECT_TRUE(skrifa_font->get_font_bbox(font_bbox));
+  EXPECT_EQ(font_bbox.x_min, -1143.0f);
+  EXPECT_EQ(font_bbox.y_min, -628.0f);
+  EXPECT_EQ(font_bbox.x_max, 4096.0f);
+  EXPECT_EQ(font_bbox.y_max, 2101.0f);
 }
 
 TEST(FxSkrifaTest, TestRobotoGlyph2344Bounds) {
@@ -199,6 +219,10 @@ TEST(FxSkrifaTest, TestType1Face) {
   EXPECT_EQ(face->GetPostscriptName(), "ChromeSansMM");
   EXPECT_EQ(face->GetGlyphCount(), 230);
   EXPECT_EQ(face->GetUnitsPerEm(), 1000);
+  EXPECT_FALSE(face->IsTtOt());
+  EXPECT_FALSE(face->IsItalic());
+  EXPECT_FALSE(face->IsBold());
+  EXPECT_NE(face->GetBBox(), FX_RECT(-1000, -1000, 1000, 1000));
 
   EXPECT_TRUE(face->SelectCharMap(fxge::FontEncoding::kAdobeCustom));
   int gid_x = face->GetCharIndex(120);
