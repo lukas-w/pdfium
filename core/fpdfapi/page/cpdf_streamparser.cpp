@@ -432,7 +432,8 @@ RetainPtr<CPDF_Object> CPDF_StreamParser::ReadLeafObject() {
   return nullptr;
 }
 
-// TODO(npm): the following methods are almost identical in cpdf_syntaxparser
+// TODO(crbug.com/567627774): the following methods are almost identical in
+// cpdf_syntaxparser
 bool CPDF_StreamParser::GetNextWord() {
   word_size_ = 0;
   if (!PositionIsInBounds()) {

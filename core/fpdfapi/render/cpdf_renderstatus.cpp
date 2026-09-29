@@ -928,7 +928,8 @@ bool CPDF_RenderStatus::ProcessText(CPDF_TextObject* textobj,
       pFont.Get(), font_size, text_matrix, fill_argb, options_);
 }
 
-// TODO(npm): Font fallback for type 3 fonts? (Completely separate code!!)
+// TODO(crbug.com/567622442): Font fallback for type 3 fonts? (Completely
+// separate code!!)
 bool CPDF_RenderStatus::ProcessType3Text(CPDF_TextObject* textobj,
                                          const CFX_Matrix& mtObj2Device) {
   CPDF_Type3Font* pType3Font = textobj->text_state().GetFont()->AsType3Font();

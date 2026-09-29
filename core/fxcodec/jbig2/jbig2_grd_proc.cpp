@@ -21,7 +21,7 @@
 
 namespace {
 
-// TODO(npm): Name this constants better or merge some together.
+// TODO(crbug.com/567627774): Name this constants better or merge some together.
 constexpr std::array<const uint16_t, 3> kOptConstant1 = {
     {0x9b25, 0x0795, 0x00e5}};
 constexpr std::array<const uint16_t, 3> kOptConstant2 = {
@@ -125,7 +125,7 @@ std::unique_ptr<CJBig2_Image> CJBig2_GRDProc::DecodeArithOpt3(
 
   int LTP = 0;
   const LineLayout layout = GetLineLayout(GBW);
-  // TODO(npm): Why is the height only trimmed when OPT is 0?
+  // TODO(crbug.com/567627774): Why is the height only trimmed when OPT is 0?
   const uint32_t height = OPT == 0 ? GBH & 0x7fffffff : GBH;
   pdfium::span<uint8_t> row_write;
   pdfium::span<const uint8_t> row_prev1;

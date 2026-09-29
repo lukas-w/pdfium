@@ -3024,8 +3024,10 @@ TEST_F(FPDFEditEmbedderTest, AddStandardFontText) {
   EXPECT_TRUE(FPDFTextObj_GetFontSize(text_object3, &size));
   EXPECT_EQ(20, size);
 
-  // TODO(npm): Why are there issues with text rotated by 90 degrees?
-  // TODO(npm): FPDF_SaveAsCopy not giving the desired result after this.
+  // TODO(crbug.com/567621440): Why are there issues with text rotated by 90
+  // degrees?
+  // TODO(crbug.com/567621440): FPDF_SaveAsCopy not giving the desired result
+  // after this.
 }
 
 TEST_F(FPDFEditEmbedderTest, SetFontSize) {
@@ -3716,7 +3718,8 @@ TEST_F(FPDFEditEmbedderTest, DoubleGenerating) {
 
 TEST_F(FPDFEditEmbedderTest, LoadSimpleType1Font) {
   CreateNewDocument();
-  // TODO(npm): use other fonts after disallowing loading any font as any type
+  // TODO(crbug.com/567623562): use other fonts after disallowing loading any
+  // font as any type
   RetainPtr<CPDF_Font> stock_font =
       CPDF_Font::GetStockFont(cpdf_doc(), "Times-Bold");
   pdfium::span<const uint8_t> span = stock_font->GetFont()->GetFontSpan();
@@ -3934,7 +3937,7 @@ TEST_F(FPDFEditEmbedderTest, TransformAnnot) {
   }
 }
 
-// TODO(npm): Add tests using Japanese fonts in other OS.
+// TODO(crbug.com/567621440): Add tests using Japanese fonts in other OS.
 #if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
 TEST_F(FPDFEditEmbedderTest, AddCIDFontText) {
   // Start with a blank page
@@ -4149,7 +4152,7 @@ TEST_F(FPDFEditEmbedderTest, SaveAndRender) {
     // Now add a more complex green path.
     FPDF_PAGEOBJECT green_path = FPDFPageObj_CreateNewPath(20, 20);
     EXPECT_TRUE(FPDFPageObj_SetFillColor(green_path, 0, 255, 0, 200));
-    // TODO(npm): stroking will cause the rendering to differ.
+    // TODO(crbug.com/567621440): stroking will cause the rendering to differ.
     EXPECT_TRUE(FPDFPath_SetDrawMode(green_path, FPDF_FILLMODE_WINDING, 0));
     EXPECT_TRUE(FPDFPath_LineTo(green_path, 20, 63));
     EXPECT_TRUE(FPDFPath_BezierTo(green_path, 55, 55, 78, 78, 90, 90));

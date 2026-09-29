@@ -119,10 +119,10 @@ std::unique_ptr<IccTransform> IccTransform::CreateTransformSRGB(
 void IccTransform::Translate(pdfium::span<const float> src_values,
                              pdfium::span<float, 3> dest_values) {
   uint8_t output[4];
-  // TODO(npm): Currently the CmsDoTransform method is part of LCMS and it will
-  // apply some member of transform_ to the input. We need to go over all the
-  // places which set transform to verify that only `src_values.size()`
-  // components are used.
+  // TODO(crbug.com/567626895): Currently the CmsDoTransform method is part of
+  // LCMS and it will apply some member of transform_ to the input. We need to
+  // go over all the places which set transform to verify that only
+  // `src_values.size()` components are used.
   if (lab_) {
     DataVector<double> inputs(std::max<size_t>(src_values.size(), 16));
     for (uint32_t i = 0; i < src_values.size(); ++i) {

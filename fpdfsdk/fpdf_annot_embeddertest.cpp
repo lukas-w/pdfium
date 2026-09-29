@@ -1067,7 +1067,8 @@ TEST_F(FPDFAnnotEmbedderTest, RemoveAnnotation) {
   EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
   UnloadPageNoEvents(page);
 
-  // TODO(npm): VerifySavedRendering changes annot rect dimensions by 1??
+  // TODO(crbug.com/567621440): VerifySavedRendering changes annot rect
+  // dimensions by 1??
   // Open the saved document.
   std::string new_file = GetString();
   FPDF_FILEACCESS file_access = {};  // Aggregate initialization

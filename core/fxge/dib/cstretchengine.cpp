@@ -361,7 +361,7 @@ bool CStretchEngine::ContinueStretchHorz(PauseIndicatorIface* pPause) {
     pdfium::span<uint8_t> dest_span = inter_buf_.subspan(
         (cur_row_ - src_clip_.top) * inter_pitch_, inter_pitch_);
     size_t dest_span_index = 0;
-    // TODO(npm): reduce duplicated code here
+    // TODO(crbug.com/567627774): reduce duplicated code here
     switch (trans_method_) {
       case TransformMethod::k1BppTo8Bpp:
         src_row_span = Expand1BppRow(src_row_span);

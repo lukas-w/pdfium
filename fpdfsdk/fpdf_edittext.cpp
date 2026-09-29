@@ -92,7 +92,7 @@ RetainPtr<CPDF_Dictionary> CreateCompositeFontDict(CPDF_Document* doc,
   auto font_dict = doc->NewIndirect<CPDF_Dictionary>();
   font_dict->SetNewFor<CPDF_Name>("Type", "Font");
   font_dict->SetNewFor<CPDF_Name>("Subtype", "Type0");
-  // TODO(npm): Get the correct encoding, if it's not identity.
+  // TODO(crbug.com/567626894): Get the correct encoding, if it's not identity.
   ByteString encoding = "Identity-H";
   font_dict->SetNewFor<CPDF_Name>("Encoding", encoding);
   font_dict->SetNewFor<CPDF_Name>(
@@ -110,8 +110,8 @@ RetainPtr<CPDF_Dictionary> CreateCidFontDict(CPDF_Document* doc,
                                                      : "CIDFontType2");
   cid_font_dict->SetNewFor<CPDF_Name>("BaseFont", name);
 
-  // TODO(npm): Maybe use FT_Get_CID_Registry_Ordering_Supplement to get the
-  // CIDSystemInfo
+  // TODO(crbug.com/567626894): Maybe use
+  // FT_Get_CID_Registry_Ordering_Supplement to get the CIDSystemInfo
   auto cid_system_info_dict = doc->NewIndirect<CPDF_Dictionary>();
   cid_system_info_dict->SetNewFor<CPDF_String>("Registry", "Adobe");
   cid_system_info_dict->SetNewFor<CPDF_String>("Ordering", "Identity");
@@ -143,27 +143,28 @@ RetainPtr<CPDF_Dictionary> LoadFontDesc(CPDF_Document* doc,
     flags |= pdfium::kFontStyleForceBold;
   }
 
-  // TODO(npm): How do I know if a font is symbolic, script, allcap, smallcap?
+  // TODO(crbug.com/567626894): How do I know if a font is symbolic, script,
+  // allcap, smallcap?
   flags |= pdfium::kFontStyleNonSymbolic;
 
   font_descriptor_dict->SetNewFor<CPDF_Number>("Flags", flags);
   FX_RECT bbox = font->GetBBox().value_or(FX_RECT());
   font_descriptor_dict->SetRectFor("FontBBox", CFX_FloatRect(bbox));
 
-  // TODO(npm): calculate italic angle correctly
+  // TODO(crbug.com/567626894): calculate italic angle correctly
   font_descriptor_dict->SetNewFor<CPDF_Number>("ItalicAngle",
                                                font->IsItalic() ? -12 : 0);
 
   font_descriptor_dict->SetNewFor<CPDF_Number>("Ascent", font->GetAscent());
   font_descriptor_dict->SetNewFor<CPDF_Number>("Descent", font->GetDescent());
 
-  // TODO(npm): calculate the capheight, stemV correctly
+  // TODO(crbug.com/567626894): calculate the capheight, stemV correctly
   font_descriptor_dict->SetNewFor<CPDF_Number>("CapHeight", font->GetAscent());
   font_descriptor_dict->SetNewFor<CPDF_Number>("StemV",
                                                font->IsBold() ? 120 : 70);
 
   auto stream = doc->NewIndirect<CPDF_Stream>(font_data);
-  // TODO(npm): Lengths for Type1 fonts.
+  // TODO(crbug.com/567626894): Lengths for Type1 fonts.
   if (font_type == FPDF_FONT_TRUETYPE) {
     stream->GetMutableDict()->SetNewFor<CPDF_Number>(
         "Length1", pdfium::checked_cast<int>(font_data.size()));
@@ -270,7 +271,7 @@ RetainPtr<CPDF_Font> LoadCompositeFont(CPDF_Document* doc,
   cid_font_dict->SetNewFor<CPDF_Reference>(
       "W", doc, doc->AddIndirectObject(CreateWidthsArray(widths)));
 
-  // TODO(npm): Support vertical writing
+  // TODO(crbug.com/567626894): Support vertical writing
 
   CreateDescendantFontsArray(doc, font_dict.Get(), cid_font_dict->GetObjNum());
 
@@ -451,9 +452,9 @@ FPDF_EXPORT FPDF_FONT FPDF_CALLCONV FPDFText_LoadFont(FPDF_DOCUMENT document,
   auto span = UNSAFE_BUFFERS(pdfium::span(data, size));
   auto pFont = std::make_unique<CFX_Font>();
 
-  // TODO(npm): Maybe use FT_Get_X11_Font_Format to check format? Otherwise, we
-  // are allowing giving any font that can be loaded on freetype and setting it
-  // as any font type.
+  // TODO(crbug.com/567623562): Maybe use FT_Get_X11_Font_Format to check
+  // format? Otherwise, we are allowing giving any font that can be loaded on
+  // freetype and setting it as any font type.
   if (!pFont->LoadFaceZeroFromSpan(span, /*force_vertical=*/false,
                                    /*object_tag=*/0)) {
     return nullptr;
