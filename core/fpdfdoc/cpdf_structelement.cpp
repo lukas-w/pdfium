@@ -28,7 +28,8 @@ CPDF_StructElement::CPDF_StructElement(const CPDF_StructTree* pTree,
                                        RetainPtr<const CPDF_Dictionary> dict)
     : tree_(pTree),
       dict_(std::move(dict)),
-      type_(tree_->GetRoleMapNameFor(dict_->GetNameFor("S").AsStringView())) {
+      type_(tree_->GetRoleMapNameFor(GetRawType().AsStringView())
+                .AsStringView()) {
   LoadKids();
 }
 
@@ -38,6 +39,10 @@ CPDF_StructElement::~CPDF_StructElement() {
       kid.element_->SetParent(nullptr);
     }
   }
+}
+
+ByteString CPDF_StructElement::GetRawType() const {
+  return dict_->GetNameFor("S");
 }
 
 ByteString CPDF_StructElement::GetObjType() const {

@@ -203,6 +203,27 @@ FPDF_StructElement_GetStringAttribute(FPDF_STRUCTELEMENT struct_element,
 FPDF_EXPORT int FPDF_CALLCONV
 FPDF_StructElement_GetMarkedContentID(FPDF_STRUCTELEMENT struct_element);
 
+// Experimental API.
+// Function: FPDF_StructElement_GetRawType
+//          Get the raw value of the /S entry for a given element.
+// Parameters:
+//          struct_element -   Handle to the struct element.
+//          buffer         -   A FPDF_WCHAR buffer for output text. May be NULL.
+//          buflen         -   The length of the buffer. May be 0.
+// Return value:
+//          The number of bytes in the text, including the terminating NUL
+//          character. The number of bytes is returned regardless of the
+//          |buffer| and |buflen| parameters.
+// Comments:
+//          Regardless of the platform, the |buffer| is always in UTF-16LE
+//          encoding. The string is terminated by a UTF16 NUL character. If
+//          |buflen| is less than the required length, or |buffer| is NULL,
+//          |buffer| will not be modified.
+FPDF_EXPORT unsigned long FPDF_CALLCONV
+FPDF_StructElement_GetRawType(FPDF_STRUCTELEMENT struct_element,
+                              FPDF_WCHAR* buffer,
+                              size_t buflen);
+
 // Function: FPDF_StructElement_GetType
 //           Get the type (/S) for a given element.
 // Parameters:

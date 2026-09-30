@@ -262,6 +262,21 @@ FPDF_StructElement_GetMarkedContentID(FPDF_STRUCTELEMENT struct_element) {
 }
 
 FPDF_EXPORT unsigned long FPDF_CALLCONV
+FPDF_StructElement_GetRawType(FPDF_STRUCTELEMENT struct_element,
+                              FPDF_WCHAR* buffer,
+                              size_t buflen) {
+  CPDF_StructElement* elem =
+      CPDFStructElementFromFPDFStructElement(struct_element);
+  if (!elem) {
+    return 0;
+  }
+  // SAFETY: required from caller.
+  return UNSAFE_BUFFERS(WideStringToBuffer(
+      WideString::FromUTF8(elem->GetRawType().AsStringView()), buffer,
+      pdfium::checked_cast<unsigned long>(buflen)));
+}
+
+FPDF_EXPORT unsigned long FPDF_CALLCONV
 FPDF_StructElement_GetType(FPDF_STRUCTELEMENT struct_element,
                            void* buffer,
                            unsigned long buflen) {
