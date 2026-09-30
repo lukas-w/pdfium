@@ -12,6 +12,7 @@
 
 #include "build/build_config.h"
 #include "core/fxcrt/fx_codepage.h"
+#include "core/fxcrt/numerics/safe_conversions.h"
 #include "core/fxcrt/span.h"
 #include "core/fxcrt/to_underlying.h"
 #include "core/fxge/cfx_font.h"
@@ -64,10 +65,10 @@ UniqueKeyGen::UniqueKeyGen(const CFX_Font* font,
                            int dest_width,
                            FontAntiAliasingMode anti_alias,
                            bool bNative) {
-  int nMatrixA = static_cast<int>(matrix.a * 10000);
-  int nMatrixB = static_cast<int>(matrix.b * 10000);
-  int nMatrixC = static_cast<int>(matrix.c * 10000);
-  int nMatrixD = static_cast<int>(matrix.d * 10000);
+  int nMatrixA = pdfium::saturated_cast<int>(matrix.a * 10000);
+  int nMatrixB = pdfium::saturated_cast<int>(matrix.b * 10000);
+  int nMatrixC = pdfium::saturated_cast<int>(matrix.c * 10000);
+  int nMatrixD = pdfium::saturated_cast<int>(matrix.d * 10000);
 
 #if BUILDFLAG(IS_APPLE)
   if (bNative) {
