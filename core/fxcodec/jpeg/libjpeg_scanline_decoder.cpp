@@ -346,7 +346,7 @@ void LibjpegScanlineDecoder::PatchUpTrailer() {
 
 pdfium::span<uint8_t> LibjpegScanlineDecoder::GetWritableSrcData() {
   if (corrected_src_data_.empty()) {
-    corrected_src_data_.assign(src_span_.begin(), src_span_.end());
+    corrected_src_data_ = ToDataVector(src_span_);
     src_span_ = corrected_src_data_;
   }
   return corrected_src_data_;

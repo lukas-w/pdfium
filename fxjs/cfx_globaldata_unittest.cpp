@@ -20,7 +20,7 @@ class TestDelegate : public CFX_GlobalData::Delegate {
   ~TestDelegate() override = default;
 
   bool StoreBuffer(pdfium::span<const uint8_t> buffer) override {
-    last_buffer_ = DataVector<uint8_t>(buffer.begin(), buffer.end());
+    last_buffer_ = ToDataVector(buffer);
     return true;
   }
   std::optional<pdfium::span<uint8_t>> LoadBuffer() override {

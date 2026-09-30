@@ -239,6 +239,7 @@ pdfium_unittest_source_set("unittests") {
     "cfx_seekablestreamproxy_unittest.cpp",
     "cfx_timer_unittest.cpp",
     "code_point_view_unittest.cpp",
+    "data_vector_unittest.cpp",
     "fixed_size_data_vector_unittest.cpp",
     "fx_bidi_unittest.cpp",
     "fx_ceil_div_unittest.cpp",

@@ -187,7 +187,7 @@ bool CFX_Font::LoadFaceZeroFromSpan(pdfium::span<const uint8_t> src_span,
                                     bool force_vertical,
                                     uint64_t object_tag) {
   vertical_ = force_vertical;
-  font_data_allocation_ = DataVector<uint8_t>(src_span.begin(), src_span.end());
+  font_data_allocation_ = ToDataVector(src_span);
   font_data_ = font_data_allocation_;
   return LoadFaceFromSpanStream(
       pdfium::MakeRetain<CFX_ReadOnlySpanStream>(font_data_allocation_), 0,

@@ -244,11 +244,7 @@ DataVector<uint32_t> ConvertBuffer_PltToPltRgb8(
   ConvertBuffer_IndexCopy(dest_buf, dest_pitch, width, height, pSrcBitmap,
                           src_left, src_top);
   const size_t plt_size = pSrcBitmap->GetRequiredPaletteSize();
-  pdfium::span<const uint32_t> src_span = pSrcBitmap->GetPaletteSpan();
-  CHECK_LE(plt_size, src_span.size());
-
-  pdfium::span<const uint32_t> src_palette_span = src_span.first(plt_size);
-  return DataVector<uint32_t>(src_palette_span.begin(), src_palette_span.end());
+  return ToDataVector(pSrcBitmap->GetPaletteSpan().first(plt_size));
 }
 
 void ConvertBuffer_1bppMaskToRgb(pdfium::span<uint8_t> dest_buf,
@@ -881,7 +877,7 @@ bool CFX_DIBBase::GetOverlapRect(int& dest_left,
 }
 
 void CFX_DIBBase::SetPalette(pdfium::span<const uint32_t> src_palette) {
-  TakePalette(DataVector<uint32_t>(src_palette.begin(), src_palette.end()));
+  TakePalette(ToDataVector(src_palette));
 }
 
 void CFX_DIBBase::TakePalette(DataVector<uint32_t> src_palette) {

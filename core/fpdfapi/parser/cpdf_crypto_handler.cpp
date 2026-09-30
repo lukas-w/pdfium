@@ -63,7 +63,7 @@ DataVector<uint8_t> CPDF_CryptoHandler::EncryptContent(
     uint32_t gennum,
     pdfium::span<const uint8_t> source) const {
   if (cipher_ == Cipher::kNone) {
-    return DataVector<uint8_t>(source.begin(), source.end());
+    return ToDataVector(source);
   }
   std::array<uint8_t, 16> realkey;
   size_t realkeylen = realkey.size();

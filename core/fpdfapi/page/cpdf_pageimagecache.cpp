@@ -57,8 +57,7 @@ class CachedImage final : public CFX_DIBBase {
     SetPitch(image_->GetPitch());
 
     if (image_->HasPalette()) {
-      pdfium::span<const uint32_t> palette = image_->GetPaletteSpan();
-      palette_ = DataVector<uint32_t>(palette.begin(), palette.end());
+      palette_ = ToDataVector(image_->GetPaletteSpan());
     }
   }
 

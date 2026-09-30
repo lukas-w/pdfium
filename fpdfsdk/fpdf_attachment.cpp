@@ -317,9 +317,8 @@ FPDFAttachment_SetFile(FPDF_ATTACHMENT attachment,
                                       CPDF_String::DataType::kIsHex);
 
   // Create the file stream and have the filespec dictionary link to it.
-  auto pFileStream = doc->NewIndirect<CPDF_Stream>(
-      DataVector<uint8_t>(contents_span.begin(), contents_span.end()),
-      std::move(pFileStreamDict));
+  auto pFileStream = doc->NewIndirect<CPDF_Stream>(ToDataVector(contents_span),
+                                                   std::move(pFileStreamDict));
 
   auto pEFDict = pFile->AsMutableDictionary()->SetNewFor<CPDF_Dictionary>("EF");
   pEFDict->SetNewFor<CPDF_Reference>("F", doc, pFileStream->GetObjNum());

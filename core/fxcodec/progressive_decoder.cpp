@@ -150,7 +150,7 @@ bool ProgressiveDecoder::PrepareScanlineResampling(
                                 src_width_, options);
   if (!palette.empty()) {
     device_bitmap_->SetPalette(palette);
-    src_palette_ = DataVector<FX_ARGB>(palette.begin(), palette.end());
+    src_palette_ = ToDataVector(palette);
   }
   if (fill_argb.has_value()) {
     device_bitmap_->Clear(fill_argb.value());

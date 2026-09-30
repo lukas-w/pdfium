@@ -76,14 +76,12 @@ uint32_t CPDF_IndexedCS::v_Load(CPDF_Document* doc,
 
   if (const CPDF_String* str_obj = pTableObj->AsString()) {
     ByteString str_data = str_obj->GetString();
-    pdfium::span<const uint8_t> str_span = str_data.unsigned_span();
-    lookup_table_ = DataVector<uint8_t>(str_span.begin(), str_span.end());
+    lookup_table_ = ToDataVector(str_data.unsigned_span());
   } else if (const CPDF_Stream* stream_obj = pTableObj->AsStream()) {
     auto acc =
         pdfium::MakeRetain<CPDF_StreamAcc>(pdfium::WrapRetain(stream_obj));
     acc->LoadAllDataFiltered();
-    pdfium::span<const uint8_t> str_span = acc->GetSpan();
-    lookup_table_ = DataVector<uint8_t>(str_span.begin(), str_span.end());
+    lookup_table_ = ToDataVector(acc->GetSpan());
   }
   return 1;
 }

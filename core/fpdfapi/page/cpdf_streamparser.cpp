@@ -214,8 +214,7 @@ RetainPtr<CPDF_Stream> CPDF_StreamParser::ReadInlineStream(
   uint32_t actual_stream_size;
   if (decoder.IsEmpty()) {
     original_size = std::min<uint32_t>(original_size, stream_span.size());
-    auto src_span = stream_span.first(original_size);
-    data = DataVector<uint8_t>(src_span.begin(), src_span.end());
+    data = ToDataVector(stream_span.first(original_size));
     actual_stream_size = original_size;
     pos_ += original_size;
   } else {
@@ -243,8 +242,7 @@ RetainPtr<CPDF_Stream> CPDF_StreamParser::ReadInlineStream(
         actual_stream_size += pos_ - saved_iteration_position;
       }
     }
-    auto src_span = stream_span.first(actual_stream_size);
-    data = DataVector<uint8_t>(src_span.begin(), src_span.end());
+    data = ToDataVector(stream_span.first(actual_stream_size));
     pos_ += actual_stream_size;
   }
   dict->SetNewFor<CPDF_Number>("Length", static_cast<int>(actual_stream_size));

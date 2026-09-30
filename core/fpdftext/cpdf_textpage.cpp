@@ -116,8 +116,7 @@ DataVector<wchar_t> GetUnicodeNormalization(wchar_t wch) {
     wFind = maps.front();
     maps = maps.subspan<1u>();
   }
-  const auto range = maps.first(static_cast<size_t>(wFind));
-  return DataVector<wchar_t>(range.begin(), range.end());
+  return ToDataVector<wchar_t>(maps.first(static_cast<size_t>(wFind)));
 }
 
 float MaskPercentFilled(const std::vector<bool>& mask,
