@@ -201,7 +201,7 @@ struct Options {
   bool pages = false;
   bool md5 = false;
 #ifdef PDF_ENABLE_BROTLI
-  bool enable_brotli = false;
+  bool enable_brotli = true;
 #endif  // PDF_ENABLE_BROTLI
 #ifdef ENABLE_CALLGRIND
   bool callgrind_delimiters = false;
@@ -610,8 +610,8 @@ bool ParseCommandLine(const std::vector<std::string>& args,
 #endif  // PDF_ENABLE_XFA
 #endif  // PDF_ENABLE_V8
 #ifdef PDF_ENABLE_BROTLI
-    } else if (cur_arg == "--enable-brotli") {
-      options->enable_brotli = true;
+    } else if (cur_arg == "--disable-brotli") {
+      options->enable_brotli = false;
 #endif  // PDF_ENABLE_BROTLI
 #ifdef ENABLE_CALLGRIND
     } else if (cur_arg == "--callgrind-delim") {
@@ -1938,8 +1938,8 @@ constexpr char kUsageString[] =
 #endif  // PDF_ENABLE_XFA
 #endif  // PDF_ENABLE_V8
 #ifdef PDF_ENABLE_BROTLI
-    "  --enable-brotli   - Enable support for the experimental PDF 2.0 "
-    "/BrotliDecode filter.\n"
+    "  --disable-brotli       - Disables support for the PDF 2.0 /BrotliDecode "
+    "filter.\n"
 #endif  // PDF_ENABLE_BROTLI
 #ifdef ENABLE_CALLGRIND
     "  --callgrind-delim      - delimit interesting section when using "
