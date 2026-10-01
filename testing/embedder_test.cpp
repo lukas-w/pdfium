@@ -15,6 +15,7 @@
 #include "core/fxcrt/check_op.h"
 #include "core/fxcrt/compiler_specific.h"
 #include "core/fxcrt/containers/contains.h"
+#include "core/fxcrt/containers/to_vector.h"
 #include "core/fxcrt/fx_memcpy_wrappers.h"
 #include "core/fxcrt/fx_safe_types.h"
 #include "core/fxcrt/notreached.h"
@@ -410,7 +411,7 @@ int CompareBGRxPremultBitmapToPng(pdfium::span<const uint8_t> bitmap_span,
                                   size_t bitmap_stride,
                                   const DecodedPng& decoded_png,
                                   const DiffOptions& options) {
-  std::vector<uint8_t> bitmap_data(bitmap_span.begin(), bitmap_span.end());
+  std::vector<uint8_t> bitmap_data = pdfium::ToVector(bitmap_span);
   pdfium::span<uint8_t> converted_bitmap_span{bitmap_data};
 
   for (int h = 0; h < decoded_png.height; ++h) {

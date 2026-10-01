@@ -9,6 +9,7 @@
 #include <utility>
 #include <vector>
 
+#include "core/fxcrt/containers/to_vector.h"
 #include "fxjs/gc/container_trace.h"
 #include "xfa/fxfa/parser/cxfa_node.h"
 
@@ -25,8 +26,7 @@ void CXFA_ArrayNodeList::Trace(cppgc::Visitor* visitor) const {
 void CXFA_ArrayNodeList::SetArrayNodeList(
     const std::vector<CXFA_Node*>& srcArray) {
   if (!srcArray.empty()) {
-    array_ =
-        std::vector<cppgc::Member<CXFA_Node>>(srcArray.begin(), srcArray.end());
+    array_ = pdfium::ToVector<cppgc::Member<CXFA_Node>>(srcArray);
   }
 }
 

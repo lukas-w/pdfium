@@ -13,6 +13,7 @@
 #include "core/fpdfapi/parser/cpdf_dictionary.h"
 #include "core/fpdfapi/parser/cpdf_number.h"
 #include "core/fpdfapi/parser/cpdf_stream.h"
+#include "core/fxcrt/containers/to_vector.h"
 #include "core/fxge/dib/cfx_dibitmap.h"
 #include "core/fxge/dib/fx_dib.h"
 #include "core/fxge/dib/scanlinecomposer_iface.h"
@@ -32,7 +33,7 @@ class ScanlineRecorder final : public ScanlineComposerIface {
  public:
   void ComposeScanline(int line,
                        pdfium::span<const uint8_t> scanline) override {
-    rows_[line] = std::vector<uint8_t>(scanline.begin(), scanline.end());
+    rows_[line] = pdfium::ToVector(scanline);
   }
 
   bool SetInfo(int width,

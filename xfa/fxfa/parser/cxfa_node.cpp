@@ -22,6 +22,7 @@
 #include "core/fxcrt/check.h"
 #include "core/fxcrt/check_op.h"
 #include "core/fxcrt/containers/contains.h"
+#include "core/fxcrt/containers/to_vector.h"
 #include "core/fxcrt/data_vector.h"
 #include "core/fxcrt/fx_codepage.h"
 #include "core/fxcrt/fx_extension.h"
@@ -1359,7 +1360,7 @@ CXFA_Node* CXFA_Node::GetBindData() {
 }
 
 std::vector<CXFA_Node*> CXFA_Node::GetBindItemsCopy() const {
-  return std::vector<CXFA_Node*>(binding_nodes_.begin(), binding_nodes_.end());
+  return pdfium::ToVector<CXFA_Node*>(binding_nodes_);
 }
 
 void CXFA_Node::AddBindItem(CXFA_Node* pFormNode) {

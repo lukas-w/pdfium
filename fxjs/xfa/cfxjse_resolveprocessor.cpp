@@ -12,6 +12,7 @@
 
 #include "core/fxcrt/check_op.h"
 #include "core/fxcrt/containers/contains.h"
+#include "core/fxcrt/containers/to_vector.h"
 #include "core/fxcrt/fx_extension.h"
 #include "fxjs/fxv8.h"
 #include "fxjs/xfa/cfxjse_engine.h"
@@ -121,8 +122,7 @@ bool CFXJSE_ResolveProcessor::ResolveAnyChild(v8::Isolate* pIsolate,
 
   std::vector<CXFA_Node*> siblings = pChild->GetSiblings(bClassName);
   nodes.insert(nodes.end(), siblings.begin(), siblings.end());
-  rnd.result_.objects =
-      std::vector<cppgc::Member<CXFA_Object>>(nodes.begin(), nodes.end());
+  rnd.result_.objects = pdfium::ToVector<cppgc::Member<CXFA_Object>>(nodes);
   FilterCondition(pIsolate, wsCondition, &rnd);
   return !rnd.result_.objects.empty();
 }
