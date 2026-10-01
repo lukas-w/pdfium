@@ -21,6 +21,10 @@ namespace fxcodec {
 namespace {
 
 constexpr size_t kKnownBadHeaderWithInvalidHeightByteOffsetStarts[] = {94, 163};
+
+// For a given invalid height byte offset in
+// `kKnownBadHeaderWithInvalidHeightByteOffsetStarts`, the SOFn marker should
+// be this many bytes before that.
 constexpr size_t kSofMarkerByteOffset = 5;
 
 pdfium::span<const uint8_t> JpegScanSOI(pdfium::span<const uint8_t> src_span) {
@@ -37,48 +41,6 @@ pdfium::span<const uint8_t> JpegScanSOI(pdfium::span<const uint8_t> src_span) {
 
 uint32_t ScaledJpegSize(uint32_t dim, uint32_t scale_denom) {
   return fxcrt::CeilDiv(dim, scale_denom);
-}
-
-bool IsSofSegment(pdfium::span<const uint8_t> src_span, size_t marker_offset) {
-  if (src_span.size() <= marker_offset + 1) {
-    return false;
-  }
-  const auto header_marker = src_span.subspan(marker_offset);
-  return header_marker[0] == 0xff && header_marker[1] >= 0xc0 &&
-         header_marker[1] <= 0xcf;
-}
-
-bool HasKnownBadHeaderWithInvalidHeight(pdfium::span<const uint8_t> src_span,
-                                        size_t dimension_offset,
-                                        uint32_t orig_width) {
-  if (src_span.size() <= dimension_offset + 3u) {
-    return false;
-  }
-  if (dimension_offset < kSofMarkerByteOffset) {
-    return false;
-  }
-  if (!IsSofSegment(src_span, dimension_offset - kSofMarkerByteOffset)) {
-    return false;
-  }
-  const auto header_dimensions = src_span.subspan(dimension_offset);
-  uint8_t expected_width_byte1 = (orig_width >> 8) & 0xff;
-  uint8_t expected_width_byte2 = orig_width & 0xff;
-  return header_dimensions[0] == 0xff && header_dimensions[1] == 0xff &&
-         header_dimensions[2] == expected_width_byte1 &&
-         header_dimensions[3] == expected_width_byte2;
-}
-
-void PatchUpKnownBadHeaderWithInvalidHeight(pdfium::span<uint8_t> src_span,
-                                            size_t dimension_offset,
-                                            uint32_t orig_height) {
-  auto data = src_span.subspan(dimension_offset);
-  data[0] = (orig_height >> 8) & 0xff;
-  data[1] = orig_height & 0xff;
-}
-
-void PatchUpTrailer(pdfium::span<uint8_t> src_span) {
-  src_span[src_span.size() - 2] = 0xff;
-  src_span[src_span.size() - 1] = 0xd9;
 }
 
 }  // namespace
@@ -112,28 +74,31 @@ bool RustJpegScanlineDecoder::CreateImpl(pdfium::span<const uint8_t> src_span,
                                          int num_components,
                                          bool color_transform,
                                          uint32_t scale_denom) {
-  src_span = JpegScanSOI(src_span);
-  if (src_span.size() < 2) {
+  src_span_ = JpegScanSOI(src_span);
+  if (src_span_.size() < 2) {
     return false;
   }
 
-  // SAFETY: const_cast<> doesn't change size.
-  pdfium::span<uint8_t> writable_src = UNSAFE_BUFFERS(
-      pdfium::span(const_cast<uint8_t*>(src_span.data()), src_span.size()));
-  PatchUpTrailer(writable_src);
+  PatchUpTrailer();
 
   rust_jpeg::JpegHeaderInfo header_info{};
-  rust::Slice<const uint8_t> src_slice(src_span);
+  rust::Slice<const uint8_t> src_slice(src_span_);
   if (!rust_jpeg::read_jpeg_info(src_slice, header_info)) {
     bool patched = false;
     for (size_t offset : kKnownBadHeaderWithInvalidHeightByteOffsetStarts) {
-      if (HasKnownBadHeaderWithInvalidHeight(src_span, offset, width)) {
-        PatchUpKnownBadHeaderWithInvalidHeight(writable_src, offset, height);
+      if (HasKnownBadHeaderWithInvalidHeight(offset, width)) {
+        PatchUpKnownBadHeaderWithInvalidHeight(offset, height);
         patched = true;
         break;
       }
     }
-    if (!patched || !rust_jpeg::read_jpeg_info(src_slice, header_info)) {
+    if (!patched) {
+      return false;
+    }
+    // Recreate `src_slice` since patching updates `src_span_` to point to
+    // `corrected_src_data_`.
+    src_slice = rust::Slice<const uint8_t>(src_span_);
+    if (!rust_jpeg::read_jpeg_info(src_slice, header_info)) {
       return false;
     }
   }
@@ -204,6 +169,61 @@ void RustJpegScanlineDecoder::CalcPitch() {
   DCHECK_GT(output_width_, 0);
   pitch_ = static_cast<uint32_t>(output_width_) * comps_;
   pitch_ = fxcrt::CeilDiv(pitch_, 4) * 4;
+}
+
+bool RustJpegScanlineDecoder::HasKnownBadHeaderWithInvalidHeight(
+    size_t dimension_offset,
+    uint32_t orig_width) const {
+  if (src_span_.size() <= dimension_offset + 3u) {
+    return false;
+  }
+  if (dimension_offset < kSofMarkerByteOffset) {
+    return false;
+  }
+  if (!IsSofSegment(dimension_offset - kSofMarkerByteOffset)) {
+    return false;
+  }
+  const auto header_dimensions = src_span_.subspan(dimension_offset);
+  uint8_t expected_width_byte1 = (orig_width >> 8) & 0xff;
+  uint8_t expected_width_byte2 = orig_width & 0xff;
+  return header_dimensions[0] == 0xff && header_dimensions[1] == 0xff &&
+         header_dimensions[2] == expected_width_byte1 &&
+         header_dimensions[3] == expected_width_byte2;
+}
+
+void RustJpegScanlineDecoder::PatchUpKnownBadHeaderWithInvalidHeight(
+    size_t dimension_offset,
+    uint32_t orig_height) {
+  auto corrected_span = GetWritableSrcData().subspan(dimension_offset);
+  corrected_span[0] = (orig_height >> 8) & 0xff;
+  corrected_span[1] = orig_height & 0xff;
+}
+
+bool RustJpegScanlineDecoder::IsSofSegment(size_t marker_offset) const {
+  if (src_span_.size() <= marker_offset + 1) {
+    return false;
+  }
+  const auto header_marker = src_span_.subspan(marker_offset);
+  return header_marker[0] == 0xff && header_marker[1] >= 0xc0 &&
+         header_marker[1] <= 0xcf;
+}
+
+void RustJpegScanlineDecoder::PatchUpTrailer() {
+  auto trailer_span = src_span_.last<2>();
+  if (trailer_span[0] == 0xff && trailer_span[1] == 0xd9) {
+    return;
+  }
+  auto corrected_trailer_span = GetWritableSrcData().last<2>();
+  corrected_trailer_span[0] = 0xff;
+  corrected_trailer_span[1] = 0xd9;
+}
+
+pdfium::span<uint8_t> RustJpegScanlineDecoder::GetWritableSrcData() {
+  if (corrected_src_data_.empty()) {
+    corrected_src_data_ = ToDataVector(src_span_);
+    src_span_ = corrected_src_data_;
+  }
+  return corrected_src_data_;
 }
 
 // static

@@ -13,6 +13,7 @@
 #include "core/fxcodec/jpeg/jpegmodule.h"
 #include "core/fxcodec/scanlinedecoder.h"
 #include "core/fxcrt/data_vector.h"
+#include "core/fxcrt/raw_span.h"
 #include "core/fxcrt/span.h"
 
 namespace fxcodec {
@@ -46,7 +47,17 @@ class RustJpegScanlineDecoder final : public ScanlineDecoder {
                   bool color_transform,
                   uint32_t scale_denom);
   void CalcPitch();
+  bool HasKnownBadHeaderWithInvalidHeight(size_t dimension_offset,
+                                          uint32_t orig_width) const;
+  void PatchUpKnownBadHeaderWithInvalidHeight(size_t dimension_offset,
+                                              uint32_t orig_height);
+  bool IsSofSegment(size_t marker_offset) const;
+  // Patch up the JPEG trailer if missing.
+  void PatchUpTrailer();
+  pdfium::span<uint8_t> GetWritableSrcData();
 
+  DataVector<uint8_t> corrected_src_data_;  // Must outlive `src_span_`.
+  pdfium::raw_span<const uint8_t> src_span_;
   DataVector<uint8_t> decoded_image_;
   uint32_t next_row_ = 0;
 };
