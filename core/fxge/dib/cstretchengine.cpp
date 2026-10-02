@@ -522,12 +522,40 @@ bool CStretchEngine::ContinueStretchHorz(PauseIndicatorIface* pPause) {
           uint32_t dest_r = 0;
           uint32_t dest_g = 0;
           uint32_t dest_b = 0;
-          for (auto [weight, src] : fxcrt::Zip(weights, window)) {
-            uint32_t pixel_weight = weight * src.alpha / 255;
-            dest_b += pixel_weight * src.blue;
-            dest_g += pixel_weight * src.green;
-            dest_r += pixel_weight * src.red;
-            dest_a += pixel_weight;
+          // At one and two taps, the loop's own setup costs more than the
+          // multiply-adds it guards, so those counts get straight-line code.
+          // The terms are summed in tap order, so the result is identical to
+          // the loop below.
+          switch (weights.size()) {
+            case 1: {
+              const auto& src0 = window[0];
+              const uint32_t pw0 = weights[0] * src0.alpha / 255;
+              dest_b = pw0 * src0.blue;
+              dest_g = pw0 * src0.green;
+              dest_r = pw0 * src0.red;
+              dest_a = pw0;
+              break;
+            }
+            case 2: {
+              const auto& src0 = window[0];
+              const auto& src1 = window[1];
+              const uint32_t pw0 = weights[0] * src0.alpha / 255;
+              const uint32_t pw1 = weights[1] * src1.alpha / 255;
+              dest_b = pw0 * src0.blue + pw1 * src1.blue;
+              dest_g = pw0 * src0.green + pw1 * src1.green;
+              dest_r = pw0 * src0.red + pw1 * src1.red;
+              dest_a = pw0 + pw1;
+              break;
+            }
+            default:
+              for (auto [weight, src] : fxcrt::Zip(weights, window)) {
+                uint32_t pixel_weight = weight * src.alpha / 255;
+                dest_b += pixel_weight * src.blue;
+                dest_g += pixel_weight * src.green;
+                dest_r += pixel_weight * src.red;
+                dest_a += pixel_weight;
+              }
+              break;
           }
           FX_BGRA_STRUCT<uint8_t>& dest = dest_pixels[dest_index++];
           dest.blue = PixelFromFixed(dest_b);
