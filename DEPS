@@ -138,7 +138,7 @@ vars = {
   # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling fast_float
   # and whatever else without interference from each other.
-  'fast_float_revision': '34164f547b7df3f5d794ff67e9f885c36819ebfc',
+  'fast_float_revision': 'b0ab987b3dfdde13fa1915f65ef2a5c068d9208c',
   # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling fp16
   # and whatever else without interference from each other.
