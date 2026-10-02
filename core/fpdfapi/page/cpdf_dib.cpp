@@ -31,6 +31,7 @@
 #include "core/fpdfapi/parser/fpdf_parser_decode.h"
 #include "core/fpdfapi/parser/fpdf_parser_utility.h"
 #include "core/fxcodec/basic/basicmodule.h"
+#include "core/fxcodec/fx_codec.h"
 #include "core/fxcodec/icc/icc_transform.h"
 #include "core/fxcodec/jbig2/jbig2_decoder.h"
 #include "core/fxcodec/jpeg/jpegmodule.h"
@@ -38,7 +39,6 @@
 #include "core/fxcodec/scanlinedecoder.h"
 #include "core/fxcrt/check.h"
 #include "core/fxcrt/check_op.h"
-#include "core/fxcrt/compiler_specific.h"
 #include "core/fxcrt/data_vector.h"
 #include "core/fxcrt/fx_2d_size.h"
 #include "core/fxcrt/fx_safe_types.h"
@@ -70,6 +70,18 @@ unsigned int GetBits8(pdfium::span<const uint8_t> pData,
   }
   return (byte >> (8 - nbits - (bitpos % 8))) & ((1 << nbits) - 1);
 }
+
+// A 16 bits-per-component RGB source pixel. PDF stores the samples
+// big-endian, so the first byte of each component is its high byte; the
+// translation below keeps only that byte.
+struct RgbBe16 {
+  uint8_t red_high;
+  uint8_t red_low;
+  uint8_t green_high;
+  uint8_t green_low;
+  uint8_t blue_high;
+  uint8_t blue_low;
+};
 
 bool GetBitValue(pdfium::span<const uint8_t> pSrc, size_t pos) {
   return pSrc[pos / 8] & (1 << (7 - pos % 8));
@@ -1114,34 +1126,36 @@ bool CPDF_DIB::TranslateScanline24bppDefaultDecode(
     return true;
   }
 
-  uint8_t* dest_pos = dest_scan.data();
-  const uint8_t* src_pos = src_scan.data();
+  const size_t width = pdfium::checked_cast<size_t>(GetWidth());
+  auto dest_pixels =
+      fxcrt::reinterpret_span<FX_BGR_STRUCT<uint8_t>>(dest_scan).first(width);
   switch (bpc_) {
     case 8:
-      UNSAFE_TODO({
-        for (int column = 0; column < GetWidth(); column++) {
-          *dest_pos++ = src_pos[2];
-          *dest_pos++ = src_pos[1];
-          *dest_pos++ = *src_pos;
-          src_pos += 3;
-        }
-      });
+      // The whole translation is the per-pixel RGB-to-BGR byte swap;
+      // ReverseRGB() is that swap, in a form the compiler vectorizes
+      // (the destination scanline buffer never overlaps the source).
+      fxcodec::ReverseRGB(dest_scan, src_scan, GetWidth());
       break;
-    case 16:
-      UNSAFE_TODO({
-        for (int col = 0; col < GetWidth(); col++) {
-          *dest_pos++ = src_pos[4];
-          *dest_pos++ = src_pos[2];
-          *dest_pos++ = *src_pos;
-          src_pos += 6;
-        }
-      });
+    case 16: {
+      // Keep each component's high byte, in BGR order.
+      auto src_pixels =
+          fxcrt::reinterpret_span<const RgbBe16>(src_scan).first(width);
+      for (auto [src, dest] : fxcrt::Zip(src_pixels, dest_pixels)) {
+        dest.blue = src.blue_high;
+        dest.green = src.green_high;
+        dest.red = src.red_high;
+      }
       break;
-    default:
+    }
+    default: {
+      // Fewer than 8 bits per component: read each component out of the bit
+      // stream and scale it to 8 bits. GetScanline() sends images with
+      // bpc * components <= 8 down a different path before reaching here, so
+      // with the 3 components this function requires, only 4 bits per
+      // component arrives.
       const unsigned int max_data = (1 << bpc_) - 1;
       uint64_t src_bit_pos = 0;
-      size_t dest_byte_pos = 0;
-      for (int column = 0; column < GetWidth(); column++) {
+      for (auto& dest : dest_pixels) {
         unsigned int R = GetBits8(src_scan, src_bit_pos, bpc_);
         src_bit_pos += bpc_;
         unsigned int G = GetBits8(src_scan, src_bit_pos, bpc_);
@@ -1151,14 +1165,12 @@ bool CPDF_DIB::TranslateScanline24bppDefaultDecode(
         R = std::min(R, max_data);
         G = std::min(G, max_data);
         B = std::min(B, max_data);
-        UNSAFE_TODO({
-          dest_pos[dest_byte_pos] = B * 255 / max_data;
-          dest_pos[dest_byte_pos + 1] = G * 255 / max_data;
-          dest_pos[dest_byte_pos + 2] = R * 255 / max_data;
-          dest_byte_pos += 3;
-        });
+        dest.blue = B * 255 / max_data;
+        dest.green = G * 255 / max_data;
+        dest.red = R * 255 / max_data;
       }
       break;
+    }
   }
   return true;
 }
