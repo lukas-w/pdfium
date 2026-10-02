@@ -98,7 +98,7 @@ vars = {
   # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling build
   # and whatever else without interference from each other.
-  'build_revision': '2cd94c0abeada712aeea6906d99021913c9fc28d',
+  'build_revision': 'ebdaeefa62db7c40f27cacb0eb034db3a5cdb849',
   # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling buildtools
   # and whatever else without interference from each other.
@@ -260,7 +260,7 @@ vars = {
   # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling tools_rust
   # and whatever else without interference from each other.
-  'tools_rust_revision': '54d1148695dbbbfc3e00dfd05aff502acaa602e3',
+  'tools_rust_revision': 'e61a63fae23826e5bf5650a1bd7da255ba950577',
   # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling tools_win_revision
   # and whatever else without interference from each other.
@@ -704,31 +704,31 @@ deps = {
     'bucket': 'chromium-browser-clang',
     'objects': [
       {
-        'object_name': 'Linux_x64/rust-toolchain-0913b18e489ac1011b580e31fa5559654be12bfc-2-llvmorg-24-init-3796-g20e97c4b.tar.xz',
-        'sha256sum': '4b131e81d157a97bcf454ad0fbb71bc2063b2a3708c858410c04201ef06134e5',
-        'size_bytes': 276314860,
-        'generation': 1786821088882867,
+        'object_name': 'Linux_x64/rust-toolchain-1edd55dcfcd573872c727fa3e086369a71661ee0-1110-llvmorg-24-init-7747-g62397f8b.tar.xz',
+        'sha256sum': '1f5b945345630c2d5c91a53fd506af476d617b79f251c7ccd2bb707a1f0faa92',
+        'size_bytes': 275879080,
+        'generation': 1790798148502695,
         'condition': 'host_os == "linux" and non_git_source',
       },
       {
-        'object_name': 'Mac/rust-toolchain-0913b18e489ac1011b580e31fa5559654be12bfc-2-llvmorg-24-init-3796-g20e97c4b.tar.xz',
-        'sha256sum': '12ca849195c27495073ba52ae7126d8a4a9a5807cd7a0dc6ba6b6fa612302a6d',
-        'size_bytes': 264031896,
-        'generation': 1786821092536805,
+        'object_name': 'Mac/rust-toolchain-1edd55dcfcd573872c727fa3e086369a71661ee0-1110-llvmorg-24-init-7747-g62397f8b.tar.xz',
+        'sha256sum': 'd2ca8d43ebd3e5ce956cfa9e1e7a292cf3faedd0113550a047d08a5cff5d10bf',
+        'size_bytes': 263208960,
+        'generation': 1790798152115147,
         'condition': 'host_os == "mac" and host_cpu == "x64"',
       },
       {
-        'object_name': 'Mac_arm64/rust-toolchain-0913b18e489ac1011b580e31fa5559654be12bfc-2-llvmorg-24-init-3796-g20e97c4b.tar.xz',
-        'sha256sum': 'fe128475561d7a51c797d1cb3ccea6f94fd770b167c8e0cc33bf75e7c25d8225',
-        'size_bytes': 248465344,
-        'generation': 1786821096222521,
+        'object_name': 'Mac_arm64/rust-toolchain-1edd55dcfcd573872c727fa3e086369a71661ee0-1110-llvmorg-24-init-7747-g62397f8b.tar.xz',
+        'sha256sum': '68b2b16c3bf32a141fa6ba8e3c51887d6c8be44659b7b8f188d9af16543bf869',
+        'size_bytes': 247890912,
+        'generation': 1790798155770959,
         'condition': 'host_os == "mac" and host_cpu == "arm64"',
       },
       {
-        'object_name': 'Win/rust-toolchain-0913b18e489ac1011b580e31fa5559654be12bfc-2-llvmorg-24-init-3796-g20e97c4b.tar.xz',
-        'sha256sum': '14bc9cea5e00cb191f58204ef44d68a6794f856a76f885c50298a12d052035bc',
-        'size_bytes': 414479372,
-        'generation': 1786821099612317,
+        'object_name': 'Win/rust-toolchain-1edd55dcfcd573872c727fa3e086369a71661ee0-1110-llvmorg-24-init-7747-g62397f8b.tar.xz',
+        'sha256sum': '630ccbd409fcef327cba0044bf72012f4023fab890a8db26c9731a03d5bdcb8e',
+        'size_bytes': 416254844,
+        'generation': 1790798159238637,
         'condition': 'host_os == "win"',
       },
     ],
