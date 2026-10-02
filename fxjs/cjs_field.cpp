@@ -2814,28 +2814,28 @@ void CJS_Field::SetDelay(bool bDelay) {
 void CJS_Field::AddDelay_Int(FIELD_PROP prop, int32_t n) {
   auto pNewData =
       std::make_unique<CJS_DelayData>(prop, form_control_index_, field_name_);
-  pNewData->num = n;
+  pNewData->data = n;
   js_doc_->AddDelayData(std::move(pNewData));
 }
 
 void CJS_Field::AddDelay_Bool(FIELD_PROP prop, bool b) {
   auto pNewData =
       std::make_unique<CJS_DelayData>(prop, form_control_index_, field_name_);
-  pNewData->b = b;
+  pNewData->data = b;
   js_doc_->AddDelayData(std::move(pNewData));
 }
 
 void CJS_Field::AddDelay_String(FIELD_PROP prop, const ByteString& str) {
   auto pNewData =
       std::make_unique<CJS_DelayData>(prop, form_control_index_, field_name_);
-  pNewData->bytestring = str;
+  pNewData->data = str;
   js_doc_->AddDelayData(std::move(pNewData));
 }
 
 void CJS_Field::AddDelay_Rect(FIELD_PROP prop, const CFX_FloatRect& rect) {
   auto pNewData =
       std::make_unique<CJS_DelayData>(prop, form_control_index_, field_name_);
-  pNewData->rect = rect;
+  pNewData->data = rect;
   js_doc_->AddDelayData(std::move(pNewData));
 }
 
@@ -2843,7 +2843,7 @@ void CJS_Field::AddDelay_WordArray(FIELD_PROP prop,
                                    const std::vector<uint32_t>& array) {
   auto pNewData =
       std::make_unique<CJS_DelayData>(prop, form_control_index_, field_name_);
-  pNewData->wordarray = array;
+  pNewData->data = array;
   js_doc_->AddDelayData(std::move(pNewData));
 }
 
@@ -2851,7 +2851,7 @@ void CJS_Field::AddDelay_WideStringArray(FIELD_PROP prop,
                                          const std::vector<WideString>& array) {
   auto pNewData =
       std::make_unique<CJS_DelayData>(prop, form_control_index_, field_name_);
-  pNewData->widestringarray = array;
+  pNewData->data = array;
   js_doc_->AddDelayData(std::move(pNewData));
 }
 
@@ -2861,31 +2861,32 @@ void CJS_Field::DoDelay(CPDFSDK_FormFillEnvironment* pFormFillEnv,
   switch (pData->eProp) {
     case FP_BORDERSTYLE:
       SetBorderStyle(pFormFillEnv, pData->sFieldName, pData->nControlIndex,
-                     pData->bytestring);
+                     std::get<ByteString>(pData->data));
       break;
     case FP_CURRENTVALUEINDICES:
       SetCurrentValueIndices(pFormFillEnv, pData->sFieldName,
-                             pData->nControlIndex, pData->wordarray);
+                             pData->nControlIndex,
+                             std::get<std::vector<uint32_t>>(pData->data));
       break;
     case FP_DISPLAY:
       SetDisplay(pFormFillEnv, pData->sFieldName, pData->nControlIndex,
-                 pData->num);
+                 std::get<int32_t>(pData->data));
       break;
     case FP_HIDDEN:
       SetHidden(pFormFillEnv, pData->sFieldName, pData->nControlIndex,
-                pData->b);
+                std::get<bool>(pData->data));
       break;
     case FP_LINEWIDTH:
       SetLineWidth(pFormFillEnv, pData->sFieldName, pData->nControlIndex,
-                   pData->num);
+                   std::get<int32_t>(pData->data));
       break;
     case FP_RECT:
       SetRect(pFormFillEnv, pData->sFieldName, pData->nControlIndex,
-              pData->rect);
+              std::get<CFX_FloatRect>(pData->data));
       break;
     case FP_VALUE:
       SetFieldValue(pFormFillEnv, pData->sFieldName, pData->nControlIndex,
-                    pData->widestringarray);
+                    std::get<std::vector<WideString>>(pData->data));
       break;
   }
 }

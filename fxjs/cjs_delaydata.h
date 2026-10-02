@@ -7,11 +7,14 @@
 #ifndef FXJS_CJS_DELAYDATA_H_
 #define FXJS_CJS_DELAYDATA_H_
 
+#include <stdint.h>
+
+#include <variant>
 #include <vector>
 
+#include "core/fxcrt/bytestring.h"
 #include "core/fxcrt/fx_coordinates.h"
 #include "core/fxcrt/widestring.h"
-#include "core/fxge/cfx_color.h"
 #include "fxjs/cjs_field.h"
 
 struct CJS_DelayData {
@@ -20,15 +23,14 @@ struct CJS_DelayData {
 
   FIELD_PROP eProp;
   int nControlIndex;
-  int32_t num = 0;
-  bool b = false;
   WideString sFieldName;
-  ByteString bytestring;
-  WideString widestring;
-  CFX_FloatRect rect;
-  CFX_Color color;
-  std::vector<uint32_t> wordarray;
-  std::vector<WideString> widestringarray;
+  std::variant<int32_t,
+               bool,
+               ByteString,
+               CFX_FloatRect,
+               std::vector<uint32_t>,
+               std::vector<WideString>>
+      data;
 };
 
 #endif  // FXJS_CJS_DELAYDATA_H_
