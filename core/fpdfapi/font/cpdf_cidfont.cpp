@@ -700,7 +700,7 @@ int CPDF_CIDFont::GlyphFromCharCode(uint32_t charcode, bool* pVertGlyph) {
       RetainPtr<CFX_Face> face = font_.GetFace();
       bool bMSUnicode = UseTTCharmapUnicode(face);
       bool bMacRoman =
-          !bMSUnicode && UseTTCharmap(face, CFX_Face::kMacRomanCmapId);
+          !bMSUnicode && UseTTCharmap(face, CFX_Face::kMacRomanCharMapIdPair);
       FontEncoding base_encoding = FontEncoding::kStandard;
       if (bMSUnicode) {
         base_encoding = FontEncoding::kWinAnsi;

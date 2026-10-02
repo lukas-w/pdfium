@@ -60,18 +60,24 @@ class CFX_Face final : public Retainable, public Observable {
 
   // Note that this corresponds to the cmap header in fonts, and not the cmap
   // data in PDFs.
-  struct CharMapId {
-    friend constexpr bool operator==(const CharMapId&,
-                                     const CharMapId&) = default;
+  struct CharMapIdPair {
+    friend constexpr bool operator==(const CharMapIdPair&,
+                                     const CharMapIdPair&) = default;
 
-    int platform_id;
-    int encoding_id;
+    uint16_t platform_id;
+    uint16_t encoding_id;
   };
 
   // Aliases for some commonly used cmaps.
-  static constexpr CharMapId kMacRomanCmapId{1, 0};
-  static constexpr CharMapId kWindowsSymbolCmapId{3, 0};
-  static constexpr CharMapId kWindowsUnicodeCmapId{3, 1};
+  static constexpr CharMapIdPair kMacRomanCharMapIdPair{
+      .platform_id = kPlatformMac,
+      .encoding_id = kMacEncodingRoman};
+  static constexpr CharMapIdPair kWindowsSymbolCharMapIdPair{
+      .platform_id = kPlatformWindows,
+      .encoding_id = kWindowsEncodingSymbol};
+  static constexpr CharMapIdPair kWindowsUnicodeCharMapIdPair{
+      .platform_id = kPlatformWindows,
+      .encoding_id = kWindowsEncodingUnicode};
 
   static RetainPtr<CFX_Face> New(RetainPtr<Retainable> cache_entry,
                                  RetainPtr<CFX_ReadOnlySpanStream> font_stream,
@@ -129,8 +135,8 @@ class CFX_Face final : public Retainable, public Observable {
 
   CharMap GetCurrentCharMap() const;
   std::optional<fxge::FontEncoding> GetCurrentCharMapEncoding() const;
-  CharMapId GetCharMapIdByIndex(size_t index) const;
-  int GetCharMapPlatformIdByIndex(size_t index) const;
+  CharMapIdPair GetCharMapIdPairByIndex(size_t index) const;
+  uint16_t GetCharMapPlatformIdByIndex(size_t index) const;
   fxge::FontEncoding GetCharMapEncodingByIndex(size_t index) const;
   size_t GetCharMapCount() const;
   int LoadGlyph(uint32_t glyph_index, bool scale);
@@ -172,7 +178,7 @@ class CFX_Face final : public Retainable, public Observable {
   FT_FaceRec* GetRec() { return rec_.get(); }
   const FT_FaceRec* GetRec() const { return rec_.get(); }
 
-  int GetCharMapEncodingIdByIndex(size_t index) const;
+  uint16_t GetCharMapEncodingIdByIndex(size_t index) const;
   CFX_Size GetPixelSize() const;
 
   bool IsTricky() const;

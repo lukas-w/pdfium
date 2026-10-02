@@ -73,10 +73,43 @@ enum class FontAntiAliasingMode : int {
   kLcd,
 };
 
-// These numbers come from the OpenType name table specification.
-constexpr uint16_t kNamePlatformAppleUnicode = 0;
-constexpr uint16_t kNamePlatformMac = 1;
-constexpr uint16_t kNamePlatformWindows = 3;
+// OpenType / TrueType platform IDs (used across 'cmap' and 'name' tables).
+// Conforms to OpenType specification, with platform 7 as FreeType's Adobe
+// convention.
+constexpr uint16_t kPlatformAppleUnicode = 0;
+constexpr uint16_t kPlatformMac = 1;
+constexpr uint16_t kPlatformIso = 2;
+constexpr uint16_t kPlatformWindows = 3;
+constexpr uint16_t kPlatformCustom = 4;
+constexpr uint16_t kPlatformAdobe = 7;
+
+// OpenType / TrueType encoding IDs for Apple Unicode (kPlatformAppleUnicode).
+constexpr uint16_t kAppleUnicodeEncodingUnicode2_0 = 3;
+
+// OpenType / TrueType encoding IDs for Macintosh (kPlatformMac).
+constexpr uint16_t kMacEncodingRoman = 0;
+
+// OpenType / TrueType encoding IDs for ISO (kPlatformIso).
+constexpr uint16_t kIsoEncoding10646 = 1;
+constexpr uint16_t kIsoEncoding8859_1 = 2;
+
+// OpenType / TrueType encoding IDs for Windows (kPlatformWindows).
+constexpr uint16_t kWindowsEncodingSymbol = 0;
+constexpr uint16_t kWindowsEncodingUnicode = 1;
+constexpr uint16_t kWindowsEncodingSjis = 2;
+constexpr uint16_t kWindowsEncodingPrc = 3;
+constexpr uint16_t kWindowsEncodingGb2312 = kWindowsEncodingPrc;
+constexpr uint16_t kWindowsEncodingBig5 = 4;
+constexpr uint16_t kWindowsEncodingWansung = 5;
+constexpr uint16_t kWindowsEncodingJohab = 6;
+constexpr uint16_t kWindowsEncodingUcs4 = 10;
+
+// Encoding IDs for Adobe platform (kPlatformAdobe, FreeType Type 1 / CFF
+// convention).
+constexpr uint16_t kAdobeEncodingStandard = 0;
+constexpr uint16_t kAdobeEncodingExpert = 1;
+constexpr uint16_t kAdobeEncodingCustom = 2;
+constexpr uint16_t kAdobeEncodingLatin1 = 3;
 
 // The length of the font subset prefix, as defined in ISO 32000-1:2008 spec,
 // section 9.6.4 "Font Subsets".

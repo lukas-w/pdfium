@@ -22,10 +22,6 @@
 
 namespace {
 
-// These numbers come from the OpenType name table specification.
-constexpr uint16_t kNameMacEncodingRoman = 0;
-constexpr uint16_t kNameWindowsEncodingUnicode = 1;
-
 ByteString GetStringFromTable(pdfium::span<const uint8_t> string_span,
                               uint16_t offset,
                               uint16_t length) {
@@ -127,15 +123,15 @@ ByteString GetNameFromTT(pdfium::span<const uint8_t> name_table,
       const uint16_t platform_encoding =
           fxcrt::GetUInt16MSBFirst(name_table.subspan<2u, 2u>());
 
-      if (platform_identifier == kNamePlatformMac &&
-          platform_encoding == kNameMacEncodingRoman) {
+      if (platform_identifier == kPlatformMac &&
+          platform_encoding == kMacEncodingRoman) {
         return GetStringFromTable(
             string_span,
             fxcrt::GetUInt16MSBFirst(name_table.subspan<10u, 2u>()),
             fxcrt::GetUInt16MSBFirst(name_table.subspan<8u, 2u>()));
       }
-      if (platform_identifier == kNamePlatformWindows &&
-          platform_encoding == kNameWindowsEncodingUnicode) {
+      if (platform_identifier == kPlatformWindows &&
+          platform_encoding == kWindowsEncodingUnicode) {
         // This name is always UTF16-BE and we have to convert it to UTF8.
         ByteString utf16_be = GetStringFromTable(
             string_span,

@@ -164,7 +164,7 @@ class CPDF_Font : public Retainable, public Observable {
   static bool UseTTCharmapUnicode(const RetainPtr<CFX_Face>& face);
 
   static bool UseTTCharmap(const RetainPtr<CFX_Face>& face,
-                           const CFX_Face::CharMapId& cmap_id);
+                           const CFX_Face::CharMapIdPair& charmap_id_pair);
 
   static const char* GetAdobeCharName(FontEncoding base_encoding,
                                       const std::vector<ByteString>& charnames,

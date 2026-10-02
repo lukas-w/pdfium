@@ -573,12 +573,13 @@ bool CPDF_Font::UseTTCharmapUnicode(const RetainPtr<CFX_Face>& face) {
   bool charmap_unicode_found = false;
   bool charmap_mssymbol_found = false;
   for (size_t i = 0; i < face->GetCharMapCount(); i++) {
-    const CFX_Face::CharMapId charmap_id = face->GetCharMapIdByIndex(i);
-    if (charmap_id == CFX_Face::kWindowsUnicodeCmapId) {
+    const CFX_Face::CharMapIdPair charmap_id_pair =
+        face->GetCharMapIdPairByIndex(i);
+    if (charmap_id_pair == CFX_Face::kWindowsUnicodeCharMapIdPair) {
       face->SetCharMapByIndex(i);
       return true;
     }
-    if (charmap_id == CFX_Face::kWindowsSymbolCmapId) {
+    if (charmap_id_pair == CFX_Face::kWindowsSymbolCharMapIdPair) {
       charmap_mssymbol_found = true;
       continue;
     }
@@ -597,9 +598,9 @@ bool CPDF_Font::UseTTCharmapUnicode(const RetainPtr<CFX_Face>& face) {
 
 // static
 bool CPDF_Font::UseTTCharmap(const RetainPtr<CFX_Face>& face,
-                             const CFX_Face::CharMapId& cmap_id) {
+                             const CFX_Face::CharMapIdPair& charmap_id_pair) {
   for (size_t i = 0; i < face->GetCharMapCount(); i++) {
-    if (face->GetCharMapIdByIndex(i) == cmap_id) {
+    if (face->GetCharMapIdPairByIndex(i) == charmap_id_pair) {
       face->SetCharMapByIndex(i);
       return true;
     }

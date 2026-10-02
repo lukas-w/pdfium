@@ -468,38 +468,54 @@ FT_Encoding ToFTEncoding(fxge::FontEncoding encoding) {
   }
 }
 
-fxge::FontEncoding ToFontEncoding(uint32_t ft_encoding) {
-  switch (ft_encoding) {
-    case FT_ENCODING_ADOBE_CUSTOM:
-      return fxge::FontEncoding::kAdobeCustom;
-    case FT_ENCODING_ADOBE_EXPERT:
-      return fxge::FontEncoding::kAdobeExpert;
-    case FT_ENCODING_ADOBE_STANDARD:
-      return fxge::FontEncoding::kAdobeStandard;
-    case FT_ENCODING_APPLE_ROMAN:
-      return fxge::FontEncoding::kAppleRoman;
-    case FT_ENCODING_BIG5:
-      return fxge::FontEncoding::kBig5;
-    case FT_ENCODING_PRC:
-      return fxge::FontEncoding::kGB2312;
-    case FT_ENCODING_JOHAB:
-      return fxge::FontEncoding::kJohab;
-    case FT_ENCODING_ADOBE_LATIN_1:
-      return fxge::FontEncoding::kLatin1;
-    case FT_ENCODING_NONE:
-      return fxge::FontEncoding::kNone;
-    case FT_ENCODING_OLD_LATIN_2:
-      return fxge::FontEncoding::kOldLatin2;
-    case FT_ENCODING_SJIS:
-      return fxge::FontEncoding::kSjis;
-    case FT_ENCODING_MS_SYMBOL:
-      return fxge::FontEncoding::kSymbol;
-    case FT_ENCODING_UNICODE:
-      return fxge::FontEncoding::kUnicode;
-    case FT_ENCODING_WANSUNG:
-      return fxge::FontEncoding::kWansung;
+fxge::FontEncoding CharMapIdPairToFontEncoding(
+    CFX_Face::CharMapIdPair charmap_id_pair) {
+  const auto [platform_id, encoding_id] = charmap_id_pair;
+  if (platform_id == kPlatformAppleUnicode) {
+    return fxge::FontEncoding::kUnicode;
   }
-  NOTREACHED();
+  if (platform_id == kPlatformMac) {
+    if (encoding_id == kMacEncodingRoman) {
+      return fxge::FontEncoding::kAppleRoman;
+    }
+    return fxge::FontEncoding::kNone;
+  }
+  if (platform_id == kPlatformIso) {
+    // FreeType treats all encodings under TT_PLATFORM_ISO as Unicode.
+    return fxge::FontEncoding::kUnicode;
+  }
+  if (platform_id == kPlatformWindows) {
+    switch (encoding_id) {
+      case kWindowsEncodingSymbol:
+        return fxge::FontEncoding::kSymbol;
+      case kWindowsEncodingUnicode:
+      case kWindowsEncodingUcs4:
+        return fxge::FontEncoding::kUnicode;
+      case kWindowsEncodingSjis:
+        return fxge::FontEncoding::kSjis;
+      case kWindowsEncodingGb2312:
+        return fxge::FontEncoding::kGB2312;
+      case kWindowsEncodingBig5:
+        return fxge::FontEncoding::kBig5;
+      case kWindowsEncodingWansung:
+        return fxge::FontEncoding::kWansung;
+      case kWindowsEncodingJohab:
+        return fxge::FontEncoding::kJohab;
+    }
+  }
+  if (platform_id == kPlatformAdobe) {
+    switch (encoding_id) {
+      case kAdobeEncodingStandard:
+        return fxge::FontEncoding::kAdobeStandard;
+      case kAdobeEncodingExpert:
+        return fxge::FontEncoding::kAdobeExpert;
+      case kAdobeEncodingCustom:
+        return fxge::FontEncoding::kAdobeCustom;
+      case kAdobeEncodingLatin1:
+        return fxge::FontEncoding::kLatin1;
+    }
+  }
+  return fxge::FontEncoding::kNone;
 }
 
 FX_RECT FXRectFromFTPos(FT_Pos left, FT_Pos top, FT_Pos right, FT_Pos bottom) {
@@ -1676,22 +1692,24 @@ std::optional<fxge::FontEncoding> CFX_Face::GetCurrentCharMapEncoding() const {
   if (!GetRec() || !GetRec()->charmap) {
     return std::nullopt;
   }
-  return ToFontEncoding(GetRec()->charmap->encoding);
+  return CharMapIdPairToFontEncoding(
+      {.platform_id = GetRec()->charmap->platform_id,
+       .encoding_id = GetRec()->charmap->encoding_id});
 }
 
-CFX_Face::CharMapId CFX_Face::GetCharMapIdByIndex(size_t index) const {
+CFX_Face::CharMapIdPair CFX_Face::GetCharMapIdPairByIndex(size_t index) const {
   return {.platform_id = GetCharMapPlatformIdByIndex(index),
           .encoding_id = GetCharMapEncodingIdByIndex(index)};
 }
 
-int CFX_Face::GetCharMapPlatformIdByIndex(size_t index) const {
+uint16_t CFX_Face::GetCharMapPlatformIdByIndex(size_t index) const {
   if (!GetRec()) {
     return 0;
   }
   return GetCharMaps()[index]->platform_id;
 }
 
-int CFX_Face::GetCharMapEncodingIdByIndex(size_t index) const {
+uint16_t CFX_Face::GetCharMapEncodingIdByIndex(size_t index) const {
   if (!GetRec()) {
     return 0;
   }
@@ -1707,7 +1725,7 @@ fxge::FontEncoding CFX_Face::GetCharMapEncodingByIndex(size_t index) const {
     return fxge::FontEncoding::kAdobeCustom;
   }
 #endif  // defined(PDF_ENABLE_FONTATIONS)
-  return ToFontEncoding(GetCharMaps()[index]->encoding);
+  return CharMapIdPairToFontEncoding(GetCharMapIdPairByIndex(index));
 }
 
 size_t CFX_Face::GetCharMapCount() const {

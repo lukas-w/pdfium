@@ -153,7 +153,7 @@ void CPDF_Type1Font::LoadGlyphMap() {
   }
 #endif
   if (!IsEmbedded() && !IsSymbolicFont() && font_.IsTTFont()) {
-    if (UseTTCharmap(face, CFX_Face::kWindowsSymbolCmapId)) {
+    if (UseTTCharmap(face, CFX_Face::kWindowsSymbolCharMapIdPair)) {
       bool bGotOne = false;
       for (uint32_t charcode = 0; charcode < kInternalTableSize; charcode++) {
         static constexpr std::array<uint8_t, 4> prefix = {
