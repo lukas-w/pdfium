@@ -15,7 +15,7 @@ use read_fonts::{
         string::Sid,
         type1::Type1Font,
     },
-    tables::{head::MacStyle, os2::SelectionFlags},
+    tables::{cmap::Cmap, head::MacStyle, os2::SelectionFlags},
     types::{Fixed, GlyphId, Tag},
     TableProvider,
 };
@@ -104,6 +104,12 @@ mod skrifa_ffi {
         pub glyph_index: u32,
     }
 
+    #[derive(Copy, Clone, PartialEq, Eq, Debug)]
+    pub struct CharMapInfo {
+        pub platform_id: u16,
+        pub encoding_id: u16,
+    }
+
     #[derive(Clone, Debug)]
     pub struct Outline {
         pub verbs: Vec<PathVerb>,
@@ -156,6 +162,9 @@ mod skrifa_ffi {
         fn glyph_bounds(&self, glyph_index: u32) -> BoundingBox;
         fn get_font_bbox(&self, bbox: &mut BoundingBox) -> bool;
         fn get_sfnt_table(&self, table: u32, buffer: &mut [u8]) -> usize;
+        fn get_charmap_count(&self) -> usize;
+        fn get_charmap_info(&self, index: usize, info: &mut CharMapInfo) -> bool;
+        fn cmap_char_to_gid(&self, subtable_index: usize, code: u32) -> u32;
 
         fn agl_name_to_unicode(name: &str, unicode: &mut u32) -> bool;
         fn agl_unicode_to_name(unicode: u32, name: &mut [u8]) -> &[u8];
@@ -170,8 +179,8 @@ mod skrifa_ffi {
 }
 
 use skrifa_ffi::{
-    BoundingBox, CharCodeAndIndex, CodePageRange, FaceFormat, Os2Panose, Outline, PathVerb, Point,
-    PsEncodingKind, UnicodeRange,
+    BoundingBox, CharCodeAndIndex, CharMapInfo, CodePageRange, FaceFormat, Os2Panose, Outline,
+    PathVerb, Point, PsEncodingKind, UnicodeRange,
 };
 
 #[allow(clippy::large_enum_variant)]
@@ -189,6 +198,7 @@ struct HinterCache {
 
 pub struct Sfnt<'a> {
     font: FontRef<'a>,
+    cmap: Option<Cmap<'a>>,
     metrics: Metrics,
     ps_name: Option<String>,
     family_name: Option<String>,
@@ -203,6 +213,7 @@ pub struct Sfnt<'a> {
 impl<'a> Sfnt<'a> {
     fn new(data: &'a [u8], index: u32) -> Option<Self> {
         let font = FontRef::from_index(data, index).ok()?;
+        let cmap = font.cmap().ok();
         let metrics = font.metrics(Size::unscaled(), LocationRef::default());
         let get_name = |id| font.localized_strings(id).english_or_first().map(|s| s.to_string());
         let ps_name = get_name(StringId::POSTSCRIPT_NAME);
@@ -216,6 +227,7 @@ impl<'a> Sfnt<'a> {
         let is_tricky = outlines.require_interpreter();
         Some(Self {
             font,
+            cmap,
             ps_name,
             metrics,
             family_name,
@@ -863,6 +875,49 @@ impl SkrifaFont<'_> {
         }
         buffer.copy_from_slice(data.as_bytes());
         buffer.len()
+    }
+
+    fn get_charmap_count(&self) -> usize {
+        let Self::Sfnt(sfnt) = self else {
+            return 0;
+        };
+        sfnt.cmap.as_ref().map(|c| c.encoding_records().len()).unwrap_or(0)
+    }
+
+    fn get_charmap_info(&self, index: usize, info: &mut CharMapInfo) -> bool {
+        let Self::Sfnt(sfnt) = self else {
+            return false;
+        };
+        let Some(cmap) = &sfnt.cmap else {
+            return false;
+        };
+        let Some(record) = cmap.encoding_records().get(index) else {
+            return false;
+        };
+        info.platform_id = record.platform_id() as u16;
+        info.encoding_id = record.encoding_id();
+        true
+    }
+
+    fn cmap_char_to_gid(&self, subtable_index: usize, code: u32) -> u32 {
+        let Self::Sfnt(sfnt) = self else {
+            return 0;
+        };
+        let Some(cmap) = &sfnt.cmap else {
+            return 0;
+        };
+        let Some(record) = cmap.encoding_records().get(subtable_index) else {
+            return 0;
+        };
+        let Ok(subtable) = record.subtable(cmap.offset_data()) else {
+            return 0;
+        };
+        let gid = subtable.map_codepoint(code).map(|g| g.to_u32()).unwrap_or(0);
+        if gid < self.num_glyphs() {
+            gid
+        } else {
+            0
+        }
     }
 
     fn is_fixed_pitch(&self) -> bool {

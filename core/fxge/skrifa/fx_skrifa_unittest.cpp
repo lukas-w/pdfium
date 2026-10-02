@@ -285,3 +285,35 @@ TEST(FxSkrifaTest, TestGetSfntTable) {
   constexpr uint32_t kMissingTag = 0x78797a77;
   EXPECT_EQ(0u, font->get_sfnt_table(kMissingTag, rust::Slice<uint8_t>()));
 }
+
+TEST(FxSkrifaTest, TestCharmaps) {
+  std::string font_path = PathService::GetTestFilePath("fonts/ahem/Ahem.ttf");
+  std::vector<uint8_t> bytes = GetFileContents(font_path.c_str());
+
+  auto font = skrifa::new_font(rust::Slice<const uint8_t>(bytes), 0);
+  ASSERT_TRUE(font->is_ok());
+
+  size_t count = font->get_charmap_count();
+  EXPECT_EQ(count, 2u);
+
+  // Verify charmap info and map characters to glyph IDs.
+  size_t found_unicode_times = 0;
+  for (size_t i = 0; i < count; ++i) {
+    skrifa::CharMapInfo info;
+    EXPECT_TRUE(font->get_charmap_info(i, info));
+    if (info.platform_id == kPlatformWindows &&
+        info.encoding_id == kWindowsEncodingUnicode) {
+      ++found_unicode_times;
+      // In Ahem, space (32) maps to glyph ID 3.
+      EXPECT_EQ(3u, font->cmap_char_to_gid(i, 32));
+      // 'A' (65) should map to non-zero glyph ID.
+      EXPECT_EQ(35u, font->cmap_char_to_gid(i, 65));
+    }
+  }
+  EXPECT_EQ(found_unicode_times, 1u);
+
+  // Out-of-bounds queries.
+  skrifa::CharMapInfo dummy_info;
+  EXPECT_FALSE(font->get_charmap_info(count, dummy_info));
+  EXPECT_EQ(0u, font->cmap_char_to_gid(count, 32));
+}

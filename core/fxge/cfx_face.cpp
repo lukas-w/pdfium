@@ -700,6 +700,17 @@ bool CFX_Face::IsTricky() const {
   return !!(GetRec()->face_flags & FT_FACE_FLAG_TRICKY);
 }
 
+#if defined(PDF_ENABLE_FONTATIONS)
+bool CFX_Face::IsPostScriptFont() const {
+  if (!skrifa_font_) {
+    return false;
+  }
+  skrifa::FaceFormat format = skrifa_font_->font->font_type();
+  return format == skrifa::FaceFormat::Type1 ||
+         format == skrifa::FaceFormat::Cff;
+}
+#endif  // defined(PDF_ENABLE_FONTATIONS)
+
 bool CFX_Face::IsFixedWidth() const {
 #if defined(PDF_ENABLE_FONTATIONS)
   if (CFX_GEModule::IsFontations()) {
@@ -1415,22 +1426,37 @@ ByteString CFX_Face::GetGlyphName(uint32_t glyph_index) {
 int CFX_Face::GetCharIndex(uint32_t code) {
 #if defined(PDF_ENABLE_FONTATIONS)
   if (CFX_GEModule::IsFontations()) {
-    if (!GetRec()) {
-      if (selected_encoding_ == fxge::FontEncoding::kUnicode ||
-          selected_encoding_ == fxge::FontEncoding::kNone) {
+    const bool unicode_or_none =
+        selected_encoding_ == fxge::FontEncoding::kUnicode ||
+        selected_encoding_ == fxge::FontEncoding::kNone;
+    if (IsPostScriptFont()) {
+      if (unicode_or_none) {
         return static_cast<int>(skrifa_font_->font->unicode_to_gid(code));
       }
-      if (skrifa_font_->font->font_type() == skrifa::FaceFormat::Type1 &&
-          code <= 0xFF) {
+      if (code <= 0xFF) {
         return static_cast<int>(
             skrifa_font_->font->code_to_gid(static_cast<uint8_t>(code)));
       }
       return 0;
     }
-    FT_CharMap charmap = GetRec()->charmap;
-    if (charmap && charmap->encoding == FT_ENCODING_UNICODE) {
-      return static_cast<int>(skrifa_font_->font->unicode_to_gid(code));
+    if (selected_charmap_index_.has_value() && !unicode_or_none) {
+      uint32_t gid = skrifa_font_->font->cmap_char_to_gid(
+          selected_charmap_index_.value(), code);
+      if (gid != 0) {
+        return static_cast<int>(gid);
+      }
     }
+    if (unicode_or_none) {
+      uint32_t gid = skrifa_font_->font->unicode_to_gid(code);
+      if (gid != 0) {
+        return static_cast<int>(gid);
+      }
+    }
+    if (selected_charmap_index_.has_value()) {
+      return static_cast<int>(skrifa_font_->font->cmap_char_to_gid(
+          selected_charmap_index_.value(), code));
+    }
+    return 0;
   }
 #endif  // defined(PDF_ENABLE_FONTATIONS)
   if (!GetRec()) {
@@ -1665,14 +1691,25 @@ std::vector<CharCodeAndIndex> CFX_Face::GetCharCodesAndIndices(
 }
 
 CFX_Face::CharMap CFX_Face::GetCurrentCharMap() const {
+#if defined(PDF_ENABLE_FONTATIONS)
+  if (CFX_GEModule::IsFontations()) {
+    if (selected_charmap_index_.has_value()) {
+      return reinterpret_cast<CharMap>(selected_charmap_index_.value() + 1);
+    }
+    return nullptr;
+  }
+#endif  // defined(PDF_ENABLE_FONTATIONS)
   return GetRec() ? GetRec()->charmap : nullptr;
 }
 
 std::optional<fxge::FontEncoding> CFX_Face::GetCurrentCharMapEncoding() const {
 #if defined(PDF_ENABLE_FONTATIONS)
-  if (CFX_GEModule::IsFontations() && !GetRec()) {
+  if (CFX_GEModule::IsFontations()) {
     if (selected_encoding_ != fxge::FontEncoding::kNone) {
       return selected_encoding_;
+    }
+    if (selected_charmap_index_.has_value()) {
+      return GetCharMapEncodingByIndex(selected_charmap_index_.value());
     }
     return fxge::FontEncoding::kUnicode;
   }
@@ -1691,6 +1728,18 @@ CFX_Face::CharMapIdPair CFX_Face::GetCharMapIdPairByIndex(size_t index) const {
 }
 
 uint16_t CFX_Face::GetCharMapPlatformIdByIndex(size_t index) const {
+#if defined(PDF_ENABLE_FONTATIONS)
+  if (CFX_GEModule::IsFontations()) {
+    if (IsPostScriptFont()) {
+      return index == 0 ? kPlatformAppleUnicode : kPlatformAdobe;
+    }
+    skrifa::CharMapInfo info;
+    if (skrifa_font_->font->get_charmap_info(index, info)) {
+      return info.platform_id;
+    }
+    return 0;
+  }
+#endif  // defined(PDF_ENABLE_FONTATIONS)
   if (!GetRec()) {
     return 0;
   }
@@ -1698,6 +1747,19 @@ uint16_t CFX_Face::GetCharMapPlatformIdByIndex(size_t index) const {
 }
 
 uint16_t CFX_Face::GetCharMapEncodingIdByIndex(size_t index) const {
+#if defined(PDF_ENABLE_FONTATIONS)
+  if (CFX_GEModule::IsFontations()) {
+    if (IsPostScriptFont()) {
+      return index == 0 ? kAppleUnicodeEncodingUnicode2_0
+                        : kAdobeEncodingCustom;
+    }
+    skrifa::CharMapInfo info;
+    if (skrifa_font_->font->get_charmap_info(index, info)) {
+      return info.encoding_id;
+    }
+    return 0;
+  }
+#endif  // defined(PDF_ENABLE_FONTATIONS)
   if (!GetRec()) {
     return 0;
   }
@@ -1705,25 +1767,17 @@ uint16_t CFX_Face::GetCharMapEncodingIdByIndex(size_t index) const {
 }
 
 fxge::FontEncoding CFX_Face::GetCharMapEncodingByIndex(size_t index) const {
-#if defined(PDF_ENABLE_FONTATIONS)
-  if (CFX_GEModule::IsFontations() && !GetRec()) {
-    if (index == 0) {
-      return fxge::FontEncoding::kUnicode;
-    }
-    return fxge::FontEncoding::kAdobeCustom;
-  }
-#endif  // defined(PDF_ENABLE_FONTATIONS)
   return CharMapIdPairToFontEncoding(GetCharMapIdPairByIndex(index));
 }
 
 size_t CFX_Face::GetCharMapCount() const {
 #if defined(PDF_ENABLE_FONTATIONS)
-  if (CFX_GEModule::IsFontations() && !GetRec()) {
-    if (skrifa_font_->font->font_type() == skrifa::FaceFormat::Type1) {
+  if (CFX_GEModule::IsFontations()) {
+    if (IsPostScriptFont()) {
       return skrifa_font_->font->encoding() != skrifa::PsEncodingKind::None ? 2
                                                                             : 1;
     }
-    return 1;
+    return skrifa_font_->font->get_charmap_count();
   }
 #endif  // defined(PDF_ENABLE_FONTATIONS)
   return GetRec() && GetRec()->charmaps
@@ -1732,10 +1786,17 @@ size_t CFX_Face::GetCharMapCount() const {
 }
 
 pdfium::span<const FT_CharMap> CFX_Face::GetCharMaps() const {
+#if defined(PDF_ENABLE_FONTATIONS)
+  if (CFX_GEModule::IsFontations()) {
+    return {};
+  }
+#endif  // defined(PDF_ENABLE_FONTATIONS)
   if (!GetRec()) {
     return {};
   }
-  size_t count = GetCharMapCount();
+  size_t count = GetRec()->charmaps
+                     ? pdfium::checked_cast<size_t>(GetRec()->num_charmaps)
+                     : 0;
   if (count == 0) {
     return {};
   }
@@ -1744,6 +1805,20 @@ pdfium::span<const FT_CharMap> CFX_Face::GetCharMaps() const {
 }
 
 void CFX_Face::SetCharMap(CharMap map) {
+#if defined(PDF_ENABLE_FONTATIONS)
+  if (CFX_GEModule::IsFontations()) {
+    if (map) {
+      size_t index = reinterpret_cast<uintptr_t>(map) - 1;
+      if (index < GetCharMapCount()) {
+        SetCharMapByIndex(index);
+        return;
+      }
+    }
+    selected_charmap_index_ = std::nullopt;
+    selected_encoding_ = fxge::FontEncoding::kNone;
+    return;
+  }
+#endif  // defined(PDF_ENABLE_FONTATIONS)
   if (GetRec()) {
     FT_Set_Charmap(GetRec(), static_cast<FT_CharMap>(map));
   }
@@ -1753,8 +1828,9 @@ void CFX_Face::SetCharMapByIndex(size_t index) {
   CHECK_LT(index, GetCharMapCount());
 
 #if defined(PDF_ENABLE_FONTATIONS)
-  if (CFX_GEModule::IsFontations() && !GetRec()) {
-    SelectCharMap(GetCharMapEncodingByIndex(index));
+  if (CFX_GEModule::IsFontations()) {
+    selected_charmap_index_ = index;
+    selected_encoding_ = GetCharMapEncodingByIndex(index);
     return;
   }
 #endif  // defined(PDF_ENABLE_FONTATIONS)
@@ -1765,15 +1841,26 @@ void CFX_Face::SetCharMapByIndex(size_t index) {
 
 bool CFX_Face::SelectCharMap(fxge::FontEncoding encoding) {
 #if defined(PDF_ENABLE_FONTATIONS)
-  if (CFX_GEModule::IsFontations() && !GetRec()) {
-    if (encoding == fxge::FontEncoding::kUnicode) {
-      selected_encoding_ = encoding;
-      return true;
+  if (CFX_GEModule::IsFontations()) {
+    if (IsPostScriptFont()) {
+      if (encoding == fxge::FontEncoding::kUnicode) {
+        selected_encoding_ = encoding;
+        selected_charmap_index_ = 0;
+        return true;
+      }
+      if (skrifa_font_->font->encoding() != skrifa::PsEncodingKind::None) {
+        selected_encoding_ = encoding;
+        selected_charmap_index_ = 1;
+        return true;
+      }
+      return false;
     }
-    if (skrifa_font_->font->font_type() == skrifa::FaceFormat::Type1 &&
-        skrifa_font_->font->encoding() != skrifa::PsEncodingKind::None) {
-      selected_encoding_ = encoding;
-      return true;
+    for (size_t i = 0; i < GetCharMapCount(); ++i) {
+      if (GetCharMapEncodingByIndex(i) == encoding) {
+        selected_encoding_ = encoding;
+        selected_charmap_index_ = i;
+        return true;
+      }
     }
     return false;
   }
