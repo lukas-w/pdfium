@@ -183,6 +183,14 @@ class CFX_Face final : public Retainable, public Observable {
 
   bool IsTricky() const;
   void AdjustVariationParams(int glyph_index, int dest_width, int weight);
+#if defined(PDF_ENABLE_FONTATIONS)
+  void AdjustSubstFontTransform(const CFX_SubstFont* subst_font,
+                                int dest_width,
+                                float advance_width,
+                                bool is_cid_font,
+                                bool is_vertical,
+                                CFX_Matrix* matrix) const;
+#endif
 
   pdfium::span<const FT_CharMap> GetCharMaps() const;
 

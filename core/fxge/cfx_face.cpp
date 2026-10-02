@@ -973,16 +973,8 @@ std::unique_ptr<CFX_GlyphBitmap> CFX_Face::RenderGlyph(
     }
 
     CFX_Matrix effective_matrix = matrix;
-    if (subst_font) {
-      int skew = subst_font->GetEffectiveSkew(is_cid_font);
-      if (skew) {
-        if (is_vertical) {
-          effective_matrix.b += effective_matrix.d * skew / 100.0f;
-        } else {
-          effective_matrix.c -= effective_matrix.a * skew / 100.0f;
-        }
-      }
-    }
+    AdjustSubstFontTransform(subst_font, dest_width, outline.advance_width,
+                             is_cid_font, is_vertical, &effective_matrix);
 
     const bool is_lcd = (anti_alias == FontAntiAliasingMode::kLcd);
     const float x_scale = is_lcd ? 3.0f : 1.0f;
@@ -1275,16 +1267,9 @@ std::unique_ptr<CFX_Path> CFX_Face::LoadGlyphPath(
         if (upem > 0) {
           float scale = 1.0f / static_cast<float>(upem);
           CFX_Matrix matrix(scale, 0, 0, scale, 0, 0);
-          if (subst_font) {
-            int skew = subst_font->GetSkew();
-            if (skew) {
-              if (is_vertical) {
-                matrix.b += matrix.d * skew / 100.0f;
-              } else {
-                matrix.c -= matrix.a * skew / 100.0f;
-              }
-            }
-          }
+          AdjustSubstFontTransform(subst_font, dest_width,
+                                   outline.advance_width, /*is_cid_font=*/false,
+                                   is_vertical, &matrix);
           auto path = ConvertOutline(outline);
           if (path) {
             path->Transform(matrix);
@@ -1378,6 +1363,9 @@ int CFX_Face::GetGlyphWidth(uint32_t glyph_index,
                             const CFX_SubstFont* subst_font) {
 #if defined(PDF_ENABLE_FONTATIONS)
   if (CFX_GEModule::IsFontations()) {
+    if (subst_font && subst_font->IsBuiltInGenericFont() && dest_width > 0) {
+      return dest_width;
+    }
     skrifa::Outline outline;
     if (skrifa_font_->font->unscaled_outline(glyph_index, outline)) {
       return EmAdjust(static_cast<int>(outline.advance_width));
@@ -1917,6 +1905,36 @@ void CFX_Face::AdjustVariationParams(int glyph_index,
   }
   FT_Set_MM_Design_Coordinates(rec, 2, coords);
 }
+
+#if defined(PDF_ENABLE_FONTATIONS)
+void CFX_Face::AdjustSubstFontTransform(const CFX_SubstFont* subst_font,
+                                        int dest_width,
+                                        float advance_width,
+                                        bool is_cid_font,
+                                        bool is_vertical,
+                                        CFX_Matrix* matrix) const {
+  if (!subst_font) {
+    return;
+  }
+  if (subst_font->IsBuiltInGenericFont() && dest_width > 0 &&
+      advance_width > 0) {
+    int glyph_width = EmAdjust(static_cast<int>(advance_width));
+    if (glyph_width > 0) {
+      float scale_x = static_cast<float>(dest_width) / glyph_width;
+      matrix->a *= scale_x;
+      matrix->b *= scale_x;
+    }
+  }
+  int skew = subst_font->GetEffectiveSkew(is_cid_font);
+  if (skew) {
+    if (is_vertical) {
+      matrix->b += matrix->d * skew / 100.0f;
+    } else {
+      matrix->c -= matrix->a * skew / 100.0f;
+    }
+  }
+}
+#endif  // defined(PDF_ENABLE_FONTATIONS)
 
 #if defined(PDF_ENABLE_XFA) || BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_LINUX)
 uint32_t CFX_Face::GetFontStyle() {
