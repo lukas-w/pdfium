@@ -1071,7 +1071,8 @@ void CPDF_DIB::TranslateScanline24bpp(
   uint64_t src_byte_pos = 0;
   size_t dest_byte_pos = 0;
   const bool bpp8 = bpc_ == 8;
-  for (int column = 0; column < GetWidth(); column++) {
+  const int width = GetWidth();
+  for (int column = 0; column < width; column++) {
     for (uint32_t color = 0; color < components_; color++) {
       if (bpp8) {
         uint8_t data = src_scan[src_byte_pos++];
@@ -1141,9 +1142,13 @@ bool CPDF_DIB::TranslateScanline24bppDefaultDecode(
       auto src_pixels =
           fxcrt::reinterpret_span<const RgbBe16>(src_scan).first(width);
       for (auto [src, dest] : fxcrt::Zip(src_pixels, dest_pixels)) {
-        dest.blue = src.blue_high;
-        dest.green = src.green_high;
-        dest.red = src.red_high;
+        // Compiler can't conclude src/dest don't overlap.
+        const uint8_t blue = src.blue_high;
+        const uint8_t green = src.green_high;
+        const uint8_t red = src.red_high;
+        dest.blue = blue;
+        dest.green = green;
+        dest.red = red;
       }
       break;
     }
