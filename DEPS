@@ -672,6 +672,42 @@ deps = {
     Var('chromium_git') + '/external/github.com/llvm/llvm-project/libc.git@' +
         Var('llvm_libc_revision'),
 
+  'third_party/llvm-libclang': {
+    'dep_type': 'gcs',
+    'bucket': 'chromium-browser-clang',
+    'objects': [
+      {
+        'object_name': 'Linux_x64/rust-libclang-1edd55dcfcd573872c727fa3e086369a71661ee0-1110-llvmorg-24-init-7747-g62397f8b.tar.xz',
+        'sha256sum': 'b251621641190cdab7d23c4a47257e4e1f1f335c34c9676118940fa562bb66ff',
+        'size_bytes': 22776236,
+        'generation': 1790798150313742,
+        'condition': 'host_os == "linux" and non_git_source',
+      },
+      {
+        'object_name': 'Mac/rust-libclang-1edd55dcfcd573872c727fa3e086369a71661ee0-1110-llvmorg-24-init-7747-g62397f8b.tar.xz',
+        'sha256sum': '4f7e9d166ad2ced03b9d5c66f2a919fefce5127d03dbe93661a0d012c1dda9ef',
+        'size_bytes': 22924716,
+        'generation': 1790798154061688,
+        'condition': 'host_os == "mac" and host_cpu == "x64"',
+      },
+      {
+        'object_name': 'Mac_arm64/rust-libclang-1edd55dcfcd573872c727fa3e086369a71661ee0-1110-llvmorg-24-init-7747-g62397f8b.tar.xz',
+        'sha256sum': '444cfa9bd9d3cda991943c9743f1992004b1f50d6641372b5ff9103d9a4db478',
+        'size_bytes': 20588924,
+        'generation': 1790798157457698,
+        'condition': 'host_os == "mac" and host_cpu == "arm64"',
+      },
+      {
+        'object_name': 'Win/rust-libclang-1edd55dcfcd573872c727fa3e086369a71661ee0-1110-llvmorg-24-init-7747-g62397f8b.tar.xz',
+        'sha256sum': 'e8bb31ac1bded5c1fce08567a8a1a8f304213cceeee7384c2cba844dcaddfd20',
+        'size_bytes': 21527244,
+        'generation': 1790798161045212,
+        'condition': 'host_os == "win"',
+      },
+    ],
+    'condition': 'checkout_v8',
+  },
+
   'third_party/markupsafe': {
     'url': Var('chromium_git') + '/chromium/src/third_party/markupsafe.git@' +
         Var('markupsafe_revision'),
