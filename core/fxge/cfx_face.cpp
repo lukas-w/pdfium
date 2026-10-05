@@ -480,10 +480,7 @@ struct SkrifaFontHolder {
 RetainPtr<CFX_Face> CFX_Face::New(RetainPtr<Retainable> cache_entry,
                                   RetainPtr<CFX_ReadOnlySpanStream> font_stream,
                                   uint32_t face_index) {
-  CFX_FontMgr* font_mgr = CFX_GEModule::Get()->GetFontMgr();
   pdfium::span<const uint8_t> data = font_stream->span();
-  std::unique_ptr<SkrifaFontHolder> skrifa_font;
-  bool skip_freetype = false;
 
 #if defined(PDF_ENABLE_FONTATIONS)
   if (CFX_GEModule::IsFontations()) {
@@ -496,13 +493,15 @@ RetainPtr<CFX_Face> CFX_Face::New(RetainPtr<Retainable> cache_entry,
       // keeping a face that only FreeType can read.
       return nullptr;
     }
-    skrifa_font = std::make_unique<SkrifaFontHolder>(std::move(raw_font));
-    skip_freetype = skrifa_font->font->font_type() == skrifa::FaceFormat::Type1;
+    return pdfium::WrapRetain(new CFX_Face(
+        std::move(cache_entry), std::move(font_stream), /*rec=*/nullptr,
+        std::make_unique<SkrifaFontHolder>(std::move(raw_font))));
   }
 #endif  // defined(PDF_ENABLE_FONTATIONS)
 
-  FT_FaceRec* face_rec = nullptr;
-  if (!skip_freetype) {
+  if (CFX_GEModule::IsFreetype()) {
+    CFX_FontMgr* font_mgr = CFX_GEModule::Get()->GetFontMgr();
+    FT_FaceRec* face_rec = nullptr;
     if (FT_New_Memory_Face(font_mgr->GetFTLibrary(), data.data(),
                            pdfium::checked_cast<FT_Long>(data.size()),
                            pdfium::checked_cast<FT_Long>(face_index),
@@ -512,12 +511,12 @@ RetainPtr<CFX_Face> CFX_Face::New(RetainPtr<Retainable> cache_entry,
     if (FT_Set_Pixel_Sizes(face_rec, 64, 64) != 0) {
       return nullptr;
     }
+    return pdfium::WrapRetain(new CFX_Face(std::move(cache_entry),
+                                           std::move(font_stream), face_rec,
+                                           /*skrifa_font=*/nullptr));
   }
 
-  // Private ctor.
-  return pdfium::WrapRetain(new CFX_Face(std::move(cache_entry),
-                                         std::move(font_stream), face_rec,
-                                         std::move(skrifa_font)));
+  return nullptr;
 }
 
 // static

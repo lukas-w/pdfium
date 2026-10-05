@@ -264,6 +264,40 @@ TEST(FxSkrifaTest, TestType1Face) {
   EXPECT_EQ(glyph_mono->GetBitmap()->GetHeight(), 6);
 }
 
+TEST(FxSkrifaTest, TestBareCffFace) {
+  if (!CFX_GEModule::IsFontations()) {
+    GTEST_SKIP();
+  }
+
+  auto stream = pdfium::MakeRetain<CFX_ReadOnlySpanStream>(kFoxitSansFontData);
+  auto face = CFX_Face::New(nullptr, stream, 0);
+  ASSERT_TRUE(face);
+
+  EXPECT_EQ(face->GetFontFormat(), "CFF");
+  EXPECT_FALSE(face->IsTtOt());
+  EXPECT_EQ(face->GetCharMapCount(), 2u);
+  EXPECT_EQ(face->GetCharMapPlatformIdByIndex(0), kPlatformAppleUnicode);
+  EXPECT_EQ(face->GetCharMapIdPairByIndex(0).encoding_id,
+            kAppleUnicodeEncodingUnicode2_0);
+  EXPECT_EQ(face->GetCharMapEncodingByIndex(0), fxge::FontEncoding::kUnicode);
+  EXPECT_EQ(face->GetCharMapPlatformIdByIndex(1), kPlatformAdobe);
+  EXPECT_EQ(face->GetCharMapIdPairByIndex(1).encoding_id, kAdobeEncodingCustom);
+  EXPECT_EQ(face->GetCharMapEncodingByIndex(1),
+            fxge::FontEncoding::kAdobeCustom);
+
+  EXPECT_TRUE(face->SelectCharMap(fxge::FontEncoding::kAdobeCustom));
+  int gid_x = face->GetCharIndex(120);
+  EXPECT_EQ(gid_x, 222);
+
+  EXPECT_TRUE(face->SelectCharMap(fxge::FontEncoding::kUnicode));
+  EXPECT_EQ(face->GetCharIndex(L'x'), gid_x);
+
+  std::unique_ptr<CFX_Path> path =
+      face->LoadGlyphPath(gid_x, 0, false, nullptr);
+  ASSERT_TRUE(path);
+  EXPECT_EQ(path->GetPoints().size(), 12u);
+}
+
 TEST(FxSkrifaTest, TestGetSfntTable) {
   std::string font_path = PathService::GetTestFilePath("fonts/ahem/Ahem.ttf");
   std::vector<uint8_t> bytes = GetFileContents(font_path.c_str());
