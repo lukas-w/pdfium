@@ -100,7 +100,7 @@ TEST_F(CFDETextOutTest, DrawLogicTextBasic) {
 #endif
 #if defined(PDF_ENABLE_FONTATIONS)
     if (CFX_GEModule::IsFontations()) {
-      return "59f4a2cfb7938032f144954642babe58";
+      return "0064590d0532663140d521a2ea6780b1";
     }
 #endif
     return "c143f8450f661a489cc9423de7cc1acc";
@@ -143,7 +143,7 @@ class CFDETextOutLargeBitmapTest : public CFDETextOutTest {
 #endif
 #if defined(PDF_ENABLE_FONTATIONS)
     if (CFX_GEModule::IsFontations()) {
-      return "89adff3e02833425d42a2f89ef8fd7e3";
+      return "78842f43dce9b89af92f17b56d9ceaab";
     }
 #endif
     return "add7cf2819b3e1397d8a60a9ec436a86";

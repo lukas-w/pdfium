@@ -262,9 +262,8 @@ FT_Vector ToFTVector(const skrifa::Point& p, const CFX_Matrix& scaled_matrix) {
 
 ConvertedFTOutline ConvertToFTOutline(const skrifa::Outline& outline,
                                       const CFX_Matrix& matrix,
-                                      int upem,
+                                      float scale,
                                       float x_scale) {
-  const float scale = kFixedPpem / upem;
   const CFX_Matrix scaled_matrix(matrix.a * scale * x_scale, matrix.b * scale,
                                  matrix.c * scale * x_scale, matrix.d * scale,
                                  0, 0);
@@ -328,110 +327,6 @@ ConvertedFTOutline ConvertToFTOutline(const skrifa::Outline& outline,
   }
   CloseContours(result.points, result.contours);
   return result;
-}
-
-// Backing store for an FT_Outline built from a skrifa outline. FreeType does
-// not take ownership of these, so they must outlive the FT_Outline itself.
-struct FtOutlineData {
-  std::vector<FT_Vector> points;
-  std::vector<uint8_t> tags;
-  std::vector<uint16_t> contours;
-};
-
-bool AppendFtPoint(FtOutlineData& data,
-                   const skrifa::Point& point,
-                   uint8_t tag) {
-  float sx = std::round(point.x * kFixedPpem);
-  float sy = std::round(point.y * kFixedPpem);
-  if (!std::isfinite(sx) || !std::isfinite(sy) ||
-      !pdfium::IsValueInRangeForNumericType<FT_Pos>(sx) ||
-      !pdfium::IsValueInRangeForNumericType<FT_Pos>(sy)) {
-    return false;
-  }
-  data.points.push_back({static_cast<FT_Pos>(sx), static_cast<FT_Pos>(sy)});
-  data.tags.push_back(tag);
-  return true;
-}
-
-// Converts `outline`, whose points are in pixels, into the 26.6 fixed point
-// form that FreeType's rasterizer expects. Returns nullopt if `outline` is
-// empty, is malformed, or does not fit within FreeType's 16-bit counts.
-std::optional<FtOutlineData> BuildFtOutline(const skrifa::Outline& outline) {
-  // FT_Outline::n_points and n_contours are signed 16-bit quantities.
-  static constexpr size_t kMaxPoints = std::numeric_limits<int16_t>::max();
-
-  FtOutlineData data;
-  auto end_contour = [&data] {
-    if (data.points.empty()) {
-      return;
-    }
-    const uint16_t last =
-        pdfium::checked_cast<uint16_t>(data.points.size() - 1);
-    if (data.contours.empty() || data.contours.back() != last) {
-      data.contours.push_back(last);
-    }
-  };
-
-  size_t point_idx = 0;
-  for (auto verb : outline.verbs) {
-    switch (verb) {
-      case skrifa::PathVerb::MoveTo:
-        if (outline.points.size() - point_idx < 1 ||
-            data.points.size() + 1 > kMaxPoints) {
-          return std::nullopt;
-        }
-        end_contour();
-        if (!AppendFtPoint(data, outline.points[point_idx++],
-                           FT_CURVE_TAG_ON)) {
-          return std::nullopt;
-        }
-        break;
-      case skrifa::PathVerb::LineTo:
-        if (outline.points.size() - point_idx < 1 ||
-            data.points.size() + 1 > kMaxPoints) {
-          return std::nullopt;
-        }
-        if (!AppendFtPoint(data, outline.points[point_idx++],
-                           FT_CURVE_TAG_ON)) {
-          return std::nullopt;
-        }
-        break;
-      case skrifa::PathVerb::QuadTo:
-        if (outline.points.size() - point_idx < 2 ||
-            data.points.size() + 2 > kMaxPoints) {
-          return std::nullopt;
-        }
-        if (!AppendFtPoint(data, outline.points[point_idx++],
-                           FT_CURVE_TAG_CONIC) ||
-            !AppendFtPoint(data, outline.points[point_idx++],
-                           FT_CURVE_TAG_ON)) {
-          return std::nullopt;
-        }
-        break;
-      case skrifa::PathVerb::CurveTo:
-        if (outline.points.size() - point_idx < 3 ||
-            data.points.size() + 3 > kMaxPoints) {
-          return std::nullopt;
-        }
-        if (!AppendFtPoint(data, outline.points[point_idx++],
-                           FT_CURVE_TAG_CUBIC) ||
-            !AppendFtPoint(data, outline.points[point_idx++],
-                           FT_CURVE_TAG_CUBIC) ||
-            !AppendFtPoint(data, outline.points[point_idx++],
-                           FT_CURVE_TAG_ON)) {
-          return std::nullopt;
-        }
-        break;
-      case skrifa::PathVerb::Close:
-        end_contour();
-        break;
-    }
-  }
-  end_contour();
-  if (data.points.empty()) {
-    return std::nullopt;
-  }
-  return data;
 }
 #endif  // defined(PDF_ENABLE_FONTATIONS)
 
@@ -973,25 +868,35 @@ std::unique_ptr<CFX_GlyphBitmap> CFX_Face::RenderGlyph(
     FontAntiAliasingMode anti_alias,
     const CFX_SubstFont* subst_font) {
 #if defined(PDF_ENABLE_FONTATIONS)
-  if (CFX_GEModule::IsFontations() && !GetRec()) {
+  if (CFX_GEModule::IsFontations()) {
+    if (!skrifa_font_ || !skrifa_font_->font->is_ok()) {
+      return nullptr;
+    }
     skrifa::Outline outline;
-    if (!skrifa_font_->font->unscaled_outline(glyph_index, outline)) {
+    bool is_scaled = IsTtOt() && skrifa_font_->font->hinted_outline(
+                                     glyph_index, kFixedPpem,
+                                     /*is_pedantic=*/false, outline);
+    if (!is_scaled &&
+        !skrifa_font_->font->unscaled_outline(glyph_index, outline)) {
       return nullptr;
     }
     const int upem = GetUnitsPerEm();
     if (upem <= 0) {
       return nullptr;
     }
-
+    const float unscaled_advance =
+        is_scaled ? outline.advance_width * upem / kFixedPpem
+                  : outline.advance_width;
     CFX_Matrix effective_matrix = matrix;
-    AdjustSubstFontTransform(subst_font, dest_width, outline.advance_width,
+    AdjustSubstFontTransform(subst_font, dest_width, unscaled_advance,
                              is_cid_font, is_vertical, &effective_matrix);
 
+    const float scale = is_scaled ? 1.0f : kFixedPpem / upem;
     const bool is_lcd = (anti_alias == FontAntiAliasingMode::kLcd);
     const float x_scale = is_lcd ? 3.0f : 1.0f;
 
     ConvertedFTOutline converted =
-        ConvertToFTOutline(outline, effective_matrix, upem, x_scale);
+        ConvertToFTOutline(outline, effective_matrix, scale, x_scale);
     if (converted.points.empty() || converted.contours.empty()) {
       return nullptr;
     }
@@ -1002,7 +907,7 @@ std::unique_ptr<CFX_GlyphBitmap> CFX_Face::RenderGlyph(
     ft_outline.points = converted.points.data();
     ft_outline.tags = converted.tags.data();
     ft_outline.contours = converted.contours.data();
-    ft_outline.flags = FT_OUTLINE_NONE;
+    ft_outline.flags = FT_OUTLINE_SMART_DROPOUTS;
 
     if (subst_font) {
       int32_t ft_matrix_xx = static_cast<int32_t>(matrix.a * 1024.0f);
@@ -1024,10 +929,40 @@ std::unique_ptr<CFX_GlyphBitmap> CFX_Face::RenderGlyph(
 
     FT_BBox cbox;
     FT_Outline_Get_CBox(&ft_outline, &cbox);
-    int x_left = static_cast<int>(cbox.xMin >> 6);
-    int y_bottom = static_cast<int>(cbox.yMin >> 6);
-    int x_right = static_cast<int>((cbox.xMax + 63) >> 6);
-    int y_top = static_cast<int>((cbox.yMax + 63) >> 6);
+    int x_left;
+    int y_bottom;
+    int x_right;
+    int y_top;
+    if (anti_alias == FontAntiAliasingMode::kMono) {
+      // Match FreeType's ft_glyphslot_preset_bitmap() monochrome rounding.
+      // Coordinates in `cbox` are in 26.6 fixed-point (1/64th pixel). Round
+      // asymmetrically (+31 / +32) so pixel centers (at 32/64) covered by the
+      // outline are included. If rounding causes the box to collapse to zero,
+      // expand by 1 pixel in the direction of the fractional remainder.
+      x_left = static_cast<int>((cbox.xMin + 31) >> 6);
+      x_right = static_cast<int>((cbox.xMax + 32) >> 6);
+      if (x_left == x_right) {
+        if (((cbox.xMin + 31) & 63) - 31 + ((cbox.xMax + 32) & 63) - 32 < 0) {
+          --x_left;
+        } else {
+          ++x_right;
+        }
+      }
+      y_bottom = static_cast<int>((cbox.yMin + 31) >> 6);
+      y_top = static_cast<int>((cbox.yMax + 32) >> 6);
+      if (y_bottom == y_top) {
+        if (((cbox.yMin + 31) & 63) - 31 + ((cbox.yMax + 32) & 63) - 32 < 0) {
+          --y_bottom;
+        } else {
+          ++y_top;
+        }
+      }
+    } else {
+      x_left = static_cast<int>(cbox.xMin >> 6);
+      y_bottom = static_cast<int>(cbox.yMin >> 6);
+      x_right = static_cast<int>((cbox.xMax + 63) >> 6);
+      y_top = static_cast<int>((cbox.yMax + 63) >> 6);
+    }
     int width = x_right - x_left;
     int height = y_top - y_bottom;
     if (width <= 0 || height <= 0) {
@@ -1157,77 +1092,30 @@ std::unique_ptr<CFX_GlyphBitmap> CFX_Face::RenderGlyph(
   auto* glyph = rec->glyph;
   glyph->format = FT_GLYPH_FORMAT_OUTLINE;
 
-  bool loaded_fontations_outline = false;
-#if defined(PDF_ENABLE_FONTATIONS)
-  // Backing store for `glyph->outline`; must outlive FT_Render_Glyph().
-  std::optional<FtOutlineData> ft_outline;
-  if (CFX_GEModule::IsFontations()) {
-    absl::Cleanup outline_cleaner = [glyph] { glyph->outline = FT_Outline{}; };
-    if (skrifa_font_ && skrifa_font_->font->is_ok()) {
-      skrifa::Outline outline;
-      bool has_outline = false;
-      if (IsTtOt()) {
-        has_outline = skrifa_font_->font->hinted_outline(
-            glyph_index, kFixedPpem, /*is_pedantic=*/false, outline);
-      }
-      if (!has_outline) {
-        has_outline = skrifa_font_->font->scaled_outline(glyph_index,
-                                                         kFixedPpem, outline);
-      }
-      if (has_outline) {
-        ft_outline = BuildFtOutline(outline);
-      }
-      if (ft_outline.has_value()) {
-        std::move(outline_cleaner).Cancel();
-        glyph->outline.n_points =
-            pdfium::checked_cast<short>(ft_outline->points.size());
-        glyph->outline.n_contours =
-            pdfium::checked_cast<short>(ft_outline->contours.size());
-        glyph->outline.points = ft_outline->points.data();
-        glyph->outline.tags = ft_outline->tags.data();
-        glyph->outline.contours = ft_outline->contours.data();
-        glyph->outline.flags = FT_OUTLINE_SMART_DROPOUTS;
-        FT_Outline_Transform(&glyph->outline, &ft_matrix);
-      }
-    }
-    loaded_fontations_outline = true;
+  ScopedFaceTransform scoped_transform(GetRec(), &ft_matrix);
+  int load_flags = FT_LOAD_NO_BITMAP | FT_LOAD_PEDANTIC;
+  if (!IsTtOt()) {
+    load_flags |= FT_LOAD_NO_HINTING;
   }
-#endif  // defined(PDF_ENABLE_FONTATIONS)
-
-  if (!loaded_fontations_outline) {
-    ScopedFaceTransform scoped_transform(GetRec(), &ft_matrix);
-    int load_flags = FT_LOAD_NO_BITMAP | FT_LOAD_PEDANTIC;
-    if (!IsTtOt()) {
-      load_flags |= FT_LOAD_NO_HINTING;
+  int error = FT_Load_Glyph(rec, glyph_index, load_flags);
+  if (error) {
+    if (load_flags & FT_LOAD_NO_HINTING) {
+      return nullptr;
     }
-    int error = FT_Load_Glyph(rec, glyph_index, load_flags);
+    load_flags |= FT_LOAD_NO_HINTING;
+    load_flags &= ~FT_LOAD_PEDANTIC;
+    error = FT_Load_Glyph(rec, glyph_index, load_flags);
     if (error) {
-      if (load_flags & FT_LOAD_NO_HINTING) {
-        return nullptr;
-      }
-      load_flags |= FT_LOAD_NO_HINTING;
-      load_flags &= ~FT_LOAD_PEDANTIC;
-      error = FT_Load_Glyph(rec, glyph_index, load_flags);
-      if (error) {
-        return nullptr;
-      }
+      return nullptr;
     }
   }
-
-#if defined(PDF_ENABLE_FONTATIONS)
-  absl::Cleanup restorer = [glyph, loaded_fontations_outline] {
-    if (loaded_fontations_outline) {
-      glyph->outline = FT_Outline{};
-    }
-  };
-#endif  // defined(PDF_ENABLE_FONTATIONS)
 
   if (embolden_level > 0) {
     FT_Outline_Embolden(&glyph->outline, embolden_level);
   }
   CFX_FontMgr* font_mgr = CFX_GEModule::Get()->GetFontMgr();
   FT_Library_SetLcdFilter(font_mgr->GetFTLibrary(), FT_LCD_FILTER_DEFAULT);
-  int error =
+  error =
       FT_Render_Glyph(glyph, FtRenderModeFromFontAntiAliasingMode(anti_alias));
   if (error) {
     return nullptr;

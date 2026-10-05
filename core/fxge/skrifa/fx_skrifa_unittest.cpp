@@ -261,7 +261,7 @@ TEST(FxSkrifaTest, TestType1Face) {
   ASSERT_TRUE(glyph_mono);
   EXPECT_TRUE(glyph_mono->GetBitmap());
   EXPECT_EQ(glyph_mono->GetBitmap()->GetWidth(), 6);
-  EXPECT_EQ(glyph_mono->GetBitmap()->GetHeight(), 7);
+  EXPECT_EQ(glyph_mono->GetBitmap()->GetHeight(), 6);
 }
 
 TEST(FxSkrifaTest, TestGetSfntTable) {

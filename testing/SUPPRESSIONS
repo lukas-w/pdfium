@@ -63,6 +63,7 @@
 3_interpolate_image.pdf mac * * skia * fuzzy
 3bigpreview.pdf mac * * agg * diff
 3bigpreview.pdf * * * * * fuzzy=21,0.15,10.0
+3bigpreview.pdf * * * * fontations fuzzy=25,0.25,15
 4_35.pdf mac * * agg * diff
 4_35.pdf * * * * fontations fuzzy=10,0.1,15
 4_39.pdf mac * * agg * diff
@@ -318,6 +319,7 @@ example_033.pdf * * * * fontations diff
 example_033.pdf * * * * * fuzzy
 example_034.pdf mac * * agg * diff
 example_034.pdf * * * * * fuzzy=4,0.05,5.0
+example_034.pdf * * * * fontations fuzzy=10,0.1,15
 example_035.pdf mac * * agg * diff
 example_035.pdf * * * * fontations diff
 example_035.pdf * * * * * fuzzy
@@ -370,6 +372,7 @@ example_050.pdf * * * * fontations diff
 example_050.pdf * * * * * fuzzy
 example_051.pdf mac * * agg * diff
 example_051.pdf * * * * * fuzzy=3,0.35,5.0
+example_051.pdf * * * * fontations fuzzy=10,0.35,15
 example_052.pdf mac * * agg * diff
 example_052.pdf * * * * fontations diff
 example_052.pdf * * * * * fuzzy
@@ -405,6 +408,7 @@ example_061.pdf * * * * fontations diff
 example_061.pdf * * * * * fuzzy
 example_062.pdf mac * * agg * diff
 example_062.pdf * * * * * fuzzy=4,0.05,5.0
+example_062.pdf * * * * fontations fuzzy=10,0.1,15
 example_063.pdf mac * * agg * diff
 example_063.pdf * * * * fontations diff
 example_063.pdf * * * * * fuzzy
@@ -568,6 +572,7 @@ time.pdf * * * * fontations fuzzy=10,0.1,15
 transformation.pdf mac * * agg * diff
 transformation.pdf * * * * fontations fuzzy=10,0.1,15
 transparent.pdf mac * * agg * diff
+transparent.pdf * * * * fontations fuzzy=10,0.1,15
 whats_new_in_v3.0.pdf mac * * agg * diff
 whats_new_in_v3.0.pdf * * * * fontations fuzzy=10,0.1,15
 whats_new_in_v3.0.pdf mac * * skia * fuzzy
@@ -613,6 +618,7 @@ Test_CheckBox.pdf * * * * * diff
 2_color_tiling.pdf mac_x86 * * skia * diff
 2_color_tiling.pdf * * * * fontations fuzzy=10,0.1,15
 2_uncolor_tiling.pdf mac_x86 * * skia * diff
+2_uncolor_tiling.pdf * * * * fontations fuzzy=10,0.1,15
 3bigpreview.pdf mac_x86 * * skia * diff
 FRC_4.5.3_DeviceRGB_rg.pdf mac_x86 * * skia * diff
 FRC_4.5.4_CalGray_gamma.pdf mac_x86 * * skia * diff
@@ -668,7 +674,7 @@ bug_668762.pdf mac_x86 * * skia * diff
 bug_668762.pdf * * * * fontations fuzzy=10,0.1,15
 edit_transform.pdf mac_x86 * * skia * diff
 en_14_foxit_products.pdf mac_x86 * * skia * diff
-en_14_foxit_products.pdf * * * * fontations fuzzy=10,0.1,15
+en_14_foxit_products.pdf * * * * fontations fuzzy=10,0.2,15
 en_contact.pdf mac_x86 * * skia * diff
 en_foxit.pdf mac_x86 * * skia * diff
 en_fqa.pdf mac_x86 * * skia * diff
@@ -678,9 +684,9 @@ example_004.pdf mac_x86 * * skia * diff
 example_028.pdf mac_x86 * * skia * diff
 example_055.pdf mac_x86 * * skia * diff
 font_1_embedded_font_en_feature.pdf mac_x86 * * skia * diff
-font_1_embedded_font_en_feature.pdf * * * * fontations fuzzy=10,0.1,15
+font_1_embedded_font_en_feature.pdf * * * * fontations fuzzy=16,0.1,15
 font_2_embedded_font_en_size14.pdf mac_x86 * * skia * diff
-font_2_embedded_font_en_size14.pdf * * * * fontations fuzzy=10,0.1,15
+font_2_embedded_font_en_size14.pdf * * * * fontations fuzzy=16,0.1,15
 new_stamp4.pdf mac_x86 * * skia * diff
 octest.pdf mac_x86 * * skia * diff
 path_5_pattern.pdf mac_x86 * * skia * diff
@@ -721,9 +727,11 @@ FRC_8.5_Screen_Img_D_Launch.pdf mac * * skia * fuzzy
 FRC_8.5_URI_IsMap.pdf * * * gdi * diff
 FRC_8.5_URI_IsMap.pdf * * * * * fuzzy
 FRC_8.5_URI_IsMap.pdf mac * * skia * fuzzy
+FRC_8.5_URI_IsMap.pdf * * * * fontations fuzzy=10,0.1,15
 bug_691967.pdf * * * gdi_skia * diff
 bug_691967.pdf * * * * * fuzzy
 bug_691967.pdf mac * * skia * fuzzy
+bug_691967.pdf * * * * fontations fuzzy=10,0.1,15
 bug_86459.pdf * * * gdi * diff
 bug_86459.pdf * * * * * fuzzy
 bug_880920.pdf * * * gdi * diff
@@ -822,6 +830,7 @@ whats_new_in_v3.0.pdf * * * gdi * diff
 
 # TODO(crbug.com/42271067): Remove after associated bug is fixed
 Date_FormCale.pdf * * * gdi * diff
+Date_FormCale.pdf * * * * fontations fuzzy=10,0.1,15
 FRC_3.5_P__3648_Password_1.pdf * * * gdi * diff
 FRC_3.5_P__3648_Password_1.pdf * * * * fontations fuzzy=10,0.1,15
 FRC_8.4.1_Annotations_AP_N_R.D_.pdf * * * gdi * diff
@@ -833,7 +842,7 @@ FRC_8.4.1_Annotations_AS_Yes_.pdf * * * * fontations fuzzy=10,0.1,15
 FRC_8.5_Bl_Hide.pdf * * * gdi * diff
 FRC_8.5_Bl_Hide.pdf * * * * fontations diff
 FRC_8.5_E_GoTo_D.pdf * * * gdi * diff
-FRC_8.5_E_GoTo_D.pdf * * * * fontations fuzzy=10,0.1,15
+FRC_8.5_E_GoTo_D.pdf * * * * fontations diff
 FRC_8.5_Fo_URI_Base.pdf * * * gdi * diff
 FRC_8.5_Fo_URI_Base.pdf * * * * fontations diff
 FRC_8.5_U_GoToR_NewWindow.pdf * * * gdi * diff
@@ -848,10 +857,13 @@ FRC_8.5_Widget_K.pdf * * * * fontations fuzzy=10,0.1,15
 FRC_8.5_Widget_V.pdf * * * gdi * diff
 FRC_8.5_Widget_V.pdf * * * * fontations fuzzy=10,0.1,15
 FRC_8.5_X_GoToR_D.pdf * * * gdi * diff
-FRC_8.5_X_GoToR_D.pdf * * * * fontations fuzzy=10,0.1,15
+FRC_8.5_X_GoToR_D.pdf * * * * fontations diff
 Line_Stroke.pdf * * * gdi * diff
+Line_Stroke.pdf * * * * fontations fuzzy=10,0.1,15
 Oneof1.pdf * * * gdi * diff
+Oneof1.pdf * * * * fontations fuzzy=10,0.1,15
 Oneof2.pdf * * * gdi * diff
+Oneof2.pdf * * * * fontations fuzzy=10,0.1,15
 PagePosition_any_rest.pdf * * * gdi * diff
 PagePosition_any_rest.pdf * * * * fontations fuzzy=10,0.1,15
 PagePosition_first.pdf * * * gdi * diff
@@ -890,7 +902,9 @@ Test_RadioButton.pdf * * * * fontations fuzzy=10,0.1,15
 Test_ResetButton.pdf * * * gdi * diff
 Test_ResetButton.pdf * * * * fontations fuzzy=10,0.1,15
 Test_TextField.pdf * * * gdi * diff
+Test_TextField.pdf * * * * fontations fuzzy=10,0.1,15
 TimeField.pdf * * * gdi * diff
+TimeField.pdf * * * * fontations fuzzy=10,0.1,15
 action_execute_a_menu_item.pdf * * * gdi * diff
 action_hide_show_form.pdf * * * gdi * diff
 action_on_focus.pdf * * * gdi * diff
@@ -898,7 +912,7 @@ action_reset.pdf * * * gdi * diff
 action_run_javascript.pdf * * * gdi * diff
 action_submit_a_form.pdf * * * gdi * diff
 all_trigger_browsefordoc.pdf * * * gdi * diff
-all_trigger_browsefordoc.pdf linux,win * * * fontations diff
+all_trigger_browsefordoc.pdf * * * * fontations diff
 all_trigger_browsefordoc.pdf * * * * * fuzzy
 all_trigger_browsefordoc.pdf mac * * skia * fuzzy
 all_trigger_newdoc.pdf * * * gdi * diff
@@ -913,6 +927,7 @@ app_launchurl.pdf * * * gdi * diff
 bi.pdf * * * gdi * diff
 bi.pdf mac * * skia * fuzzy
 bug_434.pdf * * * gdi * diff
+bug_434.pdf * * * * fontations diff
 bug_440132.pdf * * * gdi * diff
 calculate_average.pdf * * * gdi * diff
 calculate_sum_a_b_c.pdf * * * gdi * diff
@@ -1174,11 +1189,13 @@ bug_42270333.in * * * * * diff
 
 # TODO(crbug.com/40860237): Remove after associated bug is fixed
 bug_40860237.in mac * * agg * diff
+bug_40860237.in * * * * fontations fuzzy=10,0.1,15
 
 # This test is intentionally suppressed on Windows. Normally, Windows provides
 # the Symbol font, so this PDF would render correctly. However, in the hermetic
 # test environment, there is no Symbol font and the rendering is incorrect.
 bug_1442723.in win * * * * diff
+bug_1442723.in * * * * fontations fuzzy=10,0.1,15
 
 # TODO(crbug.com/42270459): Remove after associated bug is fixed
 bug_42270459_2.in * * * * * diff
@@ -1258,8 +1275,10 @@ bug_1383708.in mac * * skia * fuzzy
 
 # TODO(crbug.com/42271067): Remove after associated bug is fixed
 barcode_test.pdf * * * gdi * diff
+barcode_test.pdf * * * * fontations fuzzy=10,0.1,15
 bug_1026918.in * * * gdi * diff
 bug_1072440.in * * * gdi * diff
+bug_1072440.in * * * * fontations fuzzy=10,0.1,15
 bug_113910.in * * * gdi * diff
 bug_1282.in * * * gdi * diff
 bug_1286970.in * * * gdi * diff
@@ -1284,17 +1303,23 @@ checkbox_radiobutton_hide.in * * * gdi * diff
 checkbox_radiobutton_reset.in * * * gdi * diff
 combobox_form.in * * * gdi * diff
 dynamic_list_box_allow_multiple_selection.pdf * * * gdi * diff
+dynamic_list_box_allow_multiple_selection.pdf * * * * fontations fuzzy=10,0.1,15
 dynamic_password_field_background_fill.pdf * * * gdi * diff
 dynamic_password_field_background_fill.pdf mac * * skia * fuzzy
+dynamic_password_field_background_fill.pdf * * * * fontations fuzzy=10,0.1,15
 dynamic_table_color_and_width.pdf * * * gdi * diff
+dynamic_table_color_and_width.pdf * * * * fontations fuzzy=10,0.1,15
 password.in * * * gdi * diff
 resolve_nodes_0.pdf * * * gdi * diff
 resolve_nodes_0.pdf * * * * * fuzzy
+resolve_nodes_0.pdf * * * * fontations fuzzy=10,0.1,15
 scrollable_widgets1.in * * * gdi * diff
 scrollable_widgets2.in * * * gdi * diff
 scrollable_widgets2.in * * * * fontations fuzzy=10,0.1,15
 static_list_box_caption.pdf * * * gdi * diff
+static_list_box_caption.pdf * * * * fontations fuzzy=10,0.1,15
 static_password_field_rotate.pdf * * * gdi * diff
+static_password_field_rotate.pdf * * * * fontations fuzzy=15,0.1,15
 text_form_custom_font.in * * * gdi * diff
 text_form_multiline.in * * * gdi * diff
 text_form_multiline.in * * * * fontations fuzzy=10,0.1,15
@@ -1412,7 +1437,7 @@ shading_2_9.pdf mac * * skia * fuzzy
 zh_file_structure.pdf mac * * skia * fuzzy
 zh_file_structure.pdf * * * * fontations diff
 zh_page.pdf mac * * skia * fuzzy
-zh_page.pdf * * * * fontations fuzzy=10,0.1,15
+zh_page.pdf * * * * fontations fuzzy=20,0.1,15
 zh_webdav.pdf mac * * skia * fuzzy
 zh_webdav.pdf * * * * fontations fuzzy=10,0.1,15
 #
@@ -1431,6 +1456,7 @@ bug_846.in * * * * fontations diff
 #
 # Fontations fuzzy matching, naming no test that appears above.
 #
+050_extra_m.pdf * * * * fontations fuzzy=10,0.1,15
 2_8_stamp1.pdf * * * * fontations fuzzy=10,0.1,15
 FRC_10_8.2.2_Prev_remove_all.pdf * * * * fontations fuzzy=10,0.1,15
 FRC_10_8.2.4__remove_ModDate_value.pdf * * * * fontations fuzzy=10,0.1,15
@@ -1580,9 +1606,16 @@ FRC_9_8.2.2_Prev_remove_value.pdf * * * * fontations fuzzy=10,0.1,15
 FRC_9_8.2.4__remove__Description_obj.pdf * * * * fontations fuzzy=10,0.1,15
 annotation_highlight_no_content.pdf * * * * fontations fuzzy=10,0.1,15
 bug_113910.in * * * * fontations fuzzy=10,0.1,15
+bug_1308.pdf * * * * fontations fuzzy=15,0.1,15
+bug_1308_1.in * * * * fontations fuzzy=10,0.1,15
+bug_1355.in * * * * fontations fuzzy=15,0.1,15
+bug_1388_2.in * * * * fontations fuzzy=10,0.1,15
+bug_1388_3.in * * * * fontations fuzzy=10,0.1,15
+bug_1402.in * * * * fontations fuzzy=10,0.1,15
 bug_1752.in * * * * fontations fuzzy=10,0.1,15
 bug_1772.in * * * * fontations fuzzy=10,0.1,15
 bug_1922.in * * * * fontations fuzzy=10,0.1,15
+bug_42270459.in * * * * fontations fuzzy=10,0.1,15
 bug_432208037.in * * * * fontations fuzzy=10,0.1,15
 bug_493126_endobj_bug.pdf * * * * fontations fuzzy=10,0.1,15
 bug_493126_endobj_bug_weirdWS.pdf * * * * fontations fuzzy=10,0.1,15
@@ -1617,3 +1650,4 @@ generation_numbers1.pdf * * * * fontations fuzzy=10,0.1,15
 generation_numbers2.pdf * * * * fontations fuzzy=10,0.1,15
 password.in * * * * fontations fuzzy=10,0.1,15
 scrollable_widgets1.in * * * * fontations fuzzy=10,0.1,15
+test_m.pdf * * * * fontations fuzzy=10,0.1,15

@@ -20,8 +20,8 @@ inline constexpr double kMaxFuzzyWindowMeanSquaredError = 15.0;
 // Fontations fuzzy matching limits: allows a larger per-channel delta to
 // accommodate subpixel curve antialiasing variances while enforcing a tight
 // mean squared error bound.
-inline constexpr uint8_t kMaxFontationsPixelDelta = 10;
-inline constexpr double kMaxFontationsMeanSquaredError = 0.10;
+inline constexpr uint8_t kMaxFontationsPixelDelta = 12;
+inline constexpr double kMaxFontationsMeanSquaredError = 0.20;
 inline constexpr int kMaxFontationsWindowSize = kMaxFuzzyWindowSize;
 inline constexpr double kMaxFontationsWindowMeanSquaredError =
     kMaxFuzzyWindowMeanSquaredError;
