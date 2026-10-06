@@ -7,21 +7,25 @@
 #include "core/fxge/dib/cfx_scanlinecompositor.h"
 
 #include <algorithm>
+#include <type_traits>
 
 #include "core/fxcrt/check.h"
 #include "core/fxcrt/check_op.h"
 #include "core/fxcrt/compiler_specific.h"
 #include "core/fxcrt/fx_memcpy_wrappers.h"
 #include "core/fxcrt/notreached.h"
+#include "core/fxcrt/numerics/safe_conversions.h"
 #include "core/fxcrt/span_util.h"
 #include "core/fxcrt/stl_util.h"
 #include "core/fxcrt/zip.h"
 #include "core/fxge/dib/blend.h"
 #include "core/fxge/dib/fx_dib.h"
 
-#if defined(PDF_USE_SKIA)
-#include <type_traits>
+#if defined(PDF_USE_LIBYUV)
+#include "third_party/libyuv/include/libyuv/convert_argb.h"
+#endif
 
+#if defined(PDF_USE_SKIA)
 #include "third_party/skia/include/core/SkBlendMode.h"  // nogncheck
 #include "third_party/skia/include/core/SkCanvas.h"     // nogncheck
 #include "third_party/skia/include/core/SkImage.h"      // nogncheck
@@ -440,9 +444,23 @@ void CompositeRow_Bgr2Bgra_NoBlend_NoClip(
     int src_Bpp) {
   const size_t width = dest_span.size();
   if (src_Bpp == 3) {
-    CopyRowToOpaqueBgra(dest_span,
-                        fxcrt::reinterpret_span<const FX_BGR_STRUCT<uint8_t>>(
-                            src_span.first(width * 3)));
+    auto bgr_span = fxcrt::reinterpret_span<const FX_BGR_STRUCT<uint8_t>>(
+        src_span.first(width * 3));
+#if defined(PDF_USE_LIBYUV)
+    const int pixel_count = pdfium::checked_cast<int>(width);
+    const uint8_t* src_bytes = pdfium::as_bytes(bgr_span).data();
+    uint8_t* dest_bytes = pdfium::as_writable_bytes(dest_span).data();
+    if constexpr (std::is_same_v<DestPixelStruct, FX_BGRA_STRUCT<uint8_t>>) {
+      libyuv::RGB24ToARGB(src_bytes, pixel_count * 3, dest_bytes,
+                          pixel_count * 4, pixel_count, 1);
+    } else {
+      static_assert(std::is_same_v<DestPixelStruct, FX_RGBA_STRUCT<uint8_t>>);
+      libyuv::RAWToARGB(src_bytes, pixel_count * 3, dest_bytes, pixel_count * 4,
+                        pixel_count, 1);
+    }
+#else
+    CopyRowToOpaqueBgra(dest_span, bgr_span);
+#endif
     return;
   }
   CHECK_EQ(src_Bpp, 4);

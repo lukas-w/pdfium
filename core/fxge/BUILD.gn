@@ -141,6 +141,10 @@ source_set("fxge") {
     deps += [ "../../third_party:fx_agg" ]
   }
 
+  if (pdf_use_libyuv) {
+    deps += [ "//third_party/libyuv" ]
+  }
+
   if (pdf_use_skia) {
     sources += [
       "skia/cfx_dibbase_skia.cpp",

@@ -856,3 +856,57 @@ TEST(ScanlineCompositorTest, CompositeRgbBitmapLineBgraPremulLuminosity) {
   RunPreMultiplyTest(compositor, kSrcScan3, kExpectations3);
 }
 #endif  // defined(PDF_USE_SKIA)
+
+TEST(ScanlineCompositorTest, CompositeRgbBitmapLineBgrToBgraNormal) {
+  static constexpr FX_BGR_STRUCT<uint8_t> kBgrSrc[] = {
+      {.blue = 10, .green = 20, .red = 30},
+      {.blue = 40, .green = 50, .red = 60},
+      {.blue = 70, .green = 80, .red = 90},
+      {.blue = 100, .green = 110, .red = 120},
+      {.blue = 130, .green = 140, .red = 150},
+  };
+
+  {
+    CFX_ScanlineCompositor compositor;
+    ASSERT_TRUE(compositor.Init(/*dest_format=*/FXDIB_Format::kBgra,
+                                /*src_format=*/FXDIB_Format::kBgr,
+                                /*src_palette=*/{},
+                                /*mask_color=*/0,
+                                /*blend_type=*/BlendMode::kNormal,
+                                /*bRgbByteOrder=*/false));
+    std::array<FX_BGRA_STRUCT<uint8_t>, 5> dest_scan = {};
+    compositor.CompositeRgbBitmapLine(pdfium::as_writable_byte_span(dest_scan),
+                                      pdfium::as_byte_span(kBgrSrc),
+                                      dest_scan.size(), {});
+    static constexpr FX_BGRA_STRUCT<uint8_t> kExpectedBgra[] = {
+        {.blue = 10, .green = 20, .red = 30, .alpha = 255},
+        {.blue = 40, .green = 50, .red = 60, .alpha = 255},
+        {.blue = 70, .green = 80, .red = 90, .alpha = 255},
+        {.blue = 100, .green = 110, .red = 120, .alpha = 255},
+        {.blue = 130, .green = 140, .red = 150, .alpha = 255},
+    };
+    EXPECT_THAT(dest_scan, ElementsAreArray(kExpectedBgra));
+  }
+
+  {
+    CFX_ScanlineCompositor compositor;
+    ASSERT_TRUE(compositor.Init(/*dest_format=*/FXDIB_Format::kBgra,
+                                /*src_format=*/FXDIB_Format::kBgr,
+                                /*src_palette=*/{},
+                                /*mask_color=*/0,
+                                /*blend_type=*/BlendMode::kNormal,
+                                /*bRgbByteOrder=*/true));
+    std::array<FX_BGRA_STRUCT<uint8_t>, 5> dest_scan = {};
+    compositor.CompositeRgbBitmapLine(pdfium::as_writable_byte_span(dest_scan),
+                                      pdfium::as_byte_span(kBgrSrc),
+                                      dest_scan.size(), {});
+    static constexpr FX_BGRA_STRUCT<uint8_t> kExpectedRgba[] = {
+        {.blue = 30, .green = 20, .red = 10, .alpha = 255},
+        {.blue = 60, .green = 50, .red = 40, .alpha = 255},
+        {.blue = 90, .green = 80, .red = 70, .alpha = 255},
+        {.blue = 120, .green = 110, .red = 100, .alpha = 255},
+        {.blue = 150, .green = 140, .red = 130, .alpha = 255},
+    };
+    EXPECT_THAT(dest_scan, ElementsAreArray(kExpectedRgba));
+  }
+}
