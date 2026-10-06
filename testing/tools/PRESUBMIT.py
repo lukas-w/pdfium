@@ -14,6 +14,9 @@ def _CommonChecks(input_api, output_api):
   tests = []
   tests.extend(
       input_api.canned_checks.GetPylint(input_api, output_api, version='2.7'))
+  tests.extend(
+      input_api.canned_checks.GetUnitTestsInDirectory(
+          input_api, output_api, '.', files_to_check=[r'^.+_test\.py$']))
   return tests
 
 

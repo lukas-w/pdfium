@@ -433,6 +433,27 @@ def _CheckLibcxxRevision(input_api, output_api):
   return []
 
 
+def _CheckLibclangRevision(input_api, output_api):
+  """Makes sure that third_party/llvm-libclang and third_party/rust-toolchain
+  are in sync in DEPS.
+  """
+  if 'DEPS' not in [f.LocalPath() for f in input_api.AffectedFiles()]:
+    return []
+
+  script_path = input_api.os_path.join('testing', 'tools', 'libclang_check.py')
+
+  try:
+    errors = input_api.subprocess.check_output([script_path, 'DEPS'])
+  except input_api.subprocess.CalledProcessError as error:
+    msg = 'libclang_check.py failed:'
+    long_text = error.output.decode('utf-8', 'ignore')
+    return [output_api.PresubmitError(msg, long_text=long_text)]
+
+  if errors:
+    return [output_api.PresubmitError(errors)]
+  return []
+
+
 def _CheckTestDuplicates(input_api, output_api):
   """Checks that pixel and javascript tests don't contain duplicates.
   We use .in and .pdf files, having both can cause race conditions on the bots,
@@ -599,6 +620,7 @@ def CheckChangeOnUpload(input_api, output_api):
           input_api, output_api, lint_filters=LINT_FILTERS))
   results.extend(_CheckIncludeOrder(input_api, output_api))
   results.extend(_CheckLibcxxRevision(input_api, output_api))
+  results.extend(_CheckLibclangRevision(input_api, output_api))
   results.extend(_CheckTestDuplicates(input_api, output_api))
   results.extend(_CheckPngNames(input_api, output_api))
   results.extend(_CheckUselessForwardDeclarations(input_api, output_api))
