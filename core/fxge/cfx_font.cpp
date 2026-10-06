@@ -200,6 +200,11 @@ bool CFX_Font::LoadFaceFromSpanStream(
     uint64_t object_tag) {
   object_tag_ = object_tag;
   face_ = CFX_Face::New(nullptr, stream, face_index);
+#if defined(PDF_ENABLE_FONTATIONS)
+  if (CFX_GEModule::IsFontations() && face_) {
+    font_data_ = face_->GetData();
+  }
+#endif
   return !!face_;
 }
 

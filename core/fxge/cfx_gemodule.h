@@ -109,19 +109,20 @@ class CFX_GEModule {
   }
 #endif
 
-#if defined(PDF_ENABLE_FONTATIONS)
+#if defined(PDF_ENABLE_FONTATIONS) && defined(PDF_ENABLE_FREETYPE)
   static bool IsFontations() {
     return Get()->font_backend_ == CFX_FontMgr::FontBackend::kFontations;
   }
-#endif
-
   static bool IsFreetype() {
-#if defined(PDF_ENABLE_FONTATIONS)
     return Get()->font_backend_ == CFX_FontMgr::FontBackend::kFreeType;
-#else
-    return true;
-#endif
   }
+#elif defined(PDF_ENABLE_FONTATIONS)
+  static bool IsFontations() { return true; }
+#elif defined(PDF_ENABLE_FREETYPE)
+  static bool IsFreetype() { return true; }
+#else
+#error "Neither freetype nor fontations available"
+#endif
 
  private:
   CFX_GEModule(std::optional<pdfium::span<const char* const>> user_font_paths,

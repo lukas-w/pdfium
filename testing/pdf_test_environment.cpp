@@ -19,9 +19,11 @@ PDFTestEnvironment::~PDFTestEnvironment() = default;
 void PDFTestEnvironment::SetUp() {
   CFX_GEModule::Create(test_fonts_.FontPathsSpan(),
                        CFX_GEModule::RendererType::kDefault,
-#if defined(PDF_ENABLE_FONTATIONS)
+#if defined(PDF_ENABLE_FONTATIONS) && defined(PDF_ENABLE_FREETYPE)
                        fontations_ ? CFX_FontMgr::FontBackend::kFontations
                                    : CFX_FontMgr::FontBackend::kFreeType);
+#elif defined(PDF_ENABLE_FONTATIONS)
+                       CFX_FontMgr::FontBackend::kFontations);
 #else
                        CFX_FontMgr::FontBackend::kFreeType);
 #endif

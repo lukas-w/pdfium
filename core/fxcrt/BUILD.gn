@@ -162,7 +162,6 @@ source_set("fxcrt") {
     "//third_party/fast_float",
   ]
   public_deps = [
-    "../../:freetype_common",
     "//third_party/abseil-cpp:absl",
     "//third_party/icu:icuuc",
   ]

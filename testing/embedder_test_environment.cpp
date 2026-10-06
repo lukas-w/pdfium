@@ -54,8 +54,14 @@ void EmbedderTestEnvironment::SetUp() {
 #endif  // PDF_ENABLE_V8
 
       .m_RendererType = renderer_type_,
+#if defined(PDF_ENABLE_FONTATIONS) && defined(PDF_ENABLE_FREETYPE)
       .m_FontLibraryType = fontations_ ? FPDF_FONTBACKENDTYPE_FONTATIONS
                                        : FPDF_FONTBACKENDTYPE_FREETYPE,
+#elif defined(PDF_ENABLE_FONTATIONS)
+      .m_FontLibraryType = FPDF_FONTBACKENDTYPE_FONTATIONS,
+#else
+      .m_FontLibraryType = FPDF_FONTBACKENDTYPE_FREETYPE,
+#endif
       .m_BrotliEnabled = brotli_enabled_,
   };
 

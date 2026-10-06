@@ -218,20 +218,28 @@ FPDF_InitLibraryWithConfig(const FPDF_LIBRARY_CONFIG* config) {
 #endif
   }
 
+#if defined(PDF_ENABLE_FONTATIONS) && defined(PDF_ENABLE_FREETYPE)
   CFX_FontMgr::FontBackend backend = CFX_FontMgr::FontBackend::kFreeType;
   if (config && config->version >= 5) {
-#if defined(PDF_ENABLE_FONTATIONS)
     CHECK(config->m_FontLibraryType == FPDF_FONTBACKENDTYPE_FREETYPE ||
           config->m_FontLibraryType == FPDF_FONTBACKENDTYPE_FONTATIONS);
     if (config->m_FontLibraryType == FPDF_FONTBACKENDTYPE_FONTATIONS) {
       backend = CFX_FontMgr::FontBackend::kFontations;
     }
-#else
-    // Builds without Fontations should always use
-    // `FPDF_FONTBACKENDTYPE_FREETYPE`.
-    CHECK_EQ(config->m_FontLibraryType, FPDF_FONTBACKENDTYPE_FREETYPE);
-#endif
   }
+#elif defined(PDF_ENABLE_FONTATIONS)
+  CFX_FontMgr::FontBackend backend = CFX_FontMgr::FontBackend::kFontations;
+  if (config && config->version >= 5) {
+    CHECK_EQ(config->m_FontLibraryType, FPDF_FONTBACKENDTYPE_FONTATIONS);
+  }
+#elif defined(PDF_ENABLE_FREETYPE)
+  CFX_FontMgr::FontBackend backend = CFX_FontMgr::FontBackend::kFreeType;
+  if (config && config->version >= 5) {
+    CHECK_EQ(config->m_FontLibraryType, FPDF_FONTBACKENDTYPE_FREETYPE);
+  }
+#else
+#error "Neither FreeType nor Fontations enabled"
+#endif
 #if defined(PDF_ENABLE_BROTLI)
   if (config && config->version >= 6) {
     BrotliDecoder::SetBrotliEnabled(config->m_BrotliEnabled);

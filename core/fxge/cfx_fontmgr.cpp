@@ -48,8 +48,12 @@ sk_sp<SkFontMgr> CreateSkiaFontManagerFallback(
     return SkFontMgr_New_Fontations_Empty();
   }
 #endif  // defined(PDF_ENABLE_FONTATIONS)
+#if defined(PDF_ENABLE_FREETYPE)
   // This is a SkFontMgr which will use FreeType to decode font data.
   return SkFontMgr_New_Custom_Empty();
+#else
+  return nullptr;
+#endif  // defined(PDF_ENABLE_FREETYPE)
 #endif  // defined(PDF_USE_SKIA_CUSTOM_FONT_MANAGER)
 }
 
@@ -68,15 +72,22 @@ sk_sp<SkFontMgr> CreateSkiaFontManager(CFX_FontMgr::FontBackend backend) {
 }  // namespace
 
 CFX_FontMgr::CFX_FontMgr([[maybe_unused]] FontBackend backend)
-    : ft_library_(InitializeFreeType()),
+    :
+#if defined(PDF_ENABLE_FREETYPE)
+      ft_library_(InitializeFreeType()),
+#endif
 #if defined(PDF_USE_SKIA)
       font_backend_(backend),
       skia_fontmgr_(CreateSkiaFontManager(font_backend_)),
 #endif
-      builtin_mapper_(std::make_unique<CFX_FontMapper>()),
+      builtin_mapper_(std::make_unique<CFX_FontMapper>())
+#if defined(PDF_ENABLE_FREETYPE)
+      ,
       ft_library_supports_hinting_(
           FreeTypeSetLcdFilterMode(ft_library_.get()) ||
-          FreeTypeVersionSupportsHinting(ft_library_.get())) {
+          FreeTypeVersionSupportsHinting(ft_library_.get()))
+#endif
+{
 }
 
 CFX_FontMgr::~CFX_FontMgr() = default;

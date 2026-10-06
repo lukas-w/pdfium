@@ -16,7 +16,10 @@
 #include "core/fxcrt/observed_ptr.h"
 #include "core/fxcrt/retain_ptr.h"
 #include "core/fxcrt/span.h"
+
+#if defined(PDF_ENABLE_FREETYPE)
 #include "core/fxge/freetype/fx_freetype.h"
+#endif
 
 #if defined(PDF_USE_SKIA)
 #include "third_party/skia/include/core/SkRefCnt.h"  // nogncheck
@@ -44,17 +47,21 @@ class CFX_FontMgr {
   // Always present.
   CFX_FontMapper* GetBuiltinMapper() const { return builtin_mapper_.get(); }
 
+#if defined(PDF_ENABLE_FREETYPE)
   FXFT_LibraryRec* GetFTLibrary() const { return ft_library_.get(); }
 
   bool FTLibrarySupportsHinting() const { return ft_library_supports_hinting_; }
+#endif
 
 #if defined(PDF_USE_SKIA)
   sk_sp<SkTypeface> MakeSkTypeface(pdfium::span<const uint8_t> font_span);
 #endif
 
  private:
+#if defined(PDF_ENABLE_FREETYPE)
   // Must come before `builtin_mapper_`.
   ScopedFXFTLibraryRec const ft_library_;
+#endif
 #if defined(PDF_USE_SKIA)
   const FontBackend font_backend_;
   sk_sp<SkFontMgr> skia_fontmgr_;
@@ -62,7 +69,9 @@ class CFX_FontMgr {
 #endif
   std::unique_ptr<CFX_FontMapper> builtin_mapper_;
   std::map<CFX_Face*, ObservedPtr<CFX_GlyphCache>> glyph_cache_map_;
+#if defined(PDF_ENABLE_FREETYPE)
   const bool ft_library_supports_hinting_;
+#endif
 };
 
 #if defined(PDF_USE_SKIA) && defined(PDF_USE_SKIA_CUSTOM_FONT_MANAGER)

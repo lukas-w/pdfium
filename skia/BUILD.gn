@@ -160,7 +160,7 @@ config("skia_config") {
     "SK_ENABLE_LEGACY_SHADERCONTEXT",
   ]
 
-  if (is_win) {
+  if (pdf_enable_freetype && is_win) {
     defines += [ "SK_FREETYPE_MINIMUM_RUNTIME_VERSION=(((FREETYPE_MAJOR) * 0x01000000) | ((FREETYPE_MINOR) * 0x00010000) | ((FREETYPE_PATCH) * 0x00000100))" ]
   }
 
@@ -220,10 +220,10 @@ config("skia_library_config") {
     "SKIA_IMPLEMENTATION=1",
   ]
 
-  if (use_blink && !use_system_freetype) {
+  if (pdf_enable_freetype && use_blink && !use_system_freetype) {
     defines += [ "SK_FREETYPE_MINIMUM_RUNTIME_VERSION=(((FREETYPE_MAJOR) * 0x01000000) | ((FREETYPE_MINOR) * 0x00010000) | ((FREETYPE_PATCH) * 0x00000100))" ]
   }
-  if (use_blink) {
+  if (pdf_enable_freetype && use_blink) {
     defines += [ "SK_TYPEFACE_FACTORY_FREETYPE" ]
   }
   if (is_win) {
@@ -351,7 +351,7 @@ component("skia") {
 
   # FreeType is needed everywhere (except on iOS), on Linux and Android as main
   # font backend, on Windows and Mac as fallback backend for Variations.
-  if (!is_ios) {
+  if (pdf_enable_freetype && !is_ios) {
     sources += skia_ports_freetype_sources
   }
 
@@ -374,13 +374,6 @@ component("skia") {
     ]
   }
 
-  if (is_linux || is_chromeos) {
-    sources += skia_ports_fci_sources
-    sources += skia_ports_fontmgr_custom_sources
-    sources += skia_ports_fontmgr_empty_sources
-    sources += skia_ports_typeface_proxy_sources
-  }
-
   if (is_android) {
     # Unlike Chromium, standalone PDFium on Linux and Chrome OS does not
     # require these files, since PDFium does not perform Android emulation.
@@ -396,11 +389,19 @@ component("skia") {
     sources += [ "//third_party/skia/src/ports/SkLog_stdio.cpp" ]
   }
 
-  if (is_win || (is_apple && use_blink)) {
-    # Add the FreeType custom font manager as a fallback backend for variable
-    # fonts.
-    sources += skia_ports_fontmgr_custom_sources
-    sources += skia_ports_fontmgr_empty_sources
+  if (pdf_enable_freetype) {
+    if (is_linux || is_chromeos) {
+      sources += skia_ports_fci_sources
+      sources += skia_ports_fontmgr_custom_sources
+      sources += skia_ports_fontmgr_empty_sources
+      sources += skia_ports_typeface_proxy_sources
+    }
+    if (is_win || (is_apple && use_blink)) {
+      # Add the FreeType custom font manager as a fallback backend for variable
+      # fonts.
+      sources += skia_ports_fontmgr_custom_sources
+      sources += skia_ports_fontmgr_empty_sources
+    }
   }
 
   if (pdf_enable_fontations) {
@@ -433,15 +434,11 @@ component("skia") {
     ":skcms",
     ":skia_opts",
     "../third_party:zlib",
-    "//:freetype_common",
   ]
   public_deps = [ ":skia_core_and_effects" ]
 
   if (is_linux || is_chromeos) {
-    deps += [
-      "//third_party:fontconfig",
-      "//third_party/icu:icuuc",
-    ]
+    deps += [ "//third_party/icu:icuuc" ]
   }
 
   if (is_android) {
@@ -449,15 +446,21 @@ component("skia") {
       "//third_party/cpu_features:ndk_compat",
       "//third_party/expat",
     ]
-  }
-
-  if (is_android && !is_debug) {
-    configs -= [ "//build/config/compiler:default_optimization" ]
-    configs += [ "//build/config/compiler:optimize_max" ]
+    if (!is_debug) {
+      configs -= [ "//build/config/compiler:default_optimization" ]
+      configs += [ "//build/config/compiler:optimize_max" ]
+    }
   }
 
   if (is_ios) {
     frameworks += [ "ImageIO.framework" ]
+  }
+
+  if (pdf_enable_freetype) {
+    deps += [ "//:freetype_common" ]
+    if (is_linux || is_chromeos) {
+      deps += [ "//third_party:fontconfig" ]
+    }
   }
 
   if (skia_support_pdf) {
@@ -586,6 +589,7 @@ if (current_cpu == "x64") {
     }
     visibility = [ ":skcms" ]
   }
+
   skia_source_set("skcms_TransformSkx") {
     sources = skcms_TransformSkx
     if (!is_win) {
@@ -604,6 +608,7 @@ if (current_cpu == "x64") {
     sources = []
     visibility = [ ":skcms" ]
   }
+
   skia_source_set("skcms_TransformSkx") {
     sources = []
     visibility = [ ":skcms" ]

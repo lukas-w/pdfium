@@ -236,6 +236,7 @@ TEST(FxSkrifaTest, TestType1Face) {
   ASSERT_TRUE(path);
   EXPECT_EQ(path->GetPoints().size(), 12u);
 
+#if defined(PDF_ENABLE_FREETYPE)
   auto glyph_bitmap =
       face->RenderGlyph(gid_x, /*is_cid_font=*/false, /*is_vertical=*/false,
                         CFX_Matrix(12.0f, 0, 0, 12.0f, 0, 0), /*dest_width=*/0,
@@ -262,6 +263,7 @@ TEST(FxSkrifaTest, TestType1Face) {
   EXPECT_TRUE(glyph_mono->GetBitmap());
   EXPECT_EQ(glyph_mono->GetBitmap()->GetWidth(), 6);
   EXPECT_EQ(glyph_mono->GetBitmap()->GetHeight(), 6);
+#endif  // defined(PDF_ENABLE_FREETYPE)
 }
 
 TEST(FxSkrifaTest, TestBareCffFace) {

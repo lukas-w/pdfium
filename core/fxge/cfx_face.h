@@ -19,7 +19,6 @@
 #include "core/fxcrt/observed_ptr.h"
 #include "core/fxcrt/retain_ptr.h"
 #include "core/fxcrt/span.h"
-#include "core/fxge/freetype/fx_freetype.h"
 #include "core/fxge/fx_font.h"
 #include "core/fxge/fx_fontencoding.h"
 
@@ -27,9 +26,11 @@
 #include "third_party/skia/include/core/SkRefCnt.h"  // nogncheck
 #endif
 
-#if defined(PDF_ENABLE_FONTATIONS)
-#include "third_party/rust/cxx/v1/cxx.h"
-#endif  // defined(PDF_ENABLE_FONTATIONS)
+#if defined(PDF_ENABLE_FREETYPE)
+#include "core/fxge/freetype/fx_freetype.h"
+#else
+using FT_FaceRec = struct FT_FaceRec_;
+#endif  // defined(PDF_ENABLE_FREETYPE)
 
 class CFX_CTTGSUBTable;
 class CFX_GlyphBitmap;
@@ -44,11 +45,7 @@ class CFX_CTTNameTable;
 class SkTypeface;
 #endif
 
-#if defined(PDF_ENABLE_FONTATIONS)
 struct SkrifaFontHolder;
-#else
-struct SkrifaFontHolder {};
-#endif
 
 namespace fxge {
 enum class FontEncoding : uint32_t;
@@ -171,18 +168,22 @@ class CFX_Face final : public Retainable, public Observable {
   CFX_Face(RetainPtr<Retainable> cache_entry,
            RetainPtr<CFX_ReadOnlySpanStream> font_stream,
            FT_FaceRec* rec,
-           std::unique_ptr<SkrifaFontHolder> skrifa_font);
+           SkrifaFontHolder* skrifa_font);
 
   ~CFX_Face() override;
 
+#if defined(PDF_ENABLE_FREETYPE)
   FT_FaceRec* GetRec() { return rec_.get(); }
   const FT_FaceRec* GetRec() const { return rec_.get(); }
+#endif
 
   uint16_t GetCharMapEncodingIdByIndex(size_t index) const;
   CFX_Size GetPixelSize() const;
 
   bool IsTricky() const;
+#if defined(PDF_ENABLE_FREETYPE)
   void AdjustVariationParams(int glyph_index, int dest_width, int weight);
+#endif
 #if defined(PDF_ENABLE_FONTATIONS)
   void AdjustSubstFontTransform(const CFX_SubstFont* subst_font,
                                 int dest_width,
@@ -191,8 +192,9 @@ class CFX_Face final : public Retainable, public Observable {
                                 bool is_vertical,
                                 CFX_Matrix* matrix) const;
 #endif
-
+#if defined(PDF_ENABLE_FREETYPE)
   pdfium::span<const FT_CharMap> GetCharMaps() const;
+#endif
 
   // Returns the size of the data, or 0 on failure. Only write into `buffer` if
   // it is large enough to hold the data.
@@ -217,7 +219,9 @@ class CFX_Face final : public Retainable, public Observable {
   // this member while the `rec_` and `skia_typeface_` is still using it.
   RetainPtr<CFX_ReadOnlySpanStream> font_stream_;
 
+#if defined(PDF_ENABLE_FREETYPE)
   ScopedFXFTFaceRec const rec_;
+#endif
 #if defined(PDF_USE_SKIA)
   sk_sp<SkTypeface> skia_typeface_;
 #endif  // defined(PDF_USE_SKIA)

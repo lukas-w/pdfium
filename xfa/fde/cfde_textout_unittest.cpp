@@ -93,9 +93,15 @@ class CFDETextOutTest : public testing::Test {
 TEST_F(CFDETextOutTest, DrawLogicTextBasic) {
   text_out().DrawLogicText(device(), L"foo", CFX_RectF(0, 0, 2100, 100));
   const char* checksum = []() {
-#if defined(PDF_USE_SKIA) && BUILDFLAG(IS_WIN)
+#if defined(PDF_USE_SKIA)
     if (CFX_GEModule::IsSkiaRenderer()) {
+#if BUILDFLAG(IS_WIN)
       return "02c55ce12d3c31ae32fa08fe59c38996";
+#elif defined(PDF_ENABLE_FONTATIONS)
+      if (CFX_GEModule::IsFontations()) {
+        return "8a6b320f8a4ae1febfc6e50513506dcf";
+      }
+#endif
     }
 #endif
 #if defined(PDF_ENABLE_FONTATIONS)
@@ -138,6 +144,11 @@ class CFDETextOutLargeBitmapTest : public CFDETextOutTest {
   const char* GetLargeTextBlobChecksum() {
 #if defined(PDF_USE_SKIA)
     if (CFX_GEModule::IsSkiaRenderer()) {
+#if defined(PDF_ENABLE_FONTATIONS)
+      if (CFX_GEModule::IsFontations()) {
+        return "8b657167ef063bca5adb38f6a5d5ae54";
+      }
+#endif
       return "e9aaffff1ea680bd5dc40a7b8904788d";
     }
 #endif

@@ -9,6 +9,10 @@
 # Default: Use a bundled FreeType.
 pdf_bundle_freetype_override = true
 
+# Build PDFium with FreeType support.
+# Default: With FreeType support.
+pdf_enable_freetype_override = true
+
 # Build PDFium with experimental Brotli compression support.
 # Default: Brotli support is disabled until PDF 2.0 spec is confirmed.
 pdf_enable_brotli_override = false

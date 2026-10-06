@@ -99,8 +99,6 @@ source_set("fxge") {
     "fontdata/chromefontdata/FoxitSerifMM.cpp",
     "fontdata/chromefontdata/FoxitSymbol.cpp",
     "fontdata/chromefontdata/chromefontdata.h",
-    "freetype/fx_freetype.cpp",
-    "freetype/fx_freetype.h",
     "fx_font.cpp",
     "fx_font.h",
     "fx_fontencoding.h",
@@ -121,7 +119,15 @@ source_set("fxge") {
   public_deps = []
   defines = []
 
-  if (is_component_build || use_system_freetype) {
+  if (pdf_enable_freetype) {
+    sources += [
+      "freetype/fx_freetype.cpp",
+      "freetype/fx_freetype.h",
+    ]
+    public_deps += [ "../../:freetype_common" ]
+  }
+
+  if (pdf_enable_freetype && (is_component_build || use_system_freetype)) {
     # ft_adobe_glyph_list is not exported from the Freetype shared library so we
     # need it defined in component builds and builds using system freetype.
     defines += [ "DEFINE_PS_TABLES_DATA" ]

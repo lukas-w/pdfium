@@ -7,6 +7,10 @@
 #ifndef CORE_FXGE_FREETYPE_FX_FREETYPE_H_
 #define CORE_FXGE_FREETYPE_FX_FREETYPE_H_
 
+#if !defined(PDF_ENABLE_FREETYPE)
+#error "PDF_ENABLE_FREETYPE must be defined."
+#endif  // defined(PDF_ENABLE_FREETYPE)
+
 #include <ft2build.h>
 
 #include <memory>
