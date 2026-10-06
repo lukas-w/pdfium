@@ -2008,7 +2008,7 @@ TEST_F(FPDFAnnotEmbedderTest, GetFormAnnotAndCheckFlagsComboBox) {
 }
 
 TEST_F(FPDFAnnotEmbedderTest, Bug1206) {
-  static constexpr size_t kExpectedMinimumOriginalSize = 1601;
+  static constexpr size_t kExpectedMinimumOriginalSize = 1000;
 
   ASSERT_TRUE(OpenDocument("bug_1206.pdf"));
 
@@ -2025,9 +2025,7 @@ TEST_F(FPDFAnnotEmbedderTest, Bug1206) {
     CompareBitmapWithExpectationSuffix(bitmap.get(), "bug_1206");
 
     ASSERT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
-    // TODO(https://crbug.com/42270200): This is wrong. The size should be
-    // equal, not bigger.
-    EXPECT_GT(GetString().size(), original_size);
+    EXPECT_EQ(original_size, GetString().size());
     ClearString();
   }
 }

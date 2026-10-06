@@ -139,15 +139,13 @@ TEST_F(CPDFAnnotListTest, ClosedPopupAppearanceObjects) {
     CPDF_AnnotList list(page_);
     ASSERT_EQ(2u, list.Count());
     EXPECT_TRUE(list.GetAt(0)->GetAnnotDict()->KeyExist("AP"));
-    // TODO(crbug.com/42270200): Closed popups should not have an appearance.
-    EXPECT_TRUE(list.GetAt(1)->GetAnnotDict()->KeyExist("AP"));
+    EXPECT_FALSE(list.GetAt(1)->GetAnnotDict()->KeyExist("AP"));
   }
   const uint32_t object_count = document_->GetLastObjNum();
   for (int i = 0; i < 30; ++i) {
     CPDF_AnnotList list(page_);
-    EXPECT_TRUE(list.GetAt(1)->GetAnnotDict()->KeyExist("AP"));
-    // TODO(crbug.com/42270200): Rebuilding the list should not add objects.
-    EXPECT_EQ(object_count + 2 * (i + 1), document_->GetLastObjNum());
+    EXPECT_FALSE(list.GetAt(1)->GetAnnotDict()->KeyExist("AP"));
+    EXPECT_EQ(object_count, document_->GetLastObjNum());
   }
 }
 
@@ -177,8 +175,7 @@ TEST_P(CPDFPopupRenderTest, PopupRendering) {
   ASSERT_EQ(2u, list.Count());
   CPDF_Annot* popup = list.GetAt(1);
   ASSERT_EQ(CPDF_Annot::Subtype::POPUP, popup->GetSubtype());
-  // TODO(crbug.com/42270200): Generate the appearance only when opened.
-  EXPECT_TRUE(popup->GetAnnotDict()->KeyExist("AP"));
+  EXPECT_FALSE(popup->GetAnnotDict()->KeyExist("AP"));
   auto device =
       CFX_RenderDevice::CreateForNewBitmap(256, 256, FXDIB_Format::kBgra);
   ASSERT_TRUE(device);

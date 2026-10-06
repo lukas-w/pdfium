@@ -163,7 +163,9 @@ bool CPDF_Annot::ShouldGenerateAP() const {
     return false;
   }
 
-  return !IsHidden();
+  // Closed popups are recreated on every render. Generate their appearance
+  // only when opened; DrawAppearance() and DrawInContext() retry at that point.
+  return ShouldDrawAnnotation();
 }
 
 bool CPDF_Annot::ShouldDrawAnnotation() const {
