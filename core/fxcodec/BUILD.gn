@@ -245,6 +245,10 @@ source_set("fxcodec") {
     ]
     deps += [ "//third_party:jpeg" ]
   }
+
+  if (pdf_use_libyuv) {
+    deps += [ "//third_party/libyuv" ]
+  }
   visibility = [ "../../*" ]
 }
 

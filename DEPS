@@ -202,6 +202,10 @@ vars = {
   # and whatever else without interference from each other.
   'libunwind_revision': 'eb1ca4993b534b7d565daee144bbc7f9072b967b',
   # Three lines of non-changing comments so that
+  # the commit queue can handle CLs rolling libyuv
+  # and whatever else without interference from each other.
+  'libyuv_revision': 'eb8eda9c7973704d1103a535059224df7a6063b5',
+  # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling llvm-libc
   # and whatever else without interference from each other.
   'llvm_libc_revision': '14e51fd2cd7ec21294f18a3a0b2fc5339afea271',
@@ -492,6 +496,9 @@ deps = {
         Var('libpng_revision'),
     'condition': 'checkout_libpng',
   },
+
+  'third_party/libyuv':
+    Var('chromium_git') + '/libyuv/libyuv.git@' + Var('libyuv_revision'),
 
   'third_party/llvm-build/Release+Asserts': {
     'dep_type': 'gcs',

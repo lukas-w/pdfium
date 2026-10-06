@@ -53,6 +53,10 @@ default_args = {
 
   # Adds -Wexit-time-destructors check to match Chromium.
   is_wexit_time_destructors_default = true
+
+  # Avoid pulling libjpeg_turbo into libyuv in standalone builds.
+  libyuv_disable_jpeg = true
+  libyuv_include_tests = false
 }
 
 no_check_targets = [

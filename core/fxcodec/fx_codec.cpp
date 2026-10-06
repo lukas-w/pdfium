@@ -6,12 +6,17 @@
 
 #include "core/fxcodec/fx_codec.h"
 
-#include <utility>
-
 #include "core/fxcrt/numerics/safe_conversions.h"
 #include "core/fxcrt/span_util.h"
-#include "core/fxcrt/zip.h"
 #include "core/fxge/dib/fx_dib.h"
+
+#if defined(PDF_USE_LIBYUV)
+#include "third_party/libyuv/include/libyuv/planar_functions.h"
+#else
+#include <utility>
+
+#include "core/fxcrt/zip.h"
+#endif
 
 #if BUILDFLAG(IS_WIN)
 #include "core/fxcodec/basic/basicmodule.h"
@@ -50,6 +55,11 @@ void ReverseRGB(pdfium::span<uint8_t> pDestBuf,
       fxcrt::reinterpret_span<const FX_RGB_STRUCT<uint8_t>>(pSrcBuf).first(
           count);
 
+#if defined(PDF_USE_LIBYUV)
+  libyuv::RGB24ToRAW(pdfium::as_bytes(src_span).data(), pixels * 3,
+                     pdfium::as_writable_bytes(dst_span).data(), pixels * 3,
+                     pixels, 1);
+#else
   if (dst_span.data() == src_span.data()) {
     for (auto& pix : dst_span) {
       std::swap(pix.red, pix.blue);
@@ -66,6 +76,7 @@ void ReverseRGB(pdfium::span<uint8_t> pDestBuf,
     dst_pix.green = green;
     dst_pix.blue = red;
   }
+#endif
 }
 
 void RegisterEncoders() {

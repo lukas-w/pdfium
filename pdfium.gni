@@ -38,6 +38,9 @@ declare_args() {
   # Build PDFium to use AGG (fully supported).
   pdf_use_agg = true
 
+  # Build PDFium to use libyuv for SIMD pixel format conversions.
+  pdf_use_libyuv = true
+
   # Build PDFium to use Skia (experimental) for all PDFium graphics.
   # If `pdf_use_agg` is enabled as well, coexists in build with AGG graphics
   # and the default renderer is selectable at runtime.

@@ -347,6 +347,11 @@ if (!build_with_chromium) {
       public_deps = [ "//third_party/libjpeg" ]
     }
   }
+
+  # Stub target for //third_party/libyuv, which references
+  # //third_party:jpeg_includes when libyuv_disable_jpeg is false.
+  group("jpeg_includes") {
+  }
 }
 
 config("system_zlib_config") {
