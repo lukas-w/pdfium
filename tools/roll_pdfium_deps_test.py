@@ -784,6 +784,40 @@ deps = {
       },
     ],
   },
+  'src/third_party/llvm-libclang': {
+    'dep_type': 'gcs',
+    'bucket': 'chromium-browser-clang',
+    'objects': [
+      {
+        'object_name': 'Linux_x64/rust-libclang-1edd55dcfcd573872c727fa3e086369a71661ee0-1110-llvmorg-24-init-7747-g62397f8b.tar.xz',
+        'sha256sum': 'b251621641190cdab7d23c4a47257e4e1f1f335c34c9676118940fa562bb66ff',
+        'size_bytes': 22776236,
+        'generation': 1790798150313742,
+        'condition': 'host_os == "linux" and non_git_source',
+      },
+      {
+        'object_name': 'Mac/rust-libclang-1edd55dcfcd573872c727fa3e086369a71661ee0-1110-llvmorg-24-init-7747-g62397f8b.tar.xz',
+        'sha256sum': '4f7e9d166ad2ced03b9d5c66f2a919fefce5127d03dbe93661a0d012c1dda9ef',
+        'size_bytes': 22924716,
+        'generation': 1790798154061688,
+        'condition': 'host_os == "mac" and host_cpu == "x64"',
+      },
+      {
+        'object_name': 'Mac_arm64/rust-libclang-1edd55dcfcd573872c727fa3e086369a71661ee0-1110-llvmorg-24-init-7747-g62397f8b.tar.xz',
+        'sha256sum': '444cfa9bd9d3cda991943c9743f1992004b1f50d6641372b5ff9103d9a4db478',
+        'size_bytes': 20588924,
+        'generation': 1790798157457698,
+        'condition': 'host_os == "mac" and host_cpu == "arm64"',
+      },
+      {
+        'object_name': 'Win/rust-libclang-1edd55dcfcd573872c727fa3e086369a71661ee0-1110-llvmorg-24-init-7747-g62397f8b.tar.xz',
+        'sha256sum': 'e8bb31ac1bded5c1fce08567a8a1a8f304213cceeee7384c2cba844dcaddfd20',
+        'size_bytes': 21527244,
+        'generation': 1790798161045212,
+        'condition': 'host_os == "win"',
+      },
+    ],
+  },
   'src/third_party/clang-format/script':
     Var('chromium_git') +
     '/external/github.com/llvm/llvm-project/clang/tools/clang-format.git@' +
@@ -2080,6 +2114,41 @@ deps = {
     Var('chromium_git') + '/external/github.com/llvm/llvm-project/libc.git@' +
         Var('llvm_libc_revision'),
 
+  'third_party/llvm-libclang': {
+    'dep_type': 'gcs',
+    'bucket': 'chromium-browser-clang',
+    'objects': [
+      {
+        'object_name': 'Linux_x64/rust-libclang-1edd55dcfcd573872c727fa3e086369a71661ee0-1110-llvmorg-24-init-7747-g62397f8b.tar.xz',
+        'sha256sum': 'b251621641190cdab7d23c4a47257e4e1f1f335c34c9676118940fa562bb66ff',
+        'size_bytes': 22776236,
+        'generation': 1790798150313742,
+        'condition': 'host_os == "linux" and non_git_source',
+      },
+      {
+        'object_name': 'Mac/rust-libclang-1edd55dcfcd573872c727fa3e086369a71661ee0-1110-llvmorg-24-init-7747-g62397f8b.tar.xz',
+        'sha256sum': '4f7e9d166ad2ced03b9d5c66f2a919fefce5127d03dbe93661a0d012c1dda9ef',
+        'size_bytes': 22924716,
+        'generation': 1790798154061688,
+        'condition': 'host_os == "mac" and host_cpu == "x64"',
+      },
+      {
+        'object_name': 'Mac_arm64/rust-libclang-1edd55dcfcd573872c727fa3e086369a71661ee0-1110-llvmorg-24-init-7747-g62397f8b.tar.xz',
+        'sha256sum': '444cfa9bd9d3cda991943c9743f1992004b1f50d6641372b5ff9103d9a4db478',
+        'size_bytes': 20588924,
+        'generation': 1790798157457698,
+        'condition': 'host_os == "mac" and host_cpu == "arm64"',
+      },
+      {
+        'object_name': 'Win/rust-libclang-1edd55dcfcd573872c727fa3e086369a71661ee0-1110-llvmorg-24-init-7747-g62397f8b.tar.xz',
+        'sha256sum': 'e8bb31ac1bded5c1fce08567a8a1a8f304213cceeee7384c2cba844dcaddfd20',
+        'size_bytes': 21527244,
+        'generation': 1790798161045212,
+        'condition': 'host_os == "win"',
+      },
+    ],
+  },
+
   'third_party/markupsafe':
     Var('chromium_git') + '/chromium/src/third_party/markupsafe.git@' +
         Var('markupsafe_revision'),
@@ -2446,7 +2515,8 @@ hooks = [
 
 
 def _run_roll_dep(deps_entry):
-  return roll_dep(CHROMIUM_DEPS, PDFIUM_DEPS, deps_entry)
+  return roll_dep(CHROMIUM_DEPS, PDFIUM_DEPS, deps_entry, 'CHROMIUM_DEPS',
+                  'DEPS')
 
 
 class RollDepTest(unittest.TestCase):
@@ -2482,6 +2552,24 @@ class RollDepTest(unittest.TestCase):
     self.assertEqual('Revisions are the same.', message)
 
     success, message = _run_roll_dep('result_adapter_revision')
+    self.assertTrue(success)
+    self.assertEqual('Revisions are the same.', message)
+
+  def testGcsDepsRolls(self):
+    success, message = _run_roll_dep('third_party/llvm-build/Release+Asserts')
+    self.assertTrue(success)
+    self.assertEqual(
+        'roll_downstream_gcs_deps.py '
+        '--source-deps CHROMIUM_DEPS --destination-deps DEPS '
+        '--source-package src/third_party/llvm-build/Release+Asserts '
+        '--destination-package third_party/llvm-build/Release+Asserts', message)
+
+  def testGcsDepsRollsNothingToRoll(self):
+    success, message = _run_roll_dep('third_party/llvm-libclang')
+    self.assertTrue(success)
+    self.assertEqual('Revisions are the same.', message)
+
+    success, message = _run_roll_dep('third_party/rust-toolchain')
     self.assertTrue(success)
     self.assertEqual('Revisions are the same.', message)
 
@@ -2699,13 +2787,18 @@ class RollAllDepsTest(unittest.TestCase):
         '--roll-to 83b0b9e6065a60617504aa1d6e6997c511c3afac '
         '--ignore-dirty-tree --no-log',
         'roll-dep testing/scripts/rust --ignore-dirty-tree --no-log',
+        'roll_downstream_gcs_deps.py '
+        '--source-deps CHROMIUM_DEPS --destination-deps DEPS '
+        '--source-package src/third_party/llvm-build/Release+Asserts '
+        '--destination-package third_party/llvm-build/Release+Asserts',
         'roll-dep tools/rust --ignore-dirty-tree --no-log',
         'roll-dep tools/win --ignore-dirty-tree --no-log',
         'roll-dep v8 --roll-to 5bd40de12569247beb113659504906aa41e48959 '
         '--ignore-dirty-tree --no-log',
     ]
 
-    success, message = roll_all_deps(CHROMIUM_DEPS, PDFIUM_DEPS)
+    success, message = roll_all_deps(CHROMIUM_DEPS, PDFIUM_DEPS,
+                                     'CHROMIUM_DEPS', 'DEPS')
     self.assertTrue(success)
     self.assertEqual(EXPECTED_ALL, message)
 

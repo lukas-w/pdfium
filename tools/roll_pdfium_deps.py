@@ -41,6 +41,9 @@ ALL_DEPS_ENTRIES = (
     'siso_version',
     'skia_revision',
     'testing_rust_revision',
+    'third_party/llvm-build/Release+Asserts',
+    'third_party/llvm-libclang',
+    'third_party/rust-toolchain',
     'tools_rust_revision',
     'tools_win_revision',
     'v8_revision',
@@ -88,9 +91,45 @@ def get_revision_from_dep_value(dep_value):
   return None
 
 
-def roll_dep_impl(chromium_deps_parser, pdfium_deps_parser, deps_entry):
+def roll_gcs_dep_impl(chromium_deps_parser, pdfium_deps_parser, deps_entry,
+                      chromium_deps_file, pdfium_deps_file):
+  pdfium_dep_value = pdfium_deps_parser.deps.get(deps_entry)
+  pdfium_objects = pdfium_dep_value.get('objects')
+  if not pdfium_objects:
+    return (False, f'GCS entry "{deps_entry}" has no objects in PDFium DEPS.')
+
+  chromium_path = 'src/' + deps_entry
+  chromium_dep_value = chromium_deps_parser.deps.get(chromium_path)
+  if not isinstance(chromium_dep_value,
+                    dict) or (chromium_dep_value.get('dep_type') != 'gcs'):
+    return (False, f'GCS entry "{deps_entry}" not found in Chromium DEPS.')
+
+  chromium_objects = chromium_dep_value.get('objects')
+  if not chromium_objects:
+    return (False, f'GCS entry "{deps_entry}" has no objects in Chromium DEPS.')
+
+  if chromium_objects == pdfium_objects:
+    return (True, 'Revisions are the same.')
+
+  return (
+      True,
+      f'roll_downstream_gcs_deps.py --source-deps {chromium_deps_file} '
+      f'--destination-deps {pdfium_deps_file} '
+      f'--source-package {chromium_path} --destination-package {deps_entry}',
+  )
+
+
+def roll_dep_impl(chromium_deps_parser, pdfium_deps_parser, deps_entry,
+                  chromium_deps_file, pdfium_deps_file):
   if deps_entry in UNSUPPORTED_ENTRIES:
     return (False, f'Rolling {deps_entry} is not supported.')
+
+  if deps_entry in pdfium_deps_parser.deps:
+    pdfium_dep_value = pdfium_deps_parser.deps.get(deps_entry)
+    if isinstance(pdfium_dep_value, dict) and (pdfium_dep_value.get('dep_type')
+                                               == 'gcs'):
+      return roll_gcs_dep_impl(chromium_deps_parser, pdfium_deps_parser,
+                               deps_entry, chromium_deps_file, pdfium_deps_file)
 
   # In PDFium DEPS, only search vars for the entry.
   if deps_entry not in pdfium_deps_parser.vars:
@@ -143,19 +182,23 @@ def roll_dep_impl(chromium_deps_parser, pdfium_deps_parser, deps_entry):
           '--ignore-dirty-tree --no-log')
 
 
-def roll_dep(chromium_deps_content, pdfium_deps_content, deps_entry):
+def roll_dep(chromium_deps_content, pdfium_deps_content, deps_entry,
+             chromium_deps_file, pdfium_deps_file):
   chromium_deps_parser = DepsParser(chromium_deps_content)
   pdfium_deps_parser = DepsParser(pdfium_deps_content)
-  return roll_dep_impl(chromium_deps_parser, pdfium_deps_parser, deps_entry)
+  return roll_dep_impl(chromium_deps_parser, pdfium_deps_parser, deps_entry,
+                       chromium_deps_file, pdfium_deps_file)
 
 
-def roll_all_deps(chromium_deps_content, pdfium_deps_content):
+def roll_all_deps(chromium_deps_content, pdfium_deps_content,
+                  chromium_deps_file, pdfium_deps_file):
   chromium_deps_parser = DepsParser(chromium_deps_content)
   pdfium_deps_parser = DepsParser(pdfium_deps_content)
   messages = []
   for deps_entry in ALL_DEPS_ENTRIES:
     success, message = roll_dep_impl(chromium_deps_parser, pdfium_deps_parser,
-                                     deps_entry)
+                                     deps_entry, chromium_deps_file,
+                                     pdfium_deps_file)
     if not success:
       return (False, message)
 
@@ -186,7 +229,9 @@ def main():
 
   if args.deps_entry == 'ALL':
     success, maybe_messages = roll_all_deps(chromium_deps_content,
-                                            pdfium_deps_content)
+                                            pdfium_deps_content,
+                                            args.chromium_deps_file,
+                                            args.pdfium_deps_file)
     if not success:
       print(maybe_messages, file=sys.stderr)
       return 1
@@ -196,7 +241,8 @@ def main():
     return 0
 
   success, message = roll_dep(chromium_deps_content, pdfium_deps_content,
-                              args.deps_entry)
+                              args.deps_entry, args.chromium_deps_file,
+                              args.pdfium_deps_file)
   if not success:
     print(message, file=sys.stderr)
     return 1
