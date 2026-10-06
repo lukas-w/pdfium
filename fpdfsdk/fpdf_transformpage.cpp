@@ -7,6 +7,7 @@
 #include "public/fpdf_transformpage.h"
 
 #include <memory>
+#include <optional>
 #include <sstream>
 
 #include "constants/page_object.h"
@@ -75,8 +76,9 @@ void OutputPath(fxcrt::ostringstream& buf, CPDF_Path path) {
   }
 
   pdfium::span<const CFX_Path::Point> points = pPath->GetPoints();
-  if (path.IsRect()) {
-    CFX_PointF diff = points[2].point_ - points[0].point_;
+  std::optional<CFX_PointF> corner = pPath->GetRectOppositeCorner();
+  if (corner.has_value()) {
+    CFX_PointF diff = corner.value() - points[0].point_;
     buf << points[0].point_.x << " " << points[0].point_.y << " " << diff.x
         << " " << diff.y << " re\n";
     return;

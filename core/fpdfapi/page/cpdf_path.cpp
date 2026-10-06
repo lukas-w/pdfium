@@ -37,6 +37,10 @@ bool CPDF_Path::IsRect() const {
   return ref_.GetObject()->IsRect();
 }
 
+std::optional<CFX_PointF> CPDF_Path::GetRectOppositeCorner() const {
+  return ref_.GetObject()->GetRectOppositeCorner();
+}
+
 void CPDF_Path::Transform(const CFX_Matrix& matrix) {
   ref_.GetPrivateCopy()->Transform(matrix);
 }

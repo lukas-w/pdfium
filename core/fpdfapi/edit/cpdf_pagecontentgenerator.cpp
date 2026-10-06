@@ -741,8 +741,9 @@ void CPDF_PageContentGenerator::ProcessForm(fxcrt::ostringstream* buf,
 void CPDF_PageContentGenerator::ProcessPathPoints(fxcrt::ostringstream* buf,
                                                   CPDF_Path* pPath) {
   pdfium::span<const CFX_Path::Point> points = pPath->GetPoints();
-  if (pPath->IsRect()) {
-    CFX_PointF diff = points[2].point_ - points[0].point_;
+  std::optional<CFX_PointF> corner = pPath->GetRectOppositeCorner();
+  if (corner.has_value()) {
+    CFX_PointF diff = corner.value() - points[0].point_;
     WritePoint(*buf, points[0].point_) << " ";
     WritePoint(*buf, diff) << " re";
     return;

@@ -249,6 +249,30 @@ TEST(CFXPath, SixPlusPointRect) {
   EXPECT_EQ(CFX_FloatRect(0, 0, 2, 1), path.GetBoundingBox());
 }
 
+TEST(CFXPath, GetRectOppositeCorner) {
+  CFX_Path path;
+  path.AppendRect(/*left=*/1, /*bottom=*/2, /*right=*/3, /*top=*/5);
+  EXPECT_EQ(CFX_PointF(3, 5), path.GetRectOppositeCorner());
+
+  // A duplicate point makes GetPoints()[2] a point on the first edge.
+  path.Clear();
+  path.AppendPoint({0, 0}, CFX_Path::Point::Type::kMove);
+  path.AppendPoint({0, 0}, CFX_Path::Point::Type::kLine);
+  path.AppendPoint({2, 0}, CFX_Path::Point::Type::kLine);
+  path.AppendPoint({2, 1}, CFX_Path::Point::Type::kLine);
+  path.AppendPoint({0, 1}, CFX_Path::Point::Type::kLine);
+  path.AppendPoint({0, 0}, CFX_Path::Point::Type::kLine);
+  ASSERT_EQ(CFX_PointF(2, 0), path.GetPoints()[2].point_);
+  EXPECT_EQ(CFX_PointF(2, 1), path.GetRectOppositeCorner());
+
+  path.Clear();
+  path.AppendPoint({0, 0}, CFX_Path::Point::Type::kMove);
+  path.AppendPoint({2, 0}, CFX_Path::Point::Type::kLine);
+  path.AppendPoint({3, 1}, CFX_Path::Point::Type::kLine);
+  path.AppendPointAndClose({0, 1}, CFX_Path::Point::Type::kLine);
+  EXPECT_FALSE(path.GetRectOppositeCorner().has_value());
+}
+
 TEST(CFXPath, NotRect) {
   CFX_Path path;
   path.AppendPoint({0, 0}, CFX_Path::Point::Type::kMove);

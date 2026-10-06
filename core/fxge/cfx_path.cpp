@@ -426,6 +426,23 @@ bool CFX_Path::IsRect() const {
   return IsRectImpl(points_);
 }
 
+std::optional<CFX_PointF> CFX_Path::GetRectOppositeCorner() const {
+  bool do_normalize = PathPointsNeedNormalization(points_);
+  std::vector<Point> normalized;
+  if (do_normalize) {
+    normalized = GetNormalizedPoints(points_);
+  }
+  const std::vector<Point>& path_points = do_normalize ? normalized : points_;
+
+  if (!IsRectImpl(path_points)) {
+    return std::nullopt;
+  }
+
+  // GetNormalizedPoints() keeps the first point, so this is also the opposite
+  // corner of `points_[0]`.
+  return path_points[2].point_;
+}
+
 std::optional<CFX_FloatRect> CFX_Path::GetRect(const CFX_Matrix* matrix) const {
   bool do_normalize = PathPointsNeedNormalization(points_);
   std::vector<Point> normalized;

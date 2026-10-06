@@ -76,6 +76,19 @@ TEST_F(CPDFPageContentGeneratorTest, ProcessRect) {
   buf.str("");
   TestProcessPath(&generator, &buf, pPathObj.get());
   EXPECT_EQ("q 0 0 5.2 3.78 re n Q\n", ByteString(buf));
+
+  // A rectangle with a duplicate second point, so its third point is not the
+  // opposite corner.
+  pPathObj = std::make_unique<CPDF_PathObject>();
+  pPathObj->path().AppendPoint(CFX_PointF(0, 0), CFX_Path::Point::Type::kMove);
+  pPathObj->path().AppendPoint(CFX_PointF(0, 0), CFX_Path::Point::Type::kLine);
+  pPathObj->path().AppendPoint(CFX_PointF(2, 0), CFX_Path::Point::Type::kLine);
+  pPathObj->path().AppendPoint(CFX_PointF(2, 1), CFX_Path::Point::Type::kLine);
+  pPathObj->path().AppendPoint(CFX_PointF(0, 1), CFX_Path::Point::Type::kLine);
+  pPathObj->path().AppendPoint(CFX_PointF(0, 0), CFX_Path::Point::Type::kLine);
+  buf.str("");
+  TestProcessPath(&generator, &buf, pPathObj.get());
+  EXPECT_EQ("q 0 0 2 1 re n Q\n", ByteString(buf));
 }
 
 TEST_F(CPDFPageContentGeneratorTest, Bug937) {

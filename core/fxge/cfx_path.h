@@ -58,6 +58,11 @@ class CFX_Path {
   bool IsRect() const;
   std::optional<CFX_FloatRect> GetRect(const CFX_Matrix* matrix) const;
 
+  // If IsRect(), returns the corner diagonally opposite to the first point.
+  // This is not always GetPoints()[2], because a rectangle can have points
+  // that do not change its shape.
+  std::optional<CFX_PointF> GetRectOppositeCorner() const;
+
   void Append(const CFX_Path& src, const CFX_Matrix* matrix);
   void AppendFloatRect(const CFX_FloatRect& rect);
   void AppendRect(float left, float bottom, float right, float top);
