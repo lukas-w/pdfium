@@ -1161,6 +1161,10 @@ bool CFX_RenderDevice::DrawNormalText(pdfium::span<const TextCharPos> pCharPos,
                                       const CFX_Matrix& mtText2Device,
                                       uint32_t fill_color,
                                       const CFX_TextRenderOptions& options) {
+  if (FXSYS_IsFloatZero(font_size)) {
+    return true;
+  }
+
   // `anti_alias` and `normalize` don't affect Skia rendering.
   FontAntiAliasingMode anti_alias = FontAntiAliasingMode::kMono;
   bool normalize = false;
