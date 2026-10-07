@@ -46,7 +46,7 @@ FXJSE_CLASS_DESCRIPTOR* AsClassDescriptor(void* ptr) {
 void V8FunctionCallback_Wrapper(
     const v8::FunctionCallbackInfo<v8::Value>& info) {
   const FXJSE_FUNCTION_DESCRIPTOR* pFunctionInfo =
-      AsFunctionDescriptor(info.Data().As<v8::External>()->Value(
+      AsFunctionDescriptor(info.DataV2().As<v8::External>()->Value(
           v8::kExternalPointerTypeTagDefault));
   if (!pFunctionInfo) {
     return;
@@ -62,7 +62,7 @@ void V8ConstructorCallback_Wrapper(
   }
 
   const FXJSE_CLASS_DESCRIPTOR* pClassDescriptor =
-      AsClassDescriptor(info.Data().As<v8::External>()->Value(
+      AsClassDescriptor(info.DataV2().As<v8::External>()->Value(
           v8::kExternalPointerTypeTagDefault));
   if (!pClassDescriptor) {
     return;
@@ -77,7 +77,7 @@ void V8ConstructorCallback_Wrapper(
 void Context_GlobalObjToString(
     const v8::FunctionCallbackInfo<v8::Value>& info) {
   const FXJSE_CLASS_DESCRIPTOR* pClassDescriptor =
-      AsClassDescriptor(info.Data().As<v8::External>()->Value(
+      AsClassDescriptor(info.DataV2().As<v8::External>()->Value(
           v8::kExternalPointerTypeTagDefault));
   if (!pClassDescriptor) {
     return;
@@ -99,7 +99,8 @@ void Context_GlobalObjToString(
 
 void DynPropGetterAdapter_MethodCallback(
     const v8::FunctionCallbackInfo<v8::Value>& info) {
-  v8::Local<v8::Object> hCallBackInfo = info.Data().As<v8::Object>();
+  v8::Local<v8::Object> hCallBackInfo =
+      info.DataV2().As<v8::Value>().As<v8::Object>();
   if (hCallBackInfo->InternalFieldCount() != 2) {
     return;
   }
@@ -211,7 +212,7 @@ v8::Intercepted NamedPropertyQueryCallback(
     v8::Local<v8::Name> property,
     const v8::PropertyCallbackInfo<v8::Integer>& info) {
   const FXJSE_CLASS_DESCRIPTOR* pClass =
-      AsClassDescriptor(info.Data().As<v8::External>()->Value(
+      AsClassDescriptor(info.DataV2().As<v8::External>()->Value(
           v8::kExternalPointerTypeTagDefault));
   if (!pClass) {
     return v8::Intercepted::kNo;
@@ -235,7 +236,7 @@ v8::Intercepted NamedPropertyGetterCallback(
     v8::Local<v8::Name> property,
     const v8::PropertyCallbackInfo<v8::Value>& info) {
   const FXJSE_CLASS_DESCRIPTOR* pClass =
-      AsClassDescriptor(info.Data().As<v8::External>()->Value(
+      AsClassDescriptor(info.DataV2().As<v8::External>()->Value(
           v8::kExternalPointerTypeTagDefault));
   if (!pClass) {
     return v8::Intercepted::kNo;
@@ -256,7 +257,7 @@ v8::Intercepted NamedPropertySetterCallback(
     v8::Local<v8::Value> value,
     const v8::PropertyCallbackInfo<v8::Boolean>& info) {
   const FXJSE_CLASS_DESCRIPTOR* pClass =
-      AsClassDescriptor(info.Data().As<v8::External>()->Value(
+      AsClassDescriptor(info.DataV2().As<v8::External>()->Value(
           v8::kExternalPointerTypeTagDefault));
   if (!pClass) {
     return v8::Intercepted::kNo;

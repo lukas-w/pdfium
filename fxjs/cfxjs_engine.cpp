@@ -187,7 +187,7 @@ class CFXJS_ObjDefinition {
       fxv8::ThrowExceptionHelper(isolate, "illegal constructor");
       return;
     }
-    if (info.Data().As<v8::Int32>()->Value() != FXJSOBJTYPE_DYNAMIC) {
+    if (info.DataV2().As<v8::Int32>()->Value() != FXJSOBJTYPE_DYNAMIC) {
       fxv8::ThrowExceptionHelper(isolate, "not a dynamic object");
       return;
     }
