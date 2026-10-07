@@ -190,7 +190,7 @@ en_contact.pdf * * * * fontations fuzzy=10,0.1,15
 en_diy.pdf mac * * agg * diff
 en_diy.pdf * * * * fontations diff
 en_foxit.pdf mac * * agg * diff
-en_foxit.pdf * * * * fontations fuzzy=10,0.1,15
+en_foxit.pdf * * * * fontations diff
 en_fqa2.pdf mac * * agg * diff
 en_fqa2.pdf * * * * fontations fuzzy=10,0.1,15
 en_fqa2.pdf mac * * skia * fuzzy
@@ -453,7 +453,7 @@ form_combobox_time.pdf * nov8 * * * diff
 form_list.pdf * * * * * diff
 form_list1.pdf * * * * * diff
 form_same.pdf mac * * agg * diff
-form_same.pdf * * * * fontations fuzzy=10,0.1,15
+form_same.pdf * * * * fontations diff
 form_text_sign_url.pdf * * * * * diff
 format_combo_box.pdf mac * * agg * diff
 format_combo_box.pdf * * * * fontations fuzzy=10,0.1,15
@@ -584,9 +584,9 @@ xfermodes2.pdf * * * agg * diff
 xfermodes2.pdf * * * skia * fuzzy
 
 zh_file1.pdf mac * * agg * diff
-zh_file1.pdf * * * * fontations fuzzy=10,0.1,15
+zh_file1.pdf * * * * fontations diff
 zh_function_list.pdf mac * * agg * diff
-zh_function_list.pdf * * * * fontations fuzzy=10,0.1,15
+zh_function_list.pdf * * * * fontations diff
 zh_function_list.pdf mac * * skia * fuzzy
 zh_shared_document.pdf mac * * agg * diff
 zh_shared_document.pdf * * * * fontations diff
@@ -684,9 +684,9 @@ example_004.pdf mac_x86 * * skia * diff
 example_028.pdf mac_x86 * * skia * diff
 example_055.pdf mac_x86 * * skia * diff
 font_1_embedded_font_en_feature.pdf mac_x86 * * skia * diff
-font_1_embedded_font_en_feature.pdf * * * * fontations fuzzy=16,0.1,15
+font_1_embedded_font_en_feature.pdf * * * * fontations diff
 font_2_embedded_font_en_size14.pdf mac_x86 * * skia * diff
-font_2_embedded_font_en_size14.pdf * * * * fontations fuzzy=16,0.1,15
+font_2_embedded_font_en_size14.pdf * * * * fontations diff
 new_stamp4.pdf mac_x86 * * skia * diff
 octest.pdf mac_x86 * * skia * diff
 path_5_pattern.pdf mac_x86 * * skia * diff
