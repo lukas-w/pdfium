@@ -21,7 +21,7 @@ class BitmapSaver {
   static void WriteBitmapToPng(FPDF_BITMAP bitmap, const std::string& filename);
   static void WriteBitmapToPng(CFX_DIBitmap* bitmap,
                                const std::string& filename);
-#ifdef PDF_ENABLE_SKIA
+#ifdef PDF_USE_SKIA
   static std::vector<uint8_t> ConvertToStraightAlpha(
       pdfium::span<const uint8_t> input,
       int width,

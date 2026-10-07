@@ -16,7 +16,7 @@
 #include "core/fxcrt/notreached.h"
 #include "testing/png_codec/png_codec.h"
 
-#ifdef PDF_ENABLE_SKIA
+#ifdef PDF_USE_SKIA
 #include "third_party/skia/include/core/SkAlphaType.h"  // nogncheck
 #include "third_party/skia/include/core/SkColorType.h"  // nogncheck
 #include "third_party/skia/include/core/SkImageInfo.h"  // nogncheck
@@ -54,7 +54,7 @@ std::vector<uint8_t> BitmapSaver::EncodeBitmapToPng(FPDF_BITMAP bitmap) {
     case FPDFBitmap_BGRA:
       return png_codec::EncodeBGRA(input, width, height, stride,
                                    /*discard_transparency=*/false);
-#ifdef PDF_ENABLE_SKIA
+#ifdef PDF_USE_SKIA
     case FPDFBitmap_BGRA_Premul: {
       std::vector<uint8_t> straight_alpha_input =
           ConvertToStraightAlpha(input, width, height, stride);
@@ -89,7 +89,7 @@ void BitmapSaver::WriteBitmapToPng(CFX_DIBitmap* bitmap,
   WriteBitmapToPng(reinterpret_cast<FPDF_BITMAP>(bitmap), filename);
 }
 
-#ifdef PDF_ENABLE_SKIA
+#ifdef PDF_USE_SKIA
 // static
 std::vector<uint8_t> BitmapSaver::ConvertToStraightAlpha(
     pdfium::span<const uint8_t> input,

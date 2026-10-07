@@ -25,7 +25,7 @@
 #include "testing/utils/bitmap_saver.h"
 #include "testing/utils/file_util.h"
 
-#ifdef PDF_ENABLE_SKIA
+#ifdef PDF_USE_SKIA
 #include "third_party/skia/include/core/SkData.h"         // nogncheck
 #include "third_party/skia/include/core/SkImage.h"        // nogncheck
 #include "third_party/skia/include/core/SkPicture.h"      // nogncheck
@@ -36,7 +36,7 @@
 #else
 #include "third_party/skia/include/encode/SkPngEncoder.h"  // nogncheck
 #endif  // PDF_ENABLE_RUST_PNG
-#endif  // PDF_ENABLE_SKIA
+#endif  // PDF_USE_SKIA
 
 namespace {
 
@@ -250,7 +250,7 @@ std::string WritePng(const char* pdf_name,
       UNSAFE_TODO(pdfium::span(static_cast<uint8_t*>(buffer),
                                static_cast<size_t>(bitmap_attributes.stride) *
                                    bitmap_attributes.height));
-#ifdef PDF_ENABLE_SKIA
+#ifdef PDF_USE_SKIA
   std::vector<uint8_t> straight_alpha_input;
   if (bitmap_attributes.has_alpha && buffer_has_premultiplied_alpha) {
     straight_alpha_input = BitmapSaver::ConvertToStraightAlpha(
@@ -490,7 +490,7 @@ std::string WriteStraightAlphaBufferToPng(
                   /*buffer_has_premultiplied_alpha=*/false);
 }
 
-#ifdef PDF_ENABLE_SKIA
+#ifdef PDF_USE_SKIA
 std::string WritePremultipliedAlphaBufferToPng(
     const char* pdf_name,
     int num,
@@ -618,7 +618,7 @@ void WritePS(FPDF_PAGE page, const char* pdf_name, int num) {
 }
 #endif  // _WIN32
 
-#ifdef PDF_ENABLE_SKIA
+#ifdef PDF_USE_SKIA
 std::unique_ptr<SkWStream> WriteToSkWStream(const std::string& pdf_name,
                                             int num,
                                             const std::string& extension) {
@@ -663,7 +663,7 @@ std::string WriteSkp(const char* pdf_name, int num, const SkPicture& picture) {
   picture.serialize(stream.get(), &procs);
   return filename;
 }
-#endif  // PDF_ENABLE_SKIA
+#endif  // PDF_USE_SKIA
 
 enum class ThumbnailDecodeType { kBitmap, kRawStream, kDecodedStream };
 

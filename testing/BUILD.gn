@@ -53,7 +53,7 @@ source_set("test_support") {
   configs += [
     "../:pdfium_strict_config",
     "../:pdfium_noshorten_config",
-    ":pdfium_test_config",
+    ":pdfium_test_allocator_config",
   ]
   visibility = [ "../*" ]
   if (is_posix) {
@@ -274,12 +274,9 @@ config("pdfium_in_chromium_config") {
   }
 }
 
-config("pdfium_test_config") {
+config("pdfium_test_allocator_config") {
   defines = []
   include_dirs = [ ".." ]
-  if (pdf_use_skia) {
-    defines += [ "PDF_ENABLE_SKIA" ]
-  }
   if (is_asan) {
     defines += [ "PDF_ENABLE_ASAN" ]
   }

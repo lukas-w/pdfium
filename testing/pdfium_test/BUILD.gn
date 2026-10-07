@@ -31,7 +31,7 @@ executable("pdfium_test") {
   ]
   configs += [
     "../:pdfium_in_chromium_config",
-    "../:pdfium_test_config",
+    "../:pdfium_test_allocator_config",
     "../../:pdfium_common_config",
   ]
 

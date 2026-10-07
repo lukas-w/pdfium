@@ -10,10 +10,10 @@
 
 #include "public/fpdfview.h"
 
-#ifdef PDF_ENABLE_SKIA
+#ifdef PDF_USE_SKIA
 class SkPicture;
 class SkWStream;
-#endif  // PDF_ENABLE_SKIA
+#endif  // PDF_USE_SKIA
 
 struct BitmapAttributes {
   int width;
@@ -33,7 +33,7 @@ std::string WriteStraightAlphaBufferToPng(
     int num,
     void* buffer,
     const BitmapAttributes& bitmap_attributes);
-#ifdef PDF_ENABLE_SKIA
+#ifdef PDF_USE_SKIA
 std::string WritePremultipliedAlphaBufferToPng(
     const char* pdf_name,
     int num,
@@ -50,7 +50,7 @@ void WriteEmf(FPDF_PAGE page, const char* pdf_name, int num);
 void WritePS(FPDF_PAGE page, const char* pdf_name, int num);
 #endif  // _WIN32
 
-#ifdef PDF_ENABLE_SKIA
+#ifdef PDF_USE_SKIA
 std::unique_ptr<SkWStream> WriteToSkWStream(const std::string& pdf_name,
                                             int num,
                                             const std::string& extension);
@@ -59,7 +59,7 @@ std::unique_ptr<SkWStream> WriteToSkWStream(const std::string& pdf_name,
                                             const std::string& extension,
                                             std::string& filename);
 std::string WriteSkp(const char* pdf_name, int num, const SkPicture& picture);
-#endif  // PDF_ENABLE_SKIA
+#endif  // PDF_USE_SKIA
 
 void WriteAttachments(FPDF_DOCUMENT doc, const std::string& name);
 void WriteImages(FPDF_PAGE page, const char* pdf_name, int page_num);
