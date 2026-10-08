@@ -93,7 +93,7 @@ TEST_F(BrotliEnabledEmbedderTest, BrotliDecodeParms) {
   ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
   ASSERT_TRUE(bitmap);
 
-  CompareBitmapWithExpectationSuffix(bitmap.get(), "brotli_decode_parms");
+  CompareBitmap(bitmap.get(), "brotli_decode_parms");
 }
 
 TEST_F(BrotliEnabledEmbedderTest, BrotliWithLength1Argument) {
