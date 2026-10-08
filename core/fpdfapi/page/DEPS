@@ -1,5 +1,5 @@
 specific_include_rules = {
-  'cpdf_pageimagecache\.cpp': [
+  'cpdf_pageimagecache\\.cpp': [
     '+third_party/skia/include',
   ],
 }

@@ -1,11 +1,11 @@
 specific_include_rules = {
-  "codec_memory_sk_stream\.(cpp|h)": [
+  "codec_memory_sk_stream\\.(cpp|h)": [
     '+third_party/skia/include',
   ],
-  "codec_memory_sk_stream_unittest\.cpp": [
+  "codec_memory_sk_stream_unittest\\.cpp": [
     '+third_party/skia/include',
   ],
-  "fx_codec\.cpp": [
+  "fx_codec\\.cpp": [
     '+third_party/libyuv/include/libyuv/planar_functions.h',
   ],
 }
