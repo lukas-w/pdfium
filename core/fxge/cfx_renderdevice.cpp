@@ -18,6 +18,7 @@
 #include "core/fxcrt/check_op.h"
 #include "core/fxcrt/compiler_specific.h"
 #include "core/fxcrt/fx_safe_types.h"
+#include "core/fxcrt/notreached.h"
 #include "core/fxcrt/ptr_util.h"
 #include "core/fxcrt/span.h"
 #include "core/fxcrt/zip.h"
@@ -40,6 +41,7 @@
 #if defined(PDF_USE_AGG)
 #include "core/fxge/agg/cfx_agg_devicedriver.h"
 #endif
+
 #if defined(PDF_USE_SKIA)
 #include "core/fxge/skia/fx_skia_device.h"
 #include "third_party/skia/include/core/SkTypes.h"  // nogncheck
@@ -1682,7 +1684,7 @@ bool CFX_RenderDevice::AttachImpl(RetainPtr<CFX_DIBitmap> pBitmap,
   return AttachAggImpl(std::move(pBitmap), bRgbByteOrder,
                        std::move(pBackdropBitmap), bGroupKnockout);
 #else
-  return false;
+  NOTREACHED();
 #endif
 }
 
@@ -1702,7 +1704,7 @@ bool CFX_RenderDevice::CreateWithBackdrop(int width,
 #if defined(PDF_USE_AGG)
   return CreateAgg(width, height, format, backdrop);
 #else
-  return false;
+  NOTREACHED();
 #endif
 }
 

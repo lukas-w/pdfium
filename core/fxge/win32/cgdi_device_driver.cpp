@@ -348,7 +348,7 @@ unsigned LineClip(float w,
   pdfium::agg::rect_base<float> rect(0.0f, 0.0f, w, h);
   return pdfium::agg::clip_liang_barsky<float>(x1, y1, x2, y2, rect, x, y);
 #else
-  return 0u;
+  NOTREACHED();
 #endif
 }
 
