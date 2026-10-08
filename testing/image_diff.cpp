@@ -158,6 +158,8 @@ struct DiffMetrics {
   uint8_t max_delta = 0;
   double mse = 0.0;
   double win_mse = 0.0;
+  double mean_ssim = 1.0;
+  double min_window_ssim = 1.0;
 };
 
 // Computes the number of differing pixels. When `out_metrics` is non-null,
@@ -190,20 +192,32 @@ int PixelsDifferent(const Image& baseline,
     out_metrics->raw_diff_pixels = pixels_different;
     out_metrics->max_delta = max_delta;
     if (w > 0 && h > 0) {
-      out_metrics->mse =
-          static_cast<double>(total_squared_error) / (3.0 * w * h);
+      if (pixels_different == 0) {
+        out_metrics->mse = 0.0;
+        out_metrics->win_mse = 0.0;
+        out_metrics->mean_ssim = 1.0;
+        out_metrics->min_window_ssim = 1.0;
+      } else {
+        out_metrics->mse =
+            static_cast<double>(total_squared_error) / (3.0 * w * h);
 
-      std::vector<uint32_t> baseline_overlap(w * h);
-      std::vector<uint32_t> actual_overlap(w * h);
-      for (int y = 0; y < h; ++y) {
-        for (int x = 0; x < w; ++x) {
-          baseline_overlap[y * w + x] = baseline.pixel_at(x, y);
-          actual_overlap[y * w + x] = actual.pixel_at(x, y);
+        std::vector<uint32_t> baseline_overlap(w * h);
+        std::vector<uint32_t> actual_overlap(w * h);
+        for (int y = 0; y < h; ++y) {
+          for (int x = 0; x < w; ++x) {
+            baseline_overlap[y * w + x] = baseline.pixel_at(x, y);
+            actual_overlap[y * w + x] = actual.pixel_at(x, y);
+          }
         }
+        out_metrics->win_mse = CalculateMaxWindowMSE(
+            baseline_overlap, static_cast<size_t>(w), actual_overlap,
+            static_cast<size_t>(w), w, h, kMaxFuzzyWindowSize);
+        SSIMMetrics ssim_metrics =
+            CalculateSSIM(baseline_overlap, static_cast<size_t>(w),
+                          actual_overlap, static_cast<size_t>(w), w, h);
+        out_metrics->mean_ssim = ssim_metrics.mean_ssim;
+        out_metrics->min_window_ssim = ssim_metrics.min_window_ssim;
       }
-      out_metrics->win_mse = CalculateMaxWindowMSE(
-          baseline_overlap, static_cast<size_t>(w), actual_overlap,
-          static_cast<size_t>(w), w, h, kMaxFuzzyWindowSize);
     }
   }
 
@@ -325,10 +339,12 @@ int CompareImages(const std::string& binary_name,
 
     printf(
         "%s: actual_w=%d actual_h=%d expected_w=%d expected_h=%d pixels=%d "
-        "total=%d max_delta=%u mse=%.6f win_mse=%.6f\n",
+        "total=%d max_delta=%u mse=%.6f win_mse=%.6f mean_ssim=%.6f "
+        "min_window_ssim=%.6f\n",
         base_name.c_str(), actual_image.w(), actual_image.h(),
         baseline_image.w(), baseline_image.h(), metrics.raw_diff_pixels,
-        overlap_w * overlap_h, metrics.max_delta, metrics.mse, metrics.win_mse);
+        overlap_w * overlap_h, metrics.max_delta, metrics.mse, metrics.win_mse,
+        metrics.mean_ssim, metrics.min_window_ssim);
   }
 
   UNSAFE_TODO(printf("%s: %01.2f%% %s (%d pixels differ)\n", diff_name, percent,

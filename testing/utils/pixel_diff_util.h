@@ -48,6 +48,11 @@ inline constexpr DiffOptions kFontationsDiffOptions = {
     .max_window_mean_squared_error = kMaxFontationsWindowMeanSquaredError,
 };
 
+struct SSIMMetrics {
+  double mean_ssim;
+  double min_window_ssim;
+};
+
 // Returns the largest difference in pixel channels between `baseline_pixel` and
 // `actual_pixel`. Pixels are expected to be in 32-bit ARGB or BGRA format.
 uint8_t MaxPixelPerChannelDelta(uint32_t baseline_pixel, uint32_t actual_pixel);
@@ -67,6 +72,18 @@ double CalculateMaxWindowMSE(pdfium::span<const uint32_t> baseline,
                              int w,
                              int h,
                              int window_size);
+
+// Computes the Structural Similarity (SSIM) index across the RGB channels.
+// Uses an 8x8 sliding window with a step size of 4 pixels. Returns both the
+// global mean SSIM, and the minimum local window SSIM (worst-case match).
+// Values are between 0.0 and 1.0, where 1.0 indicates perfect similarity.
+// See https://en.wikipedia.org/wiki/Structural_similarity_index_measure
+SSIMMetrics CalculateSSIM(pdfium::span<const uint32_t> baseline,
+                          size_t baseline_stride_pixels,
+                          pdfium::span<const uint32_t> actual,
+                          size_t actual_stride_pixels,
+                          int w,
+                          int h);
 
 // Returns the number of differing pixels between `baseline` and `actual` within
 // the overlap region of dimensions (`w`, `h`), taking into account maximum

@@ -34,6 +34,8 @@ class DiffMetrics:
   max_delta: int
   mse: float
   win_mse: float
+  mean_ssim: float = 1.0
+  min_window_ssim: float = 1.0
 
   @property
   def dims_match(self):
@@ -202,7 +204,9 @@ class PNGDiffer:
         total=int(kv['total']),
         max_delta=int(kv['max_delta']),
         mse=float(kv['mse']),
-        win_mse=float(kv['win_mse']))
+        win_mse=float(kv['win_mse']),
+        mean_ssim=float(kv.get('mean_ssim', 1.0)),
+        min_window_ssim=float(kv.get('min_window_ssim', 1.0)))
     image_diff.metrics = metrics
 
     matched, failure_reason = self.EvaluateMatch(metrics,

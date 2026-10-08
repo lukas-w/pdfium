@@ -8,6 +8,7 @@
 #include <stdint.h>
 
 #include <algorithm>
+#include <array>
 #include <vector>
 
 namespace {
@@ -131,6 +132,119 @@ double CalculateMaxWindowMSE(pdfium::span<const uint32_t> baseline,
   }
 
   return max_win_mse;
+}
+
+SSIMMetrics CalculateSSIM(pdfium::span<const uint32_t> baseline,
+                          size_t baseline_stride_pixels,
+                          pdfium::span<const uint32_t> actual,
+                          size_t actual_stride_pixels,
+                          int w,
+                          int h) {
+  if (w <= 0 || h <= 0) {
+    return {0.0, 0.0};
+  }
+
+  if (baseline_stride_pixels < static_cast<size_t>(w) ||
+      actual_stride_pixels < static_cast<size_t>(w)) {
+    return {0.0, 0.0};
+  }
+
+  const size_t min_baseline_size =
+      (static_cast<size_t>(h) - 1) * baseline_stride_pixels + w;
+  const size_t min_actual_size =
+      (static_cast<size_t>(h) - 1) * actual_stride_pixels + w;
+  if (baseline.size() < min_baseline_size || actual.size() < min_actual_size) {
+    return {0.0, 0.0};
+  }
+
+  constexpr double kC1 = 6.5025;   // (0.01 * 255)^2
+  constexpr double kC2 = 58.5225;  // (0.03 * 255)^2
+
+  double ssim_total = 0.0;
+  double min_window_ssim = 1.0;
+  int samples = 0;
+
+  constexpr int kWindowSize = 8;
+  constexpr int kStepSize = 4;
+
+  const int win_w = std::min(w, kWindowSize);
+  const int win_h = std::min(h, kWindowSize);
+
+  for (int y = 0; y < h; y += kStepSize) {
+    if (y > h - win_h) {
+      y = h - win_h;
+    }
+    for (int x = 0; x < w; x += kStepSize) {
+      if (x > w - win_w) {
+        x = w - win_w;
+      }
+
+      std::array<uint32_t, 3> sum_s = {};
+      std::array<uint32_t, 3> sum_r = {};
+      std::array<uint32_t, 3> sum_sq_s = {};
+      std::array<uint32_t, 3> sum_sq_r = {};
+      std::array<uint32_t, 3> sum_sxr = {};
+
+      for (int wy = 0; wy < win_h; ++wy) {
+        const size_t b_offset = (y + wy) * baseline_stride_pixels;
+        const size_t a_offset = (y + wy) * actual_stride_pixels;
+        for (int wx = 0; wx < win_w; ++wx) {
+          UnpackedPixel p_b(baseline[b_offset + x + wx]);
+          UnpackedPixel p_a(actual[a_offset + x + wx]);
+
+          const std::array<uint32_t, 3> b_channels = {p_b.red, p_b.green,
+                                                      p_b.blue};
+          const std::array<uint32_t, 3> a_channels = {p_a.red, p_a.green,
+                                                      p_a.blue};
+
+          for (int c = 0; c < 3; ++c) {
+            sum_s[c] += b_channels[c];
+            sum_r[c] += a_channels[c];
+            sum_sq_s[c] += b_channels[c] * b_channels[c];
+            sum_sq_r[c] += a_channels[c] * a_channels[c];
+            sum_sxr[c] += b_channels[c] * a_channels[c];
+          }
+        }
+      }
+
+      double window_ssim = 0.0;
+      const int count = win_w * win_h;
+
+      for (int c = 0; c < 3; ++c) {
+        const double mean_s = static_cast<double>(sum_s[c]) / count;
+        const double mean_r = static_cast<double>(sum_r[c]) / count;
+
+        const double var_s =
+            static_cast<double>(sum_sq_s[c]) / count - mean_s * mean_s;
+        const double var_r =
+            static_cast<double>(sum_sq_r[c]) / count - mean_r * mean_r;
+        const double covar_sxr =
+            static_cast<double>(sum_sxr[c]) / count - mean_s * mean_r;
+
+        const double ssim_n =
+            (2.0 * mean_s * mean_r + kC1) * (2.0 * covar_sxr + kC2);
+        const double ssim_d =
+            (mean_s * mean_s + mean_r * mean_r + kC1) * (var_s + var_r + kC2);
+
+        window_ssim += ssim_n / ssim_d;
+      }
+
+      const double final_window_ssim = window_ssim / 3.0;
+      ssim_total += final_window_ssim;
+      min_window_ssim = std::min(min_window_ssim, final_window_ssim);
+      samples++;
+
+      if (x == w - win_w) {
+        break;
+      }
+    }
+    if (y == h - win_h) {
+      break;
+    }
+  }
+
+  return samples > 0 ? SSIMMetrics{ssim_total / samples, min_window_ssim}
+                     : SSIMMetrics{1.0, 1.0};
 }
 
 int CalculatePixelsDifferent(pdfium::span<const uint32_t> baseline,

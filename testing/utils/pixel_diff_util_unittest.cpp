@@ -129,6 +129,29 @@ TEST(PixelDiffUtilTest, CalculateMaxWindowMSEInvalidInputs) {
   EXPECT_DOUBLE_EQ(0.0, CalculateMaxWindowMSE(img, 4, img, 4, 4, 4, 0));
 }
 
+TEST(PixelDiffUtilTest, CalculateSSIMExactMatch) {
+  std::vector<uint32_t> img(64, 0xffffffff);
+  EXPECT_DOUBLE_EQ(1.0, CalculateSSIM(img, 8, img, 8, 8, 8).mean_ssim);
+  EXPECT_DOUBLE_EQ(1.0, CalculateSSIM(img, 8, img, 8, 8, 8).min_window_ssim);
+}
+
+TEST(PixelDiffUtilTest, CalculateSSIMReallyOff) {
+  std::vector<uint32_t> img1(64, 0xffffffff);
+  std::vector<uint32_t> img2(img1);
+  // Corrupt a few pixels.
+  img2[12] = 56;
+  img2[34] = 78;
+  EXPECT_NEAR(0.0364, CalculateSSIM(img1, 8, img2, 8, 8, 8).mean_ssim, 0.0001);
+  EXPECT_NEAR(0.0364, CalculateSSIM(img1, 8, img2, 8, 8, 8).min_window_ssim,
+              0.0001);
+}
+
+TEST(PixelDiffUtilTest, CalculateSSIMInvalidInputs) {
+  std::vector<uint32_t> img(16, 0);
+  EXPECT_DOUBLE_EQ(0.0, CalculateSSIM(img, 0, img, 0, 0, 0).mean_ssim);
+  EXPECT_DOUBLE_EQ(0.0, CalculateSSIM(img, 0, img, 0, 0, 0).min_window_ssim);
+}
+
 TEST(PixelDiffUtilTest, CalculatePixelsDifferentExactMatch) {
   std::vector<uint32_t> img(64, 0xffffffff);
   EXPECT_EQ(0,
