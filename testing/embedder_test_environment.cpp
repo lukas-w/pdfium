@@ -23,7 +23,8 @@ EmbedderTestEnvironment* g_environment = nullptr;
 }  // namespace
 
 EmbedderTestEnvironment::EmbedderTestEnvironment()
-    : renderer_type_(GetDefaultRendererType()) {
+    : renderer_type_(GetDefaultRendererType()),
+      font_library_type_(GetDefaultFontLibraryType()) {
   DCHECK(!g_environment);
   g_environment = this;
 }
@@ -45,28 +46,15 @@ void EmbedderTestEnvironment::SetUp() {
 
 #ifdef PDF_ENABLE_V8
       .m_pIsolate = V8TestEnvironment::GetInstance()->isolate(),
-      .m_v8EmbedderSlot = 0,
       .m_pPlatform = V8TestEnvironment::GetInstance()->platform(),
-#else   // PDF_ENABLE_V8
-      .m_pIsolate = nullptr,
-      .m_v8EmbedderSlot = 0,
-      .m_pPlatform = nullptr,
 #endif  // PDF_ENABLE_V8
 
       .m_RendererType = renderer_type_,
-#if defined(PDF_ENABLE_FONTATIONS) && defined(PDF_ENABLE_FREETYPE)
-      .m_FontLibraryType = fontations_ ? FPDF_FONTBACKENDTYPE_FONTATIONS
-                                       : FPDF_FONTBACKENDTYPE_FREETYPE,
-#elif defined(PDF_ENABLE_FONTATIONS)
-      .m_FontLibraryType = FPDF_FONTBACKENDTYPE_FONTATIONS,
-#else
-      .m_FontLibraryType = FPDF_FONTBACKENDTYPE_FREETYPE,
-#endif
+      .m_FontLibraryType = font_library_type_,
       .m_BrotliEnabled = brotli_enabled_,
   };
 
   FPDF_InitLibraryWithConfig(&config);
-
   test_fonts_.InstallFontMapper();
 }
 
@@ -100,9 +88,15 @@ void EmbedderTestEnvironment::AddFlag(const std::string& flag) {
     return;
   }
 #endif  // defined(PDF_USE_SKIA)
+#if defined(PDF_ENABLE_FREETYPE)
+  if (flag == "--freetype") {
+    font_library_type_ = FPDF_FONTBACKENDTYPE_FREETYPE;
+    return;
+  }
+#endif  // defined(PDF_ENABLE_FREETYPE)
 #if defined(PDF_ENABLE_FONTATIONS)
   if (flag == "--fontations") {
-    fontations_ = true;
+    font_library_type_ = FPDF_FONTBACKENDTYPE_FONTATIONS;
     return;
   }
 #endif  // defined(PDF_ENABLE_FONTATIONS)

@@ -124,13 +124,25 @@ namespace {
 
 enum class RendererType {
   kDefault,
+#if defined(PDF_USE_AGG)
   kAgg,
+#endif  // defined(PDF_USE_AGG)
 #ifdef _WIN32
   kGdi,
 #endif  // _WIN32
 #if defined(PDF_USE_SKIA)
   kSkia,
 #endif  // defined(PDF_USE_SKIA)
+};
+
+enum class FontLibraryType {
+  kDefault,
+#if defined(PDF_ENABLE_FREETYPE)
+  kFreetype,
+#endif  // defined(PDF_ENABLE_FREETYPE)
+#if defined(PDF_ENABLE_FONTATIONS)
+  kFontations,
+#endif  // defined(PDF_ENABLE_FONTATIONS)
 };
 
 enum class OutputFormat {
@@ -184,9 +196,7 @@ struct Options {
   bool save_thumbnails_decoded = false;
   bool save_thumbnails_raw = false;
   RendererType use_renderer_type = RendererType::kDefault;
-#if defined(PDF_ENABLE_FONTATIONS)
-  bool use_fontations_backend = false;
-#endif  // defined(PDF_ENABLE_FONTATIONS)
+  FontLibraryType use_font_library_type = FontLibraryType::kDefault;
 #ifdef PDF_ENABLE_V8
   bool disable_javascript = false;
   std::string js_flags;  // Extra flags to pass to v8 init.
@@ -569,17 +579,22 @@ bool ParseCommandLine(const std::vector<std::string>& args,
         fprintf(stderr, "Duplicate --use-renderer argument\n");
         return false;
       }
+#if defined(PDF_USE_AGG)
       if (value == "agg") {
         options->use_renderer_type = RendererType::kAgg;
+      }
+#endif  // defined(PDF_USE_AGG)
 #ifdef _WIN32
-      } else if (value == "gdi") {
+      if (value == "gdi") {
         options->use_renderer_type = RendererType::kGdi;
+      }
 #endif  // _WIN32
 #if defined(PDF_USE_SKIA)
-      } else if (value == "skia") {
+      if (value == "skia") {
         options->use_renderer_type = RendererType::kSkia;
+      }
 #endif  // defined(PDF_USE_SKIA)
-      } else {
+      if (options->use_renderer_type == RendererType::kDefault) {
         fprintf(stderr, "Invalid --use-renderer argument\n");
         return false;
       }
@@ -587,9 +602,21 @@ bool ParseCommandLine(const std::vector<std::string>& args,
     } else if (cur_arg == "--render-premultiplied") {
       options->render_premultiplied_alpha = true;
 #endif  // defined(PDF_USE_SKIA)
+#if defined(PDF_ENABLE_FREETYPE)
+    } else if (cur_arg == "--freetype") {
+      if (options->use_font_library_type != FontLibraryType::kDefault) {
+        fprintf(stderr, "Duplicate or conflicting --freetype argument\n");
+        return false;
+      }
+      options->use_font_library_type = FontLibraryType::kFreetype;
+#endif  // defined(PDF_ENABLE_FONTATIONS)
 #if defined(PDF_ENABLE_FONTATIONS)
     } else if (cur_arg == "--fontations") {
-      options->use_fontations_backend = true;
+      if (options->use_font_library_type != FontLibraryType::kDefault) {
+        fprintf(stderr, "Duplicate or conflicting --fontations argument\n");
+        return false;
+      }
+      options->use_font_library_type = FontLibraryType::kFontations;
 #endif  // defined(PDF_ENABLE_FONTATIONS)
 #ifdef PDF_ENABLE_V8
     } else if (cur_arg == "--disable-javascript") {
@@ -2021,7 +2048,6 @@ int main(int argc, const char* argv[]) {
   config.m_pIsolate = nullptr;
   config.m_v8EmbedderSlot = 0;
   config.m_pPlatform = nullptr;
-  config.m_FontLibraryType = FPDF_FONTBACKENDTYPE_FREETYPE;
 #ifdef PDF_ENABLE_BROTLI
   config.m_BrotliEnabled = options.enable_brotli;
 #else
@@ -2038,18 +2064,17 @@ int main(int argc, const char* argv[]) {
     case RendererType::kDefault:
       config.m_RendererType = GetDefaultRendererType();
       break;
-
+#if defined(PDF_USE_AGG)
     case RendererType::kAgg:
       config.m_RendererType = FPDF_RENDERERTYPE_AGG;
       break;
-
+#endif  // defined(PDF_USE_AGG)
 #ifdef _WIN32
     case RendererType::kGdi:
       // GDI renderer uses `FPDF_RenderPage()`, rather than a renderer type.
       config.m_RendererType = GetDefaultRendererType();
       break;
 #endif  // _WIN32
-
 #if defined(PDF_USE_SKIA)
     case RendererType::kSkia:
       config.m_RendererType = FPDF_RENDERERTYPE_SKIA;
@@ -2057,11 +2082,22 @@ int main(int argc, const char* argv[]) {
 #endif  // defined(PDF_USE_SKIA)
   }
 
+  switch (options.use_font_library_type) {
+    case FontLibraryType::kDefault:
+      config.m_FontLibraryType = GetDefaultFontLibraryType();
+      break;
+#if defined(PDF_ENABLE_FREETYPE)
+    case FontLibraryType::kFreetype:
+      config.m_FontLibraryType = FPDF_FONTBACKENDTYPE_FREETYPE;
+      break;
+#endif  // defined(PDF_ENABLE_FREETYPE)
 #if defined(PDF_ENABLE_FONTATIONS)
-  if (options.use_fontations_backend) {
-    config.m_FontLibraryType = FPDF_FONTBACKENDTYPE_FONTATIONS;
-  }
+    case FontLibraryType::kFontations:
+      config.m_FontLibraryType = FPDF_FONTBACKENDTYPE_FONTATIONS;
+      break;
 #endif  // defined(PDF_ENABLE_FONTATIONS)
+  }
+
 #if defined(PDF_USE_SKIA)
 #if defined(BUILD_WITH_CHROMIUM)
   // Needed to support Chromium's copy of Skia, which uses a

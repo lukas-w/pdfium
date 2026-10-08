@@ -22,3 +22,11 @@ FPDF_RENDERER_TYPE GetDefaultRendererType() {
   return FPDF_RENDERERTYPE_AGG;
 #endif
 }
+
+FPDF_FONT_BACKEND_TYPE GetDefaultFontLibraryType() {
+#if defined(PDF_ENABLE_FREETYPE)
+  return FPDF_FONTBACKENDTYPE_FREETYPE;
+#else
+  return FPDF_FONTBACKENDTYPE_FONTATIONS;
+#endif
+}

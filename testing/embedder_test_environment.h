@@ -32,14 +32,16 @@ class EmbedderTestEnvironment : public testing::Environment {
   void AddFlags(int argc, char** argv);
 
   bool write_pngs() const { return write_pngs_; }
-  bool fontations() const { return fontations_; }
+  bool fontations() const {
+    return font_library_type_ == FPDF_FONTBACKENDTYPE_FONTATIONS;
+  }
 
  private:
   void AddFlag(const std::string& flag);
 
   int version_ = 6;
   FPDF_RENDERER_TYPE renderer_type_;
-  bool fontations_ = false;
+  FPDF_FONT_BACKEND_TYPE font_library_type_;
   bool write_pngs_ = false;
   bool brotli_enabled_ = false;
   TestFonts test_fonts_;

@@ -20,4 +20,9 @@ bool ParseSwitchKeyValue(const std::string& arg,
 // based upon command line options.
 FPDF_RENDERER_TYPE GetDefaultRendererType();
 
+// Identifies the compile-time default font library to use for font rendering.
+// Used as part of support to override the font library at runtime based upon
+// command line options.
+FPDF_FONT_BACKEND_TYPE GetDefaultFontLibraryType();
+
 #endif  // TESTING_COMMAND_LINE_HELPERS_H_
