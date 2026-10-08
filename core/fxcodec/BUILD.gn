@@ -257,6 +257,7 @@ pdfium_unittest_source_set("unittests") {
     "basic/a85_unittest.cpp",
     "basic/rle_unittest.cpp",
     "flate/flatemodule_unittest.cpp",
+    "image_predictors_unittest.cpp",
     "jbig2/jbig2_bit_stream_unittest.cpp",
     "jbig2/jbig2_image_unittest.cpp",
     "jpeg/jpegmodule_unittest.cpp",

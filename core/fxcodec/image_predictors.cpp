@@ -7,6 +7,7 @@
 #include <stdlib.h>
 
 #include <algorithm>
+#include <array>
 #include <optional>
 #include <utility>
 
@@ -25,14 +26,150 @@ namespace fxcodec {
 namespace {
 
 uint8_t PaethPredictor(uint8_t a, uint8_t b, uint8_t c) {
-  int p = static_cast<int>(a) + b - c;
-  int pa = abs(p - a);
-  int pb = abs(p - b);
-  int pc = abs(p - c);
-  if (pa <= pb && pa <= pc) {
-    return a;
+  const int bc = static_cast<int>(b) - c;
+  const int ac = static_cast<int>(a) - c;
+  const int pa = abs(bc);
+  const int pb = abs(ac);
+  const int pc = abs(ac + bc);
+  // Eagerly selecting between `b` and `c` avoids a short-circuit branch across
+  // `&&` and lets the compiler emit two branchless conditional selects.
+  const uint8_t bc_best = pb <= pc ? b : c;
+  return (pa <= pb && pa <= pc) ? a : bc_best;
+}
+
+// Fixed-size pixel view for per-pixel register carry in Sub, Average, and Paeth
+// predictors. PNG predictors operate on raw bytes and never care about color
+// order.
+template <size_t Bpp>
+using Pixel = std::array<uint8_t, Bpp>;
+
+template <size_t Bpp>
+void PredictSubRest(pdfium::span<uint8_t> dest_span,
+                    pdfium::span<const uint8_t> src_span) {
+  const size_t row_size = dest_span.size();
+  if (row_size <= Bpp) {
+    return;
   }
-  return pb <= pc ? b : c;
+  auto src_px = fxcrt::reinterpret_span<const Pixel<Bpp>>(src_span);
+  auto dest_px = fxcrt::reinterpret_span<Pixel<Bpp>>(dest_span);
+  Pixel<Bpp> left = dest_px.front();
+  for (auto [s, d] : fxcrt::Zip(src_px.subspan(1u), dest_px.subspan(1u))) {
+    for (size_t c = 0; c < Bpp; ++c) {
+      left[c] += s[c];
+    }
+    d = left;
+  }
+  for (size_t i = row_size - row_size % Bpp; i < row_size; ++i) {
+    dest_span[i] = src_span[i] + dest_span[i - Bpp];
+  }
+}
+
+void PredictSubRow(pdfium::span<uint8_t> dest_span,
+                   pdfium::span<const uint8_t> src_span,
+                   size_t bpp,
+                   size_t lead) {
+  // The lead bytes have a zero left neighbor.
+  fxcrt::Copy(src_span.first(lead), dest_span);
+  // A Sub-filtered row's channels form independent additive chains; the
+  // generic loop below re-reads dest_span[i - bpp], a value it stored `bpp`
+  // iterations earlier, which serializes the loop on store-to-load
+  // forwarding. Walking the row as pixel arrays and carrying the running
+  // channel values in a local removes that dependency (and, via fxcrt::Zip(),
+  // all per-element bounds checks).
+  switch (bpp) {
+    case 1:
+      PredictSubRest<1>(dest_span, src_span);
+      return;
+    case 2:
+      PredictSubRest<2>(dest_span, src_span);
+      return;
+    case 3:
+      PredictSubRest<3>(dest_span, src_span);
+      return;
+    case 4:
+      PredictSubRest<4>(dest_span, src_span);
+      return;
+    default: {
+      const size_t row_size = dest_span.size();
+      for (size_t i = lead; i < row_size; ++i) {
+        dest_span[i] = src_span[i] + dest_span[i - bpp];
+      }
+      return;
+    }
+  }
+}
+
+template <size_t Bpp>
+void PredictAverageFirstRowRest(pdfium::span<uint8_t> dest_span,
+                                pdfium::span<const uint8_t> src_span) {
+  const size_t row_size = dest_span.size();
+  if (row_size <= Bpp) {
+    return;
+  }
+  auto src_px = fxcrt::reinterpret_span<const Pixel<Bpp>>(src_span);
+  auto dest_px = fxcrt::reinterpret_span<Pixel<Bpp>>(dest_span);
+  Pixel<Bpp> left = dest_px.front();
+  for (auto [s, d] : fxcrt::Zip(src_px.subspan(1u), dest_px.subspan(1u))) {
+    for (size_t c = 0; c < Bpp; ++c) {
+      left[c] = s[c] + left[c] / 2;
+    }
+    d = left;
+  }
+  for (size_t i = row_size - row_size % Bpp; i < row_size; ++i) {
+    dest_span[i] = src_span[i] + dest_span[i - Bpp] / 2;
+  }
+}
+
+template <size_t Bpp>
+void PredictAverageRest(pdfium::span<uint8_t> dest_span,
+                        pdfium::span<const uint8_t> src_span,
+                        pdfium::span<const uint8_t> last_span) {
+  const size_t row_size = dest_span.size();
+  if (row_size <= Bpp) {
+    return;
+  }
+  auto src_px = fxcrt::reinterpret_span<const Pixel<Bpp>>(src_span);
+  auto last_px = fxcrt::reinterpret_span<const Pixel<Bpp>>(last_span);
+  auto dest_px = fxcrt::reinterpret_span<Pixel<Bpp>>(dest_span);
+  Pixel<Bpp> left = dest_px.front();
+  for (auto [s, u, d] : fxcrt::Zip(src_px.subspan(1u), last_px.subspan(1u),
+                                   dest_px.subspan(1u))) {
+    for (size_t c = 0; c < Bpp; ++c) {
+      left[c] = s[c] + (u[c] + left[c]) / 2;
+    }
+    d = left;
+  }
+  for (size_t i = row_size - row_size % Bpp; i < row_size; ++i) {
+    dest_span[i] = src_span[i] + (last_span[i] + dest_span[i - Bpp]) / 2;
+  }
+}
+
+template <size_t Bpp>
+void PredictPaethRest(pdfium::span<uint8_t> dest_span,
+                      pdfium::span<const uint8_t> src_span,
+                      pdfium::span<const uint8_t> last_span) {
+  const size_t row_size = dest_span.size();
+  if (row_size <= Bpp) {
+    return;
+  }
+  auto src_px = fxcrt::reinterpret_span<const Pixel<Bpp>>(src_span);
+  auto last_px = fxcrt::reinterpret_span<const Pixel<Bpp>>(last_span);
+  auto dest_px = fxcrt::reinterpret_span<Pixel<Bpp>>(dest_span);
+  Pixel<Bpp> left = dest_px.front();
+  Pixel<Bpp> upper_left = last_px.front();
+  for (auto [s, u, d] : fxcrt::Zip(src_px.subspan(1u), last_px.subspan(1u),
+                                   dest_px.subspan(1u))) {
+    for (size_t c = 0; c < Bpp; ++c) {
+      left[c] = s[c] + PaethPredictor(left[c], u[c], upper_left[c]);
+    }
+    upper_left = u;
+    d = left;
+  }
+  for (size_t i = row_size - row_size % Bpp; i < row_size; ++i) {
+    dest_span[i] =
+        src_span[i] +
+        PaethPredictor(dest_span[i - Bpp], last_span[i], last_span[i - Bpp]);
+  }
 }
 
 std::optional<DataVector<uint8_t>> PngPredictor(
@@ -138,22 +275,6 @@ const DataAndBytesConsumed ApplyPredictor(DataVector<uint8_t> decoded_buf,
   NOTREACHED();
 }
 
-// Fixed-size pixel views for the Sub filter's per-channel fast paths. The
-// channel names are deliberately positional: PNG predictors operate on raw
-// bytes and never care about color order.
-struct Pixel3 {
-  uint8_t c0;
-  uint8_t c1;
-  uint8_t c2;
-};
-
-struct Pixel4 {
-  uint8_t c0;
-  uint8_t c1;
-  uint8_t c2;
-  uint8_t c3;
-};
-
 void PngPredictLine(pdfium::span<uint8_t> dest_span,
                     pdfium::span<const uint8_t> src_span,
                     pdfium::span<const uint8_t> last_span,
@@ -181,51 +302,7 @@ void PngPredictLine(pdfium::span<uint8_t> dest_span,
   switch (tag) {
     case 1: {
       // Sub: left neighbor only, so the first row needs no special casing.
-      // The lead bytes have a zero left neighbor.
-      fxcrt::Copy(src_span.first(lead), dest_span);
-      // A Sub-filtered row's channels form independent additive chains; the
-      // generic loop below re-reads dest_span[i - bpp], a value it stored `bpp`
-      // iterations earlier, which serializes the loop on store-to-load
-      // forwarding. For the common 3- and 4-byte pixel sizes, walking the
-      // row as pixel structs and carrying the running channel values in a
-      // local removes that dependency (and, via fxcrt::Zip(), all
-      // per-element bounds checks).
-      if (bpp == 3 && row_size >= 3) {
-        auto src_px = fxcrt::reinterpret_span<const Pixel3>(src_span);
-        auto dest_px = fxcrt::reinterpret_span<Pixel3>(dest_span);
-        Pixel3 carry = dest_px.front();
-        for (auto [s, d] :
-             fxcrt::Zip(src_px.subspan(1u), dest_px.subspan(1u))) {
-          carry.c0 += s.c0;
-          carry.c1 += s.c1;
-          carry.c2 += s.c2;
-          d = carry;
-        }
-        for (size_t i = row_size - row_size % 3; i < row_size; ++i) {
-          dest_span[i] = src_span[i] + dest_span[i - 3];
-        }
-        break;
-      }
-      if (bpp == 4 && row_size >= 4) {
-        auto src_px = fxcrt::reinterpret_span<const Pixel4>(src_span);
-        auto dest_px = fxcrt::reinterpret_span<Pixel4>(dest_span);
-        Pixel4 carry = dest_px.front();
-        for (auto [s, d] :
-             fxcrt::Zip(src_px.subspan(1u), dest_px.subspan(1u))) {
-          carry.c0 += s.c0;
-          carry.c1 += s.c1;
-          carry.c2 += s.c2;
-          carry.c3 += s.c3;
-          d = carry;
-        }
-        for (size_t i = row_size - row_size % 4; i < row_size; ++i) {
-          dest_span[i] = src_span[i] + dest_span[i - 4];
-        }
-        break;
-      }
-      for (size_t i = lead; i < row_size; ++i) {
-        dest_span[i] = src_span[i] + dest_span[i - bpp];
-      }
+      PredictSubRow(dest_span, src_span, bpp, lead);
       break;
     }
     case 2: {
@@ -243,8 +320,24 @@ void PngPredictLine(pdfium::span<uint8_t> dest_span,
       // Average: (left + up) / 2, with the zero cases hoisted.
       if (last_span.empty()) {
         fxcrt::Copy(src_span.first(lead), dest_span);
-        for (size_t i = lead; i < row_size; ++i) {
-          dest_span[i] = src_span[i] + dest_span[i - bpp] / 2;
+        switch (bpp) {
+          case 1:
+            PredictAverageFirstRowRest<1>(dest_span, src_span);
+            break;
+          case 2:
+            PredictAverageFirstRowRest<2>(dest_span, src_span);
+            break;
+          case 3:
+            PredictAverageFirstRowRest<3>(dest_span, src_span);
+            break;
+          case 4:
+            PredictAverageFirstRowRest<4>(dest_span, src_span);
+            break;
+          default:
+            for (size_t i = lead; i < row_size; ++i) {
+              dest_span[i] = src_span[i] + dest_span[i - bpp] / 2;
+            }
+            break;
         }
         break;
       }
@@ -252,8 +345,25 @@ void PngPredictLine(pdfium::span<uint8_t> dest_span,
            fxcrt::Zip(src_span.first(lead), last_span, dest_span)) {
         d = s + u / 2;
       }
-      for (size_t i = lead; i < row_size; ++i) {
-        dest_span[i] = src_span[i] + (last_span[i] + dest_span[i - bpp]) / 2;
+      switch (bpp) {
+        case 1:
+          PredictAverageRest<1>(dest_span, src_span, last_span);
+          break;
+        case 2:
+          PredictAverageRest<2>(dest_span, src_span, last_span);
+          break;
+        case 3:
+          PredictAverageRest<3>(dest_span, src_span, last_span);
+          break;
+        case 4:
+          PredictAverageRest<4>(dest_span, src_span, last_span);
+          break;
+        default:
+          for (size_t i = lead; i < row_size; ++i) {
+            dest_span[i] =
+                src_span[i] + (last_span[i] + dest_span[i - bpp]) / 2;
+          }
+          break;
       }
       break;
     }
@@ -262,20 +372,33 @@ void PngPredictLine(pdfium::span<uint8_t> dest_span,
       // selects the left neighbor, so the first row reduces to Sub; with
       // left == upper_left == 0 (lead bytes) it always selects up.
       if (last_span.empty()) {
-        fxcrt::Copy(src_span.first(lead), dest_span);
-        for (size_t i = lead; i < row_size; ++i) {
-          dest_span[i] = src_span[i] + dest_span[i - bpp];
-        }
+        PredictSubRow(dest_span, src_span, bpp, lead);
         break;
       }
       for (auto [s, u, d] :
            fxcrt::Zip(src_span.first(lead), last_span, dest_span)) {
         d = s + u;
       }
-      for (size_t i = lead; i < row_size; ++i) {
-        dest_span[i] =
-            src_span[i] + PaethPredictor(dest_span[i - bpp], last_span[i],
-                                         last_span[i - bpp]);
+      switch (bpp) {
+        case 1:
+          PredictPaethRest<1>(dest_span, src_span, last_span);
+          break;
+        case 2:
+          PredictPaethRest<2>(dest_span, src_span, last_span);
+          break;
+        case 3:
+          PredictPaethRest<3>(dest_span, src_span, last_span);
+          break;
+        case 4:
+          PredictPaethRest<4>(dest_span, src_span, last_span);
+          break;
+        default:
+          for (size_t i = lead; i < row_size; ++i) {
+            dest_span[i] =
+                src_span[i] + PaethPredictor(dest_span[i - bpp], last_span[i],
+                                             last_span[i - bpp]);
+          }
+          break;
       }
       break;
     }
