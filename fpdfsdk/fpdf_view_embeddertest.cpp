@@ -18,11 +18,13 @@
 #include "fpdfsdk/cpdfsdk_helpers.h"
 #include "fpdfsdk/fpdf_view_c_api_test.h"
 #include "public/cpp/fpdf_scopers.h"
+#include "public/fpdf_doc.h"
 #include "public/fpdfview.h"
 #include "testing/embedder_test.h"
 #include "testing/embedder_test_constants.h"
 #include "testing/embedder_test_environment.h"
 #include "testing/fx_string_testhelpers.h"
+#include "testing/gmock/include/gmock/gmock.h"
 #include "testing/gtest/include/gtest/gtest.h"
 #include "testing/utils/file_util.h"
 #include "testing/utils/hash.h"
@@ -919,6 +921,57 @@ TEST_F(FPDFViewEmbedderTest, NamedDestsOldStyle) {
   ASSERT_TRUE(FPDF_GetNamedDest(document(), 1, buffer, &size));
   ASSERT_EQ(static_cast<int>(sizeof(kLastAlternate) * 2), size);
   EXPECT_EQ(kLastAlternate,
+            GetPlatformString(reinterpret_cast<FPDF_WIDESTRING>(buffer)));
+}
+
+TEST_F(FPDFViewEmbedderTest, NamedDestsOldStyleIndirect) {
+  ASSERT_TRUE(OpenDocument("named_dests_old_style_indirect.pdf"));
+  EXPECT_EQ(3u, FPDF_CountNamedDests(document()));
+
+  static constexpr char kIndirectArray[] = "IndirectArray";
+  static constexpr char kIndirectDangling[] = "IndirectDangling";
+  static constexpr char kIndirectDict[] = "IndirectDict";
+
+  char buffer[512];
+  static constexpr long kBufferSize = sizeof(buffer);
+  long size = kBufferSize;
+
+  // The first entry is an indirect destination array for the second page.
+  // Looking it up by index must give the same destination as by name.
+  FPDF_DEST dest = FPDF_GetNamedDestByName(document(), kIndirectArray);
+  ASSERT_TRUE(dest);
+  EXPECT_EQ(1, FPDFDest_GetDestPageIndex(document(), dest));
+  EXPECT_EQ(dest, FPDF_GetNamedDest(document(), 0, nullptr, &size));
+  ASSERT_EQ(static_cast<int>(sizeof(kIndirectArray) * 2), size);
+  ASSERT_EQ(dest, FPDF_GetNamedDest(document(), 0, buffer, &size));
+  ASSERT_EQ(static_cast<int>(sizeof(kIndirectArray) * 2), size);
+  EXPECT_EQ(kIndirectArray,
+            GetPlatformString(reinterpret_cast<FPDF_WIDESTRING>(buffer)));
+
+  // The second entry is a dangling reference, so neither lookup finds a
+  // destination, and FPDF_GetNamedDest() does not report the name.
+  EXPECT_FALSE(FPDF_GetNamedDestByName(document(), kIndirectDangling));
+  size = kBufferSize;
+  EXPECT_FALSE(FPDF_GetNamedDest(document(), 1, nullptr, &size));
+  EXPECT_EQ(0, size);
+  static constexpr char kPattern = 'X';
+  std::ranges::fill(buffer, kPattern);
+  size = kBufferSize;
+  EXPECT_FALSE(FPDF_GetNamedDest(document(), 1, buffer, &size));
+  EXPECT_EQ(kBufferSize, size);  // unmodified.
+  EXPECT_THAT(buffer, testing::Each(kPattern));
+
+  // The third entry is an indirect destination dictionary, whose /D array is
+  // for the third page.
+  dest = FPDF_GetNamedDestByName(document(), kIndirectDict);
+  ASSERT_TRUE(dest);
+  EXPECT_EQ(2, FPDFDest_GetDestPageIndex(document(), dest));
+  size = kBufferSize;
+  EXPECT_EQ(dest, FPDF_GetNamedDest(document(), 2, nullptr, &size));
+  ASSERT_EQ(static_cast<int>(sizeof(kIndirectDict) * 2), size);
+  ASSERT_EQ(dest, FPDF_GetNamedDest(document(), 2, buffer, &size));
+  ASSERT_EQ(static_cast<int>(sizeof(kIndirectDict) * 2), size);
+  EXPECT_EQ(kIndirectDict,
             GetPlatformString(reinterpret_cast<FPDF_WIDESTRING>(buffer)));
 }
 

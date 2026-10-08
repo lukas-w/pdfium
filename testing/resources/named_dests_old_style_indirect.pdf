@@ -1,0 +1,67 @@
+%PDF-1.7
+% ò¤ô
+1 0 obj <<
+  /Type /Catalog
+  /Pages 2 0 R
+  /Dests 6 0 R
+>>
+endobj
+2 0 obj <<
+  /Type /Pages
+  /Count 3
+  /Kids [3 0 R 4 0 R 5 0 R]
+>>
+endobj
+3 0 obj <<
+  /Type /Page
+  /Parent 2 0 R
+  /MediaBox [0 0 612 792]
+>>
+endobj
+4 0 obj <<
+  /Type /Page
+  /Parent 2 0 R
+  /MediaBox [0 0 612 792]
+>>
+endobj
+5 0 obj <<
+  /Type /Page
+  /Parent 2 0 R
+  /MediaBox [0 0 612 792]
+>>
+endobj
+% Old-style top-level Dests dictionary whose values are all indirect.
+% The keys are listed in sorted order, which is their index order.
+% IndirectDangling intentionally references non-existent object 999.
+6 0 obj <<
+  /IndirectArray 7 0 R
+  /IndirectDangling 999 0 R
+  /IndirectDict 8 0 R
+>>
+endobj
+% Destination array for the second page.
+7 0 obj [4 0 R /XYZ 0 792 0]
+endobj
+% Destination dictionary for the third page.
+8 0 obj <<
+  /D [5 0 R /Fit]
+>>
+endobj
+xref
+0 9
+0000000000 65535 f 
+0000000015 00000 n 
+0000000083 00000 n 
+0000000158 00000 n 
+0000000235 00000 n 
+0000000312 00000 n 
+0000000595 00000 n 
+0000000730 00000 n 
+0000000811 00000 n 
+trailer <<
+  /Root 1 0 R
+  /Size 9
+>>
+startxref
+850
+%%EOF

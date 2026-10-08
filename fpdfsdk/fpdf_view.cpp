@@ -1437,9 +1437,9 @@ FPDF_EXPORT FPDF_DEST FPDF_CALLCONV FPDF_GetNamedDest(FPDF_DOCUMENT document,
     ByteStringView bsName;
     CPDF_DictionaryLocker locker(pDest);
     for (const auto& it : locker) {
-      bsName = it.first.AsStringView();
-      pDestObj = it.second;
       if (i == index) {
+        bsName = it.first.AsStringView();
+        pDestObj = it.second->GetDirect();
         break;
       }
       i++;
