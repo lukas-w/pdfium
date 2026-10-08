@@ -108,9 +108,10 @@ if (pdf_enable_xfa) {
       "xfa_process_state.h",
     ]
     configs += [ ":fuzzer_config" ]
+    public_deps = [ "../../fxjs:gc" ]
     deps = [
-      "../../fxjs:gc",
       "//v8",
+      "//v8:v8_libplatform_headers",
     ]
   }
 }
@@ -132,6 +133,7 @@ source_set("fuzzer_init_public") {
       "../:test_support",
       "../../fxjs",
       "//v8",
+      "//v8:v8_config_headers",
       "//v8:v8_libplatform",
     ]
     if (pdf_enable_xfa) {
@@ -164,8 +166,8 @@ source_set("fuzzer_helper") {
     "pdfium_fuzzer_helper.h",
   ]
   configs += [ ":fuzzer_config" ]
+  public_deps = [ "../../:pdfium_public_headers" ]
   deps = [
-    "../../:pdfium_public_headers",
     "../../core/fxcrt",
     "../../fpdfsdk",
   ]
@@ -180,7 +182,7 @@ source_set("fuzzer_utils") {
     "pdfium_fuzzer_util.cc",
     "pdfium_fuzzer_util.h",
   ]
-  deps = [ "../../:pdfium_public_headers" ]
+  public_deps = [ "../../:pdfium_public_headers" ]
   include_dirs = [ "../.." ]
 }
 
@@ -219,6 +221,8 @@ template("pdfium_fuzzer") {
 
   source_set(impl_name) {
     testonly = true
+    # Explicitly specifying public = [] disables implicitly public headers in sources.
+    public = []
     sources = invoker.sources
     defines = []
     deps = []
@@ -292,6 +296,7 @@ if (pdf_enable_v8) {
         "../../xfa/fgas/crt",
         "../../xfa/fxfa",
         "../../xfa/fxfa/parser",
+        "//v8:cppgc_headers",
       ]
       public_fuzzer = true
     }

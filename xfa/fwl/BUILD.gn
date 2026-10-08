@@ -112,15 +112,16 @@ source_set("fwl") {
     "../../:pdfium_noshorten_config",
     "../:xfa_warnings",
   ]
-  deps = [
+  public_deps = [
     "../../core/fxcrt",
     "../../core/fxge",
     "../../fxbarcode",
     "../../fxjs:gc",
     "../fde",
-    "../fgas/font",
     "../fgas/graphics",
+    "//v8:cppgc_headers",
   ]
+  deps = [ "../fgas/font" ]
   visibility = [ "../../*" ]
 }
 

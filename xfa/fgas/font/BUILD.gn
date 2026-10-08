@@ -27,13 +27,15 @@ source_set("font") {
     "../../../:pdfium_noshorten_config",
     "../../:xfa_warnings",
   ]
+  public_deps = [
+    "../../../core/fxcrt",
+    "../../../core/fxge",
+  ]
   deps = [
     "../../../constants",
     "../../../core/fpdfapi/font",
     "../../../core/fpdfapi/page",
     "../../../core/fpdfapi/parser",
-    "../../../core/fxcrt",
-    "../../../core/fxge",
   ]
   visibility = [ "../../../*" ]
 }

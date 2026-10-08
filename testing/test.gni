@@ -42,7 +42,8 @@ template("test") {
           "$target_out_dir/${invoker.target_name}/${invoker.target_name}"
 
       executable(_exec_target) {
-        # Configs will always be defined since we set_defaults in BUILDCONFIG.gn.
+        # Configs will always be defined since we set_defaults in
+        # BUILDCONFIG.gn.
         configs = []
         data_deps = []
         forward_variables_from(invoker,
@@ -94,6 +95,7 @@ template("test") {
       if (defined(invoker.add_unwind_tables_in_apk) &&
           invoker.add_unwind_tables_in_apk) {
         _unwind_table_asset_name = "${target_name}_unwind_assets"
+
         unwind_table_asset(_unwind_table_asset_name) {
           testonly = true
           library_target = _library_target
@@ -102,7 +104,8 @@ template("test") {
       }
 
       shared_library(_library_target) {
-        # Configs will always be defined since we set_defaults in BUILDCONFIG.gn.
+        # Configs will always be defined since we set_defaults in
+        # BUILDCONFIG.gn.
         configs = []  # Prevent list overwriting warning.
         configs = invoker.configs
         testonly = true
@@ -118,6 +121,7 @@ template("test") {
           deps += [ "//testing/android/native_test:native_test_native_code" ]
         }
       }
+
       unittest_apk(_apk_target) {
         forward_variables_from(invoker, _apk_specific_vars)
         shared_library = ":$_library_target"
@@ -260,6 +264,9 @@ template("pdfium_unittest_source_set") {
 
     testonly = true
     sources = invoker.sources
+
+    # Explicitly specifying public disables implictly public headers in sources.
+    public = []
     configs += [ _pdfium_root_dir + ":pdfium_core_config" ]
     if (defined(invoker.configs)) {
       configs += invoker.configs
@@ -279,6 +286,9 @@ template("pdfium_embeddertest_source_set") {
 
     testonly = true
     sources = invoker.sources
+
+    # Explicitly specifying public disables implictly public headers in sources.
+    public = []
     configs += [ _pdfium_root_dir + ":pdfium_core_config" ]
     if (defined(invoker.configs)) {
       configs += invoker.configs

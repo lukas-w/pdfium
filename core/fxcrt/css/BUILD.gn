@@ -55,8 +55,9 @@ source_set("css") {
     "../../../:pdfium_strict_config",
     "../../../:pdfium_noshorten_config",
   ]
-  deps = [ "../" ]
+
   visibility = [ "../../../*" ]
+  public_deps = [ "../../fxcrt" ]
 }
 
 pdfium_unittest_source_set("unittests") {

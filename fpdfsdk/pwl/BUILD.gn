@@ -39,14 +39,16 @@ source_set("pwl") {
     "../../:pdfium_strict_config",
     "../../:pdfium_noshorten_config",
   ]
-  deps = [
+  public_deps = [
     "../../:pdfium_public_headers",
-    "../../constants",
-    "../../core/fpdfapi/font",
-    "../../core/fpdfapi/render",
     "../../core/fpdfdoc",
     "../../core/fxcrt",
     "../../core/fxge",
+  ]
+  deps = [
+    "../../constants",
+    "../../core/fpdfapi/font",
+    "../../core/fpdfapi/render",
   ]
   visibility = [ "../../*" ]
 }
@@ -58,13 +60,15 @@ source_set("embedder_test_support") {
     "cpwl_combo_box_embeddertest.h",
   ]
   configs += [ "../../:pdfium_strict_config" ]
+  public_deps = [
+    "../../testing:embedder_test_support",
+    "//testing/gtest",
+  ]
   deps = [
     ":pwl",
     "../:fpdfsdk",
     "../../:pdfium_public_headers",
-    "../../testing:embedder_test_support",
     "../formfiller",
-    "//testing/gtest",
   ]
 }
 

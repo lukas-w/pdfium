@@ -682,16 +682,19 @@ source_set("parser") {
     "../../../:pdfium_noshorten_config",
     "../../:xfa_warnings",
   ]
-  deps = [
-    "../../../core/fxcodec",
+  public_deps = [
     "../../../core/fxcrt",
     "../../../core/fxge",
     "../../../fxjs",
     "../../../fxjs:gc",
-    "../../fde",
     "../../fgas/crt",
-    "../../fgas/font",
     "../../fgas/graphics",
+    "//v8:cppgc_headers",
+  ]
+  deps = [
+    "../../../core/fxcodec",
+    "../../fde",
+    "../../fgas/font",
   ]
   visibility = [ "../../../*" ]
 }
@@ -713,6 +716,8 @@ pdfium_unittest_source_set("unittests") {
     ":parser",
     "../../../fxjs",
     "../../../fxjs:gc",
+    "../../../testing:test_support",
+    "//v8:cppgc_headers",
   ]
   pdfium_root_dir = "../../../"
 }

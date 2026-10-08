@@ -82,14 +82,17 @@ source_set("fpdfdoc") {
     "../../:pdfium_strict_config",
     "../../:pdfium_noshorten_config",
   ]
-  deps = [
+  public_deps = [
     "../../constants",
-    "../fpdfapi/font",
-    "../fpdfapi/page",
     "../fpdfapi/parser",
     "../fpdfapi/render",
     "../fxcrt",
     "../fxge",
+  ]
+  deps = [
+    "../fpdfapi/font",
+    "../fpdfapi/page",
+    "//third_party/abseil-cpp:absl",
   ]
   visibility = [ "../../*" ]
 }
@@ -116,6 +119,7 @@ pdfium_unittest_source_set("unittests") {
   deps = [
     ":fpdfdoc",
     "../../constants",
+    "../../testing:test_support",
     "../fpdfapi/font",
     "../fpdfapi/page",
     "../fpdfapi/page:unit_test_support",

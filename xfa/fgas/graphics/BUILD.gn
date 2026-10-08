@@ -24,9 +24,10 @@ source_set("graphics") {
     "../../../:pdfium_noshorten_config",
     "../../:xfa_warnings",
   ]
-  deps = [
+  public_deps = [
     "../../../core/fxcrt",
     "../../../core/fxge",
   ]
+
   visibility = [ "../../../*" ]
 }

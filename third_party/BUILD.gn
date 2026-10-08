@@ -257,7 +257,7 @@ if (pdf_use_agg) {
       "agg23/agg_vcgen_stroke.h",
       "agg23/agg_vertex_sequence.h",
     ]
-    deps = [ "../core/fxcrt" ]
+    public_deps = [ "../core/fxcrt" ]
   }
 }
 

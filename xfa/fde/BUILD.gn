@@ -22,12 +22,12 @@ source_set("fde") {
     "../../:pdfium_noshorten_config",
     "../:xfa_warnings",
   ]
-  deps = [
+  public_deps = [
     "../../core/fxcrt",
     "../../core/fxge",
-    "../fgas/font",
     "../fgas/layout",
   ]
+  deps = [ "../fgas/font" ]
   visibility = [ "../../*" ]
 }
 
@@ -40,6 +40,8 @@ pdfium_unittest_source_set("unittests") {
     ":fde",
     "../../core/fdrm",
     "../../core/fxge",
+    "../../testing:test_environments",
+    "../../testing:test_support",
     "../fgas/font",
   ]
   pdfium_root_dir = "../../"

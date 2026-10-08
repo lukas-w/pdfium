@@ -128,7 +128,10 @@ source_set("fxcodec") {
     "../../:pdfium_strict_config",
     "../../:pdfium_noshorten_config",
   ]
-  public_deps = [ "../fxcrt" ]
+  public_deps = [
+    "../../third_party:fx_lcms2",
+    "../fxcrt",
+  ]
   deps = [
     "../../third_party:lcms2",
     "../../third_party:libopenjpeg2",
@@ -141,7 +144,10 @@ source_set("fxcodec") {
       "brotli/brotli_decoder.cpp",
       "brotli/brotli_decoder.h",
     ]
-    deps += [ "//third_party/brotli:dec" ]
+    deps += [
+      "//third_party/brotli:dec",
+      "//third_party/brotli:headers",
+    ]
   }
   if (pdf_enable_xfa) {
     sources += [
@@ -161,6 +167,7 @@ source_set("fxcodec") {
       "tiff/libtiff_tiff_context.cpp",
       "tiff/libtiff_tiff_context.h",
     ]
+    public_deps += [ "../fxge" ]
     deps += [ "../../third_party:tiff" ]
     if (pdf_enable_rust_bmp) {
       sources += [
@@ -217,6 +224,7 @@ source_set("fxcodec") {
         "codec_memory_sk_stream.cpp",
         "codec_memory_sk_stream.h",
       ]
+      public_deps += [ "//skia" ]
     }
   }
 
@@ -243,6 +251,7 @@ source_set("fxcodec") {
       "jpeg/jpeg_common.c",
       "jpeg/jpeg_common.h",
     ]
+    public_deps += [ "//third_party/libjpeg_turbo:libjpeg_headers" ]
     deps += [ "//third_party:jpeg" ]
   }
 
@@ -265,6 +274,8 @@ pdfium_unittest_source_set("unittests") {
   ]
   deps = [
     ":fxcodec",
+    "../../testing:path_service",
+    "../../testing:test_support",
     "../../third_party:libopenjpeg2",
     "../fpdfapi/parser",
     "../fxge",

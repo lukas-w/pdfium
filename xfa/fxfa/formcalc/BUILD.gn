@@ -23,10 +23,12 @@ source_set("formcalc") {
     "../../../:pdfium_noshorten_config",
     "../../:xfa_warnings",
   ]
-  deps = [
+  public_deps = [
     "../../../core/fxcrt",
     "../../../fxjs:gc",
+    "//v8:cppgc_headers",
   ]
+
   visibility = [ "../../../*" ]
 }
 
@@ -39,6 +41,7 @@ pdfium_unittest_source_set("unittests") {
   deps = [
     ":formcalc",
     "../../../fxjs:gc",
+    "//v8:cppgc_headers",
   ]
   pdfium_root_dir = "../../../"
 }

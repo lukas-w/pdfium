@@ -29,12 +29,13 @@ source_set("layout") {
     "../../../:pdfium_noshorten_config",
     "../../:xfa_warnings",
   ]
-  deps = [
+  public_deps = [
     "../../../core/fxcrt",
-    "../../../fxjs",
     "../../../fxjs:gc",
     "../parser",
+    "//v8:cppgc_headers",
   ]
+  deps = [ "../../../fxjs" ]
   visibility = [ "../../../*" ]
 }
 

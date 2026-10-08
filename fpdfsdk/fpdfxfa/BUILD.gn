@@ -22,22 +22,26 @@ source_set("fpdfxfa") {
     "../../:pdfium_strict_config",
     "../../:pdfium_noshorten_config",
   ]
-  deps = [
+  public_deps = [
     "../../:pdfium_public_headers",
-    "../../constants",
     "../../core/fpdfapi/page",
     "../../core/fpdfapi/parser",
-    "../../core/fpdfapi/render",
-    "../../core/fxcodec",
     "../../core/fxcrt",
-    "../../fxbarcode",
     "../../fxjs",
     "../../fxjs:gc",
+    "../../xfa/fxfa",
+    "//v8:cppgc_headers",
+  ]
+  deps = [
+    "../../constants",
+    "../../core/fpdfapi/render",
+    "../../core/fxcodec",
+    "../../fxbarcode",
     "../../xfa/fgas/font",
     "../../xfa/fgas/graphics",
     "../../xfa/fwl",
-    "../../xfa/fxfa",
     "../../xfa/fxfa/parser",
+    "//v8:v8_headers",
   ]
   visibility = [ "../../*" ]
 }
@@ -53,6 +57,8 @@ pdfium_embeddertest_source_set("embeddertests") {
     ":fpdfxfa",
     "../:fpdfsdk",
     "../../fxjs",
+    "../../testing:path_service",
+    "../../testing:test_environments",
   ]
   pdfium_root_dir = "../../"
 }

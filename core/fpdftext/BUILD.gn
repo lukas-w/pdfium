@@ -17,11 +17,13 @@ source_set("fpdftext") {
     "unicodenormalizationdata.h",
   ]
   configs += [ "../../:pdfium_strict_config" ]
+  public_deps = [
+    "../fpdfapi/page",
+    "../fxcrt",
+  ]
   deps = [
     "../fpdfapi/font",
-    "../fpdfapi/page",
     "../fpdfapi/parser",
-    "../fxcrt",
   ]
   visibility = [ "../../*" ]
 }

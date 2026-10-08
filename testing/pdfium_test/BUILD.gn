@@ -18,13 +18,15 @@ executable("pdfium_test") {
     "write.cc",
     "write.h",
   ]
+  public_deps = [ "../../:pdfium_public_headers" ]
 
   # Note: One should write programs that depend on ../../:pdfium. Whereas this
   # test program does not set a good example, and depends on PDFium internals,
   # as well as test support code, for convenience.
   deps = [
+    "../:path_service",
     "../:test_support",
-    "../../:pdfium_public_headers",
+    "../../core/fxcrt",
     "../../fpdfsdk",
     "../png_codec",
     "//build/win:default_exe_manifest",
@@ -44,8 +46,10 @@ executable("pdfium_test") {
 
   if (pdf_enable_v8) {
     deps += [
+      "//v8:v8_config_headers",
       "//v8:v8_headers",
       "//v8:v8_libplatform",
+      "//v8:v8_libplatform_headers",
     ]
     include_dirs = [ "//v8" ]
     configs += [ "//v8:external_startup_data" ]

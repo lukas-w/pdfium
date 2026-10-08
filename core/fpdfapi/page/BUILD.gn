@@ -111,15 +111,14 @@ source_set("page") {
   ]
   configs += [ "../../../:pdfium_strict_config" ]
   public_deps = [
-    "../../fxge",
-    "../parser",
-  ]
-  deps = [
     "../../../constants",
     "../../fxcodec",
     "../../fxcrt",
+    "../../fxge",
     "../font",
+    "../parser",
   ]
+  deps = [ "//third_party/abseil-cpp:absl" ]
   allow_circular_includes_from = []
   if (pdf_use_skia) {
     allow_circular_includes_from += [ "../../fxge" ]
@@ -134,10 +133,8 @@ source_set("unit_test_support") {
     "test_with_page_module.h",
   ]
   configs += [ "../../../:pdfium_strict_config" ]
-  deps = [
-    "../page",
-    "//testing/gtest",
-  ]
+  public_deps = [ "//testing/gtest" ]
+  deps = [ "../page" ]
 }
 
 pdfium_unittest_source_set("unittests") {
@@ -157,6 +154,7 @@ pdfium_unittest_source_set("unittests") {
     ":page",
     ":unit_test_support",
     "../../../constants",
+    "../../../testing:path_service",
     "../parser",
     "../parser:unit_test_support",
     "../render",

@@ -115,8 +115,8 @@ source_set("fxge") {
     "../../:pdfium_strict_config",
     "../../:pdfium_noshorten_config",
   ]
-  deps = [ "../fxcrt" ]
-  public_deps = []
+  public_deps = [ "../fxcrt" ]
+  deps = [ "//third_party/abseil-cpp:absl" ]
   defines = []
 
   if (pdf_enable_freetype) {
@@ -288,6 +288,8 @@ pdfium_unittest_source_set("unittests") {
   ]
   deps = [
     ":fxge",
+    "../../testing:path_service",
+    "../../testing:test_support",
     "../fpdfapi/page",
     "../fpdfapi/parser",
     "../fxcrt:test_support",

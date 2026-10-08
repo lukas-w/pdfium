@@ -42,13 +42,13 @@ source_set("font") {
     "../../../:pdfium_strict_config",
     "../../../:pdfium_noshorten_config",
   ]
-  deps = [
-    "../../../constants",
+  public_deps = [
     "../../fxcrt",
     "../../fxge",
     "../cmaps",
     "../parser",
   ]
+  deps = [ "../../../constants" ]
   visibility = [ "../../../*" ]
   if (is_mac) {
     frameworks = [ "CoreFoundation.framework" ]

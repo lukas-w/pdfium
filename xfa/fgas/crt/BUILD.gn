@@ -21,10 +21,8 @@ source_set("crt") {
     "../../../:pdfium_noshorten_config",
     "../../:xfa_warnings",
   ]
-  deps = [
-    "../../../core/fpdfapi/page",
-    "../../../core/fxcrt",
-  ]
+  public_deps = [ "../../../core/fxcrt" ]
+  deps = [ "../../../core/fpdfapi/page" ]
   visibility = [ "../../../*" ]
 }
 
@@ -37,7 +35,9 @@ pdfium_unittest_source_set("unittests") {
     ":crt",
     "../../../core/fpdfapi/page",
     "../../../fxjs:gc",
+    "../../../testing:test_support",
     "../../fxfa/parser",
+    "//v8:cppgc_headers",
   ]
   pdfium_root_dir = "../../../"
 }

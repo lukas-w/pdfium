@@ -18,12 +18,16 @@ source_set("fdrm") {
     "../../:pdfium_strict_config",
     "../../:pdfium_noshorten_config",
   ]
-  deps = [ "../fxcrt" ]
+
   visibility = [ "../../*" ]
+  public_deps = [ "../fxcrt" ]
 }
 
 pdfium_unittest_source_set("unittests") {
   sources = [ "fx_crypt_unittest.cpp" ]
-  deps = [ ":fdrm" ]
+  deps = [
+    ":fdrm",
+    "../../testing:test_support",
+  ]
   pdfium_root_dir = "../../"
 }

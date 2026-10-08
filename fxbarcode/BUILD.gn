@@ -130,11 +130,11 @@ source_set("fxbarcode") {
     "qrcode/BC_QRCoderVersion.cpp",
     "qrcode/BC_QRCoderVersion.h",
   ]
-  deps = [
+  public_deps = [
     "../core/fxcrt",
     "../core/fxge",
-    "../third_party:bigint",
   ]
+  deps = [ "../third_party:bigint" ]
   configs += [ "../:pdfium_strict_config" ]
   visibility = [ "../*" ]
 }
@@ -157,6 +157,7 @@ pdfium_unittest_source_set("unittests") {
   deps = [
     ":fxbarcode",
     "../core/fxge",
+    "../testing:test_support",
   ]
   pdfium_root_dir = "../"
 }

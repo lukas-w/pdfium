@@ -217,6 +217,7 @@ source_set("pdfium_public_headers_impl") {
     "public/fpdf_transformpage.h",
     "public/fpdfview.h",
   ]
+  visibility = [ ":*" ]
 }
 
 group("pdfium_public_headers") {
@@ -330,6 +331,8 @@ test("pdfium_unittests") {
     "core/fxcrt:unittests",
     "core/fxge:unittests",
     "fpdfsdk:unittests",
+    "testing:test_environments",
+    "testing:test_support",
     "testing:unit_test_support",
     "testing:unittests",
     "testing/png_codec:unittests",
@@ -393,6 +396,8 @@ test("pdfium_embeddertests") {
     "fpdfsdk:embeddertests",
     "fpdfsdk/formfiller:embeddertests",
     "fpdfsdk/pwl:embeddertests",
+    "testing:test_environments",
+    "testing:test_support",
     "testing/png_codec",
     "//testing/gmock",
     "//testing/gtest",

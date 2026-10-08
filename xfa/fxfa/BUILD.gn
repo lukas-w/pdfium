@@ -84,24 +84,27 @@ source_set("fxfa") {
     "fxfa.h",
     "fxfa_basic.h",
   ]
-  deps = [
-    "../../constants",
-    "../../core/fpdfapi/parser",
+  public_deps = [
     "../../core/fpdfdoc",
     "../../core/fxcodec",
     "../../core/fxcrt",
     "../../core/fxcrt/css",
     "../../core/fxge",
     "../../fxbarcode",
-    "../../fxjs",
     "../../fxjs:gc",
-    "../fde",
-    "../fgas/font",
-    "../fgas/graphics",
     "../fgas/layout",
     "../fwl",
     "layout",
     "parser",
+    "//v8:cppgc_headers",
+  ]
+  deps = [
+    "../../constants",
+    "../../core/fpdfapi/parser",
+    "../../fxjs",
+    "../fde",
+    "../fgas/font",
+    "../fgas/graphics",
   ]
   allow_circular_includes_from = [
     "../../fxjs",
@@ -125,6 +128,7 @@ pdfium_unittest_source_set("unittests") {
   deps = [
     ":fxfa",
     "../../fxjs:gc",
+    "//v8:cppgc_headers",
   ]
   pdfium_root_dir = "../../"
 }

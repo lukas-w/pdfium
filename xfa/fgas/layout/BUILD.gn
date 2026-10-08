@@ -32,8 +32,8 @@ source_set("layout") {
     "fgas_linebreak.cpp",
     "fgas_linebreak.h",
   ]
+  public_deps = [ "../../../core/fxcrt" ]
   deps = [
-    "../../../core/fxcrt",
     "../../../core/fxcrt/css",
     "../../../core/fxge",
     "../font",

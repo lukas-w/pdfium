@@ -106,13 +106,13 @@ source_set("fxjs") {
       "../core/fpdfapi/parser",
       "../core/fpdfapi/render",
       "../core/fpdfdoc",
-      "../core/fxge",
       "//v8",
       "//v8:v8_libplatform",
     ]
     configs += [ "//v8:external_startup_data" ]
     public_deps += [
       "../core/fxcrt",
+      "../core/fxge",
       "//v8",
     ]
 
@@ -208,8 +208,8 @@ source_set("fxjs") {
         "xfa/fxjse.h",
         "xfa/jse_define.h",
       ]
+      public_deps += [ ":gc" ]
       deps += [
-        ":gc",
         "../xfa/fgas/crt",
         "../xfa/fgas/graphics",
         "../xfa/fxfa/formcalc",
@@ -229,7 +229,10 @@ if (pdf_enable_v8) {
         "gc/heap.h",
       ]
       configs += [ "../:pdfium_strict_config" ]
-      deps = [ "//v8" ]
+      deps = [
+        "//v8",
+        "//v8:v8_config_headers",
+      ]
       public_deps = [
         "../core/fxcrt",
         "//v8:cppgc",
@@ -253,6 +256,7 @@ if (pdf_enable_v8) {
     deps = [
       ":fxjs",
       "../core/fxcrt:unit_test_support",
+      "//v8:v8_headers",
     ]
     pdfium_root_dir = "../"
     if (pdf_enable_xfa) {
@@ -267,7 +271,9 @@ if (pdf_enable_v8) {
       ]
       deps += [
         ":gc",
+        "../testing:test_environments",
         "../xfa/fxfa/parser",
+        "//v8:cppgc_headers",
       ]
     }
 
@@ -285,6 +291,7 @@ if (pdf_enable_v8) {
     deps = [
       ":fxjs",
       "../fpdfsdk",
+      "//v8:v8_headers",
     ]
     pdfium_root_dir = "../"
     if (pdf_enable_xfa) {
@@ -297,6 +304,8 @@ if (pdf_enable_v8) {
       ]
       deps += [
         ":gc",
+        "../testing:test_environments",
+        "../testing:test_support",
         "../xfa/fxfa",
       ]
     }

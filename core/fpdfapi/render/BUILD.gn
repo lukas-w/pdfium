@@ -38,14 +38,16 @@ source_set("render") {
     "../../../:pdfium_strict_config",
     "../../../:pdfium_noshorten_config",
   ]
+  public_deps = [
+    "../../fxcrt",
+    "../../fxge",
+    "../page",
+    "../parser",
+  ]
   deps = [
     "../../../constants",
     "../../fxcodec",
-    "../../fxcrt",
-    "../../fxge",
     "../font",
-    "../page",
-    "../parser",
   ]
   visibility = [ "../../../*" ]
   if (is_win) {

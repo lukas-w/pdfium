@@ -30,12 +30,15 @@ source_set("edit") {
     "../../../:pdfium_strict_config",
     "../../../:pdfium_noshorten_config",
   ]
+  public_deps = [
+    "../../fxcrt",
+    "../parser",
+  ]
   deps = [
     "../../../constants",
-    "../../fxcrt",
+    "../../fxge",
     "../font",
     "../page",
-    "../parser",
     "//third_party/harfbuzz",
   ]
   visibility = [ "../../../*" ]
@@ -71,6 +74,8 @@ pdfium_embeddertest_source_set("embeddertests") {
   ]
   deps = [
     ":edit",
+    "../../../testing:path_service",
+    "../../../testing:test_support",
     "../../fxge",
     "../font",
     "../parser",

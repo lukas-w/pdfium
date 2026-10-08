@@ -36,14 +36,16 @@ source_set("formfiller") {
     "../../:pdfium_strict_config",
     "../../:pdfium_noshorten_config",
   ]
-  deps = [
+  public_deps = [
     "../../:pdfium_public_headers",
-    "../../constants",
-    "../../core/fpdfapi/page",
     "../../core/fpdfdoc",
     "../../core/fxcrt",
-    "../../core/fxge",
     "../pwl",
+  ]
+  deps = [
+    "../../constants",
+    "../../core/fpdfapi/page",
+    "../../core/fxge",
   ]
   visibility = [ "../../*" ]
 }
