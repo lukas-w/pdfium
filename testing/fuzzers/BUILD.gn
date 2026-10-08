@@ -221,8 +221,6 @@ template("pdfium_fuzzer") {
 
   source_set(impl_name) {
     testonly = true
-    # Explicitly specifying public = [] disables implicitly public headers in sources.
-    public = []
     sources = invoker.sources
     defines = []
     deps = []
