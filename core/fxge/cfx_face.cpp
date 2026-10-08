@@ -48,7 +48,7 @@
 #if defined(PDF_ENABLE_FONTATIONS)
 #include "core/fxge/skrifa/src/main.rs.h"
 #include "third_party/abseil-cpp/absl/cleanup/cleanup.h"
-#include "third_party/rust/cxx/v1/cxx.h"
+#include "third_party/rust/chromium_crates_io/vendor/cxx-v1/include/cxx.h"
 #endif
 
 namespace {
