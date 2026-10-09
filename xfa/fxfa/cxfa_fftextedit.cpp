@@ -226,10 +226,11 @@ void CXFA_FFTextEdit::ValidateNumberField(const WideString& wsText) {
   }
 
   WideString wsSomField = GetNode()->GetSOMExpression();
-  pAppProvider->MsgBox(
-      wsText + WideString::FromASCII(" can not contain ") + wsSomField,
-      pAppProvider->GetAppTitle(), static_cast<uint32_t>(AlertIcon::kError),
-      static_cast<uint32_t>(AlertButton::kOK));
+  pAppProvider->MsgBox(WideString({wsText.AsStringView(), L" can not contain ",
+                                   wsSomField.AsStringView()}),
+                       pAppProvider->GetAppTitle(),
+                       static_cast<uint32_t>(AlertIcon::kError),
+                       static_cast<uint32_t>(AlertButton::kOK));
 }
 
 bool CXFA_FFTextEdit::IsDataChanged() {

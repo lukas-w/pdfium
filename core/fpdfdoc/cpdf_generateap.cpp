@@ -601,9 +601,10 @@ ByteString GetPopupContentsString(CPDF_Document* doc,
                                   const CPDF_Dictionary& annot_dict,
                                   RetainPtr<CPDF_Font> default_font,
                                   const ByteString& font_name) {
-  WideString value(annot_dict.GetUnicodeTextFor(pdfium::form_fields::kT));
-  value += L'\n';
-  value += annot_dict.GetUnicodeTextFor(pdfium::annotation::kContents);
+  WideString title = annot_dict.GetUnicodeTextFor(pdfium::form_fields::kT);
+  WideString contents =
+      annot_dict.GetUnicodeTextFor(pdfium::annotation::kContents);
+  WideString value({title.AsStringView(), L'\n', contents.AsStringView()});
 
   CPVT_FontMap map(doc, nullptr, std::move(default_font), font_name);
   CPVT_VariableText::Provider prd(&map);

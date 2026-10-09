@@ -3579,24 +3579,22 @@ void CFXJSE_FormCalcContext::Format(
           info.GetReturnValue().SetEmptyString();
           return;
         }
-        auto wsDatePattern = WideString::FromASCII("date{");
-        wsDatePattern += wsPattern.First(iTChar.value()) + L"} ";
-
-        auto wsTimePattern = WideString::FromASCII("time{");
-        wsTimePattern += wsPattern.Substr(iTChar.value() + 1) + L"}";
-        wsPattern = wsDatePattern + wsTimePattern;
+        wsPattern = WideString(
+            {L"date{", wsPattern.AsStringView().First(iTChar.value()),
+             L"} time{", wsPattern.AsStringView().Substr(iTChar.value() + 1),
+             L'}'});
       } break;
       case CXFA_LocaleValue::ValueType::kDate: {
-        wsPattern = L"date{" + wsPattern + L"}";
+        wsPattern = WideString({L"date{", wsPattern.AsStringView(), L'}'});
       } break;
       case CXFA_LocaleValue::ValueType::kTime: {
-        wsPattern = L"time{" + wsPattern + L"}";
+        wsPattern = WideString({L"time{", wsPattern.AsStringView(), L'}'});
       } break;
       case CXFA_LocaleValue::ValueType::kText: {
-        wsPattern = L"text{" + wsPattern + L"}";
+        wsPattern = WideString({L"text{", wsPattern.AsStringView(), L'}'});
       } break;
       case CXFA_LocaleValue::ValueType::kFloat: {
-        wsPattern = L"num{" + wsPattern + L"}";
+        wsPattern = WideString({L"num{", wsPattern.AsStringView(), L'}'});
       } break;
       default: {
         WideString wsTestPattern = L"num{" + wsPattern + L"}";
@@ -3766,11 +3764,9 @@ void CFXJSE_FormCalcContext::Parse(
         info.GetReturnValue().SetEmptyString();
         return;
       }
-      WideString wsDatePattern(L"date{" + wsPattern.First(iTChar.value()) +
-                               L"} ");
-      WideString wsTimePattern(L"time{" + wsPattern.Substr(iTChar.value() + 1) +
-                               L"}");
-      wsPattern = wsDatePattern + wsTimePattern;
+      wsPattern = WideString(
+          {L"date{", wsPattern.AsStringView().First(iTChar.value()), L"} time{",
+           wsPattern.AsStringView().Substr(iTChar.value() + 1), L'}'});
       CXFA_LocaleValue localeValue(dwPatternType, wsValue, wsPattern, pLocale,
                                    pMgr);
       if (!localeValue.IsValid()) {
@@ -3783,7 +3779,7 @@ void CFXJSE_FormCalcContext::Parse(
       return;
     }
     case CXFA_LocaleValue::ValueType::kDate: {
-      wsPattern = L"date{" + wsPattern + L"}";
+      wsPattern = WideString({L"date{", wsPattern.AsStringView(), L'}'});
       CXFA_LocaleValue localeValue(dwPatternType, wsValue, wsPattern, pLocale,
                                    pMgr);
       if (!localeValue.IsValid()) {
@@ -3796,7 +3792,7 @@ void CFXJSE_FormCalcContext::Parse(
       return;
     }
     case CXFA_LocaleValue::ValueType::kTime: {
-      wsPattern = L"time{" + wsPattern + L"}";
+      wsPattern = WideString({L"time{", wsPattern.AsStringView(), L'}'});
       CXFA_LocaleValue localeValue(dwPatternType, wsValue, wsPattern, pLocale,
                                    pMgr);
       if (!localeValue.IsValid()) {
@@ -3809,7 +3805,7 @@ void CFXJSE_FormCalcContext::Parse(
       return;
     }
     case CXFA_LocaleValue::ValueType::kText: {
-      wsPattern = L"text{" + wsPattern + L"}";
+      wsPattern = WideString({L"text{", wsPattern.AsStringView(), L'}'});
       CXFA_LocaleValue localeValue(CXFA_LocaleValue::ValueType::kText, wsValue,
                                    wsPattern, pLocale, pMgr);
       if (!localeValue.IsValid()) {
@@ -3822,7 +3818,7 @@ void CFXJSE_FormCalcContext::Parse(
       return;
     }
     case CXFA_LocaleValue::ValueType::kFloat: {
-      wsPattern = L"num{" + wsPattern + L"}";
+      wsPattern = WideString({L"num{", wsPattern.AsStringView(), L'}'});
       CXFA_LocaleValue localeValue(CXFA_LocaleValue::ValueType::kFloat, wsValue,
                                    wsPattern, pLocale, pMgr);
       if (!localeValue.IsValid()) {
@@ -5596,8 +5592,7 @@ void CFXJSE_FormCalcContext::ApplyToObject(
 
 void CFXJSE_FormCalcContext::ThrowNoDefaultPropertyException(
     ByteStringView name) const {
-  ByteString msg(name);
-  msg += " doesn't have a default property.";
+  ByteString msg({name, " doesn't have a default property."});
   ThrowException(msg.AsStringView());
 }
 
@@ -5616,19 +5611,15 @@ void CFXJSE_FormCalcContext::ThrowServerDeniedException() const {
 void CFXJSE_FormCalcContext::ThrowPropertyNotInObjectException(
     ByteStringView name,
     ByteStringView exp) const {
-  ByteString msg("An attempt was made to reference property '");
-  msg += name;
-  msg += "' of a non-object in SOM expression ";
-  msg += exp;
-  msg += ".";
+  ByteString msg({"An attempt was made to reference property '", name,
+                  "' of a non-object in SOM expression ", exp, '.'});
   ThrowException(msg.AsStringView());
 }
 
 void CFXJSE_FormCalcContext::ThrowParamCountMismatchException(
     ByteStringView method) const {
-  ByteString msg("Incorrect number of parameters calling method '");
-  msg += method;
-  msg += "'.";
+  ByteString msg(
+      {"Incorrect number of parameters calling method '", method, "'."});
   ThrowException(msg.AsStringView());
 }
 

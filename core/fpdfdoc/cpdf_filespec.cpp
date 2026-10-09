@@ -82,16 +82,11 @@ WideString CPDF_FileSpec::DecodeFileName(const WideString& filepath) {
     return ChangeSlashToPlatform(view.Substr(1));
   }
   if (view[2] == L'/') {
-    WideString result;
-    result += view[1];
-    result += L':';
-    result += ChangeSlashToPlatform(view.Substr(2));
-    return result;
+    WideString platform_path = ChangeSlashToPlatform(view.Substr(2));
+    return WideString({view.Substr(1, 1), L':', platform_path.AsStringView()});
   }
-  WideString result;
-  result += L'\\';
-  result += ChangeSlashToPlatform(view);
-  return result;
+  WideString platform_path = ChangeSlashToPlatform(view);
+  return WideString({L'\\', platform_path.AsStringView()});
 #else
   return filepath;
 #endif

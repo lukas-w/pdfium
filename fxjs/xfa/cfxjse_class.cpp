@@ -84,8 +84,7 @@ void Context_GlobalObjToString(
   }
 
   if (pClassDescriptor->name) {
-    ByteString szStringVal =
-        ByteString::Format("[object %s]", pClassDescriptor->name);
+    ByteString szStringVal({"[object ", pClassDescriptor->name, "]"});
     info.GetReturnValue().Set(
         fxv8::NewStringHelper(info.GetIsolate(), szStringVal.AsStringView()));
     return;

@@ -633,7 +633,8 @@ ByteString GetWordRenderString(ByteStringView strWords) {
   if (strWords.IsEmpty()) {
     return ByteString();
   }
-  return PDF_EncodeString(strWords) + " " + kShowTextOperator + "\n";
+  ByteString encoded = PDF_EncodeString(strWords);
+  return ByteString({encoded.AsStringView(), ' ', kShowTextOperator, '\n'});
 }
 
 ByteString GetEditAppStream(CPWL_EditImpl* pEdit,
@@ -1596,8 +1597,12 @@ void CPDFSDK_AppStream::SetAsComboBox(std::optional<WideString> sValue) {
   }
 
   sBody << GetDropButtonAppStream(rcButton);
+  ByteString background = GetBackgroundAppStream();
+  ByteString border = GetBorderAppStream();
+  ByteString body(sBody);
   Write("N",
-        GetBackgroundAppStream() + GetBorderAppStream() + ByteString(sBody),
+        ByteString({background.AsStringView(), border.AsStringView(),
+                    body.AsStringView()}),
         ByteString());
 }
 
@@ -1678,8 +1683,12 @@ void CPDFSDK_AppStream::SetAsListBox() {
           << kEndPathNoFillOrStrokeOperator << "\n"
           << sList.str();
   }
+  ByteString background = GetBackgroundAppStream();
+  ByteString border = GetBorderAppStream();
+  ByteString body(sBody);
   Write("N",
-        GetBackgroundAppStream() + GetBorderAppStream() + ByteString(sBody),
+        ByteString({background.AsStringView(), border.AsStringView(),
+                    body.AsStringView()}),
         ByteString());
 }
 
@@ -1824,9 +1833,13 @@ void CPDFSDK_AppStream::SetAsTextField(std::optional<WideString> sValue) {
     }
   }
 
+  ByteString background = GetBackgroundAppStream();
+  ByteString border = GetBorderAppStream();
+  ByteString lines(sLines);
+  ByteString body(sBody);
   Write("N",
-        GetBackgroundAppStream() + GetBorderAppStream() + ByteString(sLines) +
-            ByteString(sBody),
+        ByteString({background.AsStringView(), border.AsStringView(),
+                    lines.AsStringView(), body.AsStringView()}),
         ByteString());
 }
 

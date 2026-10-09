@@ -566,9 +566,8 @@ void CPDFXFA_DocEnvironment::ExportData(CXFA_FFDoc* hDoc,
       if (i == pArray->size() - 1) {
         WideString wPath = WideString::FromUTF16LE(bs.unsigned_span());
         ByteString bPath = wPath.ToUTF8();
-        static const char kFormat[] =
-            "\n<pdf href=\"%s\" xmlns=\"http://ns.adobe.com/xdp/pdf/\"/>";
-        ByteString content = ByteString::Format(kFormat, bPath.c_str());
+        ByteString content({"\n<pdf href=\"", bPath.AsStringView(),
+                            "\" xmlns=\"http://ns.adobe.com/xdp/pdf/\"/>"});
         fileWrite->WriteString(content.AsStringView());
       }
       auto pAcc = pdfium::MakeRetain<CPDF_StreamAcc>(std::move(pStream));

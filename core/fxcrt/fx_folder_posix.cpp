@@ -57,7 +57,7 @@ bool FX_PosixFolder::GetNextFile(ByteString* filename, bool* bFolder) {
     return false;
   }
 
-  ByteString fullpath = path_ + "/" + de->d_name;
+  ByteString fullpath({path_.AsStringView(), '/', de->d_name});
   struct stat deStat;
   if (stat(fullpath.c_str(), &deStat) < 0) {
     return false;

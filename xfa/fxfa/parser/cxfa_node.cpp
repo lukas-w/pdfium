@@ -1595,10 +1595,9 @@ WideString CXFA_Node::GetNameExpression() {
   WideString wsName = GetNameExpressionSinglePath(this);
   CXFA_Node* parent = GetParent();
   while (parent) {
-    WideString wsParent = GetNameExpressionSinglePath(parent);
-    wsParent += L".";
-    wsParent += wsName;
-    wsName = std::move(wsParent);
+    WideString parent_path = GetNameExpressionSinglePath(parent);
+    wsName =
+        WideString({parent_path.AsStringView(), L'.', wsName.AsStringView()});
     parent = parent->GetParent();
   }
   return wsName;
@@ -2794,9 +2793,10 @@ XFA_EventError CXFA_Node::ProcessNullTestValidate(CXFA_FFDocView* pDocView,
 
       if (wsNullMsg.IsEmpty()) {
         wsCaptionName = GetValidateCaptionName(bVersionFlag);
-        wsNullMsg = wsCaptionName +
-                    L" cannot be blank. To ignore validations for " +
-                    wsCaptionName + L", click Ignore.";
+        wsNullMsg =
+            WideString({wsCaptionName.AsStringView(),
+                        L" cannot be blank. To ignore validations for ",
+                        wsCaptionName.AsStringView(), L", click Ignore."});
       }
       if (pAppProvider->MsgBox(wsNullMsg, wsTitle,
                                static_cast<uint32_t>(AlertIcon::kWarning),
@@ -2884,15 +2884,16 @@ WideString CXFA_Node::GetValidateCaptionName(bool bVersionFlag) {
 WideString CXFA_Node::GetValidateMessage(bool bError, bool bVersionFlag) {
   WideString wsCaptionName = GetValidateCaptionName(bVersionFlag);
   if (bVersionFlag) {
-    return wsCaptionName + L" validation failed";
+    return WideString({wsCaptionName.AsStringView(), L" validation failed"});
   }
-  WideString result =
-      L"The value you entered for " + wsCaptionName + L" is invalid.";
   if (!bError) {
-    result +=
-        L" To ignore validations for " + wsCaptionName + L", click Ignore.";
+    return WideString({L"The value you entered for ",
+                       wsCaptionName.AsStringView(),
+                       L" is invalid. To ignore validations for ",
+                       wsCaptionName.AsStringView(), L", click Ignore."});
   }
-  return result;
+  return WideString({L"The value you entered for ",
+                     wsCaptionName.AsStringView(), L" is invalid."});
 }
 
 XFA_EventError CXFA_Node::ExecuteScript(CXFA_FFDocView* pDocView,

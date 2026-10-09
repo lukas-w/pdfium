@@ -97,12 +97,11 @@ WideString JSGetStringFromID(JSMessage msg) {
 WideString JSFormatErrorString(const char* class_name,
                                const char* property_name,
                                const WideString& details) {
-  WideString result = WideString::FromUTF8(class_name);
+  WideString class_str = WideString::FromUTF8(class_name);
   if (property_name) {
-    result += L".";
-    result += WideString::FromUTF8(property_name);
+    WideString prop_str = WideString::FromUTF8(property_name);
+    return WideString({class_str.AsStringView(), L'.', prop_str.AsStringView(),
+                       L": ", details.AsStringView()});
   }
-  result += L": ";
-  result += details;
-  return result;
+  return WideString({class_str.AsStringView(), L": ", details.AsStringView()});
 }

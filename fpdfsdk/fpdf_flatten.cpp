@@ -207,7 +207,7 @@ CFX_FloatRect CalculateRect(std::vector<CFX_FloatRect>* pRectArray) {
 }
 
 ByteString GenerateFlattenedContent(const ByteString& key) {
-  return "q 1 0 0 1 0 0 cm /" + key + " Do Q";
+  return ByteString({"q 1 0 0 1 0 0 cm /", key.AsStringView(), " Do Q"});
 }
 
 RetainPtr<CPDF_Reference> NewIndirectContentsStreamReference(
@@ -241,12 +241,11 @@ void SetPageContents(const ByteString& key,
                              NewIndirectContentsStreamReference(document, "q"));
     pContentsArray->Append(NewIndirectContentsStreamReference(document, "Q"));
   } else {
-    ByteString sStream = "q\n";
+    ByteString sStream;
     {
       auto pAcc = pdfium::MakeRetain<CPDF_StreamAcc>(pContentsStream);
       pAcc->LoadAllDataFiltered();
-      sStream += ByteStringView(pAcc->GetSpan());
-      sStream += "\nQ";
+      sStream = ByteString({"q\n", ByteStringView(pAcc->GetSpan()), "\nQ"});
     }
     pContentsStream->SetDataAndRemoveFilter(sStream.unsigned_span());
     pContentsArray = document->NewIndirect<CPDF_Array>();
@@ -619,8 +618,8 @@ FPDF_EXPORT int FPDF_CALLCONV FPDFPage_Flatten(FPDF_PAGE page, int nFlag) {
     fxcrt::ostringstream buf;
     WriteMatrix(buf, m);
     ByteString str(buf);
-    sStream += ByteString::Format("q %s cm /%s Do Q\n", str.c_str(),
-                                  sFormName.c_str());
+    sStream += ByteString({"q ", str.AsStringView(), " cm /",
+                           sFormName.AsStringView(), " Do Q\n"});
     pNewXObject->SetDataAndRemoveFilter(sStream.unsigned_span());
   }
   RemoveFlattenedFields(document, pPageDict.Get());

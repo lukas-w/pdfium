@@ -324,11 +324,10 @@ RetainPtr<CPDF_Dictionary> InitDict(CPDF_Document* document) {
       }
     }
   }
-  ByteString default_appearance;
-  if (font) {
-    default_appearance = "/" + PDF_NameEncode(base_name) + " 12 Tf ";
-  }
-  default_appearance += "0 g";
+  ByteString default_appearance =
+      font ? ByteString(
+                 {'/', PDF_NameEncode(base_name).AsStringView(), " 12 Tf 0 g"})
+           : ByteString("0 g");
   form_dict->SetNewFor<CPDF_String>("DA", std::move(default_appearance));
   return form_dict;
 }

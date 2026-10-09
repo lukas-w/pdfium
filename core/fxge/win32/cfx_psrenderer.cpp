@@ -184,13 +184,11 @@ ByteString GenerateType42FontData(const CFX_Font* font) {
     return ByteString();
   }
 
-  ByteString output = "%%BeginResource: font ";
-  output += psname;
-  output += "\n";
-  output += sfnt_data.value();
-  output += GenerateType42FontDictionary(psname, font->GetRawBBox().value(),
-                                         num_glyphs, kGlyphsPerDescendantFont);
-  return output;
+  ByteString font_dict = GenerateType42FontDictionary(
+      psname, font->GetRawBBox().value(), num_glyphs, kGlyphsPerDescendantFont);
+  return ByteString({"%%BeginResource: font ", psname.AsStringView(), '\n',
+                     sfnt_data.value().AsStringView(),
+                     font_dict.AsStringView()});
 }
 
 }  // namespace

@@ -101,7 +101,8 @@ WideString CPDF_FormField::GetFullNameForDict(
       if (full_name.IsEmpty()) {
         full_name = std::move(short_name);
       } else {
-        full_name = short_name + L'.' + full_name;
+        full_name = WideString(
+            {short_name.AsStringView(), L'.', full_name.AsStringView()});
       }
     }
     pLevel = pLevel->GetDictFor(pdfium::form_fields::kParent).Get();

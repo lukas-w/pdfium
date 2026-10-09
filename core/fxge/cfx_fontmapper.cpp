@@ -281,8 +281,8 @@ ByteString GetFontNameFromFace(const CFX_Face& face) {
 
   ByteString style_name = face.GetStyleName();
   if (!style_name.IsEmpty() && style_name != "Regular") {
-    family_name += ' ';
-    family_name += style_name;
+    return ByteString(
+        {family_name.AsStringView(), ' ', style_name.AsStringView()});
   }
   return family_name;
 }
