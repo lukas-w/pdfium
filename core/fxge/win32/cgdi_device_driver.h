@@ -9,16 +9,23 @@
 
 #include <windows.h>
 
+#include <memory>
 #include <optional>
 
 #include "core/fxcrt/retain_ptr.h"
 #include "core/fxge/renderdevicedriver_iface.h"
 
 class CFX_DIBBase;
+class CFX_PSFontTracker;
 
 class CGdiDeviceDriver : public RenderDeviceDriverIface {
+ public:
+  static std::unique_ptr<RenderDeviceDriverIface> CreateDriver(
+      HDC hdc,
+      CFX_PSFontTracker* ps_font_tracker);
+
  protected:
-  CGdiDeviceDriver(HDC hDC, DeviceType device_type);
+  CGdiDeviceDriver(HDC hdc, DeviceType device_type);
   ~CGdiDeviceDriver() override;
 
   // RenderDeviceDriverIface:

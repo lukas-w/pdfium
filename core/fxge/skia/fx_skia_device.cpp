@@ -1699,31 +1699,3 @@ bool CFX_RenderDevice::AttachSkiaImpl(RetainPtr<CFX_DIBitmap> pBitmap,
   return true;
 }
 
-bool CFX_RenderDevice::AttachCanvas(SkCanvas& canvas) {
-  auto driver = CFX_SkiaDeviceDriver::Create(canvas);
-  if (!driver) {
-    return false;
-  }
-  SetDeviceDriver(std::move(driver));
-  return true;
-}
-
-bool CFX_RenderDevice::CreateSkia(int width,
-                                  int height,
-                                  FXDIB_Format format,
-                                  RetainPtr<CFX_DIBitmap> pBackdropBitmap) {
-  auto pBitmap = pdfium::MakeRetain<CFX_DIBitmap>();
-  if (!pBitmap->Create(width, height, format)) {
-    return false;
-  }
-
-  SetBitmap(pBitmap);
-  auto driver = CFX_SkiaDeviceDriver::Create(std::move(pBitmap), false,
-                                             std::move(pBackdropBitmap));
-  if (!driver) {
-    return false;
-  }
-
-  SetDeviceDriver(std::move(driver));
-  return true;
-}

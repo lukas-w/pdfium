@@ -47,13 +47,6 @@
 #include "third_party/skia/include/core/SkTypes.h"  // nogncheck
 #endif
 
-#if BUILDFLAG(IS_WIN)
-#include "core/fxge/win32/cgdi_display_driver.h"
-#include "core/fxge/win32/cgdi_printer_driver.h"
-#include "core/fxge/win32/cps_printer_driver.h"
-#include "core/fxge/win32/ctext_only_printer_driver.h"
-#endif
-
 namespace {
 
 void AdjustGlyphSpace(std::vector<TextGlyphPos>* pGlyphAndPos) {
@@ -518,36 +511,6 @@ FXDIB_Format GetCreateCompatibleBitmapFormat(bool bytemask_output,
   return CFX_DIBBase::kPlatformRGBFormat;
 }
 
-#if BUILDFLAG(IS_WIN)
-std::unique_ptr<RenderDeviceDriverIface> CreateDriver(
-    HDC hdc,
-    CFX_PSFontTracker* ps_font_tracker,
-    const EncoderIface* encoder_iface) {
-  int device_type = ::GetDeviceCaps(hdc, TECHNOLOGY);
-  int obj_type = ::GetObjectType(hdc);
-  const bool use_printer =
-      device_type == DT_RASPRINTER || device_type == DT_PLOTTER ||
-      device_type == DT_CHARSTREAM || obj_type == OBJ_ENHMETADC;
-
-  if (!use_printer) {
-    return std::make_unique<CGdiDisplayDriver>(hdc);
-  }
-
-  WindowsPrintMode print_mode = CFX_GEModule::Get()->GetPrintMode();
-  if (print_mode == WindowsPrintMode::kEmf ||
-      print_mode == WindowsPrintMode::kEmfImageMasks) {
-    return std::make_unique<CGdiPrinterDriver>(hdc);
-  }
-
-  if (print_mode == WindowsPrintMode::kTextOnly) {
-    return std::make_unique<CTextOnlyPrinterDriver>(hdc);
-  }
-
-  return std::make_unique<CPSPrinterDriver>(hdc, print_mode, ps_font_tracker,
-                                            encoder_iface);
-}
-#endif  // BUILDFLAG(IS_WIN)
-
 }  // namespace
 
 CFX_RenderDevice::CFX_RenderDevice() = default;
@@ -863,8 +826,7 @@ bool CFX_RenderDevice::DrawFillStrokePath(
     backdrop->Copy(bitmap);
   }
   std::unique_ptr<CFX_RenderDevice> bitmap_device =
-      CFX_RenderDevice::CreateForBitmapWithBackdrop(bitmap,
-                                                    std::move(backdrop));
+      CFX_RenderDevice::CreateForBitmap(bitmap, std::move(backdrop));
   if (!bitmap_device) {
     return false;
   }
@@ -1643,53 +1605,18 @@ CFX_RenderDevice::StateRestorer::~StateRestorer() {
   device_->RestoreState(false);
 }
 
-bool CFX_RenderDevice::Attach(RetainPtr<CFX_DIBitmap> pBitmap) {
-  return AttachWithRgbByteOrder(std::move(pBitmap), false);
-}
-
-bool CFX_RenderDevice::AttachWithRgbByteOrder(RetainPtr<CFX_DIBitmap> pBitmap,
-                                              bool bRgbByteOrder) {
-  return AttachImpl(std::move(pBitmap), bRgbByteOrder, nullptr);
-}
-
-bool CFX_RenderDevice::AttachWithBackdrop(
-    RetainPtr<CFX_DIBitmap> pBitmap,
-    RetainPtr<CFX_DIBitmap> pBackdropBitmap) {
-  return AttachImpl(std::move(pBitmap), false, std::move(pBackdropBitmap));
-}
-
-bool CFX_RenderDevice::AttachImpl(RetainPtr<CFX_DIBitmap> pBitmap,
-                                  bool bRgbByteOrder,
-                                  RetainPtr<CFX_DIBitmap> pBackdropBitmap) {
+bool CFX_RenderDevice::Attach(RetainPtr<CFX_DIBitmap> bitmap,
+                              RetainPtr<CFX_DIBitmap> backdrop_bitmap,
+                              bool rgb_byte_order) {
 #if defined(PDF_USE_SKIA)
   if (CFX_GEModule::IsSkiaRenderer()) {
-    return AttachSkiaImpl(std::move(pBitmap), bRgbByteOrder,
-                          std::move(pBackdropBitmap));
+    return AttachSkiaImpl(std::move(bitmap), rgb_byte_order,
+                          std::move(backdrop_bitmap));
   }
 #endif
 #if defined(PDF_USE_AGG)
-  return AttachAggImpl(std::move(pBitmap), bRgbByteOrder,
-                       std::move(pBackdropBitmap));
-#else
-  NOTREACHED();
-#endif
-}
-
-bool CFX_RenderDevice::Create(int width, int height, FXDIB_Format format) {
-  return CreateWithBackdrop(width, height, format, nullptr);
-}
-
-bool CFX_RenderDevice::CreateWithBackdrop(int width,
-                                          int height,
-                                          FXDIB_Format format,
-                                          RetainPtr<CFX_DIBitmap> backdrop) {
-#if defined(PDF_USE_SKIA)
-  if (CFX_GEModule::IsSkiaRenderer()) {
-    return CreateSkia(width, height, format, backdrop);
-  }
-#endif
-#if defined(PDF_USE_AGG)
-  return CreateAgg(width, height, format, backdrop);
+  return AttachAggImpl(std::move(bitmap), rgb_byte_order,
+                       std::move(backdrop_bitmap));
 #else
   NOTREACHED();
 #endif
@@ -1699,70 +1626,15 @@ void CFX_RenderDevice::Clear(uint32_t color) {
   GetDeviceDriver()->Clear(color);
 }
 
-#if BUILDFLAG(IS_WIN)
-CFX_RenderDevice::CFX_RenderDevice(HDC hdc,
-                                   CFX_PSFontTracker* ps_font_tracker) {
-  const EncoderIface* encoder_iface = CFX_GEModule::Get()->GetEncoderIface();
-  SetDeviceDriver(CreateDriver(hdc, ps_font_tracker, encoder_iface));
-}
-
-// static
-std::unique_ptr<CFX_RenderDevice> CFX_RenderDevice::CreateForWindowsDC(
-    HDC hdc,
-    CFX_PSFontTracker* ps_font_tracker) {
-  // Private ctor.
-  return pdfium::WrapUnique(new CFX_RenderDevice(hdc, ps_font_tracker));
-}
-#endif
-
 // static
 std::unique_ptr<CFX_RenderDevice> CFX_RenderDevice::CreateForBitmap(
     RetainPtr<CFX_DIBitmap> bitmap,
+    RetainPtr<CFX_DIBitmap> backdrop_bitmap,
     bool rgb_byte_order) {
   // Private ctor.
   auto device = pdfium::WrapUnique(new CFX_RenderDevice());
-  if (!device->AttachWithRgbByteOrder(std::move(bitmap), rgb_byte_order)) {
-    return nullptr;
-  }
-  return device;
-}
-
-// static
-std::unique_ptr<CFX_RenderDevice> CFX_RenderDevice::CreateForBitmapWithBackdrop(
-    RetainPtr<CFX_DIBitmap> bitmap,
-    RetainPtr<CFX_DIBitmap> backdrop_bitmap) {
-  // Private ctor.
-  auto device = pdfium::WrapUnique(new CFX_RenderDevice());
-  if (!device->AttachWithBackdrop(std::move(bitmap),
-                                  std::move(backdrop_bitmap))) {
-    return nullptr;
-  }
-  return device;
-}
-
-// static
-std::unique_ptr<CFX_RenderDevice> CFX_RenderDevice::CreateForNewBitmap(
-    int width,
-    int height,
-    FXDIB_Format format) {
-  // Private ctor.
-  auto device = pdfium::WrapUnique(new CFX_RenderDevice());
-  if (!device->Create(width, height, format)) {
-    return nullptr;
-  }
-  return device;
-}
-
-// static
-std::unique_ptr<CFX_RenderDevice>
-CFX_RenderDevice::CreateForNewBitmapWithBackdrop(
-    int width,
-    int height,
-    FXDIB_Format format,
-    RetainPtr<CFX_DIBitmap> backdrop) {
-  // Private ctor.
-  auto device = pdfium::WrapUnique(new CFX_RenderDevice());
-  if (!device->CreateWithBackdrop(width, height, format, std::move(backdrop))) {
+  if (!device->Attach(std::move(bitmap), std::move(backdrop_bitmap),
+                      rgb_byte_order)) {
     return nullptr;
   }
   return device;
@@ -1772,11 +1644,18 @@ CFX_RenderDevice::CreateForNewBitmapWithBackdrop(
 // static
 std::unique_ptr<CFX_RenderDevice> CFX_RenderDevice::CreateForSkiaCanvas(
     SkCanvas& canvas) {
-  // Private ctor.
-  auto device = pdfium::WrapUnique(new CFX_RenderDevice());
-  if (!device->AttachCanvas(canvas)) {
-    return nullptr;
-  }
-  return device;
+  return CreateWithDriver(CFX_SkiaDeviceDriver::Create(canvas));
 }
 #endif
+
+// static
+std::unique_ptr<CFX_RenderDevice> CFX_RenderDevice::CreateWithDriver(
+    std::unique_ptr<RenderDeviceDriverIface> driver) {
+  if (!driver) {
+    return nullptr;
+  }
+  // Private ctor.
+  auto device = pdfium::WrapUnique(new CFX_RenderDevice());
+  device->SetDeviceDriver(std::move(driver));
+  return device;
+}

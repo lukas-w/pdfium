@@ -677,9 +677,12 @@ bool CPDF_RenderStatus::ProcessTransparency(CPDF_PageObject* pPageObj,
     }
     device_->GetDIBits(backdrop, rect.left, rect.top);
   }
+  auto bitmap = pdfium::MakeRetain<CFX_DIBitmap>();
+  if (!bitmap->Create(width, height, GetCompatibleArgbFormat())) {
+    return true;
+  }
   std::unique_ptr<CFX_RenderDevice> bitmap_device =
-      CFX_RenderDevice::CreateForNewBitmapWithBackdrop(
-          width, height, GetCompatibleArgbFormat(), std::move(backdrop));
+      CFX_RenderDevice::CreateForBitmap(bitmap, std::move(backdrop));
   if (!bitmap_device) {
     return true;
   }
@@ -1024,9 +1027,12 @@ bool CPDF_RenderStatus::ProcessType3Text(CPDF_TextObject* textobj,
 
         // TODO(crbug.com/42271020): Consider adding support for
         // `FXDIB_Format::kBgraPremul`
+        auto bitmap = pdfium::MakeRetain<CFX_DIBitmap>();
+        if (!bitmap->Create(rect.Width(), rect.Height(), FXDIB_Format::kBgra)) {
+          return true;
+        }
         std::unique_ptr<CFX_RenderDevice> bitmap_device =
-            CFX_RenderDevice::CreateForNewBitmap(rect.Width(), rect.Height(),
-                                                 FXDIB_Format::kBgra);
+            CFX_RenderDevice::CreateForBitmap(bitmap);
         if (!bitmap_device) {
           return true;
         }
@@ -1457,8 +1463,12 @@ RetainPtr<CFX_DIBitmap> CPDF_RenderStatus::LoadSMask(
   const int width = clip_rect.Width();
   const int height = clip_rect.Height();
   const FXDIB_Format format = GetFormatForLuminosity(bLuminosity);
+  auto bitmap = pdfium::MakeRetain<CFX_DIBitmap>();
+  if (!bitmap->Create(width, height, format)) {
+    return nullptr;
+  }
   std::unique_ptr<CFX_RenderDevice> bitmap_device =
-      CFX_RenderDevice::CreateForNewBitmap(width, height, format);
+      CFX_RenderDevice::CreateForBitmap(bitmap);
   if (!bitmap_device) {
     return nullptr;
   }
@@ -1491,7 +1501,6 @@ RetainPtr<CFX_DIBitmap> CPDF_RenderStatus::LoadSMask(
   }
 
   pdfium::span<uint8_t> dest_buf = result_mask->GetWritableBuffer();
-  RetainPtr<const CFX_DIBitmap> bitmap = bitmap_device->GetBitmap();
   pdfium::span<const uint8_t> src_buf = bitmap->GetBuffer();
   const int dest_pitch = result_mask->GetPitch();
   const int src_pitch = bitmap->GetPitch();

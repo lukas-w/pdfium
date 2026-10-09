@@ -335,10 +335,12 @@ bool CPDF_ImageRenderer::DrawPatternImage() {
     return false;
   }
 
-  CFX_Matrix new_matrix = GetDrawMatrix(rect);
+  auto bitmap = pdfium::MakeRetain<CFX_DIBitmap>();
+  if (!bitmap->Create(rect.Width(), rect.Height(), FXDIB_Format::kBgra)) {
+    return true;
+  }
   std::unique_ptr<CFX_RenderDevice> bitmap_device =
-      CFX_RenderDevice::CreateForNewBitmap(rect.Width(), rect.Height(),
-                                           FXDIB_Format::kBgra);
+      CFX_RenderDevice::CreateForBitmap(bitmap);
   if (!bitmap_device) {
     return true;
   }
@@ -361,15 +363,16 @@ bool CPDF_ImageRenderer::DrawPatternImage() {
                                      pattern_matrix, false);
   }
 
+  const CFX_Matrix new_matrix = GetDrawMatrix(rect);
   RetainPtr<const CFX_DIBitmap> mask_bitmap =
       CalculateDrawImage(bitmap_device.get(), dibbase_, new_matrix, rect);
   if (!mask_bitmap) {
     return true;
   }
 
-  bitmap_device->GetBitmap()->MultiplyAlphaMask(std::move(mask_bitmap));
+  bitmap->MultiplyAlphaMask(std::move(mask_bitmap));
   render_status_->GetRenderDevice()->SetDIBitsWithBlend(
-      bitmap_device->GetBitmap(), rect.left, rect.top, blend_type_);
+      std::move(bitmap), rect.left, rect.top, blend_type_);
   return false;
 }
 
@@ -386,14 +389,18 @@ bool CPDF_ImageRenderer::DrawMaskedImage() {
     return false;
   }
 
-  CFX_Matrix new_matrix = GetDrawMatrix(rect);
+  auto bitmap = pdfium::MakeRetain<CFX_DIBitmap>();
+  if (!bitmap->Create(rect.Width(), rect.Height(), FXDIB_Format::kBgrx)) {
+    return true;
+  }
   std::unique_ptr<CFX_RenderDevice> bitmap_device =
-      CFX_RenderDevice::CreateForNewBitmap(rect.Width(), rect.Height(),
-                                           FXDIB_Format::kBgrx);
+      CFX_RenderDevice::CreateForBitmap(bitmap);
   if (!bitmap_device) {
     return true;
   }
   bitmap_device->Clear(0xffffffff);
+
+  const CFX_Matrix new_matrix = GetDrawMatrix(rect);
   CPDF_RenderStatus bitmap_status(render_status_->GetContext(),
                                   bitmap_device.get());
   bitmap_status.SetDropObjects(render_status_->GetDropObjects());
@@ -412,15 +419,14 @@ bool CPDF_ImageRenderer::DrawMaskedImage() {
 #if defined(PDF_USE_SKIA)
   if (CFX_GEModule::IsSkiaRenderer() &&
       render_status_->GetRenderDevice()->SetBitsWithMask(
-          bitmap_device->GetBitmap(), mask_bitmap, rect.left, rect.top, alpha_,
-          blend_type_)) {
+          bitmap, mask_bitmap, rect.left, rect.top, alpha_, blend_type_)) {
     return false;
   }
 #endif
-  bitmap_device->GetBitmap()->MultiplyAlphaMask(std::move(mask_bitmap));
-  bitmap_device->GetBitmap()->MultiplyAlpha(alpha_);
+  bitmap->MultiplyAlphaMask(std::move(mask_bitmap));
+  bitmap->MultiplyAlpha(alpha_);
   render_status_->GetRenderDevice()->SetDIBitsWithBlend(
-      bitmap_device->GetBitmap(), rect.left, rect.top, blend_type_);
+      std::move(bitmap), rect.left, rect.top, blend_type_);
   return false;
 }
 

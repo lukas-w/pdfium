@@ -176,10 +176,10 @@ TEST_P(CPDFPopupRenderTest, PopupRendering) {
   CPDF_Annot* popup = list.GetAt(1);
   ASSERT_EQ(CPDF_Annot::Subtype::POPUP, popup->GetSubtype());
   EXPECT_FALSE(popup->GetAnnotDict()->KeyExist("AP"));
-  auto device =
-      CFX_RenderDevice::CreateForNewBitmap(256, 256, FXDIB_Format::kBgra);
+  auto bitmap = pdfium::MakeRetain<CFX_DIBitmap>();
+  ASSERT_TRUE(bitmap->Create(256, 256, FXDIB_Format::kBgra));
+  auto device = CFX_RenderDevice::CreateForBitmap(bitmap);
   ASSERT_TRUE(device);
-  RetainPtr<CFX_DIBitmap> bitmap = device->GetBitmap();
   EXPECT_FALSE(DrawPopup(popup, device.get()));
   EXPECT_EQ(0xffffffffu, GetCenterPixel(bitmap.Get()));
   popup->SetOpenState(true);

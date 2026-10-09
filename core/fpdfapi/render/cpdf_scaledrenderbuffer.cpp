@@ -6,6 +6,8 @@
 
 #include "core/fpdfapi/render/cpdf_scaledrenderbuffer.h"
 
+#include <utility>
+
 #include "build/build_config.h"
 #include "core/fpdfapi/parser/cpdf_dictionary.h"
 #include "core/fpdfapi/render/cpdf_devicebuffer.h"
@@ -47,12 +49,14 @@ bool CPDF_ScaledRenderBuffer::Initialize(CPDF_RenderContext* context,
     }
 
     if (pitch_size.value().size <= kImageSizeLimitBytes) {
-      bitmap_device_ =
-          CFX_RenderDevice::CreateForNewBitmap(width, height, dibFormat);
-      if (bitmap_device_) {
-        context->GetBackgroundToDevice(bitmap_device_.get(), pObj, &options,
-                                       matrix_);
-        return true;
+      auto bitmap = pdfium::MakeRetain<CFX_DIBitmap>();
+      if (bitmap->Create(width, height, dibFormat)) {
+        bitmap_device_ = CFX_RenderDevice::CreateForBitmap(std::move(bitmap));
+        if (bitmap_device_) {
+          context->GetBackgroundToDevice(bitmap_device_.get(), pObj, &options,
+                                         matrix_);
+          return true;
+        }
       }
     }
     matrix_.Scale(0.5f, 0.5f);

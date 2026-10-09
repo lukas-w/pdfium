@@ -253,8 +253,9 @@ void FFLCommon(FPDF_FORMHANDLE hHandle,
 
   std::unique_ptr<CFX_RenderDevice> pDevice;
   if (dest_is_bitmap) {
-    pDevice = CFX_RenderDevice::CreateForBitmap(
-        holder, !!(flags & FPDF_REVERSE_BYTE_ORDER));
+    pDevice =
+        CFX_RenderDevice::CreateForBitmap(holder, /*backdrop_bitmap=*/nullptr,
+                                          !!(flags & FPDF_REVERSE_BYTE_ORDER));
   } else {
 #if defined(PDF_USE_SKIA)
     pDevice = CFX_RenderDevice::CreateForSkiaCanvas(*canvas);

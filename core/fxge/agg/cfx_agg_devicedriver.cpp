@@ -1423,17 +1423,3 @@ bool CFX_RenderDevice::AttachAggImpl(RetainPtr<CFX_DIBitmap> pBitmap,
   return true;
 }
 
-bool CFX_RenderDevice::CreateAgg(int width,
-                                 int height,
-                                 FXDIB_Format format,
-                                 RetainPtr<CFX_DIBitmap> pBackdropBitmap) {
-  auto pBitmap = pdfium::MakeRetain<CFX_DIBitmap>();
-  if (!pBitmap->Create(width, height, format)) {
-    return false;
-  }
-
-  SetBitmap(pBitmap);
-  SetDeviceDriver(std::make_unique<pdfium::CFX_AggDeviceDriver>(
-      std::move(pBitmap), false, std::move(pBackdropBitmap)));
-  return true;
-}
