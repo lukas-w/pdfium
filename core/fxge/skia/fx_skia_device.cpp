@@ -1683,11 +1683,7 @@ CFX_SkiaDeviceDriver::CharDetail::~CharDetail() = default;
 bool CFX_RenderDevice::AttachSkiaImpl(RetainPtr<CFX_DIBitmap> pBitmap,
                                       bool bRgbByteOrder,
                                       RetainPtr<CFX_DIBitmap> pBackdropBitmap) {
-  // FPDF_FFLDrawSkia() ends up calling this method with a deliberately null
-  // `pBitmap`.
-  if (!pBitmap) {
-    return false;
-  }
+  CHECK(pBitmap);
   SetBitmap(pBitmap);
   auto driver = CFX_SkiaDeviceDriver::Create(std::move(pBitmap), bRgbByteOrder,
                                              std::move(pBackdropBitmap));

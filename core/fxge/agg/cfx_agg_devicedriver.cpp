@@ -1415,7 +1415,6 @@ bool CFX_AggDeviceDriver::ContinueDIBits(
 bool CFX_RenderDevice::AttachAggImpl(RetainPtr<CFX_DIBitmap> pBitmap,
                                      bool bRgbByteOrder,
                                      RetainPtr<CFX_DIBitmap> pBackdropBitmap) {
-  // Unlike the Skia version, all callers pass in a non-null `pBitmap`.
   CHECK(pBitmap);
   SetBitmap(pBitmap);
   SetDeviceDriver(std::make_unique<pdfium::CFX_AggDeviceDriver>(
