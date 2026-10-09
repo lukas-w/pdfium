@@ -809,26 +809,16 @@ bool CFX_RenderDevice::DrawPath(const CFX_Path& path,
 #if defined(PDF_USE_SKIA)
     if (render_cap_fillstroke_path_) {
       const bool using_skia = CFX_GEModule::IsSkiaRenderer();
-      if (using_skia) {
-        device_driver_->SetGroupKnockout(true);
-      }
-      bool draw_fillstroke_path_result =
-          device_driver_->DrawPath(path, pObject2Device, pGraphState,
-                                   fill_color, stroke_color, fill_options);
-
-      if (using_skia) {
-        // Restore the group knockout status for `device_driver_` after
-        // finishing painting a fill-and-stroke path.
-        device_driver_->SetGroupKnockout(false);
-      }
-      return draw_fillstroke_path_result;
+      return device_driver_->DrawPath(
+          path, pObject2Device, pGraphState, fill_color, stroke_color,
+          using_skia || group_knockout_, fill_options);
     }
 #endif  // defined(PDF_USE_SKIA)
     return DrawFillStrokePath(path, pObject2Device, pGraphState, fill_color,
                               stroke_color, fill_options);
   }
   return device_driver_->DrawPath(path, pObject2Device, pGraphState, fill_color,
-                                  stroke_color, fill_options);
+                                  stroke_color, group_knockout_, fill_options);
 }
 
 // This can be removed once PDFium entirely relies on Skia
@@ -873,19 +863,19 @@ bool CFX_RenderDevice::DrawFillStrokePath(
     backdrop->Copy(bitmap);
   }
   std::unique_ptr<CFX_RenderDevice> bitmap_device =
-      CFX_RenderDevice::CreateForBitmapWithBackdropAndGroupKnockout(
-          bitmap, std::move(backdrop), /*group_knockout=*/true);
+      CFX_RenderDevice::CreateForBitmapWithBackdrop(bitmap,
+                                                    std::move(backdrop));
   if (!bitmap_device) {
     return false;
   }
-
   CFX_Matrix matrix;
   if (pObject2Device) {
     matrix = *pObject2Device;
   }
   matrix.Translate(-rect.left, -rect.top);
   if (!bitmap_device->GetDeviceDriver()->DrawPath(
-          path, &matrix, pGraphState, fill_color, stroke_color, fill_options)) {
+          path, &matrix, pGraphState, fill_color, stroke_color,
+          /*group_knockout=*/true, fill_options)) {
     return false;
   }
   FX_RECT src_rect(0, 0, rect.Width(), rect.Height());
@@ -940,7 +930,7 @@ bool CFX_RenderDevice::DrawCosmeticLine(
   path.AppendPoint(ptMoveTo, CFX_Path::Point::Type::kMove);
   path.AppendPoint(ptLineTo, CFX_Path::Point::Type::kLine);
   return device_driver_->DrawPath(path, nullptr, &graph_state, 0, color,
-                                  fill_options);
+                                  group_knockout_, fill_options);
 }
 
 void CFX_RenderDevice::DrawZeroAreaPath(
@@ -980,7 +970,7 @@ void CFX_RenderDevice::DrawZeroAreaPath(
   path_options.aliased_path = aliased_path;
 
   device_driver_->DrawPath(new_path, new_matrix, &graph_state, 0, stroke_color,
-                           path_options);
+                           group_knockout_, path_options);
 }
 
 bool CFX_RenderDevice::GetDIBits(RetainPtr<CFX_DIBitmap> bitmap,
@@ -1659,30 +1649,27 @@ bool CFX_RenderDevice::Attach(RetainPtr<CFX_DIBitmap> pBitmap) {
 
 bool CFX_RenderDevice::AttachWithRgbByteOrder(RetainPtr<CFX_DIBitmap> pBitmap,
                                               bool bRgbByteOrder) {
-  return AttachImpl(std::move(pBitmap), bRgbByteOrder, nullptr, false);
+  return AttachImpl(std::move(pBitmap), bRgbByteOrder, nullptr);
 }
 
-bool CFX_RenderDevice::AttachWithBackdropAndGroupKnockout(
+bool CFX_RenderDevice::AttachWithBackdrop(
     RetainPtr<CFX_DIBitmap> pBitmap,
-    RetainPtr<CFX_DIBitmap> pBackdropBitmap,
-    bool bGroupKnockout) {
-  return AttachImpl(std::move(pBitmap), false, std::move(pBackdropBitmap),
-                    bGroupKnockout);
+    RetainPtr<CFX_DIBitmap> pBackdropBitmap) {
+  return AttachImpl(std::move(pBitmap), false, std::move(pBackdropBitmap));
 }
 
 bool CFX_RenderDevice::AttachImpl(RetainPtr<CFX_DIBitmap> pBitmap,
                                   bool bRgbByteOrder,
-                                  RetainPtr<CFX_DIBitmap> pBackdropBitmap,
-                                  bool bGroupKnockout) {
+                                  RetainPtr<CFX_DIBitmap> pBackdropBitmap) {
 #if defined(PDF_USE_SKIA)
   if (CFX_GEModule::IsSkiaRenderer()) {
     return AttachSkiaImpl(std::move(pBitmap), bRgbByteOrder,
-                          std::move(pBackdropBitmap), bGroupKnockout);
+                          std::move(pBackdropBitmap));
   }
 #endif
 #if defined(PDF_USE_AGG)
   return AttachAggImpl(std::move(pBitmap), bRgbByteOrder,
-                       std::move(pBackdropBitmap), bGroupKnockout);
+                       std::move(pBackdropBitmap));
 #else
   NOTREACHED();
 #endif
@@ -1741,15 +1728,13 @@ std::unique_ptr<CFX_RenderDevice> CFX_RenderDevice::CreateForBitmap(
 }
 
 // static
-std::unique_ptr<CFX_RenderDevice>
-CFX_RenderDevice::CreateForBitmapWithBackdropAndGroupKnockout(
+std::unique_ptr<CFX_RenderDevice> CFX_RenderDevice::CreateForBitmapWithBackdrop(
     RetainPtr<CFX_DIBitmap> bitmap,
-    RetainPtr<CFX_DIBitmap> backdrop_bitmap,
-    bool group_knockout) {
+    RetainPtr<CFX_DIBitmap> backdrop_bitmap) {
   // Private ctor.
   auto device = pdfium::WrapUnique(new CFX_RenderDevice());
-  if (!device->AttachWithBackdropAndGroupKnockout(
-          std::move(bitmap), std::move(backdrop_bitmap), group_knockout)) {
+  if (!device->AttachWithBackdrop(std::move(bitmap),
+                                  std::move(backdrop_bitmap))) {
     return nullptr;
   }
   return device;

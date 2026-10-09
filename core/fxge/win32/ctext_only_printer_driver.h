@@ -39,6 +39,7 @@ class CTextOnlyPrinterDriver final : public RenderDeviceDriverIface {
                 const CFX_GraphStateData* pGraphState,
                 uint32_t fill_color,
                 uint32_t stroke_color,
+                bool group_knockout,
                 const CFX_FillRenderOptions& fill_options) override;
   FX_RECT GetClipBox() const override;
   bool SetDIBits(RetainPtr<const CFX_DIBBase> bitmap,

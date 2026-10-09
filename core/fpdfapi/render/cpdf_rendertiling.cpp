@@ -54,11 +54,11 @@ RetainPtr<CFX_DIBitmap> CPDF_RenderTiling::DrawPatternBitmap(
     return nullptr;
   }
   std::unique_ptr<CFX_RenderDevice> bitmap_device =
-      CFX_RenderDevice::CreateForBitmapWithBackdropAndGroupKnockout(
-          pBitmap, /*backdrop_bitmap=*/nullptr, /*group_knockout=*/true);
+      CFX_RenderDevice::CreateForBitmap(pBitmap);
   if (!bitmap_device) {
     return nullptr;
   }
+  bitmap_device->SetGroupKnockout(true);
   CFX_FloatRect cell_bbox =
       pPattern->pattern_to_form().TransformRect(pPattern->bbox());
   cell_bbox = mtObject2Device.TransformRect(cell_bbox);

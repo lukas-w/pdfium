@@ -149,6 +149,7 @@ bool CPSPrinterDriver::DrawPath(const CFX_Path& path,
                                 const CFX_GraphStateData* pGraphState,
                                 FX_ARGB fill_color,
                                 FX_ARGB stroke_color,
+                                bool group_knockout,
                                 const CFX_FillRenderOptions& fill_options) {
   return psrenderer_.DrawPath(path, pObject2Device, pGraphState, fill_color,
                               stroke_color, fill_options);

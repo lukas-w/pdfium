@@ -623,6 +623,7 @@ bool CGdiDeviceDriver::DrawPath(const CFX_Path& path,
                                 const CFX_GraphStateData* pGraphState,
                                 uint32_t fill_color,
                                 uint32_t stroke_color,
+                                bool group_knockout,
                                 const CFX_FillRenderOptions& fill_options) {
   auto* pPlatform =
       static_cast<CWin32Platform*>(CFX_GEModule::Get()->GetPlatform());

@@ -986,11 +986,9 @@ agg::path_storage BuildAggPath(const CFX_Path& path,
 CFX_AggDeviceDriver::CFX_AggDeviceDriver(
     RetainPtr<CFX_DIBitmap> pBitmap,
     bool bRgbByteOrder,
-    RetainPtr<CFX_DIBitmap> pBackdropBitmap,
-    bool bGroupKnockout)
+    RetainPtr<CFX_DIBitmap> pBackdropBitmap)
     : bitmap_(std::move(pBitmap)),
       rgb_byte_order_(bRgbByteOrder),
-      group_knockout_(bGroupKnockout),
       backdrop_bitmap_(std::move(pBackdropBitmap)) {
   CHECK(bitmap_);
   CHECK_NE(bitmap_->GetFormat(), FXDIB_Format::k1bppMask);
@@ -1193,6 +1191,7 @@ bool CFX_AggDeviceDriver::DrawPath(const CFX_Path& path,
                                    const CFX_GraphStateData* pGraphState,
                                    uint32_t fill_color,
                                    uint32_t stroke_color,
+                                   bool group_knockout,
                                    const CFX_FillRenderOptions& fill_options) {
   if (bitmap_->GetBuffer().empty()) {
     return true;
@@ -1223,7 +1222,7 @@ bool CFX_AggDeviceDriver::DrawPath(const CFX_Path& path,
     RasterizeStroke(&rasterizer, &path_data, nullptr, pGraphState, 1,
                     fill_options.stroke_text_mode);
     RenderRasterizer(rasterizer, stroke_color, fill_options.full_cover,
-                     group_knockout_);
+                     group_knockout);
     return true;
   }
   CFX_Matrix matrix1;
@@ -1245,7 +1244,7 @@ bool CFX_AggDeviceDriver::DrawPath(const CFX_Path& path,
   RasterizeStroke(&rasterizer, &path_data, &matrix2, pGraphState, matrix1.a,
                   fill_options.stroke_text_mode);
   RenderRasterizer(rasterizer, stroke_color, fill_options.full_cover,
-                   group_knockout_);
+                   group_knockout);
   return true;
 }
 
@@ -1415,14 +1414,12 @@ bool CFX_AggDeviceDriver::ContinueDIBits(
 
 bool CFX_RenderDevice::AttachAggImpl(RetainPtr<CFX_DIBitmap> pBitmap,
                                      bool bRgbByteOrder,
-                                     RetainPtr<CFX_DIBitmap> pBackdropBitmap,
-                                     bool bGroupKnockout) {
+                                     RetainPtr<CFX_DIBitmap> pBackdropBitmap) {
   // Unlike the Skia version, all callers pass in a non-null `pBitmap`.
   CHECK(pBitmap);
   SetBitmap(pBitmap);
   SetDeviceDriver(std::make_unique<pdfium::CFX_AggDeviceDriver>(
-      std::move(pBitmap), bRgbByteOrder, std::move(pBackdropBitmap),
-      bGroupKnockout));
+      std::move(pBitmap), bRgbByteOrder, std::move(pBackdropBitmap)));
   return true;
 }
 
@@ -1437,6 +1434,6 @@ bool CFX_RenderDevice::CreateAgg(int width,
 
   SetBitmap(pBitmap);
   SetDeviceDriver(std::make_unique<pdfium::CFX_AggDeviceDriver>(
-      std::move(pBitmap), false, std::move(pBackdropBitmap), false));
+      std::move(pBitmap), false, std::move(pBackdropBitmap)));
   return true;
 }

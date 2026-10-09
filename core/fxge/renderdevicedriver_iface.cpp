@@ -129,8 +129,6 @@ bool RenderDeviceDriverIface::SetBitsWithMask(
   return false;
 }
 
-void RenderDeviceDriverIface::SetGroupKnockout(bool group_knockout) {}
-
 void RenderDeviceDriverIface::SyncInternalBitmaps() {}
 #endif  // defined(PDF_USE_SKIA)
 

@@ -34,8 +34,7 @@ class CFX_AggDeviceDriver final : public RenderDeviceDriverIface {
  public:
   CFX_AggDeviceDriver(RetainPtr<CFX_DIBitmap> pBitmap,
                       bool bRgbByteOrder,
-                      RetainPtr<CFX_DIBitmap> pBackdropBitmap,
-                      bool bGroupKnockout);
+                      RetainPtr<CFX_DIBitmap> pBackdropBitmap);
   ~CFX_AggDeviceDriver() override;
 
   void InitPlatform();
@@ -66,6 +65,7 @@ class CFX_AggDeviceDriver final : public RenderDeviceDriverIface {
                 const CFX_GraphStateData* pGraphState,
                 uint32_t fill_color,
                 uint32_t stroke_color,
+                bool group_knockout,
                 const CFX_FillRenderOptions& fill_options) override;
   bool FillRect(const FX_RECT& rect, uint32_t fill_color) override;
   FX_RECT GetClipBox() const override;
@@ -122,7 +122,6 @@ class CFX_AggDeviceDriver final : public RenderDeviceDriverIface {
 #endif
   CFX_FillRenderOptions fill_options_;
   const bool rgb_byte_order_;
-  const bool group_knockout_;
   RetainPtr<CFX_DIBitmap> backdrop_bitmap_;
 };
 

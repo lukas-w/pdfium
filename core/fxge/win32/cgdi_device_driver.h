@@ -43,6 +43,7 @@ class CGdiDeviceDriver : public RenderDeviceDriverIface {
                 const CFX_GraphStateData* pGraphState,
                 uint32_t fill_color,
                 uint32_t stroke_color,
+                bool group_knockout,
                 const CFX_FillRenderOptions& fill_options) override;
   bool FillRect(const FX_RECT& rect, uint32_t fill_color) override;
   bool DrawCosmeticLine(const CFX_PointF& ptMoveTo,

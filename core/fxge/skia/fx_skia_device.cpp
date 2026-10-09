@@ -664,11 +664,9 @@ SkFont SkFontFromCFXFont(const CFX_Font* cfx_font,
 std::unique_ptr<CFX_SkiaDeviceDriver> CFX_SkiaDeviceDriver::Create(
     RetainPtr<CFX_DIBitmap> pBitmap,
     bool bRgbByteOrder,
-    RetainPtr<CFX_DIBitmap> pBackdropBitmap,
-    bool bGroupKnockout) {
-  auto driver = pdfium::WrapUnique(
-      new CFX_SkiaDeviceDriver(std::move(pBitmap), bRgbByteOrder,
-                               std::move(pBackdropBitmap), bGroupKnockout));
+    RetainPtr<CFX_DIBitmap> pBackdropBitmap) {
+  auto driver = pdfium::WrapUnique(new CFX_SkiaDeviceDriver(
+      std::move(pBitmap), bRgbByteOrder, std::move(pBackdropBitmap)));
   if (!driver->canvas_) {
     return nullptr;
   }
@@ -690,12 +688,10 @@ std::unique_ptr<CFX_SkiaDeviceDriver> CFX_SkiaDeviceDriver::Create(
 CFX_SkiaDeviceDriver::CFX_SkiaDeviceDriver(
     RetainPtr<CFX_DIBitmap> pBitmap,
     bool bRgbByteOrder,
-    RetainPtr<CFX_DIBitmap> pBackdropBitmap,
-    bool bGroupKnockout)
+    RetainPtr<CFX_DIBitmap> pBackdropBitmap)
     : bitmap_(std::move(pBitmap)),
       backdrop_bitmap_(pBackdropBitmap),
-      rgb_byte_order_(bRgbByteOrder),
-      group_knockout_(bGroupKnockout) {
+      rgb_byte_order_(bRgbByteOrder) {
   SkColorType color_type;
   const int bpp = bitmap_->GetBPP();
   SkAlphaType alpha_type = kPremul_SkAlphaType;
@@ -745,7 +741,7 @@ CFX_SkiaDeviceDriver::CFX_SkiaDeviceDriver(
 }
 
 CFX_SkiaDeviceDriver::CFX_SkiaDeviceDriver(SkCanvas& canvas)
-    : canvas_(&canvas), rgb_byte_order_(false), group_knockout_(false) {
+    : canvas_(&canvas), rgb_byte_order_(false) {
   int width = canvas_->imageInfo().width();
   int height = canvas_->imageInfo().height();
   DCHECK_EQ(kUnknown_SkColorType, canvas_->imageInfo().colorType());
@@ -1142,6 +1138,7 @@ bool CFX_SkiaDeviceDriver::DrawPath(const CFX_Path& cfx_path,
                                     const CFX_GraphStateData* stroke_options,
                                     uint32_t fill_color,
                                     uint32_t stroke_color,
+                                    bool group_knockout,
                                     const CFX_FillRenderOptions& fill_options) {
   fill_options_ = fill_options;
 
@@ -1179,7 +1176,7 @@ bool CFX_SkiaDeviceDriver::DrawPath(const CFX_Path& cfx_path,
     // See section 11.4.6 of in ISO 32000-1:2008:
     // "At any given point, only the topmost object enclosing the point shall
     // contribute to the result colour and opacity of the group as a whole"
-    if (stroke_alpha && group_knockout_) {
+    if (stroke_alpha && group_knockout) {
       // Draw the knockout group path on a separate layer so blend modes can be
       // adjusted. When restore() is called path_paint is used to composite the
       // layer.
@@ -1601,10 +1598,6 @@ bool CFX_SkiaDeviceDriver::SetBitsWithMask(RetainPtr<const CFX_DIBBase> bitmap,
                           blend_type);
 }
 
-void CFX_SkiaDeviceDriver::SetGroupKnockout(bool group_knockout) {
-  group_knockout_ = group_knockout;
-}
-
 void CFX_SkiaDeviceDriver::SyncInternalBitmaps() {
   if (!original_bitmap_) {
     return;
@@ -1689,17 +1682,15 @@ CFX_SkiaDeviceDriver::CharDetail::~CharDetail() = default;
 
 bool CFX_RenderDevice::AttachSkiaImpl(RetainPtr<CFX_DIBitmap> pBitmap,
                                       bool bRgbByteOrder,
-                                      RetainPtr<CFX_DIBitmap> pBackdropBitmap,
-                                      bool bGroupKnockout) {
+                                      RetainPtr<CFX_DIBitmap> pBackdropBitmap) {
   // FPDF_FFLDrawSkia() ends up calling this method with a deliberately null
   // `pBitmap`.
   if (!pBitmap) {
     return false;
   }
   SetBitmap(pBitmap);
-  auto driver =
-      CFX_SkiaDeviceDriver::Create(std::move(pBitmap), bRgbByteOrder,
-                                   std::move(pBackdropBitmap), bGroupKnockout);
+  auto driver = CFX_SkiaDeviceDriver::Create(std::move(pBitmap), bRgbByteOrder,
+                                             std::move(pBackdropBitmap));
   if (!driver) {
     return false;
   }
@@ -1728,7 +1719,7 @@ bool CFX_RenderDevice::CreateSkia(int width,
 
   SetBitmap(pBitmap);
   auto driver = CFX_SkiaDeviceDriver::Create(std::move(pBitmap), false,
-                                             std::move(pBackdropBitmap), false);
+                                             std::move(pBackdropBitmap));
   if (!driver) {
     return false;
   }

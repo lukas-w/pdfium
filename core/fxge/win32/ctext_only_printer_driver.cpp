@@ -76,6 +76,7 @@ bool CTextOnlyPrinterDriver::DrawPath(
     const CFX_GraphStateData* pGraphState,
     uint32_t fill_color,
     uint32_t stroke_color,
+    bool group_knockout,
     const CFX_FillRenderOptions& fill_options) {
   return false;
 }

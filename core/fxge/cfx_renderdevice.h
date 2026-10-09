@@ -58,11 +58,9 @@ class CFX_RenderDevice final {
       RetainPtr<CFX_DIBitmap> bitmap,
       bool rgb_byte_order = false);
 
-  static std::unique_ptr<CFX_RenderDevice>
-  CreateForBitmapWithBackdropAndGroupKnockout(
+  static std::unique_ptr<CFX_RenderDevice> CreateForBitmapWithBackdrop(
       RetainPtr<CFX_DIBitmap> bitmap,
-      RetainPtr<CFX_DIBitmap> backdrop_bitmap,
-      bool group_knockout);
+      RetainPtr<CFX_DIBitmap> backdrop_bitmap);
 
   static std::unique_ptr<CFX_RenderDevice>
   CreateForNewBitmap(int width, int height, FXDIB_Format format);
@@ -238,6 +236,9 @@ class CFX_RenderDevice final {
   // See RenderDeviceDriverIface methods of the same name.
   bool MultiplyAlpha(float alpha);
   bool MultiplyAlphaMask(RetainPtr<const CFX_DIBitmap> mask);
+  void SetGroupKnockout(bool group_knockout) {
+    group_knockout_ = group_knockout;
+  }
 
 #if defined(PDF_USE_SKIA)
   bool DrawShading(const CPDF_ShadingPattern& pattern,
@@ -262,10 +263,9 @@ class CFX_RenderDevice final {
   [[nodiscard]] bool Attach(RetainPtr<CFX_DIBitmap> pBitmap);
   [[nodiscard]] bool AttachWithRgbByteOrder(RetainPtr<CFX_DIBitmap> pBitmap,
                                             bool bRgbByteOrder);
-  [[nodiscard]] bool AttachWithBackdropAndGroupKnockout(
+  [[nodiscard]] bool AttachWithBackdrop(
       RetainPtr<CFX_DIBitmap> pBitmap,
-      RetainPtr<CFX_DIBitmap> pBackdropBitmap,
-      bool bGroupKnockout);
+      RetainPtr<CFX_DIBitmap> pBackdropBitmap);
 #if defined(PDF_USE_SKIA)
   [[nodiscard]] bool AttachCanvas(SkCanvas& canvas);
 #endif
@@ -304,15 +304,13 @@ class CFX_RenderDevice final {
 
   bool AttachImpl(RetainPtr<CFX_DIBitmap> pBitmap,
                   bool bRgbByteOrder,
-                  RetainPtr<CFX_DIBitmap> pBackdropBitmap,
-                  bool bGroupKnockout);
+                  RetainPtr<CFX_DIBitmap> pBackdropBitmap);
 
 #if defined(PDF_USE_AGG)
   // Implemented in agg/cfx_agg_devicedriver.cpp
   bool AttachAggImpl(RetainPtr<CFX_DIBitmap> pBitmap,
                      bool bRgbByteOrder,
-                     RetainPtr<CFX_DIBitmap> pBackdropBitmap,
-                     bool bGroupKnockout);
+                     RetainPtr<CFX_DIBitmap> pBackdropBitmap);
 
   // Implemented in agg/cfx_agg_devicedriver.cpp
   bool CreateAgg(int width,
@@ -325,8 +323,7 @@ class CFX_RenderDevice final {
   // Implemented in skia/fx_skia_device.cpp
   bool AttachSkiaImpl(RetainPtr<CFX_DIBitmap> pBitmap,
                       bool bRgbByteOrder,
-                      RetainPtr<CFX_DIBitmap> pBackdropBitmap,
-                      bool bGroupKnockout);
+                      RetainPtr<CFX_DIBitmap> pBackdropBitmap);
 
   // Implemented in skia/fx_skia_device.cpp
   bool CreateSkia(int width,
@@ -350,6 +347,7 @@ class CFX_RenderDevice final {
   bool render_cap_shading_ = false;
   bool render_cap_premultiplied_alpha_ = false;
 #endif
+  bool group_knockout_ = false;
   DeviceType device_type_ = DeviceType::kDisplay;
   FX_RECT clip_box_;
   std::unique_ptr<RenderDeviceDriverIface> device_driver_;

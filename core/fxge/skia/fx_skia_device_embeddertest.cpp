@@ -95,6 +95,7 @@ void CommonTest(CFX_SkiaDeviceDriver* driver, const State& state) {
   }
   if (state.graphic_ == State::Graphic::kPath) {
     driver->DrawPath(path1, &matrix, &graphState, 0xFF112233, 0,
+                     /*group_knockout=*/false,
                      CFX_FillRenderOptions::WindingOptions());
   } else if (state.graphic_ == State::Graphic::kText) {
     driver->DrawDeviceText(pdfium::span_from_ref(charPos), &font, matrix,
@@ -121,6 +122,7 @@ void CommonTest(CFX_SkiaDeviceDriver* driver, const State& state) {
   }
   if (state.graphic_ == State::Graphic::kPath) {
     driver->DrawPath(path2, &matrix2, &graphState, 0xFF112233, 0,
+                     /*group_knockout=*/false,
                      CFX_FillRenderOptions::WindingOptions());
   } else if (state.graphic_ == State::Graphic::kText) {
     driver->DrawDeviceText(pdfium::span_from_ref(charPos), &font, matrix2,
@@ -162,7 +164,7 @@ void Harness(void (*Test)(CFX_SkiaDeviceDriver*, const State&),
   ASSERT_TRUE(
       FPDFBitmap_FillRect(bitmap.get(), 0, 0, kWidth, kHeight, 0x00000000));
   RetainPtr<CFX_DIBitmap> pBitmap(CFXDIBitmapFromFPDFBitmap(bitmap.get()));
-  auto driver = CFX_SkiaDeviceDriver::Create(pBitmap, false, nullptr, false);
+  auto driver = CFX_SkiaDeviceDriver::Create(pBitmap, false, nullptr);
   ASSERT_TRUE(driver);
   (*Test)(driver.get(), state);
   uint32_t pixel = pBitmap->GetPixelForTesting(0, 0);

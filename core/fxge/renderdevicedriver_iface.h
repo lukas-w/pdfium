@@ -99,6 +99,7 @@ class RenderDeviceDriverIface {
                         const CFX_GraphStateData* pGraphState,
                         uint32_t fill_color,
                         uint32_t stroke_color,
+                        bool group_knockout,
                         const CFX_FillRenderOptions& fill_options) = 0;
   virtual bool FillRect(const FX_RECT& rect, uint32_t fill_color);
   virtual bool DrawCosmeticLine(const CFX_PointF& ptMoveTo,
@@ -152,7 +153,6 @@ class RenderDeviceDriverIface {
                                int top,
                                float alpha,
                                BlendMode blend_type);
-  virtual void SetGroupKnockout(bool group_knockout);
 
   // For `CFX_SkiaDeviceDriver` only:
   // Syncs the current rendering result from the internal buffer to the output

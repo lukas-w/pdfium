@@ -42,8 +42,7 @@ class CFX_SkiaDeviceDriver final : public RenderDeviceDriverIface {
   static std::unique_ptr<CFX_SkiaDeviceDriver> Create(
       RetainPtr<CFX_DIBitmap> pBitmap,
       bool bRgbByteOrder,
-      RetainPtr<CFX_DIBitmap> pBackdropBitmap,
-      bool bGroupKnockout);
+      RetainPtr<CFX_DIBitmap> pBackdropBitmap);
   static std::unique_ptr<CFX_SkiaDeviceDriver> Create(SkCanvas& canvas);
 
   ~CFX_SkiaDeviceDriver() override;
@@ -75,6 +74,7 @@ class CFX_SkiaDeviceDriver final : public RenderDeviceDriverIface {
                 const CFX_GraphStateData* pGraphState,
                 uint32_t fill_color,
                 uint32_t stroke_color,
+                bool group_knockout,
                 const CFX_FillRenderOptions& fill_options) override;
   bool FillRect(const FX_RECT& rect, uint32_t fill_color) override;
   FX_RECT GetClipBox() const override;
@@ -94,7 +94,6 @@ class CFX_SkiaDeviceDriver final : public RenderDeviceDriverIface {
                        int dest_top,
                        float alpha,
                        BlendMode blend_type) override;
-  void SetGroupKnockout(bool group_knockout) override;
   void SyncInternalBitmaps() override;
   bool StretchDIBits(RetainPtr<const CFX_DIBBase> bitmap,
                      uint32_t color,
@@ -171,8 +170,7 @@ class CFX_SkiaDeviceDriver final : public RenderDeviceDriverIface {
   // Use the public creation methods instead.
   CFX_SkiaDeviceDriver(RetainPtr<CFX_DIBitmap> pBitmap,
                        bool bRgbByteOrder,
-                       RetainPtr<CFX_DIBitmap> pBackdropBitmap,
-                       bool bGroupKnockout);
+                       RetainPtr<CFX_DIBitmap> pBackdropBitmap);
   explicit CFX_SkiaDeviceDriver(SkCanvas& canvas);
 
   bool TryDrawText(pdfium::span<const TextCharPos> char_pos,
@@ -213,9 +211,8 @@ class CFX_SkiaDeviceDriver final : public RenderDeviceDriverIface {
   UnownedPtr<SkCanvas> canvas_;
   CFX_FillRenderOptions fill_options_;
   const bool rgb_byte_order_;
-  bool group_knockout_;
-
   CharDetail char_details_;
+
   // accumulator for txt rotate/scale/translate
   DataVector<SkRSXform> rsxform_;
 };
