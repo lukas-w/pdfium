@@ -40,8 +40,9 @@ bool CPDF_ScaledRenderBuffer::Initialize(CPDF_RenderContext* context,
         matrix_.TransformRect(CFX_FloatRect(rect_)).GetOuterRect();
     int32_t width = bitmap_rect.Width();
     int32_t height = bitmap_rect.Height();
+
     // Set to 0 to make CalculatePitchAndSize() calculate it.
-    static constexpr uint32_t kNoPitch = 0;
+    constexpr uint32_t kNoPitch = 0;
     std::optional<CFX_DIBitmap::PitchAndSize> pitch_size =
         CFX_DIBitmap::CalculatePitchAndSize(width, height, dibFormat, kNoPitch);
     if (!pitch_size.has_value()) {
@@ -58,6 +59,11 @@ bool CPDF_ScaledRenderBuffer::Initialize(CPDF_RenderContext* context,
           return true;
         }
       }
+    }
+
+    // Once dimensions are at a minimum, further scaling cannot help.
+    if (width <= 1 && height <= 1) {
+      return false;
     }
     matrix_.Scale(0.5f, 0.5f);
   }
