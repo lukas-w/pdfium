@@ -11,6 +11,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <utility>
 #include <vector>
 
@@ -670,14 +671,22 @@ CPDF_TextPage::TextOrientation CPDF_TextPage::FindTextlineFlowOrientation()
       continue;
     }
 
+    const CFX_FloatRect& rect = page_obj->GetRect();
+    if (!std::isfinite(rect.left) ||
+        !std::isfinite(rect.right) ||
+        !std::isfinite(rect.bottom) ||
+        !std::isfinite(rect.top)) {
+      continue;
+    }
+
     int32_t minH = static_cast<int32_t>(
-        std::clamp<float>(page_obj->GetRect().left, 0.0f, nPageWidth));
+        std::clamp<float>(rect.left, 0.0f, nPageWidth));
     int32_t maxH = static_cast<int32_t>(
-        std::clamp<float>(page_obj->GetRect().right, 0.0f, nPageWidth));
+        std::clamp<float>(rect.right, 0.0f, nPageWidth));
     int32_t minV = static_cast<int32_t>(
-        std::clamp<float>(page_obj->GetRect().bottom, 0.0f, nPageHeight));
+        std::clamp<float>(rect.bottom, 0.0f, nPageHeight));
     int32_t maxV = static_cast<int32_t>(
-        std::clamp<float>(page_obj->GetRect().top, 0.0f, nPageHeight));
+        std::clamp<float>(rect.top, 0.0f, nPageHeight));
     if (minH >= maxH || minV >= maxV) {
       continue;
     }
@@ -695,7 +704,7 @@ CPDF_TextPage::TextOrientation CPDF_TextPage::FindTextlineFlowOrientation()
     nEndV = std::max(nEndV, maxV);
 
     if (fLineHeight <= 0.0f) {
-      fLineHeight = page_obj->GetRect().Height();
+      fLineHeight = rect.Height();
     }
   }
   const int32_t nDoubleLineHeight = 2 * fLineHeight;
