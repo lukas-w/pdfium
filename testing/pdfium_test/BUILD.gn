@@ -26,8 +26,14 @@ executable("pdfium_test") {
   deps = [
     "../:path_service",
     "../:test_support",
+    "../../:pdfium_public_headers",
+    "../../core/fpdfapi/page",
+    "../../core/fpdfapi/parser",
+    "../../core/fpdfapi/render",
     "../../core/fxcrt",
+    "../../core/fxge",
     "../../fpdfsdk",
+    "../../fpdfsdk:test_support",
     "../png_codec",
     "//build/win:default_exe_manifest",
   ]

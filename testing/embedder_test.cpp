@@ -26,6 +26,7 @@
 #include "core/fxge/cfx_gemodule.h"
 #include "core/fxge/dib/fx_dib.h"
 #include "fpdfsdk/cpdfsdk_helpers.h"
+#include "fpdfsdk/display_list_renderer.h"
 #include "public/cpp/fpdf_scopers.h"
 #include "public/fpdf_dataavail.h"
 #include "public/fpdf_edit.h"
@@ -933,6 +934,41 @@ ScopedFPDFBitmap EmbedderTest::RenderPageWithFlags(FPDF_PAGE page,
 // static
 ScopedFPDFBitmap EmbedderTest::RenderPage(FPDF_PAGE page) {
   return RenderPageWithFlags(page, nullptr, 0);
+}
+
+std::string EmbedderTest::RenderLoadedPageToDisplayList(FPDF_PAGE page) {
+  return RenderLoadedPageWithFlagsToDisplayList(page, 0);
+}
+
+std::string EmbedderTest::RenderLoadedPageWithFlagsToDisplayList(FPDF_PAGE page,
+                                                                 int flags) {
+  int page_index = GetPageNumberForLoadedPage(page);
+  CHECK_GE(page_index, 0);
+  return RenderPageWithFlagsToDisplayList(page, form_handle(), flags);
+}
+
+std::string EmbedderTest::RenderSavedPageToDisplayList(FPDF_PAGE page) {
+  return RenderSavedPageWithFlagsToDisplayList(page, 0);
+}
+
+std::string EmbedderTest::RenderSavedPageWithFlagsToDisplayList(FPDF_PAGE page,
+                                                                int flags) {
+  int page_index = GetPageNumberForSavedPage(page);
+  CHECK_GE(page_index, 0);
+  return RenderPageWithFlagsToDisplayList(page, saved_form_handle(), flags);
+}
+
+// static
+std::string EmbedderTest::RenderPageWithFlagsToDisplayList(
+    FPDF_PAGE page,
+    FPDF_FORMHANDLE handle,
+    int flags) {
+  return DisplayListRenderer::RenderPage(page, handle, flags);
+}
+
+// static
+std::string EmbedderTest::RenderPageToDisplayList(FPDF_PAGE page) {
+  return RenderPageWithFlagsToDisplayList(page, nullptr, 0);
 }
 
 #if BUILDFLAG(IS_WIN)

@@ -16,6 +16,7 @@
 #include "core/fxge/cfx_renderdevice.h"
 #include "core/fxge/dib/cfx_dibitmap.h"
 #include "core/fxge/dib/fx_dib.h"
+#include "core/fxge/display_list_device_driver.h"
 #include "core/fxge/renderdevicedriver_iface.h"
 #include "testing/gtest/include/gtest/gtest.h"
 
@@ -27,73 +28,9 @@
 #include "core/fxge/cfx_gemodule.h"
 #include "core/fxge/win32/cfx_psfonttracker.h"
 #include "core/fxge/win32/cgdi_device_driver.h"
-#endif
+#endif  // BUILDFLAG(IS_WIN)
 
 namespace {
-
-class FakeDeviceDriver : public RenderDeviceDriverIface {
- public:
-  FakeDeviceDriver(int width, int height) : width_(width), height_(height) {}
-  ~FakeDeviceDriver() override = default;
-
-  DeviceType GetDeviceType() const override { return DeviceType::kDisplay; }
-  int GetPixelWidth() const override { return width_; }
-  int GetPixelHeight() const override { return height_; }
-  int GetBitsPerPixel() const override { return 32; }
-  void Clear(uint32_t color) override {}
-  void SaveState() override {}
-  void RestoreState(bool bKeepSaved) override {}
-  bool SetClip_PathFill(const CFX_Path& path,
-                        const CFX_Matrix* pObject2Device,
-                        const CFX_FillRenderOptions& fill_options) override {
-    return true;
-  }
-  bool DrawPath(const CFX_Path& path,
-                const CFX_Matrix* pObject2Device,
-                const CFX_GraphStateData* pGraphState,
-                uint32_t fill_color,
-                uint32_t stroke_color,
-                bool group_knockout,
-                const CFX_FillRenderOptions& fill_options) override {
-    return true;
-  }
-  FX_RECT GetClipBox() const override { return FX_RECT(0, 0, width_, height_); }
-  bool SetDIBits(RetainPtr<const CFX_DIBBase> bitmap,
-                 uint32_t color,
-                 const FX_RECT& src_rect,
-                 int dest_left,
-                 int dest_top,
-                 BlendMode blend_type) override {
-    return true;
-  }
-  bool StretchDIBits(RetainPtr<const CFX_DIBBase> bitmap,
-                     uint32_t color,
-                     int dest_left,
-                     int dest_top,
-                     int dest_width,
-                     int dest_height,
-                     const FX_RECT* pClipRect,
-                     const FXDIB_ResampleOptions& options,
-                     BlendMode blend_type) override {
-    return true;
-  }
-  StartResult StartDIBits(RetainPtr<const CFX_DIBBase> bitmap,
-                          float alpha,
-                          uint32_t color,
-                          const CFX_Matrix& matrix,
-                          const FXDIB_ResampleOptions& options,
-                          BlendMode blend_type) override {
-    return StartResult(Result::kFailure, nullptr);
-  }
-  bool MultiplyAlpha(float alpha) override { return true; }
-  bool MultiplyAlphaMask(RetainPtr<const CFX_DIBitmap> mask) override {
-    return true;
-  }
-
- private:
-  const int width_;
-  const int height_;
-};
 
 std::unique_ptr<CFX_RenderDevice> CreateDeviceForBitmap(int width, int height) {
   auto bitmap = pdfium::MakeRetain<CFX_DIBitmap>();
@@ -108,7 +45,7 @@ std::unique_ptr<CFX_RenderDevice> CreateDeviceForBitmap(int width, int height) {
 TEST(CFXRenderDeviceTest, CreateWithDriver) {
   EXPECT_FALSE(CFX_RenderDevice::CreateWithDriver(nullptr));
 
-  auto driver = std::make_unique<FakeDeviceDriver>(20, 30);
+  auto driver = std::make_unique<DisplayListDeviceDriver>(20, 30);
   RenderDeviceDriverIface* driver_ptr = driver.get();
   std::unique_ptr<CFX_RenderDevice> device =
       CFX_RenderDevice::CreateWithDriver(std::move(driver));

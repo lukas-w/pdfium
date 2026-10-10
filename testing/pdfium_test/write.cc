@@ -930,3 +930,16 @@ void WriteThumbnail(FPDF_PAGE page, const char* pdf_name, int page_num) {
   WriteBufferToFile(&png_encoding.front(), png_encoding.size(), filename,
                     "thumbnail");
 }
+
+std::string WriteDisplayList(const char* pdf_name,
+                             int num,
+                             const std::string& display_list) {
+  std::string filename = GeneratePageOutputFilename(pdf_name, num, "dump.txt");
+  if (filename.empty()) {
+    return std::string();
+  }
+
+  WriteBufferToFile(display_list.data(), display_list.size(), filename.c_str(),
+                    "dump");
+  return filename;
+}

@@ -102,6 +102,29 @@ source_set("fpdfsdk") {
   }
 }
 
+source_set("test_support") {
+  testonly = true
+  sources = [
+    "display_list_renderer.cpp",
+    "display_list_renderer.h",
+  ]
+  configs += [
+    "../:pdfium_strict_config",
+    "../:pdfium_noshorten_config",
+  ]
+  deps = [
+    ":fpdfsdk",
+    "../:pdfium_public_headers",
+    "../core/fpdfapi/page",
+    "../core/fpdfapi/parser",
+    "../core/fpdfapi/render",
+    "../core/fxcrt",
+    "../core/fxge",
+    "../core/fxge:test_support",
+  ]
+  visibility = [ "../*" ]
+}
+
 pdfium_unittest_source_set("unittests") {
   sources = [
     "cpdfsdk_helpers_unittest.cpp",

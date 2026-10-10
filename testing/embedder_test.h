@@ -293,6 +293,32 @@ class EmbedderTest : public ::testing::Test,
   // Simplified form of RenderPageWithFlags() with no handle and no flags.
   static ScopedFPDFBitmap RenderPage(FPDF_PAGE page);
 
+  // RenderLoadedPageWithFlagsToDisplayList() with no flags.
+  std::string RenderLoadedPageToDisplayList(FPDF_PAGE page);
+
+  // Convert `page` loaded via LoadPage() into a display list string with the
+  // specified page rendering `flags`.
+  std::string RenderLoadedPageWithFlagsToDisplayList(FPDF_PAGE page, int flags);
+
+  // RenderSavedPageWithFlagsToDisplayList() with no flags.
+  std::string RenderSavedPageToDisplayList(FPDF_PAGE page);
+
+  // Convert `page` loaded via LoadSavedPage() into a display list string with
+  // the specified page rendering `flags`.
+  std::string RenderSavedPageWithFlagsToDisplayList(FPDF_PAGE page, int flags);
+
+  // Convert `page` into a display list string with the specified page rendering
+  // `flags`. The form handle associated with `page` should be passed in via
+  // `handle`. If `handle` is nullptr, then forms on the page will not be
+  // rendered.
+  static std::string RenderPageWithFlagsToDisplayList(FPDF_PAGE page,
+                                                      FPDF_FORMHANDLE handle,
+                                                      int flags);
+
+  // Simplified form of RenderPageWithFlagsToDisplayList() with no handle and no
+  // flags.
+  static std::string RenderPageToDisplayList(FPDF_PAGE page);
+
 #if BUILDFLAG(IS_WIN)
   // Convert `page` into EMF with the specified page rendering `flags`.
   static std::vector<uint8_t> RenderPageWithFlagsToEmf(FPDF_PAGE page,

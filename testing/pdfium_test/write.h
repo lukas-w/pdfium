@@ -61,6 +61,10 @@ std::unique_ptr<SkWStream> WriteToSkWStream(const std::string& pdf_name,
 std::string WriteSkp(const char* pdf_name, int num, const SkPicture& picture);
 #endif  // PDF_USE_SKIA
 
+std::string WriteDisplayList(const char* pdf_name,
+                             int num,
+                             const std::string& display_list);
+
 void WriteAttachments(FPDF_DOCUMENT doc, const std::string& name);
 void WriteImages(FPDF_PAGE page, const char* pdf_name, int page_num);
 void WriteRenderedImages(FPDF_DOCUMENT doc,

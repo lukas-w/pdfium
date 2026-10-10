@@ -2231,3 +2231,94 @@ TEST_F(FPDFViewEmbedderTest, DocumentVersionInCatalog) {
   EXPECT_TRUE(FPDF_GetFileVersion(document(), &version));
   EXPECT_EQ(16, version);
 }
+
+TEST_F(FPDFViewEmbedderTest, RenderPageToDisplayList) {
+  static const char kExpectedDisplayList[] =
+      "SaveState\n"
+      "SetBaseClip [0,0,200,300]\n"
+      "SetClip_PathFill rule=winding matrix=none "
+      "points=[move(0.0000,300.0000) line(0.0000,0.0000) line(200.0000,0.0000) "
+      "line(200.0000,300.0000) line(0.0000,300.0000,close)]\n"
+      "SaveState\n"
+      "DrawPath fill=0xff000000 stroke=0xff000000 rule=even-odd "
+      "stroke_state=[width=1.0000 cap=butt join=miter miter=10.0000] "
+      "matrix=[1.0000,0.0000,0.0000,-1.0000,0.0000,300.0000] "
+      "points=[move(0.0000,290.0000) line(10.0000,290.0000) "
+      "line(10.0000,300.0000) "
+      "line(0.0000,300.0000) line(0.0000,290.0000,close)]\n"
+      "DrawPath fill=0xff000000 stroke=0xff000000 rule=even-odd "
+      "stroke_state=[width=1.0000 cap=butt join=miter miter=10.0000] "
+      "matrix=[1.0000,0.0000,0.0000,-1.0000,0.0000,300.0000] "
+      "points=[move(10.0000,150.0000) line(60.0000,150.0000) "
+      "line(60.0000,180.0000) "
+      "line(10.0000,180.0000) line(10.0000,150.0000,close)]\n"
+      "DrawPath fill=0xff0000ff stroke=0xff000000 rule=even-odd "
+      "stroke_state=[width=1.0000 cap=butt join=miter miter=10.0000] "
+      "matrix=[1.0000,0.0000,0.0000,-1.0000,0.0000,300.0000] "
+      "points=[move(190.0000,290.0000) line(200.0000,290.0000) "
+      "line(200.0000,300.0000) "
+      "line(190.0000,300.0000) line(190.0000,290.0000,close)]\n"
+      "DrawPath fill=0xff0000ff stroke=0xff000000 rule=even-odd "
+      "stroke_state=[width=1.0000 cap=butt join=miter miter=10.0000] "
+      "matrix=[1.0000,0.0000,0.0000,-1.0000,0.0000,300.0000] "
+      "points=[move(70.0000,232.0000) line(120.0000,232.0000) "
+      "line(120.0000,262.0000) "
+      "line(70.0000,262.0000) line(70.0000,232.0000,close)]\n"
+      "DrawPath fill=0xff00ff00 stroke=0xff000000 rule=even-odd "
+      "stroke_state=[width=1.0000 cap=butt join=miter miter=10.0000] "
+      "matrix=[1.0000,0.0000,0.0000,-1.0000,0.0000,300.0000] "
+      "points=[move(190.0000,0.0000) line(200.0000,0.0000) "
+      "line(200.0000,10.0000) "
+      "line(190.0000,10.0000) line(190.0000,0.0000,close)]\n"
+      "DrawPath fill=0xff00ff00 stroke=0xff000000 rule=even-odd "
+      "stroke_state=[width=1.0000 cap=butt join=miter miter=10.0000] "
+      "matrix=[1.0000,0.0000,0.0000,-1.0000,0.0000,300.0000] "
+      "points=[move(130.0000,150.0000) line(180.0000,150.0000) "
+      "line(180.0000,180.0000) "
+      "line(130.0000,180.0000) line(130.0000,150.0000,close)]\n"
+      "DrawPath fill=0xffff0000 stroke=0xff000000 rule=even-odd "
+      "stroke_state=[width=1.0000 cap=butt join=miter miter=10.0000] "
+      "matrix=[1.0000,0.0000,0.0000,-1.0000,0.0000,300.0000] "
+      "points=[move(0.0000,0.0000) line(10.0000,0.0000) line(10.0000,10.0000) "
+      "line(0.0000,10.0000) line(0.0000,0.0000,close)]\n"
+      "DrawPath fill=0xffff0000 stroke=0xff000000 rule=even-odd "
+      "stroke_state=[width=1.0000 cap=butt join=miter miter=10.0000] "
+      "matrix=[1.0000,0.0000,0.0000,-1.0000,0.0000,300.0000] "
+      "points=[move(70.0000,67.0000) line(120.0000,67.0000) "
+      "line(120.0000,97.0000) "
+      "line(70.0000,97.0000) line(70.0000,67.0000,close)]\n"
+      "RestoreState\n"
+      "RestoreState\n";
+
+  ASSERT_TRUE(OpenDocument("rectangles.pdf"));
+  ScopedPage page = LoadScopedPage(0);
+  ASSERT_TRUE(page);
+
+  std::string display_list = RenderPageToDisplayList(page.get());
+  EXPECT_EQ(kExpectedDisplayList, display_list);
+}
+
+TEST_F(FPDFViewEmbedderTest, RenderHelloWorldToDisplayList) {
+  ASSERT_TRUE(OpenDocument("hello_world.pdf"));
+  ScopedPage page = LoadScopedPage(0);
+  ASSERT_TRUE(page);
+
+  std::string display_list = RenderPageToDisplayList(page.get());
+  EXPECT_NE(std::string::npos,
+            display_list.find("DrawDeviceText font=\"Tinos\" size=12.0000"));
+  EXPECT_NE(std::string::npos,
+            display_list.find("DrawDeviceText font=\"Arimo\" size=16.0000"));
+  EXPECT_NE(std::string::npos, display_list.find("idx=43,u=U+0048"));
+}
+
+TEST_F(FPDFViewEmbedderTest, RenderImageToDisplayList) {
+  ASSERT_TRUE(OpenDocument("embedded_images.pdf"));
+  ScopedPage page = LoadScopedPage(0);
+  ASSERT_TRUE(page);
+
+  std::string display_list = RenderPageToDisplayList(page.get());
+  EXPECT_NE(std::string::npos,
+            display_list.find("StartDIBits size=[109,88] bpp=24"));
+  EXPECT_NE(std::string::npos,
+            display_list.find("StartDIBits size=[92,68] bpp=1"));
+}

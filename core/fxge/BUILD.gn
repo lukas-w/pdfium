@@ -266,6 +266,19 @@ if (pdf_enable_fontations) {
   }
 }
 
+source_set("test_support") {
+  testonly = true
+  sources = [
+    "display_list_device_driver.cpp",
+    "display_list_device_driver.h",
+  ]
+  configs += [ "../../:pdfium_strict_config" ]
+  deps = [
+    ":fxge",
+    "../fxcrt",
+  ]
+}
+
 pdfium_unittest_source_set("unittests") {
   sources = [
     "cfx_color_unittest.cpp",
@@ -288,6 +301,7 @@ pdfium_unittest_source_set("unittests") {
   ]
   deps = [
     ":fxge",
+    ":test_support",
     "../../testing:path_service",
     "../../testing:test_support",
     "../fpdfapi/page",

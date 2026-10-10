@@ -42,10 +42,12 @@ source_set("test_support") {
     ":path_service",
     "../:pdfium_public_headers",
     "../core/fxcrt",
+    "../core/fxge:test_support",
     "//third_party/test_fonts",
   ]
   deps = [
     "../core/fdrm",
+    "../core/fxcrt",
     "../core/fxge",
     "../fpdfsdk",
     "png_codec",
@@ -242,6 +244,7 @@ source_set("embedder_test_support") {
     "../core/fdrm",
     "../core/fxge",
     "../fpdfsdk",
+    "../fpdfsdk:test_support",
     "png_codec",
     "//third_party/simdutf",
   ]

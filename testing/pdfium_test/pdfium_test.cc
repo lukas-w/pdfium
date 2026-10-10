@@ -23,6 +23,7 @@
 #include "core/fxcrt/compiler_specific.h"
 #include "core/fxcrt/fx_memcpy_wrappers.h"
 #include "core/fxcrt/span.h"
+#include "fpdfsdk/display_list_renderer.h"
 #include "public/cpp/fpdf_scopers.h"
 #include "public/fpdf_annot.h"
 #include "public/fpdf_attachment.h"
@@ -153,6 +154,7 @@ enum class OutputFormat {
   kPpm,
   kPng,
   kAnnot,
+  kDisplayList,
 #ifdef _WIN32
   kBmp,
   kEmf,
@@ -670,6 +672,12 @@ bool ParseCommandLine(const std::vector<std::string>& args,
         return false;
       }
       options->output_format = OutputFormat::kAnnot;
+    } else if (cur_arg == "--dump") {
+      if (options->output_format != OutputFormat::kNone) {
+        fprintf(stderr, "Duplicate or conflicting --dump argument\n");
+        return false;
+      }
+      options->output_format = OutputFormat::kDisplayList;
 #ifdef PDF_USE_SKIA
     } else if (cur_arg == "--skp") {
       if (options->output_format != OutputFormat::kNone) {
@@ -1495,6 +1503,35 @@ class SkDocumentPageRenderer final : public SkCanvasPageRenderer {
 };
 #endif  // PDF_USE_SKIA
 
+class DisplayListPageRenderer final : public PageRenderer {
+ public:
+  DisplayListPageRenderer(FPDF_PAGE page, int width, int height, int flags)
+      : PageRenderer(page, width, height, flags),
+        renderer_(page, width, height, flags) {}
+
+  bool HasOutput() const override { return has_output_; }
+
+  bool Start() override { return renderer_.Start(); }
+
+  void Finish(FPDF_FORMHANDLE form) override {
+    renderer_.Finish(form);
+    has_output_ = true;
+  }
+
+  bool Write(const std::string& name, int page_index, bool /*md5*/) override {
+    if (!has_output_) {
+      return false;
+    }
+    std::string filename =
+        WriteDisplayList(name.c_str(), page_index, renderer_.GetDisplayList());
+    return !filename.empty();
+  }
+
+ private:
+  DisplayListRenderer renderer_;
+  bool has_output_ = false;
+};
+
 bool PdfProcessor::ProcessPage(const int page_index) {
   FPDF_PAGE page = GetPage(page_index);
   if (!page) {
@@ -1621,6 +1658,11 @@ bool PdfProcessor::ProcessPage(const int page_index) {
     }
 #endif  // _WIN32
 #endif  // PDF_USE_SKIA
+
+    case OutputFormat::kDisplayList:
+      renderer = std::make_unique<DisplayListPageRenderer>(
+          page, /*width=*/width, /*height=*/height, /*flags=*/flags);
+      break;
 
     default:
       // Other formats won't write the output to a file, but still rasterize.
@@ -1991,6 +2033,8 @@ constexpr char kUsageString[] =
     "  --png   - write page images <pdf-name>.<page-number>.png\n"
     "  --ppm   - write page images <pdf-name>.<page-number>.ppm\n"
     "  --annot - write annotation info <pdf-name>.<page-number>.annot.txt\n"
+    "  --dump  - write page drawing commands "
+    "<pdf-name>.<page-number>.dump.txt\n"
 #ifdef PDF_USE_SKIA
     "  --skp   - write page images <pdf-name>.<page-number>.skp\n"
 #ifdef _WIN32
