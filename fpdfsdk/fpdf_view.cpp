@@ -242,9 +242,8 @@ FPDF_InitLibraryWithConfig(const FPDF_LIBRARY_CONFIG* config) {
 #error "Neither FreeType nor Fontations enabled"
 #endif
 #if defined(PDF_ENABLE_BROTLI)
-  if (config && config->version >= 6) {
-    BrotliDecoder::SetBrotliEnabled(config->m_BrotliEnabled);
-  }
+  BrotliDecoder::SetBrotliEnabled(config && config->version >= 6 &&
+                                  config->m_BrotliEnabled);
 #endif
 
   std::optional<pdfium::span<const char* const>> user_font_paths_opt;
