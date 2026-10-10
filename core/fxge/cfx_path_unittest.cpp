@@ -265,12 +265,96 @@ TEST(CFXPath, GetRectOppositeCorner) {
   ASSERT_EQ(CFX_PointF(2, 0), path.GetPoints()[2].point_);
   EXPECT_EQ(CFX_PointF(2, 1), path.GetRectOppositeCorner());
 
+  // So does an extra point in the middle of the first edge.
+  path.Clear();
+  path.AppendPoint({0, 0}, CFX_Path::Point::Type::kMove);
+  path.AppendPoint({1, 0}, CFX_Path::Point::Type::kLine);
+  path.AppendPoint({2, 0}, CFX_Path::Point::Type::kLine);
+  path.AppendPoint({2, 1}, CFX_Path::Point::Type::kLine);
+  path.AppendPoint({0, 1}, CFX_Path::Point::Type::kLine);
+  path.AppendPointAndClose({0, 0}, CFX_Path::Point::Type::kLine);
+  ASSERT_EQ(CFX_PointF(2, 0), path.GetPoints()[2].point_);
+  EXPECT_EQ(CFX_PointF(2, 1), path.GetRectOppositeCorner());
+
   path.Clear();
   path.AppendPoint({0, 0}, CFX_Path::Point::Type::kMove);
   path.AppendPoint({2, 0}, CFX_Path::Point::Type::kLine);
   path.AppendPoint({3, 1}, CFX_Path::Point::Type::kLine);
   path.AppendPointAndClose({0, 1}, CFX_Path::Point::Type::kLine);
   EXPECT_FALSE(path.GetRectOppositeCorner().has_value());
+}
+
+TEST(CFXPath, SixPlusPointRectWithCollinearPoints) {
+  // A rectangle with an extra point in the middle of its bottom edge, closed
+  // with "h". This is how some PDF generators emit rectangular clip paths.
+  CFX_Path path;
+  path.AppendPoint({0, 1}, CFX_Path::Point::Type::kMove);
+  path.AppendPoint({2, 1}, CFX_Path::Point::Type::kLine);
+  path.AppendPoint({2, 0}, CFX_Path::Point::Type::kLine);
+  path.AppendPoint({1, 0}, CFX_Path::Point::Type::kLine);
+  path.AppendPoint({0, 0}, CFX_Path::Point::Type::kLine);
+  path.AppendPointAndClose({0, 1}, CFX_Path::Point::Type::kLine);
+  ASSERT_EQ(6u, path.GetPoints().size());
+  EXPECT_TRUE(path.IsRect());
+  std::optional<CFX_FloatRect> rect = path.GetRect(nullptr);
+  ASSERT_TRUE(rect.has_value());
+  EXPECT_EQ(CFX_FloatRect(0, 0, 2, 1), rect.value());
+
+  constexpr CFX_Matrix kScaleMatrix(1, 0, 0, 2, 60, 70);
+  rect = path.GetRect(&kScaleMatrix);
+  ASSERT_TRUE(rect.has_value());
+  EXPECT_EQ(CFX_FloatRect(60, 70, 62, 72), rect.value());
+
+  // An extra point on a vertical edge.
+  path.Clear();
+  path.AppendPoint({0, 0}, CFX_Path::Point::Type::kMove);
+  path.AppendPoint({2, 0}, CFX_Path::Point::Type::kLine);
+  path.AppendPoint({2, 0.5f}, CFX_Path::Point::Type::kLine);
+  path.AppendPoint({2, 1}, CFX_Path::Point::Type::kLine);
+  path.AppendPoint({0, 1}, CFX_Path::Point::Type::kLine);
+  path.AppendPointAndClose({0, 0}, CFX_Path::Point::Type::kLine);
+  EXPECT_TRUE(path.IsRect());
+  rect = path.GetRect(nullptr);
+  ASSERT_TRUE(rect.has_value());
+  EXPECT_EQ(CFX_FloatRect(0, 0, 2, 1), rect.value());
+
+  // Extra points on two edges.
+  path.Clear();
+  path.AppendPoint({0, 0}, CFX_Path::Point::Type::kMove);
+  path.AppendPoint({1, 0}, CFX_Path::Point::Type::kLine);
+  path.AppendPoint({2, 0}, CFX_Path::Point::Type::kLine);
+  path.AppendPoint({2, 1}, CFX_Path::Point::Type::kLine);
+  path.AppendPoint({1, 1}, CFX_Path::Point::Type::kLine);
+  path.AppendPoint({0, 1}, CFX_Path::Point::Type::kLine);
+  path.AppendPointAndClose({0, 0}, CFX_Path::Point::Type::kLine);
+  ASSERT_EQ(7u, path.GetPoints().size());
+  EXPECT_TRUE(path.IsRect());
+  rect = path.GetRect(&kScaleMatrix);
+  ASSERT_TRUE(rect.has_value());
+  EXPECT_EQ(CFX_FloatRect(60, 70, 62, 72), rect.value());
+
+  // A point that goes past the corner and back is not in between its
+  // neighbors, so the path is not a rectangle.
+  path.Clear();
+  path.AppendPoint({0, 0}, CFX_Path::Point::Type::kMove);
+  path.AppendPoint({3, 0}, CFX_Path::Point::Type::kLine);
+  path.AppendPoint({2, 0}, CFX_Path::Point::Type::kLine);
+  path.AppendPoint({2, 1}, CFX_Path::Point::Type::kLine);
+  path.AppendPoint({0, 1}, CFX_Path::Point::Type::kLine);
+  path.AppendPointAndClose({0, 0}, CFX_Path::Point::Type::kLine);
+  EXPECT_FALSE(path.IsRect());
+  EXPECT_FALSE(path.GetRect(nullptr).has_value());
+
+  // Collinear points on a diagonal line are not dropped.
+  path.Clear();
+  path.AppendPoint({0, 0}, CFX_Path::Point::Type::kMove);
+  path.AppendPoint({1, 1}, CFX_Path::Point::Type::kLine);
+  path.AppendPoint({2, 2}, CFX_Path::Point::Type::kLine);
+  path.AppendPoint({2, 3}, CFX_Path::Point::Type::kLine);
+  path.AppendPoint({0, 3}, CFX_Path::Point::Type::kLine);
+  path.AppendPointAndClose({0, 0}, CFX_Path::Point::Type::kLine);
+  EXPECT_FALSE(path.IsRect());
+  EXPECT_FALSE(path.GetRect(nullptr).has_value());
 }
 
 TEST(CFXPath, NotRect) {

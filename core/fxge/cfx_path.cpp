@@ -71,6 +71,22 @@ bool PathPointsNeedNormalization(const std::vector<CFX_Path::Point>& points) {
   return points.size() > 5;
 }
 
+// Returns whether `point` lies strictly between `prev` and `next` on a
+// horizontal or vertical line, so dropping it does not change the path shape.
+bool IsBetweenOnAxisAlignedLine(const CFX_PointF& prev,
+                                const CFX_PointF& point,
+                                const CFX_PointF& next) {
+  if (prev.y == point.y && point.y == next.y) {
+    return (prev.x < point.x && point.x < next.x) ||
+           (prev.x > point.x && point.x > next.x);
+  }
+  if (prev.x == point.x && point.x == next.x) {
+    return (prev.y < point.y && point.y < next.y) ||
+           (prev.y > point.y && point.y > next.y);
+  }
+  return false;
+}
+
 std::vector<CFX_Path::Point> GetNormalizedPoints(
     const std::vector<CFX_Path::Point>& points) {
   DCHECK(PathPointsNeedNormalization(points));
@@ -89,12 +105,23 @@ std::vector<CFX_Path::Point> GetNormalizedPoints(
       break;
     }
 
-    // If the line does not move, skip this point.
     const auto& point = *it;
     if (point.type_ == CFX_Path::Point::Type::kLine && !point.close_figure_ &&
-        !normalized.back().close_figure_ &&
-        point.point_ == normalized.back().point_) {
-      continue;
+        !normalized.back().close_figure_) {
+      // If the line does not move, skip this point.
+      if (point.point_ == normalized.back().point_) {
+        continue;
+      }
+
+      // If the line continues straight on along the same edge, skip this
+      // point. Some PDF generators emit a rectangle with an extra vertex in
+      // the middle of an edge.
+      const auto next = std::next(it);
+      if (next != points.end() && next->type_ == CFX_Path::Point::Type::kLine &&
+          IsBetweenOnAxisAlignedLine(normalized.back().point_, point.point_,
+                                     next->point_)) {
+        continue;
+      }
     }
 
     normalized.push_back(point);
