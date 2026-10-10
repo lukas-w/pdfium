@@ -146,6 +146,10 @@ bool CXFA_FFField::LoadWidget() {
 }
 
 void CXFA_FFField::SetEditScrollOffset() {
+  if (!GetNormalWidget()) {
+    return;
+  }
+
   XFA_FFWidgetType eType = node_->GetFFWidgetType();
   if (eType != XFA_FFWidgetType::kTextEdit &&
       eType != XFA_FFWidgetType::kNumericEdit &&
