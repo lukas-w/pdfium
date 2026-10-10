@@ -26,6 +26,7 @@
 #include "core/fxcrt/fx_2d_size.h"
 #include "core/fxcrt/fx_ceil_div.h"
 #include "core/fxcrt/fx_memory.h"
+#include "core/fxcrt/fx_safe_types.h"
 #include "core/fxcrt/numerics/safe_conversions.h"
 #include "core/fxcrt/raw_span.h"
 #include "core/fxcrt/span.h"
@@ -363,7 +364,13 @@ void FaxG4GetRow(pdfium::span<const uint8_t> src_buf,
           ++run_len1;
         }
 
-        a1 = a0 + run_len1;
+        FX_SAFE_INT32 safe_a1 = a0;
+        safe_a1 += run_len1;
+        if (!safe_a1.IsValid()) {
+          return;
+        }
+
+        a1 = safe_a1.ValueOrDie();
         if (!a0color) {
           FaxFillBits(dest_buf, columns, a0, a1);
         }
@@ -392,7 +399,14 @@ void FaxG4GetRow(pdfium::span<const uint8_t> src_buf,
             break;
           }
         }
-        a2 = a1 + run_len2;
+
+        FX_SAFE_INT32 safe_a2 = a1;
+        safe_a2 += run_len2;
+        if (!safe_a2.IsValid()) {
+          return;
+        }
+
+        a2 = safe_a2.ValueOrDie();
         if (a0color) {
           FaxFillBits(dest_buf, columns, a1, a2);
         }
@@ -468,7 +482,13 @@ void FaxG4GetRow(pdfium::span<const uint8_t> src_buf,
     int b2;
     FaxG4FindB1B2(ref_buf, columns, a0, a0color, &b1, &b2);
 
-    a1 = b1 + v_delta;
+    FX_SAFE_INT32 safe_a1 = b1;
+    safe_a1 += v_delta;
+    if (!safe_a1.IsValid()) {
+      return;
+    }
+
+    a1 = safe_a1.ValueOrDie();
     if (!a0color) {
       FaxFillBits(dest_buf, columns, a0, a1);
     }
