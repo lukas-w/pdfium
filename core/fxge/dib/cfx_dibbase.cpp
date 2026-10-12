@@ -29,6 +29,14 @@
 #include "core/fxge/dib/cfx_imagestretcher.h"
 #include "core/fxge/dib/cfx_imagetransformer.h"
 
+#if defined(PDF_USE_LIBYUV)
+#include "third_party/libyuv/include/libyuv/convert_argb.h"
+#include "third_party/libyuv/include/libyuv/convert_from_argb.h"
+#include "third_party/libyuv/include/libyuv/planar_functions.h"
+#include "third_party/libyuv/include/libyuv/rotate.h"
+#include "third_party/libyuv/include/libyuv/rotate_argb.h"
+#endif
+
 namespace {
 
 #if defined(PDF_USE_SKIA)
@@ -40,6 +48,23 @@ void ConvertBuffer_RgbToArgbPremul(
     const RetainPtr<const CFX_DIBBase>& src_bitmap,
     int src_left,
     int src_top) {
+#if defined(PDF_USE_LIBYUV)
+  if (!src_bitmap->GetBuffer().empty()) {
+    const uint8_t* src_buf = src_bitmap->GetScanline(src_top)
+                                 .subspan(Fx2DSizeOrDie(src_left, 3))
+                                 .data();
+    libyuv::RGB24ToARGB(src_buf, src_bitmap->GetPitch(), dest_buf.data(),
+                        dest_pitch, width, height);
+    return;
+  }
+
+  for (int row = 0; row < height; ++row) {
+    auto dest_span = dest_buf.subspan(Fx2DSizeOrDie(row, dest_pitch));
+    auto src_span = src_bitmap->GetScanline(src_top + row)
+                        .subspan(Fx2DSizeOrDie(src_left, 3));
+    libyuv::RGB24ToARGB(src_span.data(), 0, dest_span.data(), 0, width, 1);
+  }
+#else
   for (int row = 0; row < height; ++row) {
     auto dest_span = fxcrt::reinterpret_span<FX_BGRA_STRUCT<uint8_t>>(
         dest_buf.subspan(Fx2DSizeOrDie(row, dest_pitch)));
@@ -57,6 +82,7 @@ void ConvertBuffer_RgbToArgbPremul(
       output.alpha = 255;
     }
   }
+#endif
 }
 
 void ConvertBuffer_ArgbPremulToRgb(
@@ -462,11 +488,24 @@ void ConvertBuffer_32bppRgbToRgb24(
     int src_left,
     int src_top) {
   const size_t x_offset = Fx2DSizeOrDie(src_left, 4);
+#if defined(PDF_USE_LIBYUV)
+  if (!pSrcBitmap->GetBuffer().empty()) {
+    const uint8_t* src_buf =
+        pSrcBitmap->GetScanline(src_top).subspan(x_offset).data();
+    libyuv::ARGBToRGB24(src_buf, pSrcBitmap->GetPitch(), dest_buf.data(),
+                        dest_pitch, width, height);
+    return;
+  }
+#endif
+
   for (int row = 0; row < height; ++row) {
     uint8_t* dest_scan =
         dest_buf.subspan(Fx2DSizeOrDie(row, dest_pitch)).data();
     const uint8_t* src_scan =
         pSrcBitmap->GetScanline(src_top + row).subspan(x_offset).data();
+#if defined(PDF_USE_LIBYUV)
+    libyuv::ARGBToRGB24(src_scan, 0, dest_scan, 0, width, 1);
+#else
     UNSAFE_TODO({
       for (int col = 0; col < width; ++col) {
         FXSYS_memcpy(dest_scan, src_scan, 3);
@@ -474,6 +513,7 @@ void ConvertBuffer_32bppRgbToRgb24(
         src_scan += 4;
       }
     });
+#endif
   }
 }
 
@@ -613,6 +653,10 @@ CFX_DIBBase::CFX_DIBBase() = default;
 
 CFX_DIBBase::~CFX_DIBBase() = default;
 
+pdfium::span<const uint8_t> CFX_DIBBase::GetBuffer() const {
+  return pdfium::span<const uint8_t>();
+}
+
 bool CFX_DIBBase::SkipToScanline(int line, PauseIndicatorIface* pPause) const {
   return false;
 }
@@ -621,7 +665,7 @@ size_t CFX_DIBBase::GetEstimatedImageMemoryBurden() const {
   return GetRequiredPaletteSize() * sizeof(uint32_t);
 }
 
-#if BUILDFLAG(IS_WIN) || defined(PDF_USE_SKIA)
+#if BUILDFLAG(IS_WIN) || defined(PDF_USE_SKIA) || defined(PDF_USE_LIBYUV)
 RetainPtr<const CFX_DIBitmap> CFX_DIBBase::RealizeIfNeeded() const {
   return Realize();
 }
@@ -901,7 +945,21 @@ RetainPtr<CFX_DIBitmap> CFX_DIBBase::CloneAlphaMask() const {
     return nullptr;
   }
 
+#if defined(PDF_USE_LIBYUV)
+  if (!GetBuffer().empty()) {
+    libyuv::ARGBExtractAlpha(GetBuffer().data(), GetPitch(),
+                             pMask->GetWritableBuffer().data(),
+                             pMask->GetPitch(), GetWidth(), GetHeight());
+    return pMask;
+  }
+#endif
+
   for (int row = 0; row < GetHeight(); ++row) {
+#if defined(PDF_USE_LIBYUV)
+    libyuv::ARGBExtractAlpha(GetScanline(row).data(), 0,
+                             pMask->GetWritableScanline(row).data(), 0,
+                             GetWidth(), 1);
+#else
     const uint8_t* src_scan = GetScanline(row).subspan<3u>().data();
     uint8_t* dest_scan = pMask->GetWritableScanline(row).data();
     UNSAFE_TODO({
@@ -910,6 +968,7 @@ RetainPtr<CFX_DIBitmap> CFX_DIBBase::CloneAlphaMask() const {
         src_scan += 4;
       }
     });
+#endif
   }
   return pMask;
 }
@@ -956,12 +1015,25 @@ RetainPtr<CFX_DIBitmap> CFX_DIBBase::FlipImage(bool bXFlip, bool bYFlip) const {
   }
 
   if (bytes_per_pixel == 1) {
+#if defined(PDF_USE_LIBYUV)
+    if (!GetBuffer().empty()) {
+      libyuv::MirrorPlane(GetBuffer().data(), GetPitch(),
+                          pFlipped->GetWritableBuffer().data(),
+                          pFlipped->GetPitch(), GetWidth(),
+                          bYFlip ? -GetHeight() : GetHeight());
+      return pFlipped;
+    }
+#endif
+
     for (int row = 0; row < GetHeight(); ++row) {
+      const uint8_t* src_scan = GetScanline(row).data();
+      uint8_t* dest_scan =
+          pFlipped->GetWritableScanline(bYFlip ? GetHeight() - row - 1 : row)
+              .data();
+#if defined(PDF_USE_LIBYUV)
+      libyuv::MirrorPlane(src_scan, 0, dest_scan, 0, GetWidth(), 1);
+#else
       UNSAFE_TODO({
-        const uint8_t* src_scan = GetScanline(row).data();
-        uint8_t* dest_scan =
-            pFlipped->GetWritableScanline(bYFlip ? GetHeight() - row - 1 : row)
-                .data();
         dest_scan += (GetWidth() - 1) * bytes_per_pixel;
         for (int col = 0; col < GetWidth(); ++col) {
           *dest_scan = *src_scan;
@@ -969,17 +1041,31 @@ RetainPtr<CFX_DIBitmap> CFX_DIBBase::FlipImage(bool bXFlip, bool bYFlip) const {
           ++src_scan;
         }
       });
+#endif
     }
     return pFlipped;
   }
 
   if (bytes_per_pixel == 3) {
+#if defined(PDF_USE_LIBYUV)
+    if (!GetBuffer().empty()) {
+      libyuv::RGB24Mirror(GetBuffer().data(), GetPitch(),
+                          pFlipped->GetWritableBuffer().data(),
+                          pFlipped->GetPitch(), GetWidth(),
+                          bYFlip ? -GetHeight() : GetHeight());
+      return pFlipped;
+    }
+#endif
+
     for (int row = 0; row < GetHeight(); ++row) {
+      const uint8_t* src_scan = GetScanline(row).data();
+      uint8_t* dest_scan =
+          pFlipped->GetWritableScanline(bYFlip ? GetHeight() - row - 1 : row)
+              .data();
+#if defined(PDF_USE_LIBYUV)
+      libyuv::RGB24Mirror(src_scan, 0, dest_scan, 0, GetWidth(), 1);
+#else
       UNSAFE_TODO({
-        const uint8_t* src_scan = GetScanline(row).data();
-        uint8_t* dest_scan =
-            pFlipped->GetWritableScanline(bYFlip ? GetHeight() - row - 1 : row)
-                .data();
         dest_scan += (GetWidth() - 1) * bytes_per_pixel;
         for (int col = 0; col < GetWidth(); ++col) {
           FXSYS_memcpy(dest_scan, src_scan, 3);
@@ -987,17 +1073,30 @@ RetainPtr<CFX_DIBitmap> CFX_DIBBase::FlipImage(bool bXFlip, bool bYFlip) const {
           src_scan += 3;
         }
       });
+#endif
     }
     return pFlipped;
   }
 
   CHECK_EQ(bytes_per_pixel, 4);
+#if defined(PDF_USE_LIBYUV)
+  if (!GetBuffer().empty()) {
+    libyuv::ARGBMirror(
+        GetBuffer().data(), GetPitch(), pFlipped->GetWritableBuffer().data(),
+        pFlipped->GetPitch(), GetWidth(), bYFlip ? -GetHeight() : GetHeight());
+    return pFlipped;
+  }
+#endif
+
   for (int row = 0; row < GetHeight(); ++row) {
+    const uint8_t* src_scan = GetScanline(row).data();
+    uint8_t* dest_scan =
+        pFlipped->GetWritableScanline(bYFlip ? GetHeight() - row - 1 : row)
+            .data();
+#if defined(PDF_USE_LIBYUV)
+    libyuv::ARGBMirror(src_scan, 0, dest_scan, 0, GetWidth(), 1);
+#else
     UNSAFE_TODO({
-      const uint8_t* src_scan = GetScanline(row).data();
-      uint8_t* dest_scan =
-          pFlipped->GetWritableScanline(bYFlip ? GetHeight() - row - 1 : row)
-              .data();
       dest_scan += (GetWidth() - 1) * bytes_per_pixel;
       for (int col = 0; col < GetWidth(); ++col) {
         const auto* src_scan32 = reinterpret_cast<const uint32_t*>(src_scan);
@@ -1007,6 +1106,7 @@ RetainPtr<CFX_DIBitmap> CFX_DIBBase::FlipImage(bool bXFlip, bool bYFlip) const {
         src_scan += 4;
       }
     });
+#endif
   }
   return pFlipped;
 }
@@ -1080,6 +1180,40 @@ RetainPtr<CFX_DIBitmap> CFX_DIBBase::SwapXY(bool bXFlip, bool bYFlip) const {
   }
 
   const int bytes_per_pixel = GetBPP() / 8;
+#if defined(PDF_USE_LIBYUV)
+  if (bytes_per_pixel == 1 || bytes_per_pixel == 4) {
+    RetainPtr<const CFX_DIBitmap> realized = RealizeIfNeeded();
+    if (realized) {
+      const uint8_t* src_buf = realized->GetBuffer().data();
+      const int src_pitch = realized->GetPitch();
+      uint8_t* dst_buf = dest_span.data();
+      if (bytes_per_pixel == 1) {
+        if (bXFlip && bYFlip) {
+          libyuv::RotatePlane270(realized->GetScanline(GetHeight() - 1).data(),
+                                 -src_pitch, dst_buf, dest_pitch, GetWidth(),
+                                 GetHeight());
+        } else if (bXFlip) {
+          libyuv::RotatePlane90(src_buf, src_pitch, dst_buf, dest_pitch,
+                                GetWidth(), GetHeight());
+        } else if (bYFlip) {
+          libyuv::RotatePlane270(src_buf, src_pitch, dst_buf, dest_pitch,
+                                 GetWidth(), GetHeight());
+        } else {
+          libyuv::TransposePlane(src_buf, src_pitch, dst_buf, dest_pitch,
+                                 GetWidth(), GetHeight());
+        }
+        return pTransBitmap;
+      }
+      if (libyuv::ARGBRotate(
+              src_buf, src_pitch, dst_buf, dest_pitch, GetWidth(),
+              bXFlip == bYFlip ? -GetHeight() : GetHeight(),
+              bYFlip ? libyuv::kRotate270 : libyuv::kRotate90) == 0) {
+        return pTransBitmap;
+      }
+    }
+  }
+#endif
+
   int dest_step = bYFlip ? -dest_pitch : dest_pitch;
   if (bytes_per_pixel == 3) {
     dest_step -= 2;

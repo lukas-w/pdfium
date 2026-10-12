@@ -163,3 +163,154 @@ TEST(CFXDIBBaseTest, GetOverlapRectBadInputs) {
     RunOverlapRectTest(bitmap.Get(), input, /*expected_output=*/nullptr);
   }
 }
+
+TEST(CFXDIBBaseTest, SwapXY8Bpp) {
+  auto src = pdfium::MakeRetain<CFX_DIBitmap>();
+  ASSERT_TRUE(src->Create(3, 2, FXDIB_Format::k8bppMask));
+  auto row0 = src->GetWritableScanline(0);
+  row0[0] = 10;
+  row0[1] = 20;
+  row0[2] = 30;
+  auto row1 = src->GetWritableScanline(1);
+  row1[0] = 40;
+  row1[1] = 50;
+  row1[2] = 60;
+
+  auto ff = src->SwapXY(false, false);
+  ASSERT_TRUE(ff);
+  ASSERT_EQ(2, ff->GetWidth());
+  ASSERT_EQ(3, ff->GetHeight());
+  EXPECT_EQ(10u, ff->GetScanline(0)[0]);
+  EXPECT_EQ(40u, ff->GetScanline(0)[1]);
+  EXPECT_EQ(20u, ff->GetScanline(1)[0]);
+  EXPECT_EQ(50u, ff->GetScanline(1)[1]);
+  EXPECT_EQ(30u, ff->GetScanline(2)[0]);
+  EXPECT_EQ(60u, ff->GetScanline(2)[1]);
+
+  auto tf = src->SwapXY(true, false);
+  ASSERT_TRUE(tf);
+  ASSERT_EQ(2, tf->GetWidth());
+  ASSERT_EQ(3, tf->GetHeight());
+  EXPECT_EQ(40u, tf->GetScanline(0)[0]);
+  EXPECT_EQ(10u, tf->GetScanline(0)[1]);
+  EXPECT_EQ(50u, tf->GetScanline(1)[0]);
+  EXPECT_EQ(20u, tf->GetScanline(1)[1]);
+  EXPECT_EQ(60u, tf->GetScanline(2)[0]);
+  EXPECT_EQ(30u, tf->GetScanline(2)[1]);
+
+  auto ft = src->SwapXY(false, true);
+  ASSERT_TRUE(ft);
+  ASSERT_EQ(2, ft->GetWidth());
+  ASSERT_EQ(3, ft->GetHeight());
+  EXPECT_EQ(30u, ft->GetScanline(0)[0]);
+  EXPECT_EQ(60u, ft->GetScanline(0)[1]);
+  EXPECT_EQ(20u, ft->GetScanline(1)[0]);
+  EXPECT_EQ(50u, ft->GetScanline(1)[1]);
+  EXPECT_EQ(10u, ft->GetScanline(2)[0]);
+  EXPECT_EQ(40u, ft->GetScanline(2)[1]);
+
+  auto tt = src->SwapXY(true, true);
+  ASSERT_TRUE(tt);
+  ASSERT_EQ(2, tt->GetWidth());
+  ASSERT_EQ(3, tt->GetHeight());
+  EXPECT_EQ(60u, tt->GetScanline(0)[0]);
+  EXPECT_EQ(30u, tt->GetScanline(0)[1]);
+  EXPECT_EQ(50u, tt->GetScanline(1)[0]);
+  EXPECT_EQ(20u, tt->GetScanline(1)[1]);
+  EXPECT_EQ(40u, tt->GetScanline(2)[0]);
+  EXPECT_EQ(10u, tt->GetScanline(2)[1]);
+}
+
+TEST(CFXDIBBaseTest, SwapXY32Bpp) {
+  auto src = pdfium::MakeRetain<CFX_DIBitmap>();
+  ASSERT_TRUE(src->Create(3, 2, FXDIB_Format::kBgra));
+  auto row0 = src->GetWritableScanlineAs<uint32_t>(0);
+  row0[0] = 0x11223301u;
+  row0[1] = 0x11223302u;
+  row0[2] = 0x11223303u;
+  auto row1 = src->GetWritableScanlineAs<uint32_t>(1);
+  row1[0] = 0x44556604u;
+  row1[1] = 0x44556605u;
+  row1[2] = 0x44556606u;
+
+  auto ff = src->SwapXY(false, false);
+  ASSERT_TRUE(ff);
+  ASSERT_EQ(2, ff->GetWidth());
+  ASSERT_EQ(3, ff->GetHeight());
+  EXPECT_EQ(0x11223301u, ff->GetScanlineAs<uint32_t>(0)[0]);
+  EXPECT_EQ(0x44556604u, ff->GetScanlineAs<uint32_t>(0)[1]);
+  EXPECT_EQ(0x11223302u, ff->GetScanlineAs<uint32_t>(1)[0]);
+  EXPECT_EQ(0x44556605u, ff->GetScanlineAs<uint32_t>(1)[1]);
+  EXPECT_EQ(0x11223303u, ff->GetScanlineAs<uint32_t>(2)[0]);
+  EXPECT_EQ(0x44556606u, ff->GetScanlineAs<uint32_t>(2)[1]);
+
+  auto tf = src->SwapXY(true, false);
+  ASSERT_TRUE(tf);
+  ASSERT_EQ(2, tf->GetWidth());
+  ASSERT_EQ(3, tf->GetHeight());
+  EXPECT_EQ(0x44556604u, tf->GetScanlineAs<uint32_t>(0)[0]);
+  EXPECT_EQ(0x11223301u, tf->GetScanlineAs<uint32_t>(0)[1]);
+  EXPECT_EQ(0x44556605u, tf->GetScanlineAs<uint32_t>(1)[0]);
+  EXPECT_EQ(0x11223302u, tf->GetScanlineAs<uint32_t>(1)[1]);
+  EXPECT_EQ(0x44556606u, tf->GetScanlineAs<uint32_t>(2)[0]);
+  EXPECT_EQ(0x11223303u, tf->GetScanlineAs<uint32_t>(2)[1]);
+
+  auto ft = src->SwapXY(false, true);
+  ASSERT_TRUE(ft);
+  ASSERT_EQ(2, ft->GetWidth());
+  ASSERT_EQ(3, ft->GetHeight());
+  EXPECT_EQ(0x11223303u, ft->GetScanlineAs<uint32_t>(0)[0]);
+  EXPECT_EQ(0x44556606u, ft->GetScanlineAs<uint32_t>(0)[1]);
+  EXPECT_EQ(0x11223302u, ft->GetScanlineAs<uint32_t>(1)[0]);
+  EXPECT_EQ(0x44556605u, ft->GetScanlineAs<uint32_t>(1)[1]);
+  EXPECT_EQ(0x11223301u, ft->GetScanlineAs<uint32_t>(2)[0]);
+  EXPECT_EQ(0x44556604u, ft->GetScanlineAs<uint32_t>(2)[1]);
+
+  auto tt = src->SwapXY(true, true);
+  ASSERT_TRUE(tt);
+  ASSERT_EQ(2, tt->GetWidth());
+  ASSERT_EQ(3, tt->GetHeight());
+  EXPECT_EQ(0x44556606u, tt->GetScanlineAs<uint32_t>(0)[0]);
+  EXPECT_EQ(0x11223303u, tt->GetScanlineAs<uint32_t>(0)[1]);
+  EXPECT_EQ(0x44556605u, tt->GetScanlineAs<uint32_t>(1)[0]);
+  EXPECT_EQ(0x11223302u, tt->GetScanlineAs<uint32_t>(1)[1]);
+  EXPECT_EQ(0x44556604u, tt->GetScanlineAs<uint32_t>(2)[0]);
+  EXPECT_EQ(0x11223301u, tt->GetScanlineAs<uint32_t>(2)[1]);
+}
+
+TEST(CFXDIBBaseTest, CloneAlphaMask) {
+  auto src = pdfium::MakeRetain<CFX_DIBitmap>();
+  ASSERT_TRUE(src->Create(2, 1, FXDIB_Format::kBgra));
+  auto row = src->GetWritableScanlineAs<FX_BGRA_STRUCT<uint8_t>>(0);
+  row[0] = {1, 2, 3, 0xaa};
+  row[1] = {4, 5, 6, 0x55};
+
+  auto mask = src->CloneAlphaMask();
+  ASSERT_TRUE(mask);
+  ASSERT_EQ(2, mask->GetWidth());
+  ASSERT_EQ(1, mask->GetHeight());
+  EXPECT_EQ(FXDIB_Format::k8bppMask, mask->GetFormat());
+  EXPECT_EQ(0xaau, mask->GetScanline(0)[0]);
+  EXPECT_EQ(0x55u, mask->GetScanline(0)[1]);
+}
+
+TEST(CFXDIBBaseTest, ConvertToBgrFromBgra) {
+  auto src = pdfium::MakeRetain<CFX_DIBitmap>();
+  ASSERT_TRUE(src->Create(2, 1, FXDIB_Format::kBgra));
+  auto row = src->GetWritableScanlineAs<FX_BGRA_STRUCT<uint8_t>>(0);
+  row[0] = {10, 20, 30, 0x80};
+  row[1] = {40, 50, 60, 0xff};
+
+  auto bgr = src->ConvertTo(FXDIB_Format::kBgr);
+  ASSERT_TRUE(bgr);
+  ASSERT_EQ(2, bgr->GetWidth());
+  ASSERT_EQ(1, bgr->GetHeight());
+  EXPECT_EQ(FXDIB_Format::kBgr, bgr->GetFormat());
+  auto bgr_row = bgr->GetScanlineAs<FX_BGR_STRUCT<uint8_t>>(0);
+  EXPECT_EQ(10u, bgr_row[0].blue);
+  EXPECT_EQ(20u, bgr_row[0].green);
+  EXPECT_EQ(30u, bgr_row[0].red);
+  EXPECT_EQ(40u, bgr_row[1].blue);
+  EXPECT_EQ(50u, bgr_row[1].green);
+  EXPECT_EQ(60u, bgr_row[1].red);
+}

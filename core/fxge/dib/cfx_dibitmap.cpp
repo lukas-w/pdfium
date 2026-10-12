@@ -28,6 +28,11 @@
 #include "core/fxge/cfx_gemodule.h"
 #include "core/fxge/dib/cfx_scanlinecompositor.h"
 
+#if defined(PDF_USE_LIBYUV)
+#include "third_party/libyuv/include/libyuv/convert_argb.h"
+#include "third_party/libyuv/include/libyuv/planar_functions.h"
+#endif
+
 namespace {
 
 size_t GetAllocSizeOrZero(uint32_t size) {
@@ -126,7 +131,7 @@ size_t CFX_DIBitmap::GetEstimatedImageMemoryBurden() const {
   return result;
 }
 
-#if BUILDFLAG(IS_WIN) || defined(PDF_USE_SKIA)
+#if BUILDFLAG(IS_WIN) || defined(PDF_USE_SKIA) || defined(PDF_USE_LIBYUV)
 RetainPtr<const CFX_DIBitmap> CFX_DIBitmap::RealizeIfNeeded() const {
   if (GetBuffer().empty()) {
     return Realize();
@@ -347,6 +352,12 @@ bool CFX_DIBitmap::MultiplyAlphaMask(RetainPtr<const CFX_DIBitmap> mask) {
   if (GetFormat() == FXDIB_Format::kBgrx) {
     // TODO(crbug.com/42271020): Consider adding support for
     // `FXDIB_Format::kBgraPremul`
+#if defined(PDF_USE_LIBYUV)
+    SetFormat(FXDIB_Format::kBgra);
+    libyuv::ARGBCopyYToAlpha(mask->GetBuffer().data(), mask->GetPitch(),
+                             GetWritableBuffer().data(), GetPitch(), GetWidth(),
+                             GetHeight());
+#else
     if (!ConvertFormat(FXDIB_Format::kBgra)) {
       return false;
     }
@@ -363,6 +374,7 @@ bool CFX_DIBitmap::MultiplyAlphaMask(RetainPtr<const CFX_DIBitmap> mask) {
         dest_scan[col].alpha = mask_scan[col];
       }
     }
+#endif
     return true;
   }
 
@@ -998,15 +1010,25 @@ bool CFX_DIBitmap::ConvertFormat(FXDIB_Format dest_format) {
 
   // SAFETY: `dest_buf` allocated with `dest_buf_size` bytes above.
   auto dest_span = UNSAFE_BUFFERS(pdfium::span(dest_buf.get(), dest_buf_size));
-  if (dest_format == FXDIB_Format::kBgra) {
-    std::ranges::fill(dest_span, 0xff);
-  }
-
-  RetainPtr<CFX_DIBBase> holder(this);
   const uint32_t dest_pitch = pitch_size.value().pitch;
-  palette_ = ConvertBuffer(dest_format, dest_span, dest_pitch, GetWidth(),
-                           GetHeight(), holder, /*src_left=*/0,
-                           /*src_top=*/0);
+#if defined(PDF_USE_LIBYUV)
+  if (dest_format == FXDIB_Format::kBgra && GetFormat() == FXDIB_Format::kBgr) {
+    libyuv::RGB24ToARGB(GetBuffer().data(), GetPitch(), dest_span.data(),
+                        dest_pitch, GetWidth(), GetHeight());
+    palette_.clear();
+  } else {
+#endif
+    if (dest_format == FXDIB_Format::kBgra) {
+      std::ranges::fill(dest_span, 0xff);
+    }
+
+    RetainPtr<CFX_DIBBase> holder(this);
+    palette_ = ConvertBuffer(dest_format, dest_span, dest_pitch, GetWidth(),
+                             GetHeight(), holder, /*src_left=*/0,
+                             /*src_top=*/0);
+#if defined(PDF_USE_LIBYUV)
+  }
+#endif
   buffer_ = std::move(dest_buf);
   SetFormat(dest_format);
   SetPitch(dest_pitch);

@@ -178,3 +178,53 @@ TEST(CFXDIBitmapTest, PreMultiplyFromPreMultiplied) {
   EXPECT_THAT(bitmap->GetBuffer(), ElementsAre(0x7f, 0x7f, 0x7f, 0x7f));
 }
 #endif  // defined(PDF_USE_SKIA)
+
+TEST(CFXDIBitmapTest, ConvertFormatBgrToBgra) {
+  auto bitmap = pdfium::MakeRetain<CFX_DIBitmap>();
+  ASSERT_TRUE(bitmap->Create(2, 1, FXDIB_Format::kBgr));
+  auto bgr_row = bitmap->GetWritableScanlineAs<FX_BGR_STRUCT<uint8_t>>(0);
+  bgr_row[0] = {11, 22, 33};
+  bgr_row[1] = {44, 55, 66};
+
+  ASSERT_TRUE(bitmap->ConvertFormat(FXDIB_Format::kBgra));
+  ASSERT_EQ(2, bitmap->GetWidth());
+  ASSERT_EQ(1, bitmap->GetHeight());
+  EXPECT_EQ(FXDIB_Format::kBgra, bitmap->GetFormat());
+  auto bgra_row = bitmap->GetScanlineAs<FX_BGRA_STRUCT<uint8_t>>(0);
+  EXPECT_EQ(11u, bgra_row[0].blue);
+  EXPECT_EQ(22u, bgra_row[0].green);
+  EXPECT_EQ(33u, bgra_row[0].red);
+  EXPECT_EQ(255u, bgra_row[0].alpha);
+  EXPECT_EQ(44u, bgra_row[1].blue);
+  EXPECT_EQ(55u, bgra_row[1].green);
+  EXPECT_EQ(66u, bgra_row[1].red);
+  EXPECT_EQ(255u, bgra_row[1].alpha);
+}
+
+TEST(CFXDIBitmapTest, MultiplyAlphaMaskFromBgrx) {
+  auto bitmap = pdfium::MakeRetain<CFX_DIBitmap>();
+  ASSERT_TRUE(bitmap->Create(2, 1, FXDIB_Format::kBgrx));
+  auto row = bitmap->GetWritableScanlineAs<FX_BGRA_STRUCT<uint8_t>>(0);
+  row[0] = {10, 20, 30, 0};
+  row[1] = {40, 50, 60, 0};
+
+  auto mask = pdfium::MakeRetain<CFX_DIBitmap>();
+  ASSERT_TRUE(mask->Create(2, 1, FXDIB_Format::k8bppMask));
+  auto mask_row = mask->GetWritableScanline(0);
+  mask_row[0] = 0x12;
+  mask_row[1] = 0x34;
+
+  ASSERT_TRUE(bitmap->MultiplyAlphaMask(mask));
+  ASSERT_EQ(2, bitmap->GetWidth());
+  ASSERT_EQ(1, bitmap->GetHeight());
+  EXPECT_EQ(FXDIB_Format::kBgra, bitmap->GetFormat());
+  auto out_row = bitmap->GetScanlineAs<FX_BGRA_STRUCT<uint8_t>>(0);
+  EXPECT_EQ(10u, out_row[0].blue);
+  EXPECT_EQ(20u, out_row[0].green);
+  EXPECT_EQ(30u, out_row[0].red);
+  EXPECT_EQ(0x12u, out_row[0].alpha);
+  EXPECT_EQ(40u, out_row[1].blue);
+  EXPECT_EQ(50u, out_row[1].green);
+  EXPECT_EQ(60u, out_row[1].red);
+  EXPECT_EQ(0x34u, out_row[1].alpha);
+}

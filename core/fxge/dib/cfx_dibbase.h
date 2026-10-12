@@ -44,11 +44,15 @@ class CFX_DIBBase : public Retainable {
 
   static constexpr uint32_t kPaletteSize = 256;
 
+  // Returns an empty buffer if there is no data, or if the DIB is not backed by
+  // a contiguous buffer. In the latter case, the caller should use
+  // GetScanline().
+  virtual pdfium::span<const uint8_t> GetBuffer() const;
   // Note that the returned scanline includes unused space at the end, if any.
   virtual pdfium::span<const uint8_t> GetScanline(int line) const = 0;
   virtual bool SkipToScanline(int line, PauseIndicatorIface* pPause) const;
   virtual size_t GetEstimatedImageMemoryBurden() const;
-#if BUILDFLAG(IS_WIN) || defined(PDF_USE_SKIA)
+#if BUILDFLAG(IS_WIN) || defined(PDF_USE_SKIA) || defined(PDF_USE_LIBYUV)
   // Calls Realize() if needed. Otherwise, return `this`.
   virtual RetainPtr<const CFX_DIBitmap> RealizeIfNeeded() const;
 #endif

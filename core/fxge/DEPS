@@ -1,10 +1,5 @@
 include_rules = [
+  '+third_party/libyuv/include',
   '+third_party/rust',
   '+third_party/skia/include',
 ]
-
-specific_include_rules = {
-  "cfx_scanlinecompositor\.cpp": [
-    '+third_party/libyuv/include/libyuv/convert_argb.h',
-  ],
-}

@@ -18,6 +18,7 @@
 #include "core/fxcrt/fx_memory_wrappers.h"
 #include "core/fxcrt/fx_safe_types.h"
 #include "core/fxcrt/notreached.h"
+#include "core/fxcrt/numerics/safe_conversions.h"
 #include "core/fxcrt/retain_ptr.h"
 #include "core/fxcrt/span.h"
 #include "core/fxge/calculate_pitch.h"
@@ -30,6 +31,10 @@
 #include "third_party/skia/include/core/SkImageInfo.h"
 #include "third_party/skia/include/core/SkPixmap.h"
 #include "third_party/skia/include/core/SkRefCnt.h"
+
+#if defined(PDF_USE_LIBYUV)
+#include "third_party/libyuv/include/libyuv/convert_argb.h"
+#endif
 
 namespace {
 
@@ -99,6 +104,7 @@ class PixelTransformTraits<8, PixelTransform> {
   }
 };
 
+#if !defined(PDF_USE_LIBYUV)
 template <typename PixelTransform>
 class PixelTransformTraits<24, PixelTransform> {
  public:
@@ -113,6 +119,7 @@ class PixelTransformTraits<24, PixelTransform> {
                            scanline[offset]);
   }
 };
+#endif
 
 template <typename PixelTransform>
 class PixelTransformTraits<32, PixelTransform> {
@@ -133,6 +140,48 @@ void ValidateScanlineSize(pdfium::span<const uint8_t> scanline,
                           size_t min_row_bytes) {
   DCHECK_GE(scanline.size(), min_row_bytes);
 }
+
+#if defined(PDF_USE_LIBYUV)
+sk_sp<SkImage> CreateSkiaImageFrom24BppDib(const CFX_DIBBase& source) {
+  const int width = source.GetWidth();
+  const int height = source.GetHeight();
+  SkImageInfo info = SkImageInfo::Make(width, height, kBGRA_8888_SkColorType,
+                                       kOpaque_SkAlphaType);
+  const size_t dst_row_bytes = info.minRowBytes();
+  size_t output_size = Fx2DSizeOrDie(dst_row_bytes, height);
+  std::unique_ptr<uint8_t, FxFreeDeleter> output(
+      FX_TryAlloc(uint8_t, output_size));
+  if (!output) {
+    return nullptr;
+  }
+
+  const size_t min_row_bytes =
+      fxge::CalculatePitch8OrDie(source.GetBPP(), /*components=*/1, width);
+  DCHECK_LE(min_row_bytes, source.GetPitch());
+
+  if (!source.GetBuffer().empty()) {
+    libyuv::RGB24ToARGB(source.GetBuffer().data(), source.GetPitch(),
+                        output.get(), pdfium::checked_cast<int>(dst_row_bytes),
+                        width, height);
+  } else {
+    // SAFETY: `output` allocated with `output_size` bytes above.
+    auto output_span = UNSAFE_BUFFERS(pdfium::span(output.get(), output_size));
+    for (int row = 0; row < height; ++row) {
+      pdfium::span<const uint8_t> scanline = source.GetScanline(row);
+      ValidateScanlineSize(scanline, min_row_bytes);
+      libyuv::RGB24ToARGB(
+          scanline.data(), 0,
+          output_span.subspan(Fx2DSizeOrDie(row, dst_row_bytes)).data(), 0,
+          width, 1);
+    }
+  }
+
+  return SkImages::RasterFromPixmap(
+      SkPixmap(info, output.release(), dst_row_bytes),
+      /*rasterReleaseProc=*/ReleaseAllocatedHeldBySkImage,
+      /*releaseContext=*/nullptr);
+}
+#endif
 
 // Creates an `SkImage` from a `CFX_DIBBase`, transforming the source pixels
 // using `pixel_transform`.
@@ -240,11 +289,15 @@ sk_sp<SkImage> CFX_DIBBase::RealizeSkImage() const {
           kPremul_SkAlphaType);
 
     case 24:
+#if defined(PDF_USE_LIBYUV)
+      return CreateSkiaImageFrom24BppDib(*this);
+#else
       return CreateSkiaImageFromTransformedDib</*source_bits_per_pixel=*/24>(
           *this, kBGRA_8888_SkColorType, kOpaque_SkAlphaType,
           [](uint8_t red, uint8_t green, uint8_t blue) -> SkColor {
             return SkColorSetRGB(red, green, blue);
           });
+#endif
 
     case 32:
       switch (GetFormat()) {
