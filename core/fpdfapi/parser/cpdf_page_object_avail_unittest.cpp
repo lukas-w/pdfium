@@ -105,8 +105,7 @@ TEST(PageObjectAvailTest, ExcludePages) {
   holder.GetTestObject(3)->GetMutableDict()->SetNewFor<CPDF_Reference>(
       "OtherPageData", &holder, 4);
   // Add unavailable object related to other page.
-  holder.AddObject(4,
-                   pdfium::MakeRetain<CPDF_String>(nullptr, "Other page data"),
+  holder.AddObject(4, pdfium::MakeRetain<CPDF_String>("Other page data"),
                    TestHolder::ObjectState::Unavailable);
 
   CPDF_PageObjectAvail avail(holder.GetValidator(), &holder, 1);

@@ -8,11 +8,9 @@
 #define CORE_FPDFAPI_PARSER_CPDF_STRING_H_
 
 #include "core/fpdfapi/parser/cpdf_object.h"
-#include "core/fxcrt/bytestring_pool.h"
 #include "core/fxcrt/fx_string.h"
 #include "core/fxcrt/retain_ptr.h"
 #include "core/fxcrt/span.h"
-#include "core/fxcrt/weak_ptr.h"
 
 class CPDF_String final : public CPDF_Object {
  public:
@@ -36,11 +34,9 @@ class CPDF_String final : public CPDF_Object {
 
  private:
   CPDF_String();
-  CPDF_String(WeakPtr<ByteStringPool> pool,
-              pdfium::span<const uint8_t> data,
-              DataType is_hex);
-  CPDF_String(WeakPtr<ByteStringPool> pool, const ByteString& str);
-  CPDF_String(WeakPtr<ByteStringPool> pool, WideStringView str);
+  CPDF_String(pdfium::span<const uint8_t> data, DataType is_hex);
+  explicit CPDF_String(const ByteString& str);
+  explicit CPDF_String(WideStringView str);
   ~CPDF_String() override;
 
   ByteString data_;

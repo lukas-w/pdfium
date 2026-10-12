@@ -409,12 +409,12 @@ RetainPtr<CPDF_Object> CPDF_StreamParser::ReadLeafObject() {
   }
 
   if (first_char == '(') {
-    return pdfium::MakeRetain<CPDF_String>(pool_, ReadString());
+    return pdfium::MakeRetain<CPDF_String>(ReadString());
   }
 
   if (first_char == '<') {
     CHECK_EQ(word_size_, 1);  // Caller handled all other cases.
-    return pdfium::MakeRetain<CPDF_String>(pool_, ReadHexString(),
+    return pdfium::MakeRetain<CPDF_String>(ReadHexString(),
                                            CPDF_String::DataType::kIsHex);
   }
 

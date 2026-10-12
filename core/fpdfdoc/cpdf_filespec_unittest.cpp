@@ -70,7 +70,7 @@ TEST(CPDFFileSpecTest, GetFileName) {
         L"/docs/test.pdf", L"/docs/test.pdf"
 #endif
     };
-    auto str_obj = pdfium::MakeRetain<CPDF_String>(nullptr, test_data.input);
+    auto str_obj = pdfium::MakeRetain<CPDF_String>(test_data.input);
     CPDF_FileSpec file_spec(str_obj);
     EXPECT_EQ(test_data.expected, file_spec.GetFileName());
   }

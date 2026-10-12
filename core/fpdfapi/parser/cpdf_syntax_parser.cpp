@@ -579,10 +579,10 @@ RetainPtr<CPDF_Object> CPDF_SyntaxParser::GetObjectBodyInternal(
   }
 
   if (word == "(") {
-    return pdfium::MakeRetain<CPDF_String>(pool_, ReadString());
+    return pdfium::MakeRetain<CPDF_String>(ReadString());
   }
   if (word == "<") {
-    return pdfium::MakeRetain<CPDF_String>(pool_, ReadHexString(),
+    return pdfium::MakeRetain<CPDF_String>(ReadHexString(),
                                            CPDF_String::DataType::kIsHex);
   }
   if (word == "[") {

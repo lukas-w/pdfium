@@ -176,7 +176,7 @@ TEST(ParserDecodeTest, ValidateDecoderPipelineWithIndirectObjects) {
   {
     // Invalid 2 decoder pipeline due to wrong type indirect object.
     CPDF_IndirectObjectHolder objects_holder;
-    auto decoder = pdfium::MakeRetain<CPDF_String>(nullptr, "FlateDecode");
+    auto decoder = pdfium::MakeRetain<CPDF_String>("FlateDecode");
     uint32_t decoder_number =
         objects_holder.AddIndirectObject(std::move(decoder));
 

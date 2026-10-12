@@ -60,9 +60,8 @@ class PDFObjectsTest : public testing::Test {
     auto number_int_obj = pdfium::MakeRetain<CPDF_Number>(1245);
     auto number_float_obj = pdfium::MakeRetain<CPDF_Number>(9.00345f);
     // String objects.
-    auto str_reg_obj =
-        pdfium::MakeRetain<CPDF_String>(nullptr, L"A simple test");
-    auto str_spec_obj = pdfium::MakeRetain<CPDF_String>(nullptr, L"\t\n");
+    auto str_reg_obj = pdfium::MakeRetain<CPDF_String>(L"A simple test");
+    auto str_spec_obj = pdfium::MakeRetain<CPDF_String>(L"\t\n");
     // Name object.
     auto name_obj = pdfium::MakeRetain<CPDF_Name>(nullptr, "space");
     // Array object.
@@ -809,8 +808,7 @@ TEST(PDFArrayTest, AddReferenceAndGetObjectAt) {
   auto boolean_obj = pdfium::MakeRetain<CPDF_Boolean>(true);
   auto int_obj = pdfium::MakeRetain<CPDF_Number>(-1234);
   auto float_obj = pdfium::MakeRetain<CPDF_Number>(2345.089f);
-  auto str_obj =
-      pdfium::MakeRetain<CPDF_String>(nullptr, "Adsfdsf 343434 %&&*\n");
+  auto str_obj = pdfium::MakeRetain<CPDF_String>("Adsfdsf 343434 %&&*\n");
   auto name_obj = pdfium::MakeRetain<CPDF_Name>(nullptr, "Title:");
   auto null_obj = pdfium::MakeRetain<CPDF_Null>();
   auto indirect_objs = std::to_array<RetainPtr<CPDF_Object>>(

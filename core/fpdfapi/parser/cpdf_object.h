@@ -162,8 +162,7 @@ template <typename T>
 struct CanInternStrings {
   static constexpr bool value = std::is_same<T, CPDF_Array>::value ||
                                 std::is_same<T, CPDF_Dictionary>::value ||
-                                std::is_same<T, CPDF_Name>::value ||
-                                std::is_same<T, CPDF_String>::value;
+                                std::is_same<T, CPDF_Name>::value;
 };
 
 #endif  // CORE_FPDFAPI_PARSER_CPDF_OBJECT_H_

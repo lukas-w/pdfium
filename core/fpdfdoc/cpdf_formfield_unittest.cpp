@@ -127,7 +127,7 @@ TEST(CPDFFormFieldTest, IsItemSelected) {
   }
   {
     // Values (/V) object is just a string.
-    auto values = pdfium::MakeRetain<CPDF_String>(/*pPool=*/nullptr, L"Gamma");
+    auto values = pdfium::MakeRetain<CPDF_String>(L"Gamma");
     std::vector<int> expected_indices{2};
     std::vector<int> excluded_indices{-1, 5};
     TestMultiselectFieldDict(opt_array, values, /*selected_indices=*/nullptr,
@@ -136,7 +136,7 @@ TEST(CPDFFormFieldTest, IsItemSelected) {
   }
   {
     // Values (/V) object is just an invalid string.
-    auto values = pdfium::MakeRetain<CPDF_String>(/*pPool=*/nullptr, L"Omega");
+    auto values = pdfium::MakeRetain<CPDF_String>(L"Omega");
     std::vector<int> expected_indices;
     std::vector<int> excluded_indices{-1, 5};
     TestMultiselectFieldDict(opt_array, values, /*selected_indices=*/nullptr,
@@ -325,7 +325,7 @@ TEST(CPDFFormFieldTest, IsItemSelected) {
   {
     // Values (/V) or Selected Indices (/I) objects conflict with each not being
     // an array.
-    auto values = pdfium::MakeRetain<CPDF_String>(/*pPool=*/nullptr, L"Gamma");
+    auto values = pdfium::MakeRetain<CPDF_String>(L"Gamma");
     auto selected_indices = pdfium::MakeRetain<CPDF_Number>(4);
     std::vector<int> expected_indices{2};
     std::vector<int> excluded_indices{-1, 5};
