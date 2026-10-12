@@ -165,8 +165,7 @@ CPDF_Parser::CPDF_Parser(ParsedObjectsHolder* holder)
     : objects_holder_(holder),
       cross_ref_table_(std::make_unique<CPDF_CrossRefTable>()) {
   if (!holder) {
-    owned_objects_holder_ = std::make_unique<ObjectsHolderStub>();
-    objects_holder_ = owned_objects_holder_.get();
+    objects_holder_ = std::make_unique<ObjectsHolderStub>();
   }
 }
 
@@ -1099,7 +1098,7 @@ RetainPtr<CPDF_Object> CPDF_Parser::ParseIndirectObject(uint32_t objnum) {
       if (!obj_stream) {
         return nullptr;
       }
-      return obj_stream->ParseObject(objects_holder_, objnum,
+      return obj_stream->ParseObject(objects_holder_.Get(), objnum,
                                      info->archive.obj_index);
     }
   }
@@ -1149,7 +1148,7 @@ RetainPtr<CPDF_Object> CPDF_Parser::ParseIndirectObjectAt(FX_FILESIZE pos,
   syntax_->SetPos(pos);
 
   auto result = syntax_->GetIndirectObject(
-      objects_holder_, CPDF_SyntaxParser::ParseType::kLoose);
+      objects_holder_.Get(), CPDF_SyntaxParser::ParseType::kLoose);
   syntax_->SetPos(saved_pos);
   if (result && objnum && result->GetObjNum() != objnum) {
     return nullptr;
@@ -1183,7 +1182,7 @@ RetainPtr<CPDF_Dictionary> CPDF_Parser::LoadTrailer() {
     return nullptr;
   }
 
-  return ToDictionary(syntax_->GetObjectBody(objects_holder_));
+  return ToDictionary(syntax_->GetObjectBody(objects_holder_.Get()));
 }
 
 uint32_t CPDF_Parser::GetPermissions(bool get_owner_perms) const {

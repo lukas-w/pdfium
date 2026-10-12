@@ -20,8 +20,8 @@
 #include "core/fpdfapi/parser/cpdf_indirect_object_holder.h"
 #include "core/fxcrt/bytestring.h"
 #include "core/fxcrt/fx_types.h"
+#include "core/fxcrt/maybe_owned.h"
 #include "core/fxcrt/retain_ptr.h"
-#include "core/fxcrt/unowned_ptr.h"
 
 class CPDF_Array;
 class CPDF_Dictionary;
@@ -189,8 +189,7 @@ class CPDF_Parser {
   void SetPassword(const ByteString& password) { password_ = password; }
 
   std::unique_ptr<CPDF_SyntaxParser> syntax_;
-  std::unique_ptr<ParsedObjectsHolder> owned_objects_holder_;
-  UnownedPtr<ParsedObjectsHolder> objects_holder_;
+  MaybeOwned<ParsedObjectsHolder> objects_holder_;
 
   bool has_parsed_ = false;
   bool xref_stream_ = false;
