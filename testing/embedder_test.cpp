@@ -296,17 +296,28 @@ std::string_view GetCpuArchSuffix() {
 #endif  // BUILDFLAG(IS_APPLE) && !defined(ARCH_CPU_ARM64)
 }
 
-std::string GetEmbedderTestExpectationPath(
-    std::string_view expectation_png_name) {
+std::string GetEmbedderTestExpectationPath(std::string_view expectation_name,
+                                           std::string_view expectation_ext) {
   std::string path = PathService::GetTestFilePath("embedder_tests");
   if (path.empty()) {
     return std::string();
   }
 
   path.push_back(PATH_SEPARATOR);
-  path.append(expectation_png_name);
-  path.append(".png");
+  path.append(expectation_name);
+  path.push_back('.');
+  path.append(expectation_ext);
   return path;
+}
+
+std::string GetEmbedderTestPngExpectationPath(
+    std::string_view expectation_name) {
+  return GetEmbedderTestExpectationPath(expectation_name, "png");
+}
+
+std::string GetEmbedderTestDisplayListExpectationPath(
+    std::string_view expectation_name) {
+  return GetEmbedderTestExpectationPath(expectation_name, "dump.txt");
 }
 
 std::vector<std::string> GetEmbedderTestExpectationsWithSuffixPath(
@@ -341,7 +352,7 @@ std::vector<std::string> GetEmbedderTestExpectationsWithSuffixPath(
 
   std::vector<std::string> results;
   for (const auto& name : expectation_names) {
-    results.push_back(GetEmbedderTestExpectationPath(name));
+    results.push_back(GetEmbedderTestPngExpectationPath(name));
     if (results.back().empty()) {
       return {};
     }
@@ -1151,6 +1162,34 @@ void EmbedderTest::VerifySavedDocumentWithExpectationSuffix(
                                      options);
 }
 
+void EmbedderTest::VerifySavedRenderingWithDisplayList(
+    FPDF_PAGE page,
+    std::string_view expectation_name,
+    int flags) {
+  CHECK(page);
+  CHECK(saved_document());
+  std::string display_list = RenderSavedPageWithFlagsToDisplayList(page, flags);
+  CompareDisplayList(display_list, expectation_name);
+}
+
+void EmbedderTest::VerifySavedDocumentWithDisplayList(
+    std::string_view expectation_name,
+    int flags) {
+  ScopedSavedDoc saved_doc = OpenScopedSavedDocument();
+  if (!saved_doc) {
+    ADD_FAILURE() << "Failed to open saved document";
+    return;
+  }
+
+  ScopedSavedPage page = LoadScopedSavedPage(0);
+  if (!page) {
+    ADD_FAILURE() << "Failed to load page 0 from saved document";
+    return;
+  }
+
+  VerifySavedRenderingWithDisplayList(page.get(), expectation_name, flags);
+}
+
 ScopedFPDFBitmap EmbedderTest::VerifySavedDocumentCommon() {
   ScopedSavedDoc saved_doc = OpenScopedSavedDocument();
   if (!saved_doc) {
@@ -1213,7 +1252,8 @@ void EmbedderTest::WriteBitmapToPng(FPDF_BITMAP bitmap,
 // static
 void EmbedderTest::CompareBitmap(FPDF_BITMAP bitmap,
                                  std::string_view expectation_png_name) {
-  std::string png_path = GetEmbedderTestExpectationPath(expectation_png_name);
+  std::string png_path =
+      GetEmbedderTestPngExpectationPath(expectation_png_name);
   SCOPED_TRACE(testing::Message() << "CompareBitmap() with " << png_path);
   DiffOptions options = kExactDiffOptions;
   if (EmbedderTestEnvironment::GetInstance()->fontations()) {
@@ -1263,6 +1303,23 @@ void EmbedderTest::CompareBitmapWithExpectationSuffix(
   }
 
   ReportMissingExpectation(bitmap);
+}
+
+// static
+void EmbedderTest::CompareDisplayList(const std::string& display_list,
+                                      std::string_view expectation_name) {
+  std::string path =
+      GetEmbedderTestDisplayListExpectationPath(expectation_name);
+  SCOPED_TRACE(testing::Message() << "CompareDisplayList() with " << path);
+  std::vector<uint8_t> expected_data = GetFileContents(path.c_str());
+  if (expected_data.empty()) {
+    ADD_FAILURE() << "Missing or empty expectation file: " << path;
+    return;
+  }
+  std::string_view expected_text(
+      reinterpret_cast<const char*>(expected_data.data()),
+      expected_data.size());
+  EXPECT_EQ(display_list, expected_text);
 }
 
 // static

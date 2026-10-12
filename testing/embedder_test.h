@@ -383,6 +383,11 @@ class EmbedderTest : public ::testing::Test,
       std::string_view expectation_png_name,
       const DiffOptions& options = kExactDiffOptions);
 
+  // Check `display_list` matches the expectation file named `expectation_name`
+  // under testing/resources/embedder_tests/.
+  static void CompareDisplayList(const std::string& display_list,
+                                 std::string_view expectation_name);
+
   void ClearString() { data_string_.clear(); }
   const std::string& GetString() const { return data_string_; }
 
@@ -409,6 +414,11 @@ class EmbedderTest : public ::testing::Test,
   void VerifySavedDocumentWithExpectationSuffix(
       std::string_view expectation_png_name,
       const DiffOptions& options = kExactDiffOptions);
+  void VerifySavedRenderingWithDisplayList(FPDF_PAGE page,
+                                           std::string_view expectation_name,
+                                           int flags = 0);
+  void VerifySavedDocumentWithDisplayList(std::string_view expectation_name,
+                                          int flags = 0);
 
   void SetWholeFileAvailable();
 
