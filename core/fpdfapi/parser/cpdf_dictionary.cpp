@@ -22,8 +22,7 @@
 #include "core/fxcrt/containers/contains.h"
 #include "core/fxcrt/fx_stream.h"
 
-CPDF_Dictionary::CPDF_Dictionary()
-    : CPDF_Dictionary(WeakPtr<ByteStringPool>()) {}
+CPDF_Dictionary::CPDF_Dictionary() : CPDF_Dictionary(nullptr) {}
 
 CPDF_Dictionary::CPDF_Dictionary(const WeakPtr<ByteStringPool>& pPool)
     : pool_(pPool) {}
@@ -305,7 +304,7 @@ RetainPtr<CPDF_Object> CPDF_Dictionary::RemoveFor(ByteStringView key) {
   CHECK(!IsLocked());
   auto it = map_.find(key);
   if (it == map_.end()) {
-    return RetainPtr<CPDF_Object>();
+    return nullptr;
   }
   auto node = map_.extract(it);
   return std::move(node.mapped());

@@ -1049,7 +1049,7 @@ uint32_t CPDF_Parser::GetTrailerObjectNumber() const {
 RetainPtr<CPDF_Dictionary> CPDF_Parser::GetCombinedTrailer() const {
   return cross_ref_table_->trailer()
              ? ToDictionary(cross_ref_table_->trailer()->Clone())
-             : RetainPtr<CPDF_Dictionary>();
+             : nullptr;
 }
 
 uint32_t CPDF_Parser::GetInfoObjNum() const {

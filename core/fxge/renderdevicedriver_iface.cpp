@@ -89,7 +89,7 @@ bool RenderDeviceDriverIface::GetDIBits(RetainPtr<CFX_DIBitmap> bitmap,
 }
 
 RetainPtr<const CFX_DIBitmap> RenderDeviceDriverIface::GetBackDrop() const {
-  return RetainPtr<const CFX_DIBitmap>();
+  return nullptr;
 }
 
 bool RenderDeviceDriverIface::ContinueDIBits(Continuation* continuation,
