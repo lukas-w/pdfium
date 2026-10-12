@@ -7,9 +7,8 @@
 #ifndef CORE_FXCRT_BYTESTRING_POOL_H_
 #define CORE_FXCRT_BYTESTRING_POOL_H_
 
-#include <unordered_set>
-
 #include "core/fxcrt/bytestring.h"
+#include "third_party/abseil-cpp/absl/container/flat_hash_set.h"
 
 namespace fxcrt {
 
@@ -21,7 +20,7 @@ class ByteStringPool {
   ByteString Intern(const ByteString& str);
 
  private:
-  std::unordered_set<ByteString> pool_;
+  absl::flat_hash_set<ByteString> pool_;
 };
 
 }  // namespace fxcrt
