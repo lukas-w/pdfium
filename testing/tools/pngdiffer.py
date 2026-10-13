@@ -119,6 +119,7 @@ class PNGDiffer:
     delta = 3
     mse = 0.05
     win_mse = 15.0
+    ssim = 1.0
     for flag in extra_flags:
       if flag.startswith('--fuzzy='):
         params = flag[len('--fuzzy='):].split(',')
@@ -128,7 +129,9 @@ class PNGDiffer:
           mse = float(params[1])
         if len(params) > 2 and params[2]:
           win_mse = float(params[2])
-    return delta, mse, win_mse
+        if len(params) > 3 and params[3]:
+          ssim = float(params[3])
+    return delta, mse, win_mse, ssim
 
   def EvaluateMatch(self, metrics, image_matching_algorithm):
     if not metrics.dims_match:
@@ -149,14 +152,17 @@ class PNGDiffer:
           f'mse={metrics.mse:.6f}')
 
     if algorithm == FUZZY_MATCHING:
-      delta, mse, win_mse = self._ParseTolerances(algorithm, extra_flags)
-      if (metrics.max_delta <= delta and (mse <= 0.0 or metrics.mse <= mse) and
-          (win_mse <= 0.0 or metrics.win_mse <= win_mse)):
+      delta, mse, win_mse, ssim = self._ParseTolerances(algorithm, extra_flags)
+      mse_passed = (
+          metrics.max_delta <= delta and (mse <= 0.0 or metrics.mse <= mse) and
+          (win_mse <= 0.0 or metrics.win_mse <= win_mse))
+      if mse_passed or metrics.mean_ssim > ssim:
         return True, None
       return False, (
           f'exceeds fuzzy: max_delta={metrics.max_delta} (max {delta}), '
           f'mse={metrics.mse:.6f} (max {mse}), '
-          f'win_mse={metrics.win_mse:.6f} (max {win_mse})')
+          f'win_mse={metrics.win_mse:.6f} (max {win_mse}), '
+          f'mean_ssim={metrics.mean_ssim:.6f} (min {ssim})')
 
     return False, f'Unknown algorithm {algorithm}'
 

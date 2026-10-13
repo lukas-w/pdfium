@@ -14,7 +14,7 @@ def _ParseFuzzyAction(token):
   if token == 'fuzzy':
     return '--fuzzy'
   params = token[len('fuzzy='):].split(',')
-  if not (1 <= len(params) <= 3):
+  if not (1 <= len(params) <= 4):
     raise ValueError(f'Invalid fuzzy option format: {token}')
   try:
     delta = int(params[0])
@@ -32,6 +32,10 @@ def _ParseFuzzyAction(token):
     if val < 0.0:
       raise ValueError(
           f'Negative value {val} not allowed in fuzzy option: {token}')
+  if len(params) == 4 and float(params[3]) > 1.0:
+    raise ValueError(
+        f'SSIM score {params[3]} out of range [0.0, 1.0] in fuzzy option: '
+        f'{token}')
   return f'--{token}'
 
 

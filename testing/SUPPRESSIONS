@@ -18,7 +18,8 @@
 #           the test still runs but never fails, however far off it lands
 #   blank - skip the image comparison entirely
 #   fuzzy - compare with a tolerance, either the defaults or the explicit
-#           fuzzy=<delta>,<mse>,<win_mse> (e.g. fuzzy=3,0.05,15.0)
+#           fuzzy=<delta>,<mse>,<win_mse>[,<ssim>] (e.g. fuzzy=3,0.05,15.0 or
+#           fuzzy=10,0.1,15.0,0.98)
 #   skip  - the test is expected to crash, so do not run it at all
 #
 # Apart from "skip", every action excuses mismatching output and nothing
