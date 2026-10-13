@@ -106,6 +106,22 @@ TEST_F(CPDFPageContentGeneratorTest, ProcessRect) {
   buf.str("");
   TestProcessPath(&generator, &buf, pPathObj.get());
   EXPECT_EQ("q 0 0 100 100 re n Q\n", ByteString(buf));
+
+  // Same as above, but closed without repeating the first point.
+  pPathObj = std::make_unique<CPDF_PathObject>();
+  pPathObj->path().AppendPoint(CFX_PointF(0, 0), CFX_Path::Point::Type::kMove);
+  pPathObj->path().AppendPoint(CFX_PointF(50, 0), CFX_Path::Point::Type::kLine);
+  pPathObj->path().AppendPoint(CFX_PointF(100, 0),
+                               CFX_Path::Point::Type::kLine);
+  pPathObj->path().AppendPoint(CFX_PointF(100, 100),
+                               CFX_Path::Point::Type::kLine);
+  pPathObj->path().AppendPointAndClose(CFX_PointF(0, 100),
+                                       CFX_Path::Point::Type::kLine);
+  buf.str("");
+  TestProcessPath(&generator, &buf, pPathObj.get());
+  // TODO(thestig): Should output "q 0 0 100 100 re n Q\n".
+  EXPECT_EQ("q 0 0 m 50 0 l 100 0 l 100 100 l 0 100 l h n Q\n",
+            ByteString(buf));
 }
 
 TEST_F(CPDFPageContentGeneratorTest, Bug937) {
