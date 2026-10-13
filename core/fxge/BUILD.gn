@@ -119,60 +119,6 @@ source_set("fxge") {
   deps = [ "//third_party/abseil-cpp:absl" ]
   defines = []
 
-  if (pdf_enable_freetype) {
-    sources += [
-      "freetype/fx_freetype.cpp",
-      "freetype/fx_freetype.h",
-    ]
-    public_deps += [ "../../:freetype_common" ]
-  }
-
-  if (pdf_enable_freetype && (is_component_build || use_system_freetype)) {
-    # ft_adobe_glyph_list is not exported from the Freetype shared library so we
-    # need it defined in component builds and builds using system freetype.
-    defines += [ "DEFINE_PS_TABLES_DATA" ]
-  }
-
-  if (pdf_use_agg) {
-    sources += [
-      "agg/cfx_agg_bitmapcomposer.cpp",
-      "agg/cfx_agg_bitmapcomposer.h",
-      "agg/cfx_agg_cliprgn.cpp",
-      "agg/cfx_agg_cliprgn.h",
-      "agg/cfx_agg_devicedriver.cpp",
-      "agg/cfx_agg_devicedriver.h",
-      "agg/cfx_agg_imagerenderer.cpp",
-      "agg/cfx_agg_imagerenderer.h",
-    ]
-    deps += [ "../../third_party:fx_agg" ]
-  }
-
-  if (pdf_use_libyuv) {
-    deps += [ "//third_party/libyuv" ]
-  }
-
-  if (pdf_use_skia) {
-    sources += [
-      "skia/cfx_dibbase_skia.cpp",
-      "skia/fx_skia_device.cpp",
-    ]
-    public_deps += [ "//skia" ]
-
-    if (pdf_skia_font_manager_target != "") {
-      defines += [ "PDF_USE_SKIA_CUSTOM_FONT_MANAGER" ]
-      deps += [ pdf_skia_font_manager_target ]
-    }
-  }
-
-  if (pdf_enable_fontations) {
-    configs += [ ":skrifa_cxx_config" ]
-    deps += [
-      ":skrifa_cxx",
-      ":skrifa_cxx_cpp",
-      "//build/rust:cxx_cppdeps",
-    ]
-  }
-
   if (is_android) {
     sources += [
       "android/cfx_androidfontinfo.cpp",
@@ -222,11 +168,65 @@ source_set("fxge") {
     configs -= [ "//build/config/win:lean_and_mean" ]
   }
 
+  if (pdf_enable_fontations) {
+    configs += [ ":skrifa_cxx_config" ]
+    deps += [
+      ":skrifa_cxx",
+      ":skrifa_cxx_cpp",
+      "//build/rust:cxx_cppdeps",
+    ]
+  }
+
+  if (pdf_enable_freetype) {
+    sources += [
+      "freetype/fx_freetype.cpp",
+      "freetype/fx_freetype.h",
+    ]
+    public_deps += [ "../../:freetype_common" ]
+  }
+
+  if (pdf_enable_freetype && (is_component_build || use_system_freetype)) {
+    # ft_adobe_glyph_list is not exported from the Freetype shared library so we
+    # need it defined in component builds and builds using system freetype.
+    defines += [ "DEFINE_PS_TABLES_DATA" ]
+  }
+
   if (pdf_enable_xfa) {
     sources += [
       "cfx_cttnametable.cpp",
       "cfx_cttnametable.h",
     ]
+  }
+
+  if (pdf_use_agg) {
+    sources += [
+      "agg/cfx_agg_bitmapcomposer.cpp",
+      "agg/cfx_agg_bitmapcomposer.h",
+      "agg/cfx_agg_cliprgn.cpp",
+      "agg/cfx_agg_cliprgn.h",
+      "agg/cfx_agg_devicedriver.cpp",
+      "agg/cfx_agg_devicedriver.h",
+      "agg/cfx_agg_imagerenderer.cpp",
+      "agg/cfx_agg_imagerenderer.h",
+    ]
+    deps += [ "../../third_party:fx_agg" ]
+  }
+
+  if (pdf_use_libyuv) {
+    deps += [ "//third_party/libyuv" ]
+  }
+
+  if (pdf_use_skia) {
+    sources += [
+      "skia/cfx_dibbase_skia.cpp",
+      "skia/fx_skia_device.cpp",
+    ]
+    public_deps += [ "//skia" ]
+
+    if (pdf_skia_font_manager_target != "") {
+      defines += [ "PDF_USE_SKIA_CUSTOM_FONT_MANAGER" ]
+      deps += [ pdf_skia_font_manager_target ]
+    }
   }
 
   visibility = [ "../../*" ]
@@ -311,10 +311,6 @@ pdfium_unittest_source_set("unittests") {
   configs = []
   pdfium_root_dir = "../../"
 
-  if (is_win) {
-    sources += [ "win32/cfx_psrenderer_unittest.cpp" ]
-  }
-
   # CFX_AndroidFontInfo contains cross-platform logic that can be tested on
   # Linux without Android-specific APIs.
   if (is_linux) {
@@ -323,6 +319,10 @@ pdfium_unittest_source_set("unittests") {
       "android/cfx_androidfontinfo.h",
       "android/cfx_androidfontinfo_unittest.cpp",
     ]
+  }
+
+  if (is_win) {
+    sources += [ "win32/cfx_psrenderer_unittest.cpp" ]
   }
 
   if (pdf_enable_fontations) {
