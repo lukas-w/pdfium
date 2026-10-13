@@ -320,6 +320,81 @@ TEST(CFXDIBBaseTest, ConvertToBgrFromBgra) {
   EXPECT_EQ(60u, bgr_row[1].red);
 }
 
+TEST(CFXDIBBaseTest, StretchToEmpty) {
+  auto bitmap = pdfium::MakeRetain<CFX_DIBitmap>();
+  ASSERT_TRUE(bitmap->Create(2, 3, FXDIB_Format::kBgra));
+
+  EXPECT_FALSE(bitmap->StretchTo(0, 3, FXDIB_ResampleOptions(), nullptr));
+  EXPECT_FALSE(bitmap->StretchTo(2, 0, FXDIB_ResampleOptions(), nullptr));
+
+  constexpr FX_RECT kOutOfBoundsClip(10, 10, 20, 20);
+  EXPECT_FALSE(
+      bitmap->StretchTo(4, 6, FXDIB_ResampleOptions(), &kOutOfBoundsClip));
+}
+
+TEST(CFXDIBBaseTest, StretchToMaskFlipAndClip) {
+  auto bitmap = pdfium::MakeRetain<CFX_DIBitmap>();
+  ASSERT_TRUE(bitmap->Create(2, 2, FXDIB_Format::k8bppMask));
+  auto src_scan0 = bitmap->GetWritableScanline(0);
+  src_scan0[0] = 0x10;
+  src_scan0[1] = 0x20;
+  auto src_scan1 = bitmap->GetWritableScanline(1);
+  src_scan1[0] = 0x30;
+  src_scan1[1] = 0x40;
+
+  constexpr FX_RECT kClip(1, 0, 3, 2);
+  RetainPtr<CFX_DIBitmap> result =
+      bitmap->StretchTo(-4, 2, FXDIB_ResampleOptions(), &kClip);
+  ASSERT_TRUE(result);
+  ASSERT_EQ(2, result->GetWidth());
+  ASSERT_EQ(2, result->GetHeight());
+  EXPECT_EQ(FXDIB_Format::k8bppMask, result->GetFormat());
+  EXPECT_THAT(result->GetScanline(0).first(2u), ElementsAre(0x1c, 0x14));
+  EXPECT_THAT(result->GetScanline(1).first(2u), ElementsAre(0x3c, 0x34));
+}
+
+TEST(CFXDIBBaseTest, StretchToGrayscale) {
+  auto bitmap = pdfium::MakeRetain<CFX_DIBitmap>();
+  ASSERT_TRUE(bitmap->Create(2, 2, FXDIB_Format::k8bppRgb));
+  auto src_scan0 = bitmap->GetWritableScanline(0);
+  src_scan0[0] = 0x10;
+  src_scan0[1] = 0x20;
+  auto src_scan1 = bitmap->GetWritableScanline(1);
+  src_scan1[0] = 0x30;
+  src_scan1[1] = 0x40;
+
+  RetainPtr<CFX_DIBitmap> result =
+      bitmap->StretchTo(4, -2, FXDIB_ResampleOptions(), nullptr);
+  ASSERT_TRUE(result);
+  ASSERT_EQ(4, result->GetWidth());
+  ASSERT_EQ(2, result->GetHeight());
+  EXPECT_EQ(FXDIB_Format::k8bppRgb, result->GetFormat());
+  EXPECT_FALSE(result->HasPalette());
+  EXPECT_THAT(result->GetScanline(0).first(4u),
+              ElementsAre(0x30, 0x34, 0x3c, 0x40));
+  EXPECT_THAT(result->GetScanline(1).first(4u),
+              ElementsAre(0x10, 0x14, 0x1c, 0x20));
+}
+
+TEST(CFXDIBBaseTest, StretchToBgra) {
+  auto bitmap = pdfium::MakeRetain<CFX_DIBitmap>();
+  ASSERT_TRUE(bitmap->Create(2, 1, FXDIB_Format::kBgra));
+  auto src_scan = bitmap->GetWritableScanlineAs<uint32_t>(0);
+  src_scan[0] = 0xff112233;
+  src_scan[1] = 0xff445566;
+
+  RetainPtr<CFX_DIBitmap> result =
+      bitmap->StretchTo(4, 2, FXDIB_ResampleOptions(), nullptr);
+  ASSERT_TRUE(result);
+  ASSERT_EQ(4, result->GetWidth());
+  ASSERT_EQ(2, result->GetHeight());
+  EXPECT_EQ(FXDIB_Format::kBgra, result->GetFormat());
+  EXPECT_THAT(result->GetScanlineAs<uint32_t>(0),
+              ElementsAre(0xff112233, 0xff112233, 0xff445566, 0xff445566));
+  EXPECT_THAT(result->GetScanlineAs<uint32_t>(1),
+              ElementsAre(0xff112233, 0xff112233, 0xff445566, 0xff445566));
+}
+
 TEST(CFXDIBBaseTest, TransformToEmpty) {
   auto bitmap = pdfium::MakeRetain<CFX_DIBitmap>();
   ASSERT_TRUE(bitmap->Create(2, 3, FXDIB_Format::kBgra));
