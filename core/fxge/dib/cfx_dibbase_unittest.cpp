@@ -5,10 +5,15 @@
 #include "core/fxge/dib/cfx_dibbase.h"
 
 #include "core/fxcrt/fx_coordinates.h"
+#include "core/fxcrt/span.h"
 #include "core/fxge/dib/cfx_dibitmap.h"
+#include "core/fxge/dib/fx_dib.h"
+#include "testing/gmock/include/gmock/gmock.h"
 #include "testing/gtest/include/gtest/gtest.h"
 
 namespace {
+
+using ::testing::ElementsAre;
 
 struct Input {
   CFX_Point src_top_left;
@@ -313,4 +318,67 @@ TEST(CFXDIBBaseTest, ConvertToBgrFromBgra) {
   EXPECT_EQ(40u, bgr_row[1].blue);
   EXPECT_EQ(50u, bgr_row[1].green);
   EXPECT_EQ(60u, bgr_row[1].red);
+}
+
+TEST(CFXDIBBaseTest, TransformToEmpty) {
+  auto bitmap = pdfium::MakeRetain<CFX_DIBitmap>();
+  ASSERT_TRUE(bitmap->Create(2, 3, FXDIB_Format::kBgra));
+
+  int left = -1;
+  int top = -1;
+  RetainPtr<CFX_DIBitmap> result =
+      bitmap->TransformTo(CFX_Matrix(0, 0, 0, 0, 10, 20), &left, &top);
+  EXPECT_FALSE(result);
+  EXPECT_EQ(0, left);
+  EXPECT_EQ(0, top);
+}
+
+TEST(CFXDIBBaseTest, TransformToMaskRotate90) {
+  auto bitmap = pdfium::MakeRetain<CFX_DIBitmap>();
+  ASSERT_TRUE(bitmap->Create(2, 3, FXDIB_Format::k8bppMask));
+  auto src_scan0 = bitmap->GetWritableScanline(0);
+  src_scan0[0] = 0x10;
+  src_scan0[1] = 0x20;
+  auto src_scan1 = bitmap->GetWritableScanline(1);
+  src_scan1[0] = 0x30;
+  src_scan1[1] = 0x40;
+  auto src_scan2 = bitmap->GetWritableScanline(2);
+  src_scan2[0] = 0x50;
+  src_scan2[1] = 0x60;
+
+  int left = 0;
+  int top = 0;
+  RetainPtr<CFX_DIBitmap> result =
+      bitmap->TransformTo(CFX_Matrix(0, 2, 3, 0, -5, 7), &left, &top);
+  ASSERT_TRUE(result);
+  EXPECT_EQ(-5, left);
+  EXPECT_EQ(7, top);
+  ASSERT_EQ(3, result->GetWidth());
+  ASSERT_EQ(2, result->GetHeight());
+  EXPECT_EQ(FXDIB_Format::k8bppMask, result->GetFormat());
+  EXPECT_THAT(result->GetScanline(0).first(3u), ElementsAre(0x50, 0x30, 0x10));
+  EXPECT_THAT(result->GetScanline(1).first(3u), ElementsAre(0x60, 0x40, 0x20));
+}
+
+TEST(CFXDIBBaseTest, TransformToBgraScaleAndTranslate) {
+  auto bitmap = pdfium::MakeRetain<CFX_DIBitmap>();
+  ASSERT_TRUE(bitmap->Create(2, 1, FXDIB_Format::kBgra));
+  auto src_scan = bitmap->GetWritableScanlineAs<uint32_t>(0);
+  src_scan[0] = 0xff112233;
+  src_scan[1] = 0xff445566;
+
+  int left = 0;
+  int top = 0;
+  RetainPtr<CFX_DIBitmap> result =
+      bitmap->TransformTo(CFX_Matrix(4, 0, 0, -2, 10, 22), &left, &top);
+  ASSERT_TRUE(result);
+  EXPECT_EQ(10, left);
+  EXPECT_EQ(20, top);
+  ASSERT_EQ(4, result->GetWidth());
+  ASSERT_EQ(2, result->GetHeight());
+  EXPECT_EQ(FXDIB_Format::kBgra, result->GetFormat());
+  EXPECT_THAT(result->GetScanlineAs<uint32_t>(0),
+              ElementsAre(0xff112233, 0xff112233, 0xff445566, 0xff445566));
+  EXPECT_THAT(result->GetScanlineAs<uint32_t>(1),
+              ElementsAre(0xff112233, 0xff112233, 0xff445566, 0xff445566));
 }
