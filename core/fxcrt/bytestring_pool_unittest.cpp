@@ -10,7 +10,8 @@
 namespace fxcrt {
 
 TEST(ByteStringPool, Basic) {
-  ByteStringPool pool;
+  std::unique_ptr<ByteStringPool> pool = ByteStringPool::Create();
+  ASSERT_TRUE(pool);
 
   ByteString null1;
   ByteString null2;
@@ -22,10 +23,10 @@ TEST(ByteStringPool, Basic) {
   EXPECT_TRUE(null2.IsEmpty());
   EXPECT_NE(goats1.c_str(), goats2.c_str());
 
-  ByteString interned_null1 = pool.Intern(null1);
-  ByteString interned_null2 = pool.Intern(null2);
-  ByteString interned_goats1 = pool.Intern(goats1);
-  ByteString interned_goats2 = pool.Intern(goats2);
+  ByteString interned_null1 = pool->Intern(null1);
+  ByteString interned_null2 = pool->Intern(null2);
+  ByteString interned_goats1 = pool->Intern(goats1);
+  ByteString interned_goats2 = pool->Intern(goats2);
 
   // Strings are logically equal after being interned.
   EXPECT_EQ(null1, interned_null1);

@@ -7,20 +7,23 @@
 #ifndef CORE_FXCRT_BYTESTRING_POOL_H_
 #define CORE_FXCRT_BYTESTRING_POOL_H_
 
+#include <memory>
+
 #include "core/fxcrt/bytestring.h"
-#include "third_party/abseil-cpp/absl/container/flat_hash_set.h"
 
 namespace fxcrt {
 
 class ByteStringPool {
  public:
-  ByteStringPool();
-  ~ByteStringPool();
+  // Never returns nullptr.
+  static std::unique_ptr<ByteStringPool> Create();
 
-  ByteString Intern(const ByteString& str);
+  virtual ~ByteStringPool() = default;
 
- private:
-  absl::flat_hash_set<ByteString> pool_;
+  virtual ByteString Intern(const ByteString& str) = 0;
+
+ protected:
+  ByteStringPool() = default;
 };
 
 }  // namespace fxcrt
