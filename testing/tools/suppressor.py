@@ -43,13 +43,12 @@ def _ParseFuzzyAction(token):
 # the test file name, which is unconstrained.
 _VALID_COLUMN_VALUES = {
     1: {'*', 'win', 'mac', 'mac_arm', 'mac_x86', 'linux'},
-    2: {'*', 'nov8', 'v8'},
-    3: {'*', 'noxfa', 'xfa'},
-    4: {'*', 'agg', 'gdi', 'gdi_agg', 'gdi_skia', 'skia'},
-    5: {'*', 'freetype', 'fontations'},
+    2: {'*', 'nov8', 'v8', 'xfa'},
+    3: {'*', 'agg', 'gdi', 'gdi_agg', 'gdi_skia', 'skia'},
+    4: {'*', 'freetype', 'fontations'},
 }
 
-# Legal keywords for the action in column 6.
+# Legal keywords for the action in column 5.
 _VALID_ACTIONS = {'diff', 'blank', 'fuzzy', 'skip'}
 
 
@@ -71,8 +70,8 @@ def _ParseAction(token):
 
 
 def _SuppressionSpecificity(item):
-  """Scores columns 1-5 as a little-endian specificity bitmask."""
-  return sum((item[col] != '*') << (col - 1) for col in range(1, 6))
+  """Scores columns 1-4 as a little-endian specificity bitmask."""
+  return sum((item[col] != '*') << (col - 1) for col in range(1, 5))
 
 
 class Suppressor:
@@ -93,19 +92,23 @@ class Suppressor:
     self._LoadSuppressions(finder)
 
   def _LoadSuppressions(self, finder):
-    v8_option = "v8" if self.has_v8 else "nov8"
-    xfa_option = "xfa" if self.has_xfa else "noxfa"
+    if not self.has_v8:
+      engine_option = 'nov8'
+    elif not self.has_xfa:
+      engine_option = 'v8'
+    else:
+      engine_option = 'xfa'
     with open(os.path.join(finder.TestingDir(), 'SUPPRESSIONS')) as f:
       os_name = common.os_name()
       mac_platform = common.mac_platform() if os_name == 'mac' else None
       fuzzy_specificity = {}
       for item in self._ExtractSuppressions(f):
-        if len(item) != 7:
+        if len(item) != 6:
           raise ValueError(f'Unexpected column count in suppressions: {item}')
         _ValidatePredicates(item)
-        keyword, flags = _ParseAction(item[6])
-        if not self._MatchSuppression(item, os_name, mac_platform, v8_option,
-                                      xfa_option, self.rendering_option,
+        keyword, flags = _ParseAction(item[5])
+        if not self._MatchSuppression(item, os_name, mac_platform,
+                                      engine_option, self.rendering_option,
                                       self.font_engine):
           continue
         filename = item[0]
@@ -146,16 +149,14 @@ class Suppressor:
       return 'gdi' in rendering_option_column
     return False
 
-  def _MatchSuppression(self, item, os_name, mac_platform, js, xfa,
+  def _MatchSuppression(self, item, os_name, mac_platform, engine,
                         rendering_option, font_engine):
     os_column = item[1].split(",")
-    js_column = item[2].split(",")
-    xfa_column = item[3].split(",")
-    rendering_option_column = item[4].split(",")
-    font_engine_column = item[5].split(",")
+    engine_column = item[2].split(",")
+    rendering_option_column = item[3].split(",")
+    font_engine_column = item[4].split(",")
     return (Suppressor._MatchOs(os_name, mac_platform, os_column) and
-            ('*' in js_column or js in js_column) and
-            ('*' in xfa_column or xfa in xfa_column) and
+            ('*' in engine_column or engine in engine_column) and
             Suppressor._MatchRenderer(rendering_option,
                                       rendering_option_column) and
             ('*' in font_engine_column or font_engine in font_engine_column))
