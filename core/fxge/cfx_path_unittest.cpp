@@ -34,12 +34,9 @@ TEST(CFXPath, BasicTest) {
   path.AppendPoint({1, 1}, CFX_Path::Point::Type::kLine);
   path.AppendPoint({1, 0}, CFX_Path::Point::Type::kLine);
   EXPECT_EQ(4u, path.GetPoints().size());
-  // TODO(thestig): Change this back to the behavior before
-  // https://pdfium-review.googlesource.com/c/80912 since the rect is open.
-  EXPECT_TRUE(path.IsRect());
+  EXPECT_FALSE(path.IsRect());
   rect = path.GetRect(nullptr);
-  ASSERT_TRUE(rect.has_value());
-  EXPECT_EQ(CFX_FloatRect(0, 0, 1, 1), rect.value());
+  EXPECT_FALSE(rect.has_value());
   EXPECT_EQ(CFX_FloatRect(0, 0, 1, 1), path.GetBoundingBox());
 
   // 4 points with a closed path makes a rect.
@@ -150,19 +147,14 @@ TEST(CFXPath, ClosePath) {
   ASSERT_EQ(4u, path.GetPoints().size());
   EXPECT_EQ(CFX_Path::Point::Type::kLine, path.GetType(3));
   EXPECT_FALSE(path.IsClosingFigure(3));
-  // TODO(thestig): Change this back to the behavior before
-  // https://pdfium-review.googlesource.com/c/80912 since the rect is open.
-  EXPECT_TRUE(path.IsRect());
+  EXPECT_FALSE(path.IsRect());
   std::optional<CFX_FloatRect> rect = path.GetRect(nullptr);
-  ASSERT_TRUE(rect.has_value());
-  EXPECT_EQ(CFX_FloatRect(0, 0, 1, 1), rect.value());
+  EXPECT_FALSE(rect.has_value());
 
   const CFX_Matrix kIdentityMatrix;
   ASSERT_TRUE(kIdentityMatrix.IsIdentity());
-  // TODO(thestig): This should return std::nullopt.
   rect = path.GetRect(&kIdentityMatrix);
-  ASSERT_TRUE(rect.has_value());
-  EXPECT_EQ(CFX_FloatRect(0, 0, 1, 1), rect.value());
+  EXPECT_FALSE(rect.has_value());
 
   path.ClosePath();
   ASSERT_EQ(4u, path.GetPoints().size());

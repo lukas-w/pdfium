@@ -22,6 +22,10 @@ bool IsRectPreTransform(const std::vector<CFX_Path::Point>& points) {
     return false;
   }
 
+  if (points.size() == 4 && !points[3].close_figure_) {
+    return false;
+  }
+
   if (points.size() == 5 && points[0].point_ != points[4].point_) {
     return false;
   }
@@ -91,7 +95,8 @@ std::vector<CFX_Path::Point> GetNormalizedPoints(
     const std::vector<CFX_Path::Point>& points) {
   DCHECK(PathPointsNeedNormalization(points));
 
-  if (points[0].point_ != points.back().point_) {
+  if (!points.back().close_figure_ &&
+      points[0].point_ != points.back().point_) {
     return {};
   }
 
