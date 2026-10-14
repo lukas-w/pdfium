@@ -34,8 +34,7 @@ std::optional<IJS_Runtime::JS_Error> CJS_EventContext::RunScript(
                                  JSGetStringFromID(JSMessage::kBusyError));
   }
 
-  AutoRestorer<bool> restorer(&busy_);
-  busy_ = true;
+  AutoRestorer<bool> restorer(&busy_, true);
 
   DCHECK(IsValid());
   CJS_Runtime::FieldEvent event(TargetName(), EventKind());

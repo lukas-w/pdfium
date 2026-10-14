@@ -1328,8 +1328,7 @@ CPDF_Parser::Error CPDF_Parser::LoadLinearizedMainXRefTable() {
     return SUCCESS;
   }
 
-  const AutoRestorer<uint32_t> save_metadata_objnum(&metadata_objnum_);
-  metadata_objnum_ = 0;
+  AutoRestorer<uint32_t> save_metadata_objnum(&metadata_objnum_, 0);
   object_stream_map_.clear();
 
   if (!LoadLinearizedAllCrossRefTable(main_xref_offset) &&

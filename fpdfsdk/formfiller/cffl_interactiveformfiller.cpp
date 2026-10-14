@@ -108,12 +108,11 @@ void CFFL_InteractiveFormFiller::OnMouseEnter(
       pWidget->set_appearance_modified(false);
       DCHECK(pPageView);
       {
-        AutoRestorer<bool> restorer(&notifying_);
-        notifying_ = true;
-
         CFFL_FieldAction fa;
         fa.bModifier = CPWL_Wnd::IsCTRLKeyDown(nFlag);
         fa.bShift = CPWL_Wnd::IsSHIFTKeyDown(nFlag);
+
+        AutoRestorer<bool> restorer(&notifying_, true);
         pWidget->OnAAction(CPDF_AAction::kCursorEnter, &fa, pPageView);
       }
       if (!pWidget) {
@@ -144,12 +143,11 @@ void CFFL_InteractiveFormFiller::OnMouseExit(
       pWidget->set_appearance_modified(false);
       DCHECK(pPageView);
       {
-        AutoRestorer<bool> restorer(&notifying_);
-        notifying_ = true;
-
         CFFL_FieldAction fa;
         fa.bModifier = CPWL_Wnd::IsCTRLKeyDown(nFlag);
         fa.bShift = CPWL_Wnd::IsSHIFTKeyDown(nFlag);
+
+        AutoRestorer<bool> restorer(&notifying_, true);
         pWidget->OnAAction(CPDF_AAction::kCursorExit, &fa, pPageView);
       }
       if (!pWidget) {
@@ -182,12 +180,11 @@ bool CFFL_InteractiveFormFiller::OnLButtonDown(
       pWidget->set_appearance_modified(false);
       DCHECK(pPageView);
       {
-        AutoRestorer<bool> restorer(&notifying_);
-        notifying_ = true;
-
         CFFL_FieldAction fa;
         fa.bModifier = CPWL_Wnd::IsCTRLKeyDown(nFlags);
         fa.bShift = CPWL_Wnd::IsSHIFTKeyDown(nFlags);
+
+        AutoRestorer<bool> restorer(&notifying_, true);
         pWidget->OnAAction(CPDF_AAction::kButtonDown, &fa, pPageView);
       }
       if (!pWidget) {
@@ -269,12 +266,11 @@ bool CFFL_InteractiveFormFiller::OnButtonUp(
   uint32_t nValueAge = pWidget->GetValueAge();
   DCHECK(pPageView);
   {
-    AutoRestorer<bool> restorer(&notifying_);
-    notifying_ = true;
-
     CFFL_FieldAction fa;
     fa.bModifier = CPWL_Wnd::IsCTRLKeyDown(nFlag);
     fa.bShift = CPWL_Wnd::IsSHIFTKeyDown(nFlag);
+
+    AutoRestorer<bool> restorer(&notifying_, true);
     pWidget->OnAAction(CPDF_AAction::kButtonUp, &fa, pPageView);
   }
   if (!pWidget || !IsValidAnnot(pPageView, pWidget.Get())) {
@@ -410,12 +406,11 @@ bool CFFL_InteractiveFormFiller::OnSetFocus(
       CPDFSDK_PageView* pPageView = pWidget->GetPageView();
       DCHECK(pPageView);
       {
-        AutoRestorer<bool> restorer(&notifying_);
-        notifying_ = true;
-
         CFFL_FieldAction fa;
         fa.bModifier = CPWL_Wnd::IsCTRLKeyDown(nFlag);
         fa.bShift = CPWL_Wnd::IsSHIFTKeyDown(nFlag);
+
+        AutoRestorer<bool> restorer(&notifying_, true);
         pFormField->GetActionData(pPageView, CPDF_AAction::kGetFocus, fa);
         pWidget->OnAAction(CPDF_AAction::kGetFocus, &fa, pPageView);
       }
@@ -470,12 +465,11 @@ bool CFFL_InteractiveFormFiller::OnKillFocus(
   CPDFSDK_PageView* pPageView = pWidget->GetPageView();
   DCHECK(pPageView);
   {
-    AutoRestorer<bool> restorer(&notifying_);
-    notifying_ = true;
-
     CFFL_FieldAction fa;
     fa.bModifier = CPWL_Wnd::IsCTRLKeyDown(nFlag);
     fa.bShift = CPWL_Wnd::IsSHIFTKeyDown(nFlag);
+
+    AutoRestorer<bool> restorer(&notifying_, true);
     pFormField->GetActionData(pPageView, CPDF_AAction::kLoseFocus, fa);
     pWidget->OnAAction(CPDF_AAction::kLoseFocus, &fa, pPageView);
   }
@@ -743,9 +737,6 @@ bool CFFL_InteractiveFormFiller::OnKeyStrokeCommit(
   DCHECK(pPageView);
   pWidget->set_appearance_modified(false);
 
-  AutoRestorer<bool> restorer(&notifying_);
-  notifying_ = true;
-
   CFFL_FieldAction fa;
   fa.bModifier = CPWL_Wnd::IsCTRLKeyDown(nFlag);
   fa.bShift = CPWL_Wnd::IsSHIFTKeyDown(nFlag);
@@ -753,6 +744,7 @@ bool CFFL_InteractiveFormFiller::OnKeyStrokeCommit(
   fa.bKeyDown = true;
   fa.bRC = true;
 
+  AutoRestorer<bool> restorer(&notifying_, true);
   CFFL_FormField* pFormField = GetFormField(pWidget.Get());
   pFormField->GetActionData(pPageView, CPDF_AAction::kKeyStroke, fa);
   pFormField->SavePWLWindowState(pPageView);
@@ -780,15 +772,13 @@ bool CFFL_InteractiveFormFiller::OnValidate(
   DCHECK(pPageView);
   pWidget->set_appearance_modified(false);
 
-  AutoRestorer<bool> restorer(&notifying_);
-  notifying_ = true;
-
   CFFL_FieldAction fa;
   fa.bModifier = CPWL_Wnd::IsCTRLKeyDown(nFlag);
   fa.bShift = CPWL_Wnd::IsSHIFTKeyDown(nFlag);
   fa.bKeyDown = true;
   fa.bRC = true;
 
+  AutoRestorer<bool> restorer(&notifying_, true);
   CFFL_FormField* pFormField = GetFormField(pWidget.Get());
   pFormField->GetActionData(pPageView, CPDF_AAction::kValidate, fa);
   pFormField->SavePWLWindowState(pPageView);
@@ -836,13 +826,11 @@ bool CFFL_InteractiveFormFiller::OnClick(ObservedPtr<CPDFSDK_Widget>& pWidget,
   uint32_t nAge = pWidget->GetAppearanceAge();
   uint32_t nValueAge = pWidget->GetValueAge();
   {
-    AutoRestorer<bool> restorer(&notifying_);
-    notifying_ = true;
-
     CFFL_FieldAction fa;
     fa.bModifier = CPWL_Wnd::IsCTRLKeyDown(nFlag);
     fa.bShift = CPWL_Wnd::IsSHIFTKeyDown(nFlag);
 
+    AutoRestorer<bool> restorer(&notifying_, true);
     pWidget->OnXFAAAction(PDFSDK_XFA_Click, &fa, pPageView);
   }
   if (!pWidget || !IsValidAnnot(pPageView, pWidget.Get())) {
@@ -873,12 +861,11 @@ bool CFFL_InteractiveFormFiller::OnFull(ObservedPtr<CPDFSDK_Widget>& pWidget,
   uint32_t nAge = pWidget->GetAppearanceAge();
   uint32_t nValueAge = pWidget->GetValueAge();
   {
-    AutoRestorer<bool> restorer(&notifying_);
-    notifying_ = true;
-
     CFFL_FieldAction fa;
     fa.bModifier = CPWL_Wnd::IsCTRLKeyDown(nFlag);
     fa.bShift = CPWL_Wnd::IsSHIFTKeyDown(nFlag);
+
+    AutoRestorer<bool> restorer(&notifying_, true);
     pWidget->OnXFAAAction(PDFSDK_XFA_Full, &fa, pPageView);
   }
   if (!pWidget || !IsValidAnnot(pPageView, pWidget.Get())) {
@@ -909,12 +896,11 @@ bool CFFL_InteractiveFormFiller::OnPreOpen(ObservedPtr<CPDFSDK_Widget>& pWidget,
   uint32_t nAge = pWidget->GetAppearanceAge();
   uint32_t nValueAge = pWidget->GetValueAge();
   {
-    AutoRestorer<bool> restorer(&notifying_);
-    notifying_ = true;
-
     CFFL_FieldAction fa;
     fa.bModifier = CPWL_Wnd::IsCTRLKeyDown(nFlag);
     fa.bShift = CPWL_Wnd::IsSHIFTKeyDown(nFlag);
+
+    AutoRestorer<bool> restorer(&notifying_, true);
     pWidget->OnXFAAAction(PDFSDK_XFA_PreOpen, &fa, pPageView);
   }
   if (!pWidget || !IsValidAnnot(pPageView, pWidget.Get())) {
@@ -946,12 +932,11 @@ bool CFFL_InteractiveFormFiller::OnPostOpen(
   uint32_t nAge = pWidget->GetAppearanceAge();
   uint32_t nValueAge = pWidget->GetValueAge();
   {
-    AutoRestorer<bool> restorer(&notifying_);
-    notifying_ = true;
-
     CFFL_FieldAction fa;
     fa.bModifier = CPWL_Wnd::IsCTRLKeyDown(nFlag);
     fa.bShift = CPWL_Wnd::IsSHIFTKeyDown(nFlag);
+
+    AutoRestorer<bool> restorer(&notifying_, true);
     pWidget->OnXFAAAction(PDFSDK_XFA_PostOpen, &fa, pPageView);
   }
   if (!pWidget || !IsValidAnnot(pPageView, pWidget.Get())) {
@@ -1005,9 +990,7 @@ CFFL_InteractiveFormFiller::OnBeforeKeyStroke(
     return {true, false};
   }
 
-  AutoRestorer<bool> restorer(&notifying_);
-  notifying_ = true;
-
+  AutoRestorer<bool> restorer(&notifying_, true);
   uint32_t nAge = pWidget->GetAppearanceAge();
   uint32_t nValueAge = pWidget->GetValueAge();
 

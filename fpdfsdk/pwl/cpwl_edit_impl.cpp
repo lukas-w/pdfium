@@ -1147,15 +1147,14 @@ void CPWL_EditImpl::SetScrollInfo() {
     return;
   }
 
-  AutoRestorer<bool> restorer(&notify_flag_);
-  notify_flag_ = true;
-
   PWL_SCROLL_INFO Info;
   Info.fPlateWidth = rcPlate.top - rcPlate.bottom;
   Info.fContentMin = rcContent.bottom;
   Info.fContentMax = rcContent.top;
   Info.fSmallStep = rcPlate.Height() / 3;
   Info.fBigStep = rcPlate.Height();
+
+  AutoRestorer<bool> restorer(&notify_flag_, true);
   notify_->SetScrollInfo(Info);
 }
 
@@ -1184,8 +1183,7 @@ void CPWL_EditImpl::SetScrollPosY(float fy) {
 
       if (notify_) {
         if (!notify_flag_) {
-          AutoRestorer<bool> restorer(&notify_flag_);
-          notify_flag_ = true;
+          AutoRestorer<bool> restorer(&notify_flag_, true);
           notify_->SetScrollPosition(fy);
         }
       }
@@ -1295,8 +1293,7 @@ void CPWL_EditImpl::Refresh() {
 
     if (notify_) {
       if (!notify_flag_) {
-        AutoRestorer<bool> restorer(&notify_flag_);
-        notify_flag_ = true;
+        AutoRestorer<bool> restorer(&notify_flag_, true);
         std::vector<CFX_FloatRect>* pRects = refresh_.GetRefreshRects();
         for (auto& rect : *pRects) {
           if (!notify_->InvalidateRect(&rect)) {
@@ -1368,8 +1365,7 @@ void CPWL_EditImpl::RefreshWordRange(const CPVT_WordRange& wr) {
 
       if (notify_) {
         if (!notify_flag_) {
-          AutoRestorer<bool> restorer(&notify_flag_);
-          notify_flag_ = true;
+          AutoRestorer<bool> restorer(&notify_flag_, true);
           CFX_FloatRect rcRefresh = VTToEdit(word_rect);
           if (!notify_->InvalidateRect(&rcRefresh)) {
             notify_ = nullptr;  // Gone, dangling even.
@@ -1384,8 +1380,7 @@ void CPWL_EditImpl::RefreshWordRange(const CPVT_WordRange& wr) {
 
       if (notify_) {
         if (!notify_flag_) {
-          AutoRestorer<bool> restorer(&notify_flag_);
-          notify_flag_ = true;
+          AutoRestorer<bool> restorer(&notify_flag_, true);
           CFX_FloatRect rcRefresh = VTToEdit(rcLine);
           if (!notify_->InvalidateRect(&rcRefresh)) {
             notify_ = nullptr;  // Gone, dangling even.
@@ -1425,8 +1420,7 @@ void CPWL_EditImpl::SetCaretInfo() {
         ptFoot.y = line.ptLine.y + line.fLineDescent;
       }
 
-      AutoRestorer<bool> restorer(&notify_flag_);
-      notify_flag_ = true;
+      AutoRestorer<bool> restorer(&notify_flag_, true);
       notify_->SetCaret(sel_state_.IsEmpty(), VTToEdit(ptHead),
                         VTToEdit(ptFoot));
     }

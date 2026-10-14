@@ -105,8 +105,7 @@ CPDF_SyntaxParser::CPDF_SyntaxParser(RetainPtr<CPDF_ReadValidator> validator,
 CPDF_SyntaxParser::~CPDF_SyntaxParser() = default;
 
 bool CPDF_SyntaxParser::GetCharAt(FX_FILESIZE pos, uint8_t& ch) {
-  AutoRestorer<FX_FILESIZE> save_pos(&pos_);
-  pos_ = pos;
+  AutoRestorer<FX_FILESIZE> save_pos(&pos_, pos);
   return GetNextChar(ch);
 }
 

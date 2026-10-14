@@ -207,9 +207,7 @@ CFXJSE_Context::ExecutionResult CFXJSE_Engine::RunScript(
     WideStringView wsScript,
     CXFA_Object* pThisObject) {
   CFXJSE_ScopeUtil_IsolateHandleContext scope(GetJseContext());
-  AutoRestorer<CXFA_Script::Type> typeRestorer(&script_type_);
-  script_type_ = eScriptType;
-
+  AutoRestorer<CXFA_Script::Type> typeRestorer(&script_type_, eScriptType);
   ByteString btScript;
   if (eScriptType == CXFA_Script::Type::Formcalc) {
     if (!form_calc_context_) {
@@ -760,9 +758,7 @@ CFXJSE_Engine::ResolveObjectsWithBindNode(CXFA_Object* refObject,
     return std::nullopt;
   }
 
-  AutoRestorer<bool> resolving_restorer(&resolving_nodes_);
-  resolving_nodes_ = true;
-
+  AutoRestorer<bool> resolving_restorer(&resolving_nodes_, true);
   const bool bParentOrSiblings =
       !!(dwStyles & Mask<XFA_ResolveFlag>{XFA_ResolveFlag::kParent,
                                           XFA_ResolveFlag::kSiblings});

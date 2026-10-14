@@ -260,9 +260,7 @@ void CPDFSDK_InteractiveForm::OnCalculate(CPDF_FormField* pFormField) {
     return;
   }
 
-  AutoRestorer<bool> restorer(&busy_);
-  busy_ = true;
-
+  AutoRestorer<bool> restorer(&busy_, true);
   if (!IsCalculateEnabled()) {
     return;
   }

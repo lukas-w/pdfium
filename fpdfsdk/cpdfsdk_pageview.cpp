@@ -570,8 +570,7 @@ bool CPDFSDK_PageView::OnKeyDown(FWL_VKEYCODE key_code,
 }
 
 void CPDFSDK_PageView::LoadFXAnnots() {
-  AutoRestorer<bool> lock(&locked_);
-  locked_ = true;
+  AutoRestorer<bool> lock(&locked_, true);
 
 #ifdef PDF_ENABLE_XFA
   RetainPtr<CPDFXFA_Page> protector(ToXFAPage(page_));
