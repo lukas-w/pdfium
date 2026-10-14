@@ -341,6 +341,13 @@ bool CFX_Font::ShouldDrawDeviceText(
 
   return true;
 }
+
+void CFX_Font::ReleasePlatformResource() {
+  if (platform_font_) {
+    CFX_GEModule::Get()->GetPlatform()->DestroyPlatformFont(platform_font_);
+    platform_font_ = nullptr;
+  }
+}
 #endif
 
 ByteString CFX_Font::GetPsName() const {

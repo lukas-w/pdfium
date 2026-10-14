@@ -61,6 +61,7 @@ class CFX_GEModule {
     CreateDefaultSystemFontInfo() = 0;
 #if BUILDFLAG(IS_APPLE)
     virtual void* CreatePlatformFont(pdfium::span<const uint8_t> font_span) = 0;
+    virtual void DestroyPlatformFont(void* font) = 0;
 #endif
   };
 

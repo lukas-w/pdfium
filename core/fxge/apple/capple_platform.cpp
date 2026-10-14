@@ -165,6 +165,10 @@ void* CApplePlatform::CreatePlatformFont(
   return quartz_2d_.CreateFont(font_span);
 }
 
+void CApplePlatform::DestroyPlatformFont(void* font) {
+  quartz_2d_.DestroyFont(font);
+}
+
 // static
 std::unique_ptr<CFX_GEModule::PlatformIface>
 CFX_GEModule::PlatformIface::Create() {
