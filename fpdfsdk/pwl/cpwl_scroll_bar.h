@@ -15,28 +15,17 @@
 #include "fpdfsdk/pwl/cpwl_wnd.h"
 
 struct PWL_SCROLL_INFO {
- public:
-  PWL_SCROLL_INFO()
-      : fContentMin(0.0f),
-        fContentMax(0.0f),
-        fPlateWidth(0.0f),
-        fBigStep(0.0f),
-        fSmallStep(0.0f) {}
-
   friend constexpr bool operator==(const PWL_SCROLL_INFO&,
                                    const PWL_SCROLL_INFO&) = default;
 
-  float fContentMin;
-  float fContentMax;
-  float fPlateWidth;
-  float fBigStep;
-  float fSmallStep;
+  float fContentMin = 0.0f;
+  float fContentMax = 0.0f;
+  float fPlateWidth = 0.0f;
+  float fBigStep = 0.0f;
+  float fSmallStep = 0.0f;
 };
 
 struct PWL_FLOATRANGE {
- public:
-  PWL_FLOATRANGE() = default;
-
   friend constexpr bool operator==(const PWL_FLOATRANGE&,
                                    const PWL_FLOATRANGE&) = default;
 
@@ -50,7 +39,6 @@ struct PWL_FLOATRANGE {
 };
 
 struct PWL_SCROLL_PRIVATEDATA {
- public:
   PWL_SCROLL_PRIVATEDATA();
 
   friend constexpr bool operator==(const PWL_SCROLL_PRIVATEDATA&,

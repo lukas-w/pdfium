@@ -59,7 +59,6 @@ inline bool operator==(const FX_FONTDESCRIPTOR& left,
 class CFGAS_FontDescriptor {
  public:
   struct Rank {
-   public:
     UNOWNED_PTR_EXCLUSION CFGAS_FontDescriptor* font;  // POD struct.
     int32_t penalty;
 

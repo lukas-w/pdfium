@@ -32,7 +32,6 @@ struct IsFXDataPartitionException : std::false_type {};
 // undo some of the nice segregation that we get from PartitionAlloc.
 template <class T, void* Alloc(size_t, size_t), void Free(void*)>
 struct FxPartitionAllocAllocator {
- public:
   static_assert(std::is_arithmetic<T>::value || std::is_enum<T>::value ||
                     IsFXDataPartitionException<T>::value,
                 "Only numeric types allowed in this partition");

@@ -58,7 +58,7 @@ class CJS_Global final : public CJS_Object {
   ~CJS_Global() override;
 
  private:
-  struct JSGlobalData : public CFX_Value {
+  class JSGlobalData : public CFX_Value {
    public:
     JSGlobalData();
     ~JSGlobalData();
