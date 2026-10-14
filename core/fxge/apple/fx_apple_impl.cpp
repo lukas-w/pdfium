@@ -110,8 +110,8 @@ bool CFX_AggDeviceDriver::DrawDeviceText(
     const CFX_Matrix& mtObject2Device,
     float font_size,
     uint32_t color,
-    const CFX_TextRenderOptions& /*options*/) {
-  if (!font) {
+    const CFX_TextRenderOptions& options) {
+  if (!font || !font->ShouldDrawDeviceText(options)) {
     return false;
   }
 

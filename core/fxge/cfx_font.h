@@ -137,6 +137,7 @@ class CFX_Font {
 #if BUILDFLAG(IS_APPLE)
   void* GetPlatformFont() const { return platform_font_; }
   void SetPlatformFont(void* font) { platform_font_ = font; }
+  bool ShouldDrawDeviceText(const CFX_TextRenderOptions& options) const;
 #endif
 
  private:

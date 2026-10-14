@@ -27,6 +27,7 @@
 #include "core/fxge/cfx_glyphcache.h"
 #include "core/fxge/cfx_path.h"
 #include "core/fxge/cfx_substfont.h"
+#include "core/fxge/cfx_textrenderoptions.h"
 #include "core/fxge/fx_font.h"
 
 namespace {
@@ -319,6 +320,26 @@ bool CFX_Font::IsSubstFontBold() const {
   CFX_SubstFont* subst_font = GetSubstFont();
   return subst_font &&
          subst_font->GetOriginalWeight() >= pdfium::kFontWeightBold;
+}
+#endif
+
+#if BUILDFLAG(IS_APPLE)
+bool CFX_Font::ShouldDrawDeviceText(
+    const CFX_TextRenderOptions& options) const {
+  if (options.font_is_cid) {
+    return false;
+  }
+
+  const ByteString ps_name = GetPsName();
+  if (ps_name.Contains("+ZJHL")) {
+    return false;
+  }
+
+  if (ps_name == "CNAAJI+cmex10") {
+    return false;
+  }
+
+  return true;
 }
 #endif
 

@@ -765,6 +765,12 @@ bool CFX_SkiaDeviceDriver::DrawDeviceText(
     float font_size,
     uint32_t color,
     const CFX_TextRenderOptions& options) {
+#if BUILDFLAG(IS_APPLE)
+  if (!pFont->ShouldDrawDeviceText(options)) {
+    return false;
+  }
+#endif
+
   // `SkTextBlob` is built from `pFont`'s font data. If `pFont` doesn't contain
   // any font data, each text blob will have zero area to be drawn and the
   // drawing command will be rejected. In this case, fall back to drawing

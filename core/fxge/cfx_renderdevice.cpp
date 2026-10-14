@@ -309,25 +309,6 @@ void DrawNormalTextHelper(const RetainPtr<CFX_DIBitmap>& bitmap,
   }
 }
 
-bool ShouldDrawDeviceText(const CFX_Font* font,
-                          const CFX_TextRenderOptions& options) {
-#if BUILDFLAG(IS_APPLE)
-  if (options.font_is_cid) {
-    return false;
-  }
-
-  const ByteString bsPsName = font->GetPsName();
-  if (bsPsName.Contains("+ZJHL")) {
-    return false;
-  }
-
-  if (bsPsName == "CNAAJI+cmex10") {
-    return false;
-  }
-#endif
-  return true;
-}
-
 // Returns true if the path is a 3-point path that draws A->B->A and forms a
 // zero area, or a 2-point path which draws A->B.
 bool CheckSimpleLinePath(pdfium::span<const CFX_Path::Point> points,
@@ -1180,8 +1161,7 @@ bool CFX_RenderDevice::DrawNormalText(pdfium::span<const TextCharPos> pCharPos,
 
 #if BUILDFLAG(IS_WIN)
   if (GetDeviceType() == DeviceType::kPrinter) {
-    if (ShouldDrawDeviceText(font, options) &&
-        device_driver_->DrawDeviceText(pCharPos, font, mtText2Device, font_size,
+    if (device_driver_->DrawDeviceText(pCharPos, font, mtText2Device, font_size,
                                        fill_color, text_options)) {
       return true;
     }
@@ -1194,8 +1174,7 @@ bool CFX_RenderDevice::DrawNormalText(pdfium::span<const TextCharPos> pCharPos,
 #endif
 
   if (try_native_text && options.native_text) {
-    if (ShouldDrawDeviceText(font, options) &&
-        device_driver_->DrawDeviceText(pCharPos, font, mtText2Device, font_size,
+    if (device_driver_->DrawDeviceText(pCharPos, font, mtText2Device, font_size,
                                        fill_color, text_options)) {
       return true;
     }
