@@ -102,7 +102,7 @@ std::vector<CFX_Path::Point> GetNormalizedPoints(
   }
 
   std::vector<CFX_Path::Point> normalized;
-  normalized.reserve(expected_size + 1);
+  normalized.reserve(expected_size);
   normalized.push_back(points[0]);
   for (auto it = points.begin() + 1; it != points.end(); ++it) {
     // Exactly `expected_size` points left. Stop normalizing and take what is
@@ -141,12 +141,12 @@ std::vector<CFX_Path::Point> GetNormalizedPoints(
       }
     }
 
-    normalized.push_back(point);
-
     // Too many points. Not considered as a rectangle.
-    if (normalized.size() > expected_size) {
+    if (normalized.size() >= expected_size) {
       return {};
     }
+
+    normalized.push_back(point);
   }
 
   DCHECK_EQ(expected_size, normalized.size());
