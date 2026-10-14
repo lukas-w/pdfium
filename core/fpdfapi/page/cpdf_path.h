@@ -30,7 +30,6 @@ class CPDF_Path {
   CFX_FloatRect GetBoundingBoxForStrokePath(float line_width,
                                             float miter_limit) const;
 
-  bool IsRect() const;
   std::optional<CFX_PointF> GetRectOppositeCorner() const;
   void Transform(const CFX_Matrix& matrix);
 

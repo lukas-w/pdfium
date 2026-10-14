@@ -6,6 +6,7 @@
 
 #include "core/fpdfapi/page/cpdf_clippath.h"
 
+#include <optional>
 #include <utility>
 
 #include "core/fpdfapi/page/cpdf_textobject.h"
@@ -86,10 +87,11 @@ void CPDF_ClipPath::AppendPathWithAutoMerge(
   PathData* pData = ref_.GetPrivateCopy();
   if (!pData->path_and_type_list_.empty()) {
     const CPDF_Path& old_path = pData->path_and_type_list_.back().first;
-    if (old_path.IsRect()) {
+    std::optional<CFX_PointF> corner = old_path.GetRectOppositeCorner();
+    if (corner.has_value()) {
       CFX_PointF point0 = old_path.GetPoint(0);
-      CFX_PointF point2 = old_path.GetPoint(2);
-      CFX_FloatRect old_rect(point0.x, point0.y, point2.x, point2.y);
+      CFX_FloatRect old_rect(point0.x, point0.y, corner.value().x,
+                             corner.value().y);
       CFX_FloatRect new_rect = path.GetBoundingBox();
       if (old_rect.Contains(new_rect)) {
         pData->path_and_type_list_.pop_back();

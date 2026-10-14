@@ -6,6 +6,7 @@
 
 #include "core/fpdfapi/page/cpdf_contentparser.h"
 
+#include <optional>
 #include <utility>
 #include <variant>
 
@@ -253,15 +254,19 @@ CPDF_ContentParser::Stage CPDF_ContentParser::CheckClip() {
     if (clip_path.GetTextCount() > 0) {
       continue;
     }
+    if (pObj->IsShading()) {
+      continue;
+    }
 
     CPDF_Path path = clip_path.GetPath(0);
-    if (!path.IsRect() || pObj->IsShading()) {
+    std::optional<CFX_PointF> corner = path.GetRectOppositeCorner();
+    if (!corner.has_value()) {
       continue;
     }
 
     CFX_PointF point0 = path.GetPoint(0);
-    CFX_PointF point2 = path.GetPoint(2);
-    CFX_FloatRect old_rect(point0.x, point0.y, point2.x, point2.y);
+    CFX_FloatRect old_rect(point0.x, point0.y, corner.value().x,
+                           corner.value().y);
     if (old_rect.Contains(pObj->GetRect())) {
       clip_path.SetNull();
     }

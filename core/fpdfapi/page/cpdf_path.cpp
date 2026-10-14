@@ -33,10 +33,6 @@ CFX_FloatRect CPDF_Path::GetBoundingBoxForStrokePath(float line_width,
   return ref_.GetObject()->GetBoundingBoxForStrokePath(line_width, miter_limit);
 }
 
-bool CPDF_Path::IsRect() const {
-  return ref_.GetObject()->IsRect();
-}
-
 std::optional<CFX_PointF> CPDF_Path::GetRectOppositeCorner() const {
   return ref_.GetObject()->GetRectOppositeCorner();
 }
