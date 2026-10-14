@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "core/fxcrt/check.h"
+#include "core/fxcrt/css/cfx_csscustomproperty.h"
 #include "core/fxcrt/css/cfx_cssdeclaration.h"
 #include "core/fxcrt/css/cfx_cssenumvalue.h"
 #include "core/fxcrt/css/cfx_cssnumbervalue.h"
@@ -330,4 +331,26 @@ TEST_F(CFXCSSStyleSheetTest, ParseWithUnterminatedCommentInProperty) {
 
 TEST_F(CFXCSSStyleSheetTest, ParseWithUnterminatedCommentInValue) {
   LoadAndVerifyRuleCount(L"a { border-bottom: /*2.5pc; }", 1);
+}
+
+TEST_F(CFXCSSStyleSheetTest, ParseOnlyCustomProperty) {
+  LoadAndVerifyDecl(L"a { xfa-spacerun: yes; }", {L"a"}, 0);
+  auto it = decl_->custom_begin();
+  ASSERT_NE(it, decl_->custom_end());
+  EXPECT_EQ(L"xfa-spacerun", (*it)->name());
+  EXPECT_EQ(L"yes", (*it)->value());
+  ++it;
+  EXPECT_EQ(it, decl_->custom_end());
+}
+
+TEST_F(CFXCSSStyleSheetTest, ParseMixedStandardAndCustomProperties) {
+  LoadAndVerifyDecl(L"a { border-left: 2.5pc; xfa-spacerun: yes; }", {L"a"}, 1);
+  VerifyFloat(CFX_CSSProperty::BorderLeftWidth, 2.5,
+              CFX_CSSNumber::Unit::kPicas);
+  auto it = decl_->custom_begin();
+  ASSERT_NE(it, decl_->custom_end());
+  EXPECT_EQ(L"xfa-spacerun", (*it)->name());
+  EXPECT_EQ(L"yes", (*it)->value());
+  ++it;
+  EXPECT_EQ(it, decl_->custom_end());
 }

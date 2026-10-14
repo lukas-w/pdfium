@@ -9,6 +9,10 @@
 #include <optional>
 
 #include "core/fxcrt/css/cfx_csscolorvalue.h"
+#include "core/fxcrt/css/cfx_csscomputedstyle.h"
+#include "core/fxcrt/css/cfx_cssstyleselector.h"
+#include "core/fxcrt/retain_ptr.h"
+#include "core/fxcrt/widestring.h"
 #include "testing/gtest/include/gtest/gtest.h"
 
 TEST(CFXCSSDeclarationTest, HexEncodingParsing) {
@@ -55,4 +59,23 @@ TEST(CFXCSSDeclarationTest, RGBEncodingParsing) {
   maybe_color = CFX_CSSDeclaration::ParseCSSColor(L"rgb(128,255,48)");
   ASSERT_TRUE(maybe_color.has_value());
   EXPECT_EQ(0xFF80FF30u, maybe_color.value());
+}
+
+TEST(CFXCSSDeclarationTest, CustomPropertiesInInlineStyle) {
+  CFX_CSSStyleSelector selector;
+  RetainPtr<CFX_CSSComputedStyle> style = selector.CreateComputedStyle(nullptr);
+  selector.ComputeStyle(
+      {}, L"color: #ff0000; xfa-spacerun: yes; tab-interval: 24pt", L"",
+      style.Get());
+
+  EXPECT_EQ(0xFFFF0000u, style->GetColor());
+
+  WideString value;
+  EXPECT_TRUE(style->GetCustomStyle(L"xfa-spacerun", &value));
+  EXPECT_EQ(L"yes", value);
+
+  EXPECT_TRUE(style->GetCustomStyle(L"tab-interval", &value));
+  EXPECT_EQ(L"24pt", value);
+
+  EXPECT_FALSE(style->GetCustomStyle(L"nonexistent", &value));
 }

@@ -46,7 +46,6 @@ CFX_CSSSyntaxParser::Status CFX_CSSStyleSheet::LoadStyleRule(
     CFX_CSSSyntaxParser* pSyntax) {
   std::vector<std::unique_ptr<CFX_CSSSelector>> selectors;
   CFX_CSSStyleRule* pStyleRule = nullptr;
-  int32_t iValueLen = 0;
   const CFX_CSSData::Property* property = nullptr;
   WideString wsName;
   while (true) {
@@ -68,7 +67,7 @@ CFX_CSSSyntaxParser::Status CFX_CSSStyleSheet::LoadStyleRule(
         break;
       }
       case CFX_CSSSyntaxParser::Status::kPropertyValue: {
-        if (property || iValueLen > 0) {
+        if (property || !wsName.IsEmpty()) {
           WideStringView strValue = pSyntax->GetCurrentString();
           auto* decl = pStyleRule->GetDeclaration();
           if (!strValue.IsEmpty()) {
