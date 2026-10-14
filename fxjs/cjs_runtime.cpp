@@ -86,6 +86,7 @@ CJS_Runtime::CJS_Runtime(CPDFSDK_FormFillEnvironment* pFormFillEnv)
 }
 
 CJS_Runtime::~CJS_Runtime() {
+  CHECK(!IsBlocking());
   NotifyObservers();
   ReleaseEngine();
   if (isolate_managed_) {
