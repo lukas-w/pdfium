@@ -100,8 +100,8 @@ def get_properties_by_name(name):
     elif is_32_bit:
         properties.update({"target_cpu": "x86"})
 
-    if name.find("brotli") != -1:
-        properties.update({"brotli": True})
+    if name.find("no_brotli") != -1:
+        properties.update({"brotli": False})
 
     if name.find("component") != -1:
         properties.update({"component": True})
@@ -489,9 +489,8 @@ add_entries_for_builder(name = "linux", category = "main|linux", swarm_tests = T
 add_entries_for_builder(name = "linux_asan_lsan", category = "main|linux", short_name = "asan", swarm_tests = True)
 add_entries_for_builder(name = "linux_msan", category = "main|linux", short_name = "msan", swarm_tests = True)
 add_entries_for_builder(name = "linux_no_partition_alloc", category = "main|linux", swarm_tests = True)
-add_entries_for_builder(name = "linux_no_v8", category = "no v8", short_name = "linux", swarm_tests = True)
+add_entries_for_builder(name = "linux_no_v8_no_brotli", category = "no v8|no_brotli", short_name = "linux", swarm_tests = True)
 add_entries_for_builder(name = "linux_skia", category = "skia|linux", swarm_tests = True)
-add_entries_for_builder(name = "linux_skia_brotli", category = "skia|linux|brotli", short_name = "brotli", swarm_tests = True)
 add_entries_for_builder(name = "linux_skia_asan_lsan", category = "skia|linux", short_name = "asan", swarm_tests = True)
 add_entries_for_builder(name = "linux_skia_msan", category = "skia|linux", short_name = "msan", swarm_tests = True)
 add_entries_for_builder(name = "linux_skia_ubsan", category = "skia|linux", short_name = "ubsan", swarm_tests = True)
@@ -513,9 +512,8 @@ add_entries_for_builder(name = "linux_xfa_skia_ubsan", category = "skia|linux", 
 add_entries_for_builder(name = "linux_xfa_ubsan", category = "xfa|linux", short_name = "ubsan", swarm_tests = True)
 add_entries_for_builder(name = "mac", category = "main|mac", swarm_tests = True)
 add_entries_for_builder(name = "mac_asan", skip_ci_builder = True)
-add_entries_for_builder(name = "mac_no_v8", category = "no v8", short_name = "mac")
+add_entries_for_builder(name = "mac_no_v8_no_brotli", category = "no v8|no_brotli", short_name = "mac")
 add_entries_for_builder(name = "mac_skia", category = "skia|mac")
-add_entries_for_builder(name = "mac_skia_brotli", category = "skia|mac|brotli", short_name = "brotli")
 add_entries_for_builder(name = "mac_xfa", category = "xfa|mac")
 add_entries_for_builder(name = "mac_xfa_asan", skip_ci_builder = True)
 add_entries_for_builder(name = "mac_xfa_component", category = "xfa|mac", short_name = "comp")
@@ -527,9 +525,8 @@ add_entries_for_builder(name = "mac_xfa_skia_rust", category = "skia|mac", short
 add_entries_for_builder(name = "mac_xfa_skia_rust_x86", category = "skia|mac")
 add_entries_for_builder(name = "win", category = "main|win", swarm_tests = True)
 add_entries_for_builder(name = "win_asan", category = "main|win", short_name = "asan")
-add_entries_for_builder(name = "win_no_v8", category = "no v8", short_name = "win")
+add_entries_for_builder(name = "win_no_v8_no_brotli", category = "no v8|no_brotli", short_name = "win")
 add_entries_for_builder(name = "win_skia", category = "skia|win")
-add_entries_for_builder(name = "win_skia_brotli", category = "skia|win|brotli", short_name = "brotli")
 add_entries_for_builder(name = "win_skia_asan", category = "skia|win", short_name = "asan")
 add_entries_for_builder(name = "win_xfa", category = "xfa|win")
 add_entries_for_builder(name = "win_xfa_32", category = "xfa|win", short_name = "32")
