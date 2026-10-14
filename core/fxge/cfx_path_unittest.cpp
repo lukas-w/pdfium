@@ -12,15 +12,11 @@ TEST(CFXPath, BasicTest) {
   path.AppendRect(/*left=*/1, /*bottom=*/2, /*right=*/3, /*top=*/5);
   EXPECT_EQ(5u, path.GetPoints().size());
   EXPECT_TRUE(path.IsRect());
-  std::optional<CFX_FloatRect> rect = path.GetRect(nullptr);
-  ASSERT_TRUE(rect.has_value());
-  EXPECT_EQ(CFX_FloatRect(1, 2, 3, 5), rect.value());
+  EXPECT_EQ(CFX_FloatRect(1, 2, 3, 5), path.GetRect(nullptr));
   EXPECT_EQ(CFX_FloatRect(1, 2, 3, 5), path.GetBoundingBox());
 
   const CFX_Matrix kScaleMatrix(1, 0, 0, 2, 60, 70);
-  rect = path.GetRect(&kScaleMatrix);
-  ASSERT_TRUE(rect.has_value());
-  EXPECT_EQ(CFX_FloatRect(61, 74, 63, 80), rect.value());
+  EXPECT_EQ(CFX_FloatRect(61, 74, 63, 80), path.GetRect(&kScaleMatrix));
   EXPECT_EQ(CFX_FloatRect(1, 2, 3, 5), path.GetBoundingBox());
 
   path.Clear();
@@ -35,32 +31,25 @@ TEST(CFXPath, BasicTest) {
   path.AppendPoint({1, 0}, CFX_Path::Point::Type::kLine);
   EXPECT_EQ(4u, path.GetPoints().size());
   EXPECT_FALSE(path.IsRect());
-  rect = path.GetRect(nullptr);
-  EXPECT_FALSE(rect.has_value());
+  EXPECT_FALSE(path.GetRect(nullptr).has_value());
   EXPECT_EQ(CFX_FloatRect(0, 0, 1, 1), path.GetBoundingBox());
 
   // 4 points with a closed path makes a rect.
   path.ClosePath();
   EXPECT_EQ(4u, path.GetPoints().size());
   EXPECT_TRUE(path.IsRect());
-  rect = path.GetRect(nullptr);
-  ASSERT_TRUE(rect.has_value());
-  EXPECT_EQ(CFX_FloatRect(0, 0, 1, 1), rect.value());
+  EXPECT_EQ(CFX_FloatRect(0, 0, 1, 1), path.GetRect(nullptr));
   EXPECT_EQ(CFX_FloatRect(0, 0, 1, 1), path.GetBoundingBox());
 
   path.Transform(kScaleMatrix);
   EXPECT_TRUE(path.IsRect());
-  rect = path.GetRect(nullptr);
-  ASSERT_TRUE(rect.has_value());
-  EXPECT_EQ(CFX_FloatRect(60, 70, 61, 72), rect.value());
+  EXPECT_EQ(CFX_FloatRect(60, 70, 61, 72), path.GetRect(nullptr));
   EXPECT_EQ(CFX_FloatRect(60, 70, 61, 72), path.GetBoundingBox());
 
   path.Clear();
   path.AppendFloatRect({1, 2, 3, 5});
   EXPECT_TRUE(path.IsRect());
-  rect = path.GetRect(nullptr);
-  ASSERT_TRUE(rect.has_value());
-  EXPECT_EQ(CFX_FloatRect(1, 2, 3, 5), rect.value());
+  EXPECT_EQ(CFX_FloatRect(1, 2, 3, 5), path.GetRect(nullptr));
   EXPECT_EQ(CFX_FloatRect(1, 2, 3, 5), path.GetBoundingBox());
 }
 
@@ -70,27 +59,21 @@ TEST(CFXPath, ShearTransform) {
 
   const CFX_Matrix kShearMatrix(1, 2, 0, 1, 0, 0);
   EXPECT_TRUE(path.IsRect());
-  std::optional<CFX_FloatRect> rect = path.GetRect(&kShearMatrix);
-  EXPECT_FALSE(rect.has_value());
+  EXPECT_FALSE(path.GetRect(&kShearMatrix).has_value());
   EXPECT_EQ(CFX_FloatRect(1, 2, 3, 5), path.GetBoundingBox());
 
   path.Transform(kShearMatrix);
   EXPECT_FALSE(path.IsRect());
-  rect = path.GetRect(nullptr);
-  EXPECT_FALSE(rect.has_value());
+  EXPECT_FALSE(path.GetRect(nullptr).has_value());
   EXPECT_EQ(CFX_FloatRect(1, 4, 3, 11), path.GetBoundingBox());
 
   const CFX_Matrix shear_inverse_matrix = kShearMatrix.GetInverse();
-  rect = path.GetRect(&shear_inverse_matrix);
-  ASSERT_TRUE(rect.has_value());
-  EXPECT_EQ(CFX_FloatRect(1, 2, 3, 5), rect.value());
+  EXPECT_EQ(CFX_FloatRect(1, 2, 3, 5), path.GetRect(&shear_inverse_matrix));
   EXPECT_EQ(CFX_FloatRect(1, 4, 3, 11), path.GetBoundingBox());
 
   path.Transform(shear_inverse_matrix);
   EXPECT_TRUE(path.IsRect());
-  rect = path.GetRect(nullptr);
-  ASSERT_TRUE(rect.has_value());
-  EXPECT_EQ(CFX_FloatRect(1, 2, 3, 5), rect.value());
+  EXPECT_EQ(CFX_FloatRect(1, 2, 3, 5), path.GetRect(nullptr));
   EXPECT_EQ(CFX_FloatRect(1, 2, 3, 5), path.GetBoundingBox());
 }
 
@@ -148,22 +131,18 @@ TEST(CFXPath, ClosePath) {
   EXPECT_EQ(CFX_Path::Point::Type::kLine, path.GetType(3));
   EXPECT_FALSE(path.IsClosingFigure(3));
   EXPECT_FALSE(path.IsRect());
-  std::optional<CFX_FloatRect> rect = path.GetRect(nullptr);
-  EXPECT_FALSE(rect.has_value());
+  EXPECT_FALSE(path.GetRect(nullptr).has_value());
 
   const CFX_Matrix kIdentityMatrix;
   ASSERT_TRUE(kIdentityMatrix.IsIdentity());
-  rect = path.GetRect(&kIdentityMatrix);
-  EXPECT_FALSE(rect.has_value());
+  EXPECT_FALSE(path.GetRect(&kIdentityMatrix).has_value());
 
   path.ClosePath();
   ASSERT_EQ(4u, path.GetPoints().size());
   EXPECT_EQ(CFX_Path::Point::Type::kLine, path.GetType(3));
   EXPECT_TRUE(path.IsClosingFigure(3));
   EXPECT_TRUE(path.IsRect());
-  rect = path.GetRect(nullptr);
-  ASSERT_TRUE(rect.has_value());
-  EXPECT_EQ(CFX_FloatRect(0, 0, 1, 1), rect.value());
+  EXPECT_EQ(CFX_FloatRect(0, 0, 1, 1), path.GetRect(nullptr));
 
   // Calling ClosePath() repeatedly makes no difference.
   path.ClosePath();
@@ -171,9 +150,7 @@ TEST(CFXPath, ClosePath) {
   EXPECT_EQ(CFX_Path::Point::Type::kLine, path.GetType(3));
   EXPECT_TRUE(path.IsClosingFigure(3));
   EXPECT_TRUE(path.IsRect());
-  rect = path.GetRect(nullptr);
-  ASSERT_TRUE(rect.has_value());
-  EXPECT_EQ(CFX_FloatRect(0, 0, 1, 1), rect.value());
+  EXPECT_EQ(CFX_FloatRect(0, 0, 1, 1), path.GetRect(nullptr));
 
   path.AppendPointAndClose({0, 0}, CFX_Path::Point::Type::kLine);
   ASSERT_EQ(5u, path.GetPoints().size());
@@ -182,9 +159,7 @@ TEST(CFXPath, ClosePath) {
   EXPECT_EQ(CFX_Path::Point::Type::kLine, path.GetType(4));
   EXPECT_TRUE(path.IsClosingFigure(4));
   EXPECT_TRUE(path.IsRect());
-  rect = path.GetRect(nullptr);
-  ASSERT_TRUE(rect.has_value());
-  EXPECT_EQ(CFX_FloatRect(0, 0, 1, 1), rect.value());
+  EXPECT_EQ(CFX_FloatRect(0, 0, 1, 1), path.GetRect(nullptr));
 }
 
 TEST(CFXPath, FivePointRect) {
@@ -198,18 +173,14 @@ TEST(CFXPath, FivePointRect) {
   EXPECT_EQ(CFX_Path::Point::Type::kLine, path.GetType(4));
   EXPECT_FALSE(path.IsClosingFigure(4));
   EXPECT_TRUE(path.IsRect());
-  std::optional<CFX_FloatRect> rect = path.GetRect(nullptr);
-  ASSERT_TRUE(rect.has_value());
-  EXPECT_EQ(CFX_FloatRect(0, 0, 2, 1), rect.value());
+  EXPECT_EQ(CFX_FloatRect(0, 0, 2, 1), path.GetRect(nullptr));
 
   path.ClosePath();
   ASSERT_EQ(5u, path.GetPoints().size());
   EXPECT_EQ(CFX_Path::Point::Type::kLine, path.GetType(4));
   EXPECT_TRUE(path.IsClosingFigure(4));
   EXPECT_TRUE(path.IsRect());
-  rect = path.GetRect(nullptr);
-  ASSERT_TRUE(rect.has_value());
-  EXPECT_EQ(CFX_FloatRect(0, 0, 2, 1), rect.value());
+  EXPECT_EQ(CFX_FloatRect(0, 0, 2, 1), path.GetRect(nullptr));
 
   // 4-point rect with a duplicate point.
   path.Clear();
@@ -224,9 +195,7 @@ TEST(CFXPath, FivePointRect) {
 
   path.ClosePath();
   EXPECT_TRUE(path.IsRect());
-  rect = path.GetRect(nullptr);
-  ASSERT_TRUE(rect.has_value());
-  EXPECT_EQ(CFX_FloatRect(0, 0, 2, 1), rect.value());
+  EXPECT_EQ(CFX_FloatRect(0, 0, 2, 1), path.GetRect(nullptr));
 
   // 4-point rect with a collinear point on an edge.
   path.Clear();
@@ -237,9 +206,7 @@ TEST(CFXPath, FivePointRect) {
   path.AppendPointAndClose({0, 1}, CFX_Path::Point::Type::kLine);
   ASSERT_EQ(5u, path.GetPoints().size());
   EXPECT_TRUE(path.IsRect());
-  rect = path.GetRect(nullptr);
-  ASSERT_TRUE(rect.has_value());
-  EXPECT_EQ(CFX_FloatRect(0, 0, 2, 1), rect.value());
+  EXPECT_EQ(CFX_FloatRect(0, 0, 2, 1), path.GetRect(nullptr));
 
   // 4-point rect with a collinear point on the closing edge.
   path.Clear();
@@ -250,9 +217,7 @@ TEST(CFXPath, FivePointRect) {
   path.AppendPointAndClose({0, 0.1f}, CFX_Path::Point::Type::kLine);
   ASSERT_EQ(5u, path.GetPoints().size());
   EXPECT_TRUE(path.IsRect());
-  rect = path.GetRect(nullptr);
-  ASSERT_TRUE(rect.has_value());
-  EXPECT_EQ(CFX_FloatRect(0, 0, 2, 1), rect.value());
+  EXPECT_EQ(CFX_FloatRect(0, 0, 2, 1), path.GetRect(nullptr));
   EXPECT_EQ(CFX_FloatRect(0, 0, 2, 1), path.GetBoundingBox());
 }
 
@@ -265,9 +230,7 @@ TEST(CFXPath, SixPlusPointRect) {
   path.AppendPoint({0, 1}, CFX_Path::Point::Type::kLine);
   path.AppendPoint({0, 0}, CFX_Path::Point::Type::kLine);
   EXPECT_TRUE(path.IsRect());
-  std::optional<CFX_FloatRect> rect = path.GetRect(nullptr);
-  ASSERT_TRUE(rect.has_value());
-  EXPECT_EQ(CFX_FloatRect(0, 0, 2, 1), rect.value());
+  EXPECT_EQ(CFX_FloatRect(0, 0, 2, 1), path.GetRect(nullptr));
   EXPECT_EQ(CFX_FloatRect(0, 0, 2, 1), path.GetBoundingBox());
 
   path.Clear();
@@ -285,9 +248,7 @@ TEST(CFXPath, SixPlusPointRect) {
   path.AppendPoint({0, 0}, CFX_Path::Point::Type::kLine);
   path.AppendPoint({0, 0}, CFX_Path::Point::Type::kLine);
   EXPECT_TRUE(path.IsRect());
-  rect = path.GetRect(nullptr);
-  ASSERT_TRUE(rect.has_value());
-  EXPECT_EQ(CFX_FloatRect(0, 0, 2, 1), rect.value());
+  EXPECT_EQ(CFX_FloatRect(0, 0, 2, 1), path.GetRect(nullptr));
   EXPECT_EQ(CFX_FloatRect(0, 0, 2, 1), path.GetBoundingBox());
 
   // 4-point rect with duplicate points that does not repeat the start point at
@@ -301,9 +262,7 @@ TEST(CFXPath, SixPlusPointRect) {
   path.AppendPointAndClose({0, 1}, CFX_Path::Point::Type::kLine);
   ASSERT_EQ(6u, path.GetPoints().size());
   EXPECT_TRUE(path.IsRect());
-  rect = path.GetRect(nullptr);
-  ASSERT_TRUE(rect.has_value());
-  EXPECT_EQ(CFX_FloatRect(0, 0, 2, 1), rect.value());
+  EXPECT_EQ(CFX_FloatRect(0, 0, 2, 1), path.GetRect(nullptr));
   EXPECT_EQ(CFX_FloatRect(0, 0, 2, 1), path.GetBoundingBox());
 }
 
@@ -364,14 +323,10 @@ TEST(CFXPath, SixPlusPointRectWithCollinearPoints) {
   path.AppendPointAndClose({0, 1}, CFX_Path::Point::Type::kLine);
   ASSERT_EQ(6u, path.GetPoints().size());
   EXPECT_TRUE(path.IsRect());
-  std::optional<CFX_FloatRect> rect = path.GetRect(nullptr);
-  ASSERT_TRUE(rect.has_value());
-  EXPECT_EQ(CFX_FloatRect(0, 0, 2, 1), rect.value());
+  EXPECT_EQ(CFX_FloatRect(0, 0, 2, 1), path.GetRect(nullptr));
 
   constexpr CFX_Matrix kScaleMatrix(1, 0, 0, 2, 60, 70);
-  rect = path.GetRect(&kScaleMatrix);
-  ASSERT_TRUE(rect.has_value());
-  EXPECT_EQ(CFX_FloatRect(60, 70, 62, 72), rect.value());
+  EXPECT_EQ(CFX_FloatRect(60, 70, 62, 72), path.GetRect(&kScaleMatrix));
 
   // An extra point on a vertical edge.
   path.Clear();
@@ -382,9 +337,7 @@ TEST(CFXPath, SixPlusPointRectWithCollinearPoints) {
   path.AppendPoint({0, 1}, CFX_Path::Point::Type::kLine);
   path.AppendPointAndClose({0, 0}, CFX_Path::Point::Type::kLine);
   EXPECT_TRUE(path.IsRect());
-  rect = path.GetRect(nullptr);
-  ASSERT_TRUE(rect.has_value());
-  EXPECT_EQ(CFX_FloatRect(0, 0, 2, 1), rect.value());
+  EXPECT_EQ(CFX_FloatRect(0, 0, 2, 1), path.GetRect(nullptr));
 
   // Extra points on two edges.
   path.Clear();
@@ -397,9 +350,7 @@ TEST(CFXPath, SixPlusPointRectWithCollinearPoints) {
   path.AppendPointAndClose({0, 0}, CFX_Path::Point::Type::kLine);
   ASSERT_EQ(7u, path.GetPoints().size());
   EXPECT_TRUE(path.IsRect());
-  rect = path.GetRect(&kScaleMatrix);
-  ASSERT_TRUE(rect.has_value());
-  EXPECT_EQ(CFX_FloatRect(60, 70, 62, 72), rect.value());
+  EXPECT_EQ(CFX_FloatRect(60, 70, 62, 72), path.GetRect(&kScaleMatrix));
 
   // Same as above, but closed without repeating the first point.
   path.Clear();
@@ -411,12 +362,8 @@ TEST(CFXPath, SixPlusPointRectWithCollinearPoints) {
   path.AppendPointAndClose({0, 1}, CFX_Path::Point::Type::kLine);
   ASSERT_EQ(6u, path.GetPoints().size());
   EXPECT_TRUE(path.IsRect());
-  rect = path.GetRect(nullptr);
-  ASSERT_TRUE(rect.has_value());
-  EXPECT_EQ(CFX_FloatRect(0, 0, 2, 1), rect.value());
-  rect = path.GetRect(&kScaleMatrix);
-  ASSERT_TRUE(rect.has_value());
-  EXPECT_EQ(CFX_FloatRect(60, 70, 62, 72), rect.value());
+  EXPECT_EQ(CFX_FloatRect(0, 0, 2, 1), path.GetRect(nullptr));
+  EXPECT_EQ(CFX_FloatRect(60, 70, 62, 72), path.GetRect(&kScaleMatrix));
 
   // A point that goes past the corner and back is not in between its
   // neighbors, so the path is not a rectangle.
@@ -450,8 +397,7 @@ TEST(CFXPath, NotRect) {
   path.AppendPoint({0, 1}, CFX_Path::Point::Type::kLine);
   path.AppendPoint({0, 0.1f}, CFX_Path::Point::Type::kLine);
   EXPECT_FALSE(path.IsRect());
-  std::optional<CFX_FloatRect> rect = path.GetRect(nullptr);
-  EXPECT_FALSE(rect.has_value());
+  EXPECT_FALSE(path.GetRect(nullptr).has_value());
   EXPECT_EQ(CFX_FloatRect(0, 0, 2, 1), path.GetBoundingBox());
 
   path.Clear();
@@ -460,8 +406,7 @@ TEST(CFXPath, NotRect) {
   path.AppendPoint({3, 1}, CFX_Path::Point::Type::kLine);
   path.AppendPointAndClose({0, 1}, CFX_Path::Point::Type::kLine);
   EXPECT_FALSE(path.IsRect());
-  rect = path.GetRect(nullptr);
-  EXPECT_FALSE(rect.has_value());
+  EXPECT_FALSE(path.GetRect(nullptr).has_value());
   EXPECT_EQ(CFX_FloatRect(0, 0, 3, 1), path.GetBoundingBox());
 
   path.Clear();
@@ -470,8 +415,7 @@ TEST(CFXPath, NotRect) {
   path.AppendPoint({2, 1}, CFX_Path::Point::Type::kLine);
   path.AppendPointAndClose({0, 1}, CFX_Path::Point::Type::kMove);
   EXPECT_FALSE(path.IsRect());
-  rect = path.GetRect(nullptr);
-  EXPECT_FALSE(rect.has_value());
+  EXPECT_FALSE(path.GetRect(nullptr).has_value());
   EXPECT_EQ(CFX_FloatRect(0, 0, 2, 1), path.GetBoundingBox());
 
   path.Clear();
@@ -480,8 +424,7 @@ TEST(CFXPath, NotRect) {
   path.AppendPoint({3, 0}, CFX_Path::Point::Type::kLine);
   path.AppendPointAndClose({0, 1}, CFX_Path::Point::Type::kLine);
   EXPECT_FALSE(path.IsRect());
-  rect = path.GetRect(nullptr);
-  EXPECT_FALSE(rect.has_value());
+  EXPECT_FALSE(path.GetRect(nullptr).has_value());
   EXPECT_EQ(CFX_FloatRect(0, 0, 3, 1), path.GetBoundingBox());
 
   path.Clear();
@@ -491,8 +434,7 @@ TEST(CFXPath, NotRect) {
   path.AppendPoint({0, 1}, CFX_Path::Point::Type::kLine);
   path.AppendPoint({0, 0}, CFX_Path::Point::Type::kLine);
   EXPECT_FALSE(path.IsRect());
-  rect = path.GetRect(nullptr);
-  EXPECT_FALSE(rect.has_value());
+  EXPECT_FALSE(path.GetRect(nullptr).has_value());
   EXPECT_EQ(CFX_FloatRect(0, 0, 2, 1), path.GetBoundingBox());
 
   path.Clear();
@@ -502,8 +444,7 @@ TEST(CFXPath, NotRect) {
   path.AppendPoint({2, 0}, CFX_Path::Point::Type::kLine);
   path.AppendPoint({0, 0}, CFX_Path::Point::Type::kLine);
   EXPECT_FALSE(path.IsRect());
-  rect = path.GetRect(nullptr);
-  EXPECT_FALSE(rect.has_value());
+  EXPECT_FALSE(path.GetRect(nullptr).has_value());
   EXPECT_EQ(CFX_FloatRect(0, 0, 2, 1), path.GetBoundingBox());
 
   path.Clear();
@@ -513,8 +454,7 @@ TEST(CFXPath, NotRect) {
   path.AppendPointAndClose({2, 1}, CFX_Path::Point::Type::kLine);
   path.AppendPoint({0, 1}, CFX_Path::Point::Type::kLine);
   EXPECT_FALSE(path.IsRect());
-  rect = path.GetRect(nullptr);
-  EXPECT_FALSE(rect.has_value());
+  EXPECT_FALSE(path.GetRect(nullptr).has_value());
   EXPECT_EQ(CFX_FloatRect(0, 0, 2, 1), path.GetBoundingBox());
 
   path.Clear();
@@ -523,11 +463,9 @@ TEST(CFXPath, NotRect) {
   path.AppendPoint({2, 1}, CFX_Path::Point::Type::kLine);
   path.AppendPoint({2, 2}, CFX_Path::Point::Type::kLine);
   EXPECT_FALSE(path.IsRect());
-  rect = path.GetRect(nullptr);
-  EXPECT_FALSE(rect.has_value());
+  EXPECT_FALSE(path.GetRect(nullptr).has_value());
   const CFX_Matrix kScaleMatrix(1, 0, 0, 2, 60, 70);
-  rect = path.GetRect(&kScaleMatrix);
-  EXPECT_FALSE(rect.has_value());
+  EXPECT_FALSE(path.GetRect(&kScaleMatrix).has_value());
   EXPECT_EQ(CFX_FloatRect(0, 0, 2, 2), path.GetBoundingBox());
 }
 
@@ -540,9 +478,7 @@ TEST(CFXPath, EmptyRect) {
   path.AppendPoint({0, 1}, CFX_Path::Point::Type::kLine);
   path.AppendPoint({0, 0}, CFX_Path::Point::Type::kLine);
   EXPECT_TRUE(path.IsRect());
-  std::optional<CFX_FloatRect> rect = path.GetRect(nullptr);
-  ASSERT_TRUE(rect.has_value());
-  EXPECT_EQ(CFX_FloatRect(0, 0, 0, 1), rect.value());
+  EXPECT_EQ(CFX_FloatRect(0, 0, 0, 1), path.GetRect(nullptr));
   EXPECT_EQ(CFX_FloatRect(0, 0, 0, 1), path.GetBoundingBox());
 }
 
