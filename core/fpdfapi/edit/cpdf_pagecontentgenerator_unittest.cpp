@@ -119,9 +119,7 @@ TEST_F(CPDFPageContentGeneratorTest, ProcessRect) {
                                        CFX_Path::Point::Type::kLine);
   buf.str("");
   TestProcessPath(&generator, &buf, pPathObj.get());
-  // TODO(thestig): Should output "q 0 0 100 100 re n Q\n".
-  EXPECT_EQ("q 0 0 m 50 0 l 100 0 l 100 100 l 0 100 l h n Q\n",
-            ByteString(buf));
+  EXPECT_EQ("q 0 0 100 100 re n Q\n", ByteString(buf));
 }
 
 TEST_F(CPDFPageContentGeneratorTest, Bug937) {

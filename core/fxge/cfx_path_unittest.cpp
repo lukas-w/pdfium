@@ -223,9 +223,10 @@ TEST(CFXPath, FivePointRect) {
   EXPECT_FALSE(path.GetRect(nullptr).has_value());
 
   path.ClosePath();
-  // TODO(thestig): Should be a rect.
-  EXPECT_FALSE(path.IsRect());
-  EXPECT_FALSE(path.GetRect(nullptr).has_value());
+  EXPECT_TRUE(path.IsRect());
+  rect = path.GetRect(nullptr);
+  ASSERT_TRUE(rect.has_value());
+  EXPECT_EQ(CFX_FloatRect(0, 0, 2, 1), rect.value());
 
   // 4-point rect with a collinear point on an edge.
   path.Clear();
@@ -235,9 +236,10 @@ TEST(CFXPath, FivePointRect) {
   path.AppendPoint({2, 1}, CFX_Path::Point::Type::kLine);
   path.AppendPointAndClose({0, 1}, CFX_Path::Point::Type::kLine);
   ASSERT_EQ(5u, path.GetPoints().size());
-  // TODO(thestig): Should be a rect.
-  EXPECT_FALSE(path.IsRect());
-  EXPECT_FALSE(path.GetRect(nullptr).has_value());
+  EXPECT_TRUE(path.IsRect());
+  rect = path.GetRect(nullptr);
+  ASSERT_TRUE(rect.has_value());
+  EXPECT_EQ(CFX_FloatRect(0, 0, 2, 1), rect.value());
 
   // 4-point rect with a collinear point on the closing edge.
   path.Clear();
@@ -247,10 +249,10 @@ TEST(CFXPath, FivePointRect) {
   path.AppendPoint({0, 1}, CFX_Path::Point::Type::kLine);
   path.AppendPointAndClose({0, 0.1f}, CFX_Path::Point::Type::kLine);
   ASSERT_EQ(5u, path.GetPoints().size());
-  // TODO(thestig): Should be a rect.
-  EXPECT_FALSE(path.IsRect());
+  EXPECT_TRUE(path.IsRect());
   rect = path.GetRect(nullptr);
-  EXPECT_FALSE(rect.has_value());
+  ASSERT_TRUE(rect.has_value());
+  EXPECT_EQ(CFX_FloatRect(0, 0, 2, 1), rect.value());
   EXPECT_EQ(CFX_FloatRect(0, 0, 2, 1), path.GetBoundingBox());
 }
 
@@ -298,9 +300,10 @@ TEST(CFXPath, SixPlusPointRect) {
   path.AppendPoint({0, 1}, CFX_Path::Point::Type::kLine);
   path.AppendPointAndClose({0, 1}, CFX_Path::Point::Type::kLine);
   ASSERT_EQ(6u, path.GetPoints().size());
-  // TODO(thestig): Should be a rect.
-  EXPECT_FALSE(path.IsRect());
-  EXPECT_FALSE(path.GetRect(nullptr).has_value());
+  EXPECT_TRUE(path.IsRect());
+  rect = path.GetRect(nullptr);
+  ASSERT_TRUE(rect.has_value());
+  EXPECT_EQ(CFX_FloatRect(0, 0, 2, 1), rect.value());
   EXPECT_EQ(CFX_FloatRect(0, 0, 2, 1), path.GetBoundingBox());
 }
 
@@ -339,8 +342,7 @@ TEST(CFXPath, GetRectOppositeCorner) {
   path.AppendPoint({2, 1}, CFX_Path::Point::Type::kLine);
   path.AppendPointAndClose({0, 1}, CFX_Path::Point::Type::kLine);
   ASSERT_EQ(CFX_PointF(2, 0), path.GetPoints()[2].point_);
-  // TODO(thestig): Should return CFX_PointF(2, 1).
-  EXPECT_FALSE(path.GetRectOppositeCorner().has_value());
+  EXPECT_EQ(CFX_PointF(2, 1), path.GetRectOppositeCorner());
 
   path.Clear();
   path.AppendPoint({0, 0}, CFX_Path::Point::Type::kMove);
@@ -408,10 +410,13 @@ TEST(CFXPath, SixPlusPointRectWithCollinearPoints) {
   path.AppendPoint({1, 1}, CFX_Path::Point::Type::kLine);
   path.AppendPointAndClose({0, 1}, CFX_Path::Point::Type::kLine);
   ASSERT_EQ(6u, path.GetPoints().size());
-  // TODO(thestig): Should be a rect.
-  EXPECT_FALSE(path.IsRect());
-  EXPECT_FALSE(path.GetRect(nullptr).has_value());
-  EXPECT_FALSE(path.GetRect(&kScaleMatrix).has_value());
+  EXPECT_TRUE(path.IsRect());
+  rect = path.GetRect(nullptr);
+  ASSERT_TRUE(rect.has_value());
+  EXPECT_EQ(CFX_FloatRect(0, 0, 2, 1), rect.value());
+  rect = path.GetRect(&kScaleMatrix);
+  ASSERT_TRUE(rect.has_value());
+  EXPECT_EQ(CFX_FloatRect(60, 70, 62, 72), rect.value());
 
   // A point that goes past the corner and back is not in between its
   // neighbors, so the path is not a rectangle.
