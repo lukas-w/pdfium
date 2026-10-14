@@ -16,6 +16,11 @@ TEST(fxcrt, AutoRestorer) {
     EXPECT_EQ(6, x);
   }
   EXPECT_EQ(5, x);
+  {
+    AutoRestorer<int> restorer(&x, 7);
+    EXPECT_EQ(7, x);
+  }
+  EXPECT_EQ(5, x);
 }
 
 TEST(fxcrt, AutoRestorerNoOp) {
@@ -30,8 +35,7 @@ TEST(fxcrt, AutoRestorerNoOp) {
 TEST(fxcrt, AutoRestorerAbandon) {
   int x = 5;
   {
-    AutoRestorer<int> restorer(&x);
-    x = 6;
+    AutoRestorer<int> restorer(&x, 6);
     EXPECT_EQ(6, x);
     restorer.AbandonRestoration();
   }

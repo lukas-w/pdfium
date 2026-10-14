@@ -17,11 +17,18 @@ class AutoRestorer {
 
   explicit AutoRestorer(T* location)
       : location_(location), old_value_(*location) {}
+
+  AutoRestorer(T* location, const T& new_value)
+      : location_(location), old_value_(*location) {
+    *location = new_value;
+  }
+
   ~AutoRestorer() {
     if (location_) {
       *location_ = old_value_;
     }
   }
+
   void AbandonRestoration() { location_ = nullptr; }
 
  private:
