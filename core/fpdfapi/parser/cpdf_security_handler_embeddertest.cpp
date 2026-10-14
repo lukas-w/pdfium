@@ -16,7 +16,6 @@
 #include "public/fpdf_save.h"
 #include "public/fpdfview.h"
 #include "testing/embedder_test.h"
-#include "testing/embedder_test_constants.h"
 #include "testing/gtest/include/gtest/gtest.h"
 
 namespace {
@@ -89,18 +88,14 @@ class CPDFSecurityHandlerEmbedderTest : public EmbedderTest {
  private:
   void VerifyHelloWorldPage(FPDF_PAGE page) {
     ASSERT_TRUE(page);
-
-    ScopedFPDFBitmap page_bitmap = RenderPage(page);
-    CompareBitmapWithExpectationSuffix(page_bitmap.get(),
-                                       pdfium::kHelloWorldPng);
+    std::string display_list = RenderPageToDisplayList(page);
+    CompareDisplayList(display_list, "hello_world");
   }
 
   void VerifyModifiedHelloWorldPage(FPDF_PAGE page) {
     ASSERT_TRUE(page);
-
-    ScopedFPDFBitmap page_bitmap = RenderPage(page);
-    CompareBitmapWithExpectationSuffix(page_bitmap.get(),
-                                       pdfium::kHelloWorldRemovedPng);
+    std::string display_list = RenderPageToDisplayList(page);
+    CompareDisplayList(display_list, "hello_world_removed");
   }
 };
 
@@ -139,7 +134,6 @@ TEST_F(CPDFSecurityHandlerEmbedderTest, OwnerPassword) {
 }
 
 TEST_F(CPDFSecurityHandlerEmbedderTest, PasswordAfterGenerateSave) {
-  constexpr char kBasename[] = "encrypted";
   {
     ASSERT_TRUE(OpenDocumentWithOptions("encrypted.pdf", "5678",
                                         LinearizeOption::kMustLinearize,
@@ -151,8 +145,7 @@ TEST_F(CPDFSecurityHandlerEmbedderTest, PasswordAfterGenerateSave) {
     EXPECT_TRUE(FPDFPageObj_SetFillColor(red_rect, 255, 0, 0, 255));
     EXPECT_TRUE(FPDFPath_SetDrawMode(red_rect, FPDF_FILLMODE_ALTERNATE, 0));
     FPDFPage_InsertObject(page.get(), red_rect);
-    ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-    CompareBitmapWithExpectationSuffix(bitmap.get(), kBasename);
+    CompareDisplayList(RenderLoadedPageToDisplayList(page.get()), "encrypted");
     EXPECT_TRUE(FPDFPage_GenerateContent(page.get()));
     SetWholeFileAvailable();
     EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
@@ -175,7 +168,7 @@ TEST_F(CPDFSecurityHandlerEmbedderTest, PasswordAfterGenerateSave) {
     ASSERT_TRUE(doc);
     ScopedSavedPage page = LoadScopedSavedPage(0);
     ASSERT_TRUE(page);
-    VerifySavedRenderingWithExpectationSuffix(page.get(), kBasename);
+    VerifySavedRenderingWithDisplayList(page.get(), "encrypted");
     EXPECT_EQ(test.permissions, FPDF_GetDocPermissions(saved_document()));
   }
 }

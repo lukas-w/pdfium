@@ -23,10 +23,6 @@ inline constexpr char kBug890322Png[] = "bug_890322";
 // Expectation file basename for rendering hello_world.pdf or bug_455199.pdf.
 inline constexpr char kHelloWorldPng[] = "hello_world";
 
-// Expectation file basename for rendering hello_world.pdf after removing
-// "Goodbye, world!".
-inline constexpr char kHelloWorldRemovedPng[] = "hello_world_removed";
-
 // Expectation file basename for rendering many_rectangles.pdf.
 inline constexpr char kManyRectanglesPng[] = "many_rectangles";
 
