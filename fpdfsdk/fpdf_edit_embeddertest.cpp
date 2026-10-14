@@ -65,8 +65,6 @@ constexpr wchar_t kLoadedFontText[] = L"I am testing my loaded font, WEE.";
 
 constexpr char kLoadedTextPng[] = "loaded_text";
 
-constexpr char kRedRectanglePng[] = "red_rectangle";
-
 // In embedded_images.pdf.
 constexpr char kEmbeddedImage33Checksum[] = "cb3637934bb3b95a6e4ae1ea9eb9e56e";
 constexpr char kEmbeddedImage33Png[] = "embedded_images_33";
@@ -483,10 +481,7 @@ TEST_F(FPDFEditEmbedderTest, AddPaths) {
   EXPECT_TRUE(FPDFPageObj_SetMatrix(red_rect, &matrix));
 
   EXPECT_TRUE(FPDFPage_InsertObject(page.get(), red_rect));
-  {
-    ScopedFPDFBitmap page_bitmap = RenderPage(page.get());
-    CompareBitmap(page_bitmap.get(), kRedRectanglePng);
-  }
+  CompareDisplayList(RenderPageToDisplayList(page.get()), "red_rectangle");
 
   // Now add to that a green rectangle with some medium alpha
   FPDF_PAGEOBJECT green_rect = FPDFPageObj_CreateNewRect(100, 100, 40, 40);
@@ -545,10 +540,8 @@ TEST_F(FPDFEditEmbedderTest, AddPaths) {
 
   EXPECT_TRUE(FPDFPath_SetDrawMode(green_rect, FPDF_FILLMODE_WINDING, 0));
   EXPECT_TRUE(FPDFPage_InsertObject(page.get(), green_rect));
-  {
-    ScopedFPDFBitmap page_bitmap = RenderPage(page.get());
-    CompareBitmap(page_bitmap.get(), "red_green_rectangles");
-  }
+  CompareDisplayList(RenderPageToDisplayList(page.get()),
+                     "red_green_rectangles");
 
   // Add a black triangle.
   FPDF_PAGEOBJECT black_path = FPDFPageObj_CreateNewPath(400, 100);
@@ -584,10 +577,8 @@ TEST_F(FPDFEditEmbedderTest, AddPaths) {
   EXPECT_FALSE(FPDFPath_GetPathSegment(black_path, 3));
 
   EXPECT_TRUE(FPDFPage_InsertObject(page.get(), black_path));
-  {
-    ScopedFPDFBitmap page_bitmap = RenderPage(page.get());
-    CompareBitmap(page_bitmap.get(), "red_green_rectangles_black_triangle");
-  }
+  CompareDisplayList(RenderPageToDisplayList(page.get()),
+                     "red_green_rectangles_black_triangle");
 
   // Now add a more complex blue path.
   FPDF_PAGEOBJECT blue_path = FPDFPageObj_CreateNewPath(200, 200);
@@ -600,18 +591,13 @@ TEST_F(FPDFEditEmbedderTest, AddPaths) {
   EXPECT_TRUE(FPDFPath_BezierTo(blue_path, 375, 330, 390, 360, 400, 400));
   EXPECT_TRUE(FPDFPath_Close(blue_path));
   EXPECT_TRUE(FPDFPage_InsertObject(page.get(), blue_path));
-  {
-    ScopedFPDFBitmap page_bitmap = RenderPage(page.get());
-    CompareBitmapWithExpectationSuffix(page_bitmap.get(), "blue_path");
-  }
+  CompareDisplayList(RenderPageToDisplayList(page.get()), "blue_path");
 
   // Now save the result, closing the page and document.
   EXPECT_TRUE(FPDFPage_GenerateContent(page.get()));
   EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
 
-  // Render the saved result. The images will change due to floating point
-  // precision error.
-  VerifySavedDocumentWithExpectationSuffix("blue_path");
+  VerifySavedDocumentWithDisplayList("blue_path_saved");
 }
 
 TEST_F(FPDFEditEmbedderTest, ClipPath) {
@@ -749,26 +735,22 @@ TEST_F(FPDFEditEmbedderTest, Bug1549) {
   ASSERT_TRUE(OpenDocument("bug_1549.pdf"));
   ScopedPage page = LoadScopedPage(0);
 
-  {
-    ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-    CompareBitmap(bitmap.get(), "bug_1549");
+  CompareDisplayList(RenderLoadedPageToDisplayList(page.get()), "bug_1549");
 
-    ScopedFPDFPageObject obj(FPDFPage_GetObject(page.get(), 0));
-    ASSERT_EQ(FPDF_PAGEOBJ_IMAGE, FPDFPageObj_GetType(obj.get()));
-    ASSERT_TRUE(FPDFPage_RemoveObject(page.get(), obj.get()));
-  }
+  ScopedFPDFPageObject obj(FPDFPage_GetObject(page.get(), 0));
+  ASSERT_EQ(FPDF_PAGEOBJ_IMAGE, FPDFPageObj_GetType(obj.get()));
+  ASSERT_TRUE(FPDFPage_RemoveObject(page.get(), obj.get()));
 
   ASSERT_TRUE(FPDFPage_GenerateContent(page.get()));
 
-  {
-    ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-    CompareBitmap(bitmap.get(), "bug_1549_removed");
-  }
+  CompareDisplayList(RenderLoadedPageToDisplayList(page.get()),
+                     "bug_1549_removed");
 
   ASSERT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
 
+  // TODO(crbug.com/42270554): Color should be 0xff00aeef instead of black,
   // TODO(crbug.com/42270554): Should be "bug_1549_removed".
-  VerifySavedDocument("bug_1549_incorrect");
+  VerifySavedDocumentWithDisplayList("bug_1549_incorrect");
 }
 
 TEST_F(FPDFEditEmbedderTest, SetText) {
@@ -2598,20 +2580,14 @@ TEST_F(FPDFEditEmbedderTest, AddAndRemovePaths) {
   EXPECT_TRUE(FPDFPageObj_SetFillColor(red_rect, 255, 0, 0, 255));
   EXPECT_TRUE(FPDFPath_SetDrawMode(red_rect, FPDF_FILLMODE_ALTERNATE, 0));
   EXPECT_TRUE(FPDFPage_InsertObject(page.get(), red_rect_deleter.release()));
-  {
-    ScopedFPDFBitmap page_bitmap = RenderPage(page.get());
-    CompareBitmap(page_bitmap.get(), kRedRectanglePng);
-  }
+  CompareDisplayList(RenderPageToDisplayList(page.get()), "red_rectangle");
   EXPECT_EQ(1, FPDFPage_CountObjects(page.get()));
 
   // Remove rectangle and verify it does not render anymore and the bitmap is
   // back to a blank one.
   EXPECT_TRUE(FPDFPage_RemoveObject(page.get(), red_rect));
   red_rect_deleter.reset(red_rect);
-  {
-    ScopedFPDFBitmap page_bitmap = RenderPage(page.get());
-    CompareBitmap(page_bitmap.get(), kBlankPage612By792Png);
-  }
+  CompareDisplayList(RenderPageToDisplayList(page.get()), "blank_page_612x792");
   EXPECT_EQ(0, FPDFPage_CountObjects(page.get()));
 
   // Trying to remove an object not in the page should return false.
@@ -3551,9 +3527,6 @@ TEST_F(FPDFEditEmbedderTest, GraphicsData) {
 }
 
 TEST_F(FPDFEditEmbedderTest, DoubleGenerating) {
-  static constexpr char kRedRectangleAlphaPng[] = "red_rectangle_alpha";
-  static constexpr char kBlueRectangleAlphaPng[] = "blue_rectangle_alpha";
-
   // Start with a blank page
   ScopedFPDFPage page(FPDFPage_New(CreateNewDocument(), 0, 612, 792));
 
@@ -3572,11 +3545,8 @@ TEST_F(FPDFEditEmbedderTest, DoubleGenerating) {
   EXPECT_THAT(graphics_dict->GetKeys(),
               UnorderedElementsAreArray({"FXE1", "FXE2"}));
 
-  // Check the bitmap
-  {
-    ScopedFPDFBitmap page_bitmap = RenderPage(page.get());
-    CompareBitmap(page_bitmap.get(), kRedRectangleAlphaPng);
-  }
+  CompareDisplayList(RenderPageToDisplayList(page.get()),
+                     "red_rectangle_alpha");
 
   // Never mind, my new favorite color is blue, increase alpha.
   // The red graphics state goes away.
@@ -3585,20 +3555,15 @@ TEST_F(FPDFEditEmbedderTest, DoubleGenerating) {
   EXPECT_THAT(graphics_dict->GetKeys(),
               UnorderedElementsAreArray({"FXE1", "FXE3"}));
 
-  // Check that bitmap displays changed content
-  {
-    ScopedFPDFBitmap page_bitmap = RenderPage(page.get());
-    CompareBitmap(page_bitmap.get(), kBlueRectangleAlphaPng);
-  }
+  CompareDisplayList(RenderPageToDisplayList(page.get()),
+                     "blue_rectangle_alpha");
 
   // And now generate, without changes
   EXPECT_TRUE(FPDFPage_GenerateContent(page.get()));
   EXPECT_THAT(graphics_dict->GetKeys(),
               UnorderedElementsAreArray({"FXE1", "FXE3"}));
-  {
-    ScopedFPDFBitmap page_bitmap = RenderPage(page.get());
-    CompareBitmap(page_bitmap.get(), kBlueRectangleAlphaPng);
-  }
+  CompareDisplayList(RenderPageToDisplayList(page.get()),
+                     "blue_rectangle_alpha");
 
   // Add some text to the page, which starts out with no fonts.
   RetainPtr<const CPDF_Dictionary> font_dict =
@@ -5836,7 +5801,7 @@ TEST_F(FPDFEditEmbedderTest, FormModifyObject) {
   // Save the document to the internal buffer
   EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
 
-  VerifySavedDocument("form_object_with_image_removed_image");
+  VerifySavedDocumentWithDisplayList("form_object_with_image_removed_image");
 }
 
 TEST_F(FPDFEditEmbedderTest, Bug410996566) {

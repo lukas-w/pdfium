@@ -1,0 +1,7 @@
+SaveState
+SetBaseClip [0,0,612,792]
+SetClip_PathFill rule=winding matrix=none points=[move(0.0000,792.0000) line(0.0000,0.0000) line(612.0000,0.0000) line(612.0000,792.0000) line(0.0000,792.0000,close)]
+SaveState
+FillRect [10,682,110,782] color=0x80ff0000
+RestoreState
+RestoreState

@@ -6,6 +6,7 @@
 #include <array>
 #include <iterator>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "core/fxcrt/fx_coordinates.h"
@@ -318,7 +319,6 @@ TEST_F(FPDFSaveEmbedderTest, IncrementalSaveWithModifications) {
 
 class FPDFSaveWithFontSubsetEmbedderTest : public FPDFSaveEmbedderTest {
  public:
-  static constexpr char kSaveNewTextFilename[] = "save_new_text";
   static constexpr std::array<FPDF_WCHAR, 38> kExpectedSingleTextAdded = {
       // "Hello, world!\r\n"
       'H', 'e', 'l', 'l', 'o', ',', ' ', 'w', 'o', 'r', 'l', 'd', '!', '\r',
@@ -410,8 +410,8 @@ TEST_F(FPDFSaveWithFontSubsetEmbedderTest, SaveWithoutSubsetWithNewText) {
   ASSERT_NO_FATAL_FAILURE(InsertNewTextObject(
       page.get(), font.get(), text.get(), CFX_PointF(10.0f, 10.0f)));
 
-  ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-  CompareBitmapWithExpectationSuffix(bitmap.get(), kSaveNewTextFilename);
+  CompareDisplayList(RenderLoadedPageToDisplayList(page.get()),
+                     "save_new_text");
 
   // Verify the file size increase is larger when not subsetting the new text's
   // font.
@@ -420,7 +420,7 @@ TEST_F(FPDFSaveWithFontSubsetEmbedderTest, SaveWithoutSubsetWithNewText) {
   EXPECT_EQ(5004u, GetString().size());
 
   // Verify the text is visible.
-  VerifySavedDocumentWithExpectationSuffix(kSaveNewTextFilename);
+  VerifySavedDocumentWithDisplayList("save_new_text");
 
   TestExtractedFont(kExpectedSingleTextAdded);
 }
@@ -438,8 +438,8 @@ TEST_F(FPDFSaveWithFontSubsetEmbedderTest, SaveWithSubsetWithNewText) {
   ASSERT_NO_FATAL_FAILURE(InsertNewTextObject(
       page.get(), font.get(), text.get(), CFX_PointF(10.0f, 10.0f)));
 
-  ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-  CompareBitmapWithExpectationSuffix(bitmap.get(), kSaveNewTextFilename);
+  CompareDisplayList(RenderLoadedPageToDisplayList(page.get()),
+                     "save_new_text");
 
   // Verify the file size increase is smaller when subsetting the new text's
   // font, since text only contains a subset of the characters in the test font.
@@ -448,7 +448,7 @@ TEST_F(FPDFSaveWithFontSubsetEmbedderTest, SaveWithSubsetWithNewText) {
   EXPECT_EQ(4454u, GetString().size());
 
   // Verify the text is visible.
-  VerifySavedDocumentWithExpectationSuffix(kSaveNewTextFilename);
+  VerifySavedDocumentWithDisplayList("save_new_text");
 
   TestExtractedFont(kExpectedSingleTextAdded);
 }
@@ -475,9 +475,8 @@ TEST_F(FPDFSaveWithFontSubsetEmbedderTest,
   ASSERT_NO_FATAL_FAILURE(InsertNewTextObject(
       page.get(), font2.get(), text2.get(), CFX_PointF(10.0f, 150.0f)));
 
-  constexpr char kSaveMultipleFontsFilename[] = "save_multiple_fonts";
-  ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-  CompareBitmapWithExpectationSuffix(bitmap.get(), kSaveMultipleFontsFilename);
+  CompareDisplayList(RenderLoadedPageToDisplayList(page.get()),
+                     "save_multiple_fonts");
 
   EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, FPDF_SUBSET_NEW_FONTS));
   EXPECT_THAT(GetString(), StartsWith("%PDF-1.7\r\n"));
@@ -486,7 +485,7 @@ TEST_F(FPDFSaveWithFontSubsetEmbedderTest,
   EXPECT_NEAR(GetString().size(), 12000u, 500u);
 
   // Verify the text is visible.
-  VerifySavedDocumentWithExpectationSuffix(kSaveMultipleFontsFilename);
+  VerifySavedDocumentWithDisplayList("save_multiple_fonts");
 
   std::vector<FPDF_WCHAR> expected_multiple_text_added;
   expected_multiple_text_added.reserve(kExpectedSingleTextAdded.size() +
