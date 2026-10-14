@@ -1248,35 +1248,35 @@ void CPDFSDK_FormFillEnvironment::RunFieldJavaScript(
   RunScript(script, [type, data, pFormField](IJS_EventContext* context) {
     switch (type) {
       case CPDF_AAction::kCursorEnter:
-        context->OnField_MouseEnter(data->bModifier, data->bShift, pFormField);
+        context->OnField_MouseEnter(data->modifier, data->shift, pFormField);
         break;
       case CPDF_AAction::kCursorExit:
-        context->OnField_MouseExit(data->bModifier, data->bShift, pFormField);
+        context->OnField_MouseExit(data->modifier, data->shift, pFormField);
         break;
       case CPDF_AAction::kButtonDown:
-        context->OnField_MouseDown(data->bModifier, data->bShift, pFormField);
+        context->OnField_MouseDown(data->modifier, data->shift, pFormField);
         break;
       case CPDF_AAction::kButtonUp:
-        context->OnField_MouseUp(data->bModifier, data->bShift, pFormField);
+        context->OnField_MouseUp(data->modifier, data->shift, pFormField);
         break;
       case CPDF_AAction::kGetFocus:
-        context->OnField_Focus(data->bModifier, data->bShift, pFormField,
-                               &data->sValue);
+        context->OnField_Focus(data->modifier, data->shift, pFormField,
+                               &data->value);
         break;
       case CPDF_AAction::kLoseFocus:
-        context->OnField_Blur(data->bModifier, data->bShift, pFormField,
-                              &data->sValue);
+        context->OnField_Blur(data->modifier, data->shift, pFormField,
+                              &data->value);
         break;
       case CPDF_AAction::kKeyStroke:
         context->OnField_Keystroke(
-            &data->sChange, data->sChangeEx, data->bKeyDown, data->bModifier,
-            &data->nSelEnd, &data->nSelStart, data->bShift, pFormField,
-            &data->sValue, data->bWillCommit, data->bFieldFull, &data->bRC);
+            &data->change, data->change_ex, data->key_down, data->modifier,
+            &data->sel_end, &data->sel_start, data->shift, pFormField,
+            &data->value, data->will_commit, data->field_full, &data->rc);
         break;
       case CPDF_AAction::kValidate:
-        context->OnField_Validate(&data->sChange, data->sChangeEx,
-                                  data->bKeyDown, data->bModifier, data->bShift,
-                                  pFormField, &data->sValue, &data->bRC);
+        context->OnField_Validate(&data->change, data->change_ex,
+                                  data->key_down, data->modifier, data->shift,
+                                  pFormField, &data->value, &data->rc);
         break;
       default:
         NOTREACHED();

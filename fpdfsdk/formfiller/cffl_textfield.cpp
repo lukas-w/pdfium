@@ -187,22 +187,22 @@ void CFFL_TextField::GetActionData(const CPDFSDK_PageView* pPageView,
   switch (type) {
     case CPDF_AAction::kKeyStroke:
       if (CPWL_Edit* pWnd = GetPWLEdit(pPageView)) {
-        fa.bFieldFull = pWnd->IsTextFull();
-        fa.sValue = pWnd->GetText();
-        if (fa.bFieldFull) {
-          fa.sChange.clear();
-          fa.sChangeEx.clear();
+        fa.field_full = pWnd->IsTextFull();
+        fa.value = pWnd->GetText();
+        if (fa.field_full) {
+          fa.change.clear();
+          fa.change_ex.clear();
         }
       }
       break;
     case CPDF_AAction::kValidate:
       if (CPWL_Edit* pWnd = GetPWLEdit(pPageView)) {
-        fa.sValue = pWnd->GetText();
+        fa.value = pWnd->GetText();
       }
       break;
     case CPDF_AAction::kLoseFocus:
     case CPDF_AAction::kGetFocus:
-      fa.sValue = widget_->GetValue();
+      fa.value = widget_->GetValue();
       break;
     default:
       break;
@@ -216,8 +216,8 @@ void CFFL_TextField::SetActionData(const CPDFSDK_PageView* pPageView,
     case CPDF_AAction::kKeyStroke:
       if (CPWL_Edit* pEdit = GetPWLEdit(pPageView)) {
         pEdit->SetFocus();
-        pEdit->SetSelection(fa.nSelStart, fa.nSelEnd);
-        pEdit->ReplaceSelection(fa.sChange);
+        pEdit->SetSelection(fa.sel_start, fa.sel_end);
+        pEdit->ReplaceSelection(fa.change);
       }
       break;
     default:

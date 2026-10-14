@@ -10,21 +10,17 @@
 #include "core/fxcrt/widestring.h"
 
 struct CFFL_FieldAction {
-  CFFL_FieldAction();
-  CFFL_FieldAction(const CFFL_FieldAction& other) = delete;
-  ~CFFL_FieldAction();
-
-  bool bModifier = false;
-  bool bShift = false;
-  bool bKeyDown = false;
-  bool bWillCommit = false;
-  bool bFieldFull = false;
-  bool bRC = true;
-  int nSelEnd = 0;
-  int nSelStart = 0;
-  WideString sChange;
-  WideString sChangeEx;
-  WideString sValue;
+  bool modifier = false;
+  bool shift = false;
+  bool key_down = false;
+  bool will_commit = false;
+  bool field_full = false;
+  bool rc = true;
+  int sel_start = 0;
+  int sel_end = 0;
+  WideString change;
+  WideString change_ex;
+  WideString value;
 };
 
 #endif  // FPDFSDK_FORMFILLER_CFFL_FIELDACTION_H_

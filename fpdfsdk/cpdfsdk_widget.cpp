@@ -240,15 +240,15 @@ bool CPDFSDK_Widget::OnXFAAAction(PDFSDK_XFAAActionType eXFAAAT,
   }
 
   CXFA_EventParam param(eEventType);
-  param.change_ = data->sChange;
+  param.change_ = data->change;
   param.commit_key_ = 0;
-  param.shift_ = data->bShift;
-  param.sel_start_ = data->nSelStart;
-  param.sel_end_ = data->nSelEnd;
-  param.full_text_ = data->sValue;
-  param.key_down_ = data->bKeyDown;
-  param.modifier_ = data->bModifier;
-  param.prev_text_ = data->sValue;
+  param.shift_ = data->shift;
+  param.sel_start_ = data->sel_start;
+  param.sel_end_ = data->sel_end;
+  param.full_text_ = data->value;
+  param.key_down_ = data->key_down;
+  param.modifier_ = data->modifier;
+  param.prev_text_ = data->value;
   if ((eEventType == XFA_EVENT_Click || eEventType == XFA_EVENT_Change) &&
       GetFieldType() == FormFieldType::kRadioButton) {
     CXFA_FFWidget* hGroupWidget = GetGroupMixXFAWidget();
@@ -332,7 +332,7 @@ bool CPDFSDK_Widget::HandleXFAAAction(
     return false;
   }
 
-  XFA_EVENTTYPE eEventType = GetXFAEventType(type, data->bWillCommit);
+  XFA_EVENTTYPE eEventType = GetXFAEventType(type, data->will_commit);
   if (eEventType == XFA_EVENT_Unknown) {
     return false;
   }
@@ -343,15 +343,15 @@ bool CPDFSDK_Widget::HandleXFAAAction(
   }
 
   CXFA_EventParam param(eEventType);
-  param.change_ = data->sChange;
+  param.change_ = data->change;
   param.commit_key_ = 0;
-  param.shift_ = data->bShift;
-  param.sel_start_ = data->nSelStart;
-  param.sel_end_ = data->nSelEnd;
-  param.full_text_ = data->sValue;
-  param.key_down_ = data->bKeyDown;
-  param.modifier_ = data->bModifier;
-  param.prev_text_ = data->sValue;
+  param.shift_ = data->shift;
+  param.sel_start_ = data->sel_start;
+  param.sel_end_ = data->sel_end;
+  param.full_text_ = data->value;
+  param.key_down_ = data->key_down;
+  param.modifier_ = data->modifier;
+  param.prev_text_ = data->value;
   bool ret = hWidget->ProcessEventUnderHandler(&param, pXFAWidgetHandler);
   CXFA_FFDocView* pDocView = context->GetXFADocView();
   if (pDocView) {

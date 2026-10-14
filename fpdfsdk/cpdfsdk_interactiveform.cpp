@@ -385,13 +385,12 @@ bool CPDFSDK_InteractiveForm::OnValidate(CPDF_FormField* pFormField,
     return true;
   }
 
-  CFFL_FieldAction fa;
-  fa.bModifier = false;
-  fa.bShift = false;
-  fa.sValue = csValue;
+  CFFL_FieldAction fa = {
+      .value = csValue,
+  };
   form_fill_env_->DoActionFieldJavaScript(action, CPDF_AAction::kValidate,
                                           pFormField, &fa);
-  return fa.bRC;
+  return fa.rc;
 }
 
 bool CPDFSDK_InteractiveForm::DoAction_Hide(const CPDF_Action& action) {

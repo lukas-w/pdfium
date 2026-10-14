@@ -583,7 +583,7 @@ void CFFL_FormField::SetChangeMark() {
 void CFFL_FormField::GetActionData(const CPDFSDK_PageView* pPageView,
                                    CPDF_AAction::AActionType type,
                                    CFFL_FieldAction& fa) {
-  fa.sValue = widget_->GetValue();
+  fa.value = widget_->GetValue();
 }
 
 void CFFL_FormField::SetActionData(const CPDFSDK_PageView* pPageView,

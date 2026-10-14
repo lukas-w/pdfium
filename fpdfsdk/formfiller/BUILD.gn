@@ -13,7 +13,6 @@ source_set("formfiller") {
     "cffl_checkbox.h",
     "cffl_combobox.cpp",
     "cffl_combobox.h",
-    "cffl_fieldaction.cpp",
     "cffl_fieldaction.h",
     "cffl_formfield.cpp",
     "cffl_formfield.h",

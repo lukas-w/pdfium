@@ -160,13 +160,13 @@ void CFFL_ListBox::GetActionData(const CPDFSDK_PageView* pPageView,
   switch (type) {
     case CPDF_AAction::kValidate:
       if (widget_->GetFieldFlags() & pdfium::form_flags::kChoiceMultiSelect) {
-        fa.sValue.clear();
+        fa.value.clear();
       } else {
         CPWL_ListBox* pListBox = GetPWLListBox(pPageView);
         if (pListBox) {
           int32_t nCurSel = pListBox->GetCurSel();
           if (nCurSel >= 0) {
-            fa.sValue = widget_->GetOptionLabel(nCurSel);
+            fa.value = widget_->GetOptionLabel(nCurSel);
           }
         }
       }
@@ -174,11 +174,11 @@ void CFFL_ListBox::GetActionData(const CPDFSDK_PageView* pPageView,
     case CPDF_AAction::kLoseFocus:
     case CPDF_AAction::kGetFocus:
       if (widget_->GetFieldFlags() & pdfium::form_flags::kChoiceMultiSelect) {
-        fa.sValue.clear();
+        fa.value.clear();
       } else {
         int32_t nCurSel = widget_->GetSelectedIndex(0);
         if (nCurSel >= 0) {
-          fa.sValue = widget_->GetOptionLabel(nCurSel);
+          fa.value = widget_->GetOptionLabel(nCurSel);
         }
       }
       break;
