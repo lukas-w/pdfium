@@ -5,6 +5,7 @@
 #include "core/fxge/dib/cstretchengine.h"
 
 #include <algorithm>
+#include <array>
 #include <map>
 #include <utility>
 #include <vector>
@@ -14,7 +15,10 @@
 #include "core/fpdfapi/parser/cpdf_number.h"
 #include "core/fpdfapi/parser/cpdf_stream.h"
 #include "core/fxcrt/containers/to_vector.h"
+#include "core/fxcrt/span.h"
+#include "core/fxcrt/span_util.h"
 #include "core/fxge/dib/cfx_dibitmap.h"
+#include "core/fxge/dib/cstretchengine_hwy.h"
 #include "core/fxge/dib/fx_dib.h"
 #include "core/fxge/dib/scanlinecomposer_iface.h"
 #include "testing/gtest/include/gtest/gtest.h"
@@ -276,4 +280,251 @@ TEST(CStretchEngine, TooManyWeights) {
   ASSERT_FALSE(table.CalculateWeights(kTooBigDestLen, 0, kTooBigDestLen,
                                       kTooBigSrcLen, 0, kTooBigSrcLen,
                                       options));
+}
+
+namespace {
+
+// What one group of StretchHorzRunSimd() is documented to compute (see the
+// comment above StretchHorzGroup), re-derived in plain scalar code rather
+// than copied from the kernel: per column and channel, gather each tap's byte
+// through the group's index plan (a 0xFF index reads as zero), multiply by
+// the tap's weight, accumulate in uint32 with wraparound, take bits 16..23.
+void ScalarGroupReference(int bpp,
+                          const StretchHorzGroup& group,
+                          pdfium::span<const uint8_t> src_row,
+                          std::array<std::array<uint8_t, 3>, 4>& expected) {
+  const int gathered = bpp == 1 ? 1 : 3;
+  for (int k = 0; k < 4; ++k) {
+    for (int c = 0; c < gathered; ++c) {
+      uint32_t acc = 0;
+      for (uint32_t t = 0; t < group.taps; ++t) {
+        const uint8_t idx = group.idx[t][k * 4 + c];
+        const uint8_t byte_val =
+            idx == 0xFF ? 0 : src_row[group.src_byte_base + idx];
+        acc += group.weights[t][k] * byte_val;
+      }
+      expected[k][c] = CStretchEngine::PixelFromFixed(acc);
+    }
+  }
+}
+
+// Weights spanning the 17-bit fixed-point range the weight table produces:
+// zero, one, the midpoint, and both ends.
+constexpr std::array<uint32_t, 5> kTestWeights = {0, 1, 32768, 65535, 65536};
+
+// Source bytes spanning uint8_t's range, plus two values that are not a
+// power of two.
+constexpr std::array<uint8_t, 8> kTestBytes = {0,   1,   84,  127,
+                                               128, 171, 254, 255};
+
+// Builds the `seed`-th of a small, fixed set of test groups with `taps` taps
+// over a `wide` (32 byte) or narrow (16 byte) window at the start of the
+// row: every (column, tap) gathers `gathered` consecutive bytes from a
+// position and a weight chosen from kTestWeights, cycling both with a
+// different phase per (column, tap) so consecutive seeds exercise different
+// combinations -- deliberately, rather than hoping random search eventually
+// covers the same positions and weights.
+StretchHorzGroup BuildTestGroup(int seed, int gathered, uint32_t taps, bool wide) {
+  const int load_bytes = wide ? 32 : 16;
+  const int max_pos = load_bytes - gathered;
+  const std::array<int, 3> positions = {0, max_pos / 2, max_pos};
+  StretchHorzGroup group = {};
+  group.taps = taps;
+  group.wide = wide;
+  std::ranges::fill(group.idx[0], 0xFF);
+  std::ranges::fill(group.idx[1], 0xFF);
+  int n = seed;
+  for (int k = 0; k < 4; ++k) {
+    for (uint32_t t = 0; t < taps; ++t) {
+      const int pos = positions[n % positions.size()];
+      for (int c = 0; c < gathered; ++c) {
+        group.idx[t][k * 4 + c] = static_cast<uint8_t>(pos + c);
+      }
+      group.weights[t][k] = kTestWeights[n % kTestWeights.size()];
+      ++n;
+    }
+  }
+  return group;
+}
+
+// How many of BuildTestGroup()'s seeds to check: enough that, since
+// kTestWeights and the 3 positions are coprime in count, every (position,
+// weight) pair is reached at least once, shifted by a different phase per
+// seed.
+constexpr int kTestSeedCount = 16;
+
+// A source row of 48 bytes cycling through kTestBytes (whole BGR and BGRA
+// pixels) and a 24-byte destination prefilled with 0xAA, so untouched bytes
+// can be told apart.
+struct KernelBuffers {
+  std::array<uint8_t, 48> src_row;
+  std::array<uint8_t, 24> dest;
+
+  KernelBuffers() {
+    for (size_t i = 0; i < src_row.size(); ++i) {
+      src_row[i] = kTestBytes[i % kTestBytes.size()];
+    }
+    std::ranges::fill(dest, 0xAA);
+  }
+};
+
+// Runs one group through the kernel for the destination pixel type `Pixel`
+// (a byte, FX_BGR_STRUCT or FX_BGRA_STRUCT).
+template <typename Pixel>
+void RunOneGroup(const StretchHorzGroup& group, KernelBuffers& buffers) {
+  StretchHorzRunSimd(
+      pdfium::span_from_ref(group),
+      fxcrt::reinterpret_span<const Pixel>(
+          pdfium::span<const uint8_t>(buffers.src_row)),
+      fxcrt::reinterpret_span<Pixel>(pdfium::span(buffers.dest)));
+}
+
+template <int kBpp, typename Pixel>
+void CheckTestGroups(uint32_t taps, bool wide) {
+  const int gathered = kBpp == 1 ? 1 : 3;
+  for (int seed = 0; seed < kTestSeedCount; ++seed) {
+    KernelBuffers buffers;
+    const StretchHorzGroup group = BuildTestGroup(seed, gathered, taps, wide);
+    std::array<std::array<uint8_t, 3>, 4> expected = {};
+    ScalarGroupReference(kBpp, group, buffers.src_row, expected);
+
+    RunOneGroup<Pixel>(group, buffers);
+    for (int k = 0; k < 4; ++k) {
+      for (int c = 0; c < gathered; ++c) {
+        EXPECT_EQ(expected[k][c], buffers.dest[k * kBpp + c])
+            << "seed " << seed << " column " << k << " channel " << c;
+      }
+      if constexpr (kBpp == 4) {
+        EXPECT_EQ(0xAA, buffers.dest[k * 4 + 3])
+            << "seed " << seed << " column " << k;
+      }
+    }
+    // The 4 columns of kBpp bytes are all the group may write.
+    for (size_t i = 4 * kBpp; i < buffers.dest.size(); ++i) {
+      EXPECT_EQ(0xAA, buffers.dest[i]) << "seed " << seed << " byte " << i;
+    }
+  }
+}
+
+// The alpha arm's per-column arithmetic (kManyBpptoManyBppWithAlpha in
+// ContinueStretchHorz()), re-derived: each tap contributes weight *
+// src.alpha / 255 (truncating) times the channel, the alpha channel
+// accumulates that pixel weight itself, and the output alpha is bits 16..23
+// of 255 times the accumulated pixel weight.
+void ScalarAlphaReference(const StretchHorzGroup& group,
+                          pdfium::span<const uint8_t> src_row,
+                          std::array<std::array<uint8_t, 4>, 4>& expected) {
+  for (int k = 0; k < 4; ++k) {
+    std::array<uint32_t, 4> acc = {};
+    for (uint32_t t = 0; t < group.taps; ++t) {
+      std::array<uint8_t, 4> px;
+      for (int c = 0; c < 4; ++c) {
+        const uint8_t idx = group.idx[t][k * 4 + c];
+        px[c] = idx == 0xFF ? 0 : src_row[group.src_byte_base + idx];
+      }
+      const uint32_t pixel_weight = group.weights[t][k] * px[3] / 255;
+      for (int c = 0; c < 3; ++c) {
+        acc[c] += pixel_weight * px[c];
+      }
+      acc[3] += pixel_weight;
+    }
+    for (int c = 0; c < 3; ++c) {
+      expected[k][c] = CStretchEngine::PixelFromFixed(acc[c]);
+    }
+    expected[k][3] = CStretchEngine::PixelFromFixed(255 * acc[3]);
+  }
+}
+
+void CheckTestAlphaGroups(uint32_t taps, bool wide) {
+  for (int seed = 0; seed < kTestSeedCount; ++seed) {
+    KernelBuffers buffers;
+    // A 4-byte gather per column: the alpha arm reads all of B, G, R, A.
+    const StretchHorzGroup group = BuildTestGroup(seed, 4, taps, wide);
+    std::array<std::array<uint8_t, 4>, 4> expected = {};
+    ScalarAlphaReference(group, buffers.src_row, expected);
+
+    using Pixel = FX_BGRA_STRUCT<uint8_t>;
+    StretchHorzRunAlphaSimd(
+        pdfium::span_from_ref(group),
+        fxcrt::reinterpret_span<const Pixel>(
+            pdfium::span<const uint8_t>(buffers.src_row)),
+        fxcrt::reinterpret_span<Pixel>(pdfium::span(buffers.dest)));
+    for (int k = 0; k < 4; ++k) {
+      for (int c = 0; c < 4; ++c) {
+        EXPECT_EQ(expected[k][c], buffers.dest[k * 4 + c])
+            << "seed " << seed << " column " << k << " channel " << c;
+      }
+    }
+    for (size_t i = 16; i < buffers.dest.size(); ++i) {
+      EXPECT_EQ(0xAA, buffers.dest[i]) << "seed " << seed << " byte " << i;
+    }
+  }
+}
+
+}  // namespace
+
+TEST(CStretchEngine, HorzRunSimdMatchesScalarReference) {
+  if (!StretchHorzSimdAvailable()) {
+    GTEST_SKIP();
+  }
+  for (uint32_t taps : {1u, 2u}) {
+    for (bool wide : {false, true}) {
+      CheckTestGroups<1, uint8_t>(taps, wide);
+      CheckTestGroups<3, FX_BGR_STRUCT<uint8_t>>(taps, wide);
+      CheckTestGroups<4, FX_BGRA_STRUCT<uint8_t>>(taps, wide);
+    }
+  }
+}
+
+TEST(CStretchEngine, HorzRunAlphaSimdMatchesScalarReference) {
+  if (!StretchHorzSimdAvailable()) {
+    GTEST_SKIP();
+  }
+  for (uint32_t taps : {1u, 2u}) {
+    for (bool wide : {false, true}) {
+      CheckTestAlphaGroups(taps, wide);
+    }
+  }
+}
+
+// The run contract: every group in the span is processed, in order, each
+// writing the next 4 destination pixels, and nothing beyond them. Every
+// group here is one identity tap (weight 65536) over bytes 0..11 of the row,
+// so each group's output must equal the row's first 12 bytes.
+TEST(CStretchEngine, HorzRunSimdProcessesEveryGroup) {
+  if (!StretchHorzSimdAvailable()) {
+    GTEST_SKIP();
+  }
+  std::array<uint8_t, 48> src_row;
+  for (size_t i = 0; i < src_row.size(); ++i) {
+    src_row[i] = static_cast<uint8_t>(0x10 + i);
+  }
+  std::array<StretchHorzGroup, 3> groups = {};
+  for (StretchHorzGroup& group : groups) {
+    group.taps = 1;
+    std::ranges::fill(group.idx[0], 0xFF);
+    std::ranges::fill(group.idx[1], 0xFF);
+    for (int k = 0; k < 4; ++k) {
+      for (int c = 0; c < 3; ++c) {
+        group.idx[0][k * 4 + c] = static_cast<uint8_t>(k * 3 + c);
+      }
+      group.weights[0][k] = CStretchEngine::kFixedPointOne;
+    }
+  }
+  std::array<uint8_t, 48> dest;
+  std::ranges::fill(dest, 0xAA);
+  using Pixel = FX_BGR_STRUCT<uint8_t>;
+  StretchHorzRunSimd(groups,
+                     fxcrt::reinterpret_span<const Pixel>(
+                         pdfium::span<const uint8_t>(src_row)),
+                     fxcrt::reinterpret_span<Pixel>(pdfium::span(dest)));
+  const pdfium::span<const uint8_t> dest_span(dest);
+  const pdfium::span<const uint8_t> row_span(src_row);
+  for (size_t j = 0; j < groups.size(); ++j) {
+    EXPECT_EQ(row_span.first(12u), dest_span.subspan(12 * j, 12u))
+        << "group " << j;
+  }
+  for (size_t i = 12 * groups.size(); i < dest.size(); ++i) {
+    EXPECT_EQ(0xAA, dest[i]) << "byte " << i;
+  }
 }

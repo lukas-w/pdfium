@@ -7,12 +7,17 @@
 #ifndef CORE_FXGE_DIB_CSTRETCHENGINE_H_
 #define CORE_FXGE_DIB_CSTRETCHENGINE_H_
 
+#include <stddef.h>
 #include <stdint.h>
+
+#include <array>
+#include <optional>
 
 #include "core/fxcrt/check_op.h"
 #include "core/fxcrt/data_vector.h"
 #include "core/fxcrt/fixed_size_data_vector.h"
 #include "core/fxcrt/fx_coordinates.h"
+#include "core/fxcrt/fx_memory_wrappers.h"
 #include "core/fxcrt/fx_system.h"
 #include "core/fxcrt/raw_span.h"
 #include "core/fxcrt/retain_ptr.h"
@@ -22,6 +27,41 @@
 class CFX_DIBBase;
 class PauseIndicatorIface;
 class ScanlineComposerIface;
+
+// The horizontal stretch pass's k8BppTo8Bpp and kManyBpptoManyBpp arms (the
+// former also serving 1bpp sources, whose rows are expanded to bytes) visit
+// every destination column once per source row, and the modal tap counts are
+// 1 (no scaling in this axis) and 2 (bilinear interpolation). Four columns
+// sharing a tap count, in a long enough run of them, can be resampled in one
+// pass with a vectorized gather-and-multiply-accumulate: see
+// StretchHorzRunSimd() in cstretchengine_hwy.cpp. PlanHorzGroups() finds those
+// runs and, for each whole group of four within one whose combined source
+// window fits the gather (at most 32 bytes), precomputes the indices and
+// weights the kernel needs. Columns not covered by a group -- an odd tap
+// count, a short run, or a group whose window does not fit -- take the
+// unchanged per-column path.
+struct StretchHorzGroup {
+  size_t src_byte_base;  // Byte offset of the source window in the row.
+  // Per-tap gather indices into the window; see the kernel.
+  std::array<std::array<uint8_t, 16>, 2> idx;
+  // Per-tap, per-column weights.
+  std::array<std::array<uint32_t, 4>, 2> weights;
+  uint32_t taps;  // 1 or 2.
+  bool wide;      // Whether the source window needs 32 bytes, not 16.
+};
+FX_DATA_PARTITION_EXCEPTION(StretchHorzGroup);
+
+// A run of consecutive groups covering 4 * group_count consecutive
+// destination columns from dest_col (an absolute column index, the same
+// coordinate space ContinueStretchHorz()'s `col` uses): the groups at
+// [first_group, first_group + group_count) of horz_groups_. The kernel
+// handles a whole run per call.
+struct StretchHorzRun {
+  int dest_col;
+  size_t first_group;
+  size_t group_count;
+};
+FX_DATA_PARTITION_EXCEPTION(StretchHorzRun);
 
 class CStretchEngine {
  public:
@@ -159,6 +199,28 @@ class CStretchEngine {
   pdfium::span<const uint8_t> Expand1BppRow(
       pdfium::span<const uint8_t> src_row);
 
+  // What PlanHorzGroups() derives once per stretch for its helpers: the
+  // source pixel stride the gather reads, how many leading bytes of each
+  // pixel it loads, and the byte length of the row the kernel will read.
+  struct HorzPlanParams {
+    uint32_t bpp;
+    uint32_t gathered;
+    size_t src_row_bytes;
+  };
+
+  // Fills horz_groups_ and horz_runs_ for the current weight table; see
+  // StretchHorzGroup.
+  void PlanHorzGroups();
+  void PlanHorzSpan(int start,
+                    int end,
+                    uint32_t taps,
+                    const HorzPlanParams& params);
+  std::optional<StretchHorzGroup>
+  BuildHorzGroup(int col, uint32_t taps, const HorzPlanParams& params) const;
+  uint32_t HorzTapCountAt(int col) const;
+  pdfium::span<const StretchHorzGroup> HorzRunGroups(
+      const StretchHorzRun& run) const;
+
   const FXDIB_Format dest_format_;
   const int dest_bpp_;
   const int src_bpp_;
@@ -182,6 +244,8 @@ class CStretchEngine {
   State state_ = State::kInitial;
   int cur_row_ = 0;
   WeightTable weight_table_;
+  DataVector<StretchHorzGroup> horz_groups_;
+  DataVector<StretchHorzRun> horz_runs_;
 };
 
 #endif  // CORE_FXGE_DIB_CSTRETCHENGINE_H_

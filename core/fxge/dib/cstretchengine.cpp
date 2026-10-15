@@ -10,6 +10,7 @@
 
 #include <algorithm>
 #include <array>
+#include <optional>
 #include <type_traits>
 #include <utility>
 
@@ -19,12 +20,14 @@
 #include "core/fxcrt/fx_ceil_div.h"
 #include "core/fxcrt/fx_safe_types.h"
 #include "core/fxcrt/fx_system.h"
+#include "core/fxcrt/numerics/safe_conversions.h"
 #include "core/fxcrt/pauseindicator_iface.h"
 #include "core/fxcrt/span_util.h"
 #include "core/fxcrt/zip.h"
 #include "core/fxge/calculate_pitch.h"
 #include "core/fxge/dib/cfx_dibbase.h"
 #include "core/fxge/dib/cfx_dibitmap.h"
+#include "core/fxge/dib/cstretchengine_hwy.h"
 #include "core/fxge/dib/fx_dib.h"
 #include "core/fxge/dib/scanlinecomposer_iface.h"
 
@@ -332,9 +335,204 @@ bool CStretchEngine::StartStretchHorz() {
       return false;
     }
   }
+  PlanHorzGroups();
   cur_row_ = src_clip_.top;
   state_ = State::kHorizontal;
   return true;
+}
+
+void CStretchEngine::PlanHorzGroups() {
+  horz_groups_.clear();
+  horz_runs_.clear();
+  if (dest_clip_.Width() <= 0) {
+    return;
+  }
+  if (!StretchHorzSimdAvailable()) {
+    // No vector wide enough for the kernel's gather exists in this build
+    // (see the HWY_SCALAR branch of cstretchengine_hwy.cpp): leave
+    // `horz_groups_` and `horz_runs_` empty, so every column takes the
+    // per-column path below, unchanged, rather than planning groups nothing
+    // can process.
+    return;
+  }
+  // The two palette arms have no group kernel; every other arm does. (1bpp
+  // sources take the k8BppTo8Bpp arm, on the row Expand1BppRow() produces.)
+  if (trans_method_ == TransformMethod::k1BppToManyBpp ||
+      trans_method_ == TransformMethod::k8BppToManyBpp) {
+    return;
+  }
+
+  HorzPlanParams params;
+  // The source pixel stride the gather reads: one byte for k8BppTo8Bpp and
+  // for an expanded 1bpp row, or the full pixel for kManyBpptoManyBpp /
+  // WithAlpha (3 or 4, per trans_method_'s own precondition on src_bpp_;
+  // WithAlpha is always 4).
+  const bool one_byte_pixels = trans_method_ == TransformMethod::k1BppTo8Bpp ||
+                               trans_method_ == TransformMethod::k8BppTo8Bpp;
+  params.bpp = one_byte_pixels ? 1 : src_bpp_ / 8;
+  // How many leading bytes of each source pixel a group loads: fewer than
+  // `bpp` when the 4th byte of a 4-byte pixel is padding the kernel never
+  // reads, matching the per-column path. WithAlpha reads all 4 bytes: its
+  // kernel needs the alpha byte the non-alpha kernel treats as padding.
+  if (trans_method_ == TransformMethod::kManyBpptoManyBppWithAlpha) {
+    params.gathered = params.bpp;
+  } else if (params.bpp == 1) {
+    params.gathered = 1;
+  } else {
+    params.gathered = 3;
+  }
+  // The row the kernel will read. For a 1bpp source that is the expanded
+  // row, which StartStretchHorz() has already sized: whole source bytes of 8
+  // pixels each, so up to 7 bytes past src_width_ (see Expand1BppRow()).
+  if (trans_method_ == TransformMethod::k1BppTo8Bpp) {
+    params.src_row_bytes = expanded_row_.size();
+  } else {
+    params.src_row_bytes = Fx2DSizeOrDie(src_width_, params.bpp);
+  }
+
+  // Walk the destination columns in maximal spans of the same tap count and
+  // plan each span.
+  int span_start = dest_clip_.left;
+  uint32_t span_taps = HorzTapCountAt(span_start);
+  for (int col = span_start + 1; col <= dest_clip_.right; ++col) {
+    const uint32_t taps = col < dest_clip_.right ? HorzTapCountAt(col) : 0;
+    if (col == dest_clip_.right || taps != span_taps) {
+      PlanHorzSpan(span_start, col, span_taps, params);
+      span_start = col;
+      span_taps = taps;
+    }
+  }
+}
+
+// A destination column's tap count if the kernel handles it (1 or 2), else 0.
+uint32_t CStretchEngine::HorzTapCountAt(int col) const {
+  const size_t weight_count =
+      weight_table_.GetPixelWeight(col)->GetWeights().size();
+  if (weight_count == 1) {
+    return 1;
+  }
+  if (weight_count == 2) {
+    return 2;
+  }
+  return 0;
+}
+
+// A span shorter than this stays on the per-column path entirely: even one
+// group's setup -- four weight-table lookups plus the index/weight plan --
+// costs more than the per-column dispatch it would replace.
+constexpr int kMinSpanLength = 4;
+
+// Plans one maximal span [start, end) of columns sharing `taps`: chops it
+// into groups of 4 and, if at least 3 in 4 of them fit the gather, adds all
+// the fitting ones, consecutive fitting groups forming one run. Below that
+// share a fitting minority is all cost, since the span's leftover columns --
+// including every non-fitting group -- fall back to the per-column path
+// regardless. Spans with taps 0 (neither 1 nor 2) are never planned, nor
+// spans shorter than kMinSpanLength.
+void CStretchEngine::PlanHorzSpan(int start,
+                                  int end,
+                                  uint32_t taps,
+                                  const HorzPlanParams& params) {
+  if (taps == 0 || end - start < kMinSpanLength) {
+    return;
+  }
+  const int candidate_groups = (end - start) / 4;
+  // Builds directly into `horz_groups_` and `horz_runs_`; reverted below if
+  // too few groups fit. `original_last_run` guards the one case a plain
+  // `horz_runs_.resize()` wouldn't undo: this span's first group extending a
+  // run from an earlier span, mutating its `group_count` in place.
+  const size_t original_group_count = horz_groups_.size();
+  const size_t original_run_count = horz_runs_.size();
+  const std::optional<StretchHorzRun> original_last_run =
+      horz_runs_.empty() ? std::nullopt
+                         : std::make_optional(horz_runs_.back());
+  int fitting = 0;
+  for (int i = 0; i < candidate_groups; ++i) {
+    std::optional<StretchHorzGroup> group =
+        BuildHorzGroup(start + 4 * i, taps, params);
+    if (!group.has_value()) {
+      continue;
+    }
+    ++fitting;
+    // Extend the current run if this group's columns follow its last group's
+    // directly; otherwise this group starts a new run.
+    const int dest_col = start + 4 * i;
+    if (!horz_runs_.empty() &&
+        horz_runs_.back().dest_col + 4 * horz_runs_.back().group_count ==
+            static_cast<size_t>(dest_col)) {
+      ++horz_runs_.back().group_count;
+    } else {
+      horz_runs_.push_back({dest_col, horz_groups_.size(), 1});
+    }
+    horz_groups_.push_back(group.value());
+  }
+  if (fitting * 4 < candidate_groups * 3) {
+    horz_groups_.resize(original_group_count);
+    horz_runs_.resize(original_run_count);
+    if (original_last_run.has_value()) {
+      horz_runs_.back() = original_last_run.value();
+    }
+  }
+}
+
+// Builds the group covering the 4 destination columns starting at `col`, all
+// already known to share `taps`, or returns nullopt if the four columns'
+// combined source window does not fit a 16- or 32-byte gather.
+// `weight->GetSrcStart()` is a source pixel position; the plan is in bytes.
+std::optional<StretchHorzGroup> CStretchEngine::BuildHorzGroup(
+    int col,
+    uint32_t taps,
+    const HorzPlanParams& params) const {
+  size_t min_start = weight_table_.GetPixelWeight(col)->GetSrcStart();
+  size_t max_start = min_start;
+  for (int i = 1; i < 4; ++i) {
+    const size_t start = weight_table_.GetPixelWeight(col + i)->GetSrcStart();
+    min_start = std::min(min_start, start);
+    max_start = std::max(max_start, start);
+  }
+  const size_t span_bytes = (max_start - min_start + taps) * params.bpp;
+  if (span_bytes > 32 || params.src_row_bytes < 16) {
+    return std::nullopt;
+  }
+  const bool wide = span_bytes > 16;
+  const size_t load_bytes = wide ? 32 : 16;
+  if (load_bytes > params.src_row_bytes) {
+    return std::nullopt;
+  }
+  // Keep the load inside the source row, sliding its base left if needed
+  // (mirrors the per-column path's own subspan, which is always in bounds).
+  size_t src_byte_base = min_start * params.bpp;
+  if (src_byte_base + load_bytes > params.src_row_bytes) {
+    src_byte_base = params.src_row_bytes - load_bytes;
+  }
+
+  StretchHorzGroup group;
+  group.taps = taps;
+  group.src_byte_base = src_byte_base;
+  group.wide = wide;
+  std::ranges::fill(group.idx[0], 0xFF);
+  std::ranges::fill(group.idx[1], 0xFF);
+  for (int k = 0; k < 4; ++k) {
+    const PixelWeight* weight = weight_table_.GetPixelWeight(col + k);
+    pdfium::span<const uint32_t> weights = weight->GetWeights();
+    group.weights[0][k] = weights[0];
+    group.weights[1][k] = taps == 2 ? weights[1] : 0;
+    for (uint32_t t = 0; t < taps; ++t) {
+      const size_t src_byte =
+          (weight->GetSrcStart() + t) * params.bpp - src_byte_base;
+      for (uint32_t c = 0; c < params.gathered; ++c) {
+        // Within the 32-byte window, so it fits the byte the gather reads.
+        group.idx[t][k * 4 + c] = pdfium::checked_cast<uint8_t>(src_byte + c);
+      }
+    }
+  }
+  return group;
+}
+
+// The groups of one planned run, in `horz_groups_`.
+pdfium::span<const StretchHorzGroup> CStretchEngine::HorzRunGroups(
+    const StretchHorzRun& run) const {
+  return pdfium::span(horz_groups_).subspan(run.first_group, run.group_count);
 }
 
 bool CStretchEngine::ContinueStretchHorz(PauseIndicatorIface* pPause) {
@@ -367,7 +565,22 @@ bool CStretchEngine::ContinueStretchHorz(PauseIndicatorIface* pPause) {
         src_row_span = Expand1BppRow(src_row_span);
         [[fallthrough]];
       case TransformMethod::k8BppTo8Bpp: {
-        for (int col = dest_clip_.left; col < dest_clip_.right; ++col) {
+        pdfium::span<const StretchHorzRun> runs(horz_runs_);
+        for (int col = dest_clip_.left; col < dest_clip_.right;) {
+          if (!runs.empty() && runs.front().dest_col == col) {
+            // A run of the 4-column groups PlanHorzGroups() found: one
+            // gather, one multiply-accumulate per tap, covering 4 columns at
+            // once. The index plan and weights come from the weight table,
+            // copied verbatim, and the terms are summed in tap order, so the
+            // output matches the per-column path below bit for bit.
+            const StretchHorzRun& run = runs.front();
+            StretchHorzRunSimd(HorzRunGroups(run), src_row_span,
+                               dest_span.subspan(dest_span_index));
+            dest_span_index += 4 * run.group_count;
+            col += 4 * run.group_count;
+            runs = runs.subspan<1u>();
+            continue;
+          }
           const PixelWeight* pWeights = weight_table_.GetPixelWeight(col);
           pdfium::span<const uint32_t> weights = pWeights->GetWeights();
           // One validated view of exactly the source bytes this column taps.
@@ -392,6 +605,7 @@ bool CStretchEngine::ContinueStretchHorz(PauseIndicatorIface* pPause) {
               break;
           }
           dest_span[dest_span_index++] = PixelFromFixed(dest_a);
+          ++col;
         }
         break;
       }
@@ -442,12 +656,26 @@ bool CStretchEngine::ContinueStretchHorz(PauseIndicatorIface* pPause) {
         auto stretch_row_from = [this, &dest_span](auto src_pixels) {
           // The destination pixels have the same layout as the source
           // pixels: 3 bytes fully written, or 4 bytes of which the 4th is
-          // left untouched.
+          // left untouched (both here and on the generic path below).
           using DestPixel =
               std::remove_const_t<typename decltype(src_pixels)::element_type>;
           auto dest_pixels = fxcrt::reinterpret_span<DestPixel>(dest_span);
+          pdfium::span<const StretchHorzRun> runs(horz_runs_);
           size_t dest_index = 0;
-          for (int col = dest_clip_.left; col < dest_clip_.right; ++col) {
+          for (int col = dest_clip_.left; col < dest_clip_.right;) {
+            if (!runs.empty() && runs.front().dest_col == col) {
+              // See the matching kernel in the k8BppTo8Bpp case above: one
+              // gather and multiply-accumulate per tap for all 4 columns of
+              // each group in the run, reading the same weights and source
+              // pixels, in the same tap order, as the per-column path below.
+              const StretchHorzRun& run = runs.front();
+              StretchHorzRunSimd(HorzRunGroups(run), src_pixels,
+                                 dest_pixels.subspan(dest_index));
+              dest_index += 4 * run.group_count;
+              col += 4 * run.group_count;
+              runs = runs.subspan<1u>();
+              continue;
+            }
             const PixelWeight* pWeights = weight_table_.GetPixelWeight(col);
             pdfium::span<const uint32_t> weights = pWeights->GetWeights();
             auto window =
@@ -487,6 +715,7 @@ bool CStretchEngine::ContinueStretchHorz(PauseIndicatorIface* pPause) {
             dest.blue = PixelFromFixed(dest_b);
             dest.green = PixelFromFixed(dest_g);
             dest.red = PixelFromFixed(dest_r);
+            ++col;
           }
         };
         if (Bpp == 3) {
@@ -512,8 +741,22 @@ bool CStretchEngine::ContinueStretchHorz(PauseIndicatorIface* pPause) {
                 src_row_span);
         auto dest_pixels =
             fxcrt::reinterpret_span<FX_BGRA_STRUCT<uint8_t>>(dest_span);
+        pdfium::span<const StretchHorzRun> runs(horz_runs_);
         size_t dest_index = 0;
-        for (int col = dest_clip_.left; col < dest_clip_.right; ++col) {
+        for (int col = dest_clip_.left; col < dest_clip_.right;) {
+          if (!runs.empty() && runs.front().dest_col == col) {
+            // See the matching kernels above: one gather and
+            // multiply-accumulate per tap for all 4 columns of each group in
+            // the run, including the per-lane weight*alpha/255 divide the
+            // per-column path below performs, in the same tap order.
+            const StretchHorzRun& run = runs.front();
+            StretchHorzRunAlphaSimd(HorzRunGroups(run), src_pixels,
+                                    dest_pixels.subspan(dest_index));
+            dest_index += 4 * run.group_count;
+            col += 4 * run.group_count;
+            runs = runs.subspan<1u>();
+            continue;
+          }
           const PixelWeight* pWeights = weight_table_.GetPixelWeight(col);
           pdfium::span<const uint32_t> weights = pWeights->GetWeights();
           auto window =
@@ -562,6 +805,7 @@ bool CStretchEngine::ContinueStretchHorz(PauseIndicatorIface* pPause) {
           dest.green = PixelFromFixed(dest_g);
           dest.red = PixelFromFixed(dest_r);
           dest.alpha = PixelFromFixed(255 * dest_a);
+          ++col;
         }
         break;
       }

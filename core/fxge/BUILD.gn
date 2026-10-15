@@ -79,6 +79,8 @@ source_set("fxge") {
     "dib/cfx_scanlinecompositor.h",
     "dib/cstretchengine.cpp",
     "dib/cstretchengine.h",
+    "dib/cstretchengine_hwy.cpp",
+    "dib/cstretchengine_hwy.h",
     "dib/fx_dib.cpp",
     "dib/fx_dib.h",
     "dib/scanlinecomposer_iface.h",
@@ -116,7 +118,10 @@ source_set("fxge") {
     "../../:pdfium_noshorten_config",
   ]
   public_deps = [ "../fxcrt" ]
-  deps = [ "//third_party/abseil-cpp:absl" ]
+  deps = [
+    "//third_party/abseil-cpp:absl",
+    "//third_party/highway:libhwy",
+  ]
   defines = []
 
   if (is_android) {

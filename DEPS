@@ -450,11 +450,9 @@ deps = {
     Var('chromium_git') + '/external/github.com/harfbuzz/harfbuzz.git@' +
         Var('harfbuzz_revision'),
 
-  'third_party/highway/src': {
-    'url': Var('chromium_git') + '/external/github.com/google/highway.git@' +
+  'third_party/highway/src':
+    Var('chromium_git') + '/external/github.com/google/highway.git@' +
         Var('highway_revision'),
-    'condition': 'checkout_v8',
-  },
 
   'third_party/icu':
     Var('chromium_git') + '/chromium/deps/icu.git@' + Var('icu_revision'),
