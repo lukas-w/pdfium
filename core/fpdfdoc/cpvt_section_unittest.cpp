@@ -26,12 +26,6 @@ constexpr uint16_t kHebrewGimel = 0x05D2;
 
 enum class TextContent { kEnglishAndHebrew, kHebrewAndEnglish };
 
-struct LayoutTestData {
-  TextContent content;
-  CFX_BidiResolver::ParagraphDirection direction;
-  pdfium::span<const int> expected_visual_order;
-};
-
 // For `TextContent::kEnglishAndHebrew`: `kAuto` uses the Unicode Bidirectional
 // Algorithm, which resolves to LTR because the first strong character is
 // English. The RTL run [w4, sp4, w5] (indices 6, 7, 8) has its words ordered
@@ -47,6 +41,12 @@ constexpr int kHebrewAndEnglishRtl[] = {6, 7, 8, 5, 4, 3, 2, 1, 0};
 constexpr int kHebrewAndEnglishLtr[] = {4, 3, 2, 1, 0, 5, 6, 7, 8};
 
 }  // namespace
+
+struct LayoutTestData {
+  TextContent content;
+  CFX_BidiResolver::ParagraphDirection direction;
+  pdfium::span<const int> expected_visual_order;
+};
 
 class CPVT_SectionTest : public testing::Test {
  public:
