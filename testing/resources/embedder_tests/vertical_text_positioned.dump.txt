@@ -1,0 +1,9 @@
+SaveState
+SetBaseClip [0,0,200,200]
+SetClip_PathFill rule=winding matrix=none points=[move(0.0000,200.0000) line(0.0000,0.0000) line(200.0000,0.0000) line(200.0000,200.0000) line(0.0000,200.0000,close)]
+SaveState
+DrawDeviceText font="Untitled1" size=12.0000 color=0xff000000 matrix=[1.0000,0.0000,0.0000,-1.0000,10.0000,10.0000] glyphs=[(idx=41,u=U+0048,origin=(-4.3320,-9.8160)) (idx=70,u=U+0065,origin=(-3.3360,-19.6920)) (idx=77,u=U+006C,origin=(-1.3320,-29.5080)) (idx=77,u=U+006C,origin=(-1.3320,-40.5240)) (idx=80,u=U+006F,origin=(-3.3360,-51.6000)) (idx=1,u=U+0020,origin=(-1.6680,-60.2760))]
+DrawDeviceText font="Untitled1" size=12.0000 color=0xff000000 matrix=[1.0000,0.0000,0.0000,-1.0000,10.0000,69.0760] glyphs=[(idx=56,u=U+0057,origin=(-5.6640,-9.8160)) (idx=80,u=U+006F,origin=(-3.3360,-18.4920)) (idx=83,u=U+0072,origin=(-1.9920,-27.1680)) (idx=77,u=U+006C,origin=(-1.3320,-38.1840)) (idx=69,u=U+0064,origin=(-3.3360,-49.2000)) (idx=2,u=U+0021,origin=(-1.6680,-60.2160))]
+DrawDeviceText font="Untitled1" size=12.0000 color=0xff000000 matrix=[1.0000,0.0000,0.0000,-1.0000,110.0000,10.0000] glyphs=[(idx=41,u=U+0048,origin=(-4.3320,-9.8160)) (idx=70,u=U+0065,origin=(-3.3360,-19.6920)) (idx=77,u=U+006C,origin=(-1.3320,-29.5080)) (idx=77,u=U+006C,origin=(-1.3320,-40.5240)) (idx=80,u=U+006F,origin=(-3.3360,-51.6000))]
+RestoreState
+RestoreState

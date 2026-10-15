@@ -1,0 +1,7 @@
+SaveState
+SetBaseClip [0,0,200,200]
+SetClip_PathFill rule=winding matrix=none points=[move(0.0000,200.0000) line(0.0000,0.0000) line(200.0000,0.0000) line(200.0000,200.0000) line(0.0000,200.0000,close)]
+SaveState
+DrawDeviceText font="Tinos" size=12.0000 color=0xff000000 matrix=[1.0000,0.0000,0.0000,-1.0000,20.0000,150.0000] glyphs=[(idx=43,u=U+0048,origin=(0.0000,0.0000)) (idx=72,u=U+0065,origin=(9.8640,0.0000)) (idx=79,u=U+006C,origin=(15.1920,0.0000)) (idx=79,u=U+006C,origin=(20.9280,0.0000)) (idx=82,u=U+006F,origin=(24.2640,0.0000)) (idx=15,u=U+002C,origin=(28.4640,0.0000)) (idx=3,u=U+0020,origin=(31.4640,0.0000)) (idx=90,u=U+0077,origin=(34.4640,0.0000)) (idx=82,u=U+006F,origin=(43.1280,0.0000)) (idx=85,u=U+0072,origin=(49.1280,0.0000)) (idx=79,u=U+006C,origin=(53.1240,0.0000)) (idx=71,u=U+0064,origin=(56.4600,0.0000)) (idx=4,u=U+0021,origin=(68.4600,0.0000))]
+RestoreState
+RestoreState

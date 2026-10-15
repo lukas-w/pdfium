@@ -1,0 +1,9 @@
+SaveState
+SetBaseClip [0,0,200,200]
+SetClip_PathFill rule=winding matrix=none points=[move(0.0000,200.0000) line(0.0000,0.0000) line(200.0000,0.0000) line(200.0000,200.0000) line(0.0000,200.0000,close)]
+SaveState
+DrawDeviceText font="Noto Sans Bengali" size=20.0000 color=0xff000000 matrix=[1.0000,0.0000,0.0000,-1.0000,40.0000,140.0000] glyphs=[(idx=4,u=U+09AA,origin=(0.0000,0.0000)) (idx=10,u=U+09BF,origin=(14.3200,0.0000)) (idx=6,u=U+09B0,origin=(19.6400,0.0000)) (idx=2,u=U+0995,origin=(31.5600,0.0000)) (idx=21,u=U+0015,origin=(47.7000,0.0000)) (idx=24,u=U+0018,origin=(55.7400,0.0000))]
+DrawDeviceText font="Noto Sans Bengali" size=20.0000 color=0xff000000 matrix=[1.0000,0.0000,0.0000,-1.0000,88.7400,141.6000] glyphs=[(idx=36,u=U+0024,origin=(0.0000,0.0000))]
+DrawDeviceText font="Noto Sans Bengali" size=20.0000 color=0xff000000 matrix=[1.0000,0.0000,0.0000,-1.0000,101.0200,140.0000] glyphs=[(idx=3,u=U+09A8,origin=(0.0000,0.0000)) (idx=9,u=U+09BE,origin=(12.0400,0.0000))]
+RestoreState
+RestoreState

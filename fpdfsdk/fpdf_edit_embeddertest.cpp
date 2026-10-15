@@ -59,11 +59,7 @@ namespace {
 
 constexpr wchar_t kBottomText[] = L"I'm at the bottom of the page";
 
-constexpr char kBottomTextPng[] = "bottom_text";
-
 constexpr wchar_t kLoadedFontText[] = L"I am testing my loaded font, WEE.";
-
-constexpr char kLoadedTextPng[] = "loaded_text";
 
 // In embedded_images.pdf.
 constexpr char kEmbeddedImage33Checksum[] = "cb3637934bb3b95a6e4ae1ea9eb9e56e";
@@ -846,14 +842,10 @@ TEST_F(FPDFEditEmbedderTest, SetPositions) {
   }
   ASSERT_TRUE(FPDFPage_GenerateContent(page.get()));
 
-  static constexpr char kExpected[] = "bug_410996566";
-  {
-    ScopedFPDFBitmap bitmap = RenderPage(page.get());
-    CompareBitmapWithExpectationSuffix(bitmap.get(), kExpected);
-  }
+  CompareDisplayList(RenderPageToDisplayList(page.get()), "bug_410996566");
 
   ASSERT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
-  VerifySavedDocumentWithExpectationSuffix(kExpected);
+  VerifySavedDocumentWithDisplayList("bug_410996566");
 }
 
 TEST_F(FPDFEditEmbedderTest, SetPositionsZeroFontSize) {
@@ -906,17 +898,13 @@ TEST_F(FPDFEditEmbedderTest, SetPositionsVertical) {
   });
   ASSERT_TRUE(FPDFText_SetPositions(page_object, kAbsolutePositions.data(),
                                     kAbsolutePositions.size()));
-
-  static constexpr char kExpected[] = "vertical_text_positioned";
-  {
-    ScopedFPDFBitmap bitmap = RenderPage(page.get());
-    CompareBitmapWithExpectationSuffix(bitmap.get(), kExpected,
-                                       kFuzzyDiffOptions);
-  }
   ASSERT_TRUE(FPDFPage_GenerateContent(page.get()));
 
+  CompareDisplayList(RenderPageToDisplayList(page.get()),
+                     "vertical_text_positioned");
+
   ASSERT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
-  VerifySavedDocumentWithExpectationSuffix(kExpected, kFuzzyDiffOptions);
+  VerifySavedDocumentWithDisplayList("vertical_text_positioned");
 }
 
 TEST_F(FPDFEditEmbedderTest, SetPositionsBengali2) {
@@ -957,12 +945,11 @@ TEST_F(FPDFEditEmbedderTest, SetPositionsBengali2) {
 
   EXPECT_TRUE(FPDFPage_GenerateContent(page.get()));
 
-  static constexpr char kExpected[] = "set_positions_bengali2";
-  ScopedFPDFBitmap page_bitmap = RenderPage(page.get());
-  CompareBitmapWithExpectationSuffix(page_bitmap.get(), kExpected);
+  CompareDisplayList(RenderPageToDisplayList(page.get()),
+                     "set_positions_bengali2");
 
   ASSERT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
-  VerifySavedDocumentWithExpectationSuffix(kExpected);
+  VerifySavedDocumentWithDisplayList("set_positions_bengali2");
 }
 
 TEST_F(FPDFEditEmbedderTest, SetPositionsBengali3) {
@@ -1041,13 +1028,11 @@ TEST_F(FPDFEditEmbedderTest, SetPositionsBengali3) {
 
   EXPECT_TRUE(FPDFPage_GenerateContent(page.get()));
 
-  static constexpr char kExpected[] = "set_positions_bengali3";
-  ScopedFPDFBitmap page_bitmap = RenderPage(page.get());
-  CompareBitmapWithExpectationSuffix(page_bitmap.get(), kExpected,
-                                     kFuzzyDiffOptions);
+  CompareDisplayList(RenderPageToDisplayList(page.get()),
+                     "set_positions_bengali3");
 
   ASSERT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
-  VerifySavedDocumentWithExpectationSuffix(kExpected);
+  VerifySavedDocumentWithDisplayList("set_positions_bengali3");
 }
 
 TEST_F(FPDFEditEmbedderTest, SetCharcodesBadParams) {
@@ -2849,13 +2834,9 @@ TEST_F(FPDFEditEmbedderTest, AddStandardFontText) {
   EXPECT_TRUE(FPDFPageObj_SetMatrix(text_object1, &kMatrix1));
   EXPECT_TRUE(FPDFPage_InsertObject(page.get(), text_object1));
   EXPECT_TRUE(FPDFPage_GenerateContent(page.get()));
-  {
-    ScopedFPDFBitmap page_bitmap = RenderPage(page.get());
-    CompareBitmapWithExpectationSuffix(page_bitmap.get(), kBottomTextPng);
-
-    EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
-    VerifySavedDocumentWithExpectationSuffix(kBottomTextPng);
-  }
+  CompareDisplayList(RenderPageToDisplayList(page.get()), "bottom_text");
+  EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
+  VerifySavedDocumentWithDisplayList("bottom_text");
 
   // Try another font
   FPDF_PAGEOBJECT text_object2 =
@@ -2867,16 +2848,10 @@ TEST_F(FPDFEditEmbedderTest, AddStandardFontText) {
   FPDFPageObj_Transform(text_object2, 1, 0, 0, 1, 100, 600);
   EXPECT_TRUE(FPDFPage_InsertObject(page.get(), text_object2));
   EXPECT_TRUE(FPDFPage_GenerateContent(page.get()));
-  {
-    static constexpr char kBottomTextAddedBoldTextPng[] =
-        "bottom_text_added_bold_text";
-    ScopedFPDFBitmap page_bitmap = RenderPage(page.get());
-    CompareBitmapWithExpectationSuffix(page_bitmap.get(),
-                                       kBottomTextAddedBoldTextPng);
-
-    EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
-    VerifySavedDocumentWithExpectationSuffix(kBottomTextAddedBoldTextPng);
-  }
+  CompareDisplayList(RenderPageToDisplayList(page.get()),
+                     "bottom_text_added_bold_text");
+  EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
+  VerifySavedDocumentWithDisplayList("bottom_text_added_bold_text");
 
   // And some randomly transformed text
   FPDF_PAGEOBJECT text_object3 =
@@ -2887,17 +2862,11 @@ TEST_F(FPDFEditEmbedderTest, AddStandardFontText) {
   FPDFPageObj_Transform(text_object3, 1, 1.5, 2, 0.5, 200, 200);
   EXPECT_TRUE(FPDFPage_InsertObject(page.get(), text_object3));
   EXPECT_TRUE(FPDFPage_GenerateContent(page.get()));
-  {
-    static constexpr char kBottomTextAddedBoldAndStretchedTextPng[] =
-        "bottom_text_added_bold_and_stretched_text";
-    ScopedFPDFBitmap page_bitmap = RenderPage(page.get());
-    CompareBitmapWithExpectationSuffix(page_bitmap.get(),
-                                       kBottomTextAddedBoldAndStretchedTextPng);
-
-    EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
-    VerifySavedDocumentWithExpectationSuffix(
-        kBottomTextAddedBoldAndStretchedTextPng);
-  }
+  CompareDisplayList(RenderPageToDisplayList(page.get()),
+                     "bottom_text_added_bold_and_stretched_text");
+  EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
+  VerifySavedDocumentWithDisplayList(
+      "bottom_text_added_bold_and_stretched_text");
 
   FS_MATRIX matrix;
 
@@ -3423,8 +3392,7 @@ TEST_F(FPDFEditEmbedderTest, AddStandardFontText2) {
   EXPECT_TRUE(FPDFText_SetText(text_object, text.get()));
   FPDFPageObj_Transform(text_object, 1, 0, 0, 1, 20, 20);
   EXPECT_TRUE(FPDFPage_InsertObject(page.get(), text_object));
-  ScopedFPDFBitmap page_bitmap = RenderPage(page.get());
-  CompareBitmapWithExpectationSuffix(page_bitmap.get(), kBottomTextPng);
+  CompareDisplayList(RenderPageToDisplayList(page.get()), "bottom_text");
 }
 
 TEST_F(FPDFEditEmbedderTest, LoadStandardFonts) {
@@ -3774,8 +3742,7 @@ TEST_F(FPDFEditEmbedderTest, AddTrueTypeFontText) {
     EXPECT_TRUE(FPDFText_SetText(text_object, text.get()));
     FPDFPageObj_Transform(text_object, 1, 0, 0, 1, 400, 400);
     EXPECT_TRUE(FPDFPage_InsertObject(page.get(), text_object));
-    ScopedFPDFBitmap page_bitmap = RenderPage(page.get());
-    CompareBitmapWithExpectationSuffix(page_bitmap.get(), kLoadedTextPng);
+    CompareDisplayList(RenderPageToDisplayList(page.get()), "loaded_text");
 
     // Add some more text, same font
     FPDF_PAGEOBJECT text_object2 =
@@ -3785,14 +3752,12 @@ TEST_F(FPDFEditEmbedderTest, AddTrueTypeFontText) {
     FPDFPageObj_Transform(text_object2, 1, 0, 0, 1, 200, 200);
     EXPECT_TRUE(FPDFPage_InsertObject(page.get(), text_object2));
   }
-  static constexpr char kTruetypeFontTextPng[] = "truetype_font_text";
-  ScopedFPDFBitmap page_bitmap2 = RenderPage(page.get());
-  CompareBitmapWithExpectationSuffix(page_bitmap2.get(), kTruetypeFontTextPng);
+  CompareDisplayList(RenderPageToDisplayList(page.get()), "truetype_font_text");
 
   EXPECT_TRUE(FPDFPage_GenerateContent(page.get()));
   EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
 
-  VerifySavedDocumentWithExpectationSuffix(kTruetypeFontTextPng);
+  VerifySavedDocumentWithDisplayList("truetype_font_text");
 }
 
 TEST_F(FPDFEditEmbedderTest, TransformAnnot) {
@@ -3854,19 +3819,14 @@ TEST_F(FPDFEditEmbedderTest, AddCIDFontText) {
     EXPECT_TRUE(FPDFPage_InsertObject(page.get(), text_object2));
   }
 
-  // Check that the text renders properly.
-  static constexpr char kJapaneseCidFontTextPng[] = "japanese_cid_font_text";
-  {
-    ScopedFPDFBitmap page_bitmap = RenderPage(page.get());
-    CompareBitmapWithExpectationSuffix(page_bitmap.get(),
-                                       kJapaneseCidFontTextPng);
-  }
+  CompareDisplayList(RenderPageToDisplayList(page.get()),
+                     "japanese_cid_font_text");
 
   // Save the document.
   EXPECT_TRUE(FPDFPage_GenerateContent(page.get()));
   EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
 
-  VerifySavedDocumentWithExpectationSuffix(kJapaneseCidFontTextPng);
+  VerifySavedDocumentWithDisplayList("japanese_cid_font_text");
 }
 #endif  // BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
 
@@ -4334,11 +4294,8 @@ TEST_F(FPDFEditEmbedderTest, AddMarkedText) {
   EXPECT_EQ(kBlobLen, out_buffer_len);
   EXPECT_EQ(pdfium::span(kBlobData), blob_buffer);
 
-  // Render and check the bitmap is the expected one.
-  {
-    ScopedFPDFBitmap page_bitmap = RenderPage(page.get());
-    CompareBitmapWithExpectationSuffix(page_bitmap.get(), kLoadedTextPng);
-  }
+  // Render and check the display list is the expected one.
+  CompareDisplayList(RenderPageToDisplayList(page.get()), "loaded_text");
 
   // Now save the result.
   EXPECT_EQ(1, FPDFPage_CountObjects(page.get()));
@@ -4404,11 +4361,8 @@ TEST_F(FPDFEditEmbedderTest, AddMarkedTextWithFloat) {
   EXPECT_TRUE(FPDFPageObjMark_GetParamFloatValue(mark, "Pi", &float_value));
   EXPECT_FLOAT_EQ(3.14159f, float_value);
 
-  // Render and check the bitmap is the expected one.
-  {
-    ScopedFPDFBitmap page_bitmap = RenderPage(page.get());
-    CompareBitmapWithExpectationSuffix(page_bitmap.get(), kLoadedTextPng);
-  }
+  // Render and check the display list is the expected one.
+  CompareDisplayList(RenderPageToDisplayList(page.get()), "loaded_text");
 
   // Now save the result.
   EXPECT_EQ(1, FPDFPage_CountObjects(page.get()));
@@ -5815,14 +5769,10 @@ TEST_F(FPDFEditEmbedderTest, Bug410996566) {
   }
   ASSERT_TRUE(FPDFPage_GenerateContent(page.get()));
 
-  static constexpr char kExpected[] = "bug_410996566";
-  {
-    ScopedFPDFBitmap bitmap = RenderPage(page.get());
-    CompareBitmapWithExpectationSuffix(bitmap.get(), kExpected);
-  }
+  CompareDisplayList(RenderPageToDisplayList(page.get()), "bug_410996566");
 
   ASSERT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
-  VerifySavedDocumentWithExpectationSuffix(kExpected);
+  VerifySavedDocumentWithDisplayList("bug_410996566");
 }
 
 TEST_F(FPDFEditEmbedderTest, Bug461845674) {
