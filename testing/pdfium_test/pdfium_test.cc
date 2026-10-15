@@ -1889,6 +1889,14 @@ void Processor::ProcessPdf(const std::string& name,
       }
       Idle(form.get());
     }
+
+    // Clear per-page caches on every repetition, to measure image decode
+    // on every repeat.
+    for (auto& [_, page] : form_callbacks.loaded_pages) {
+      FORM_OnBeforeClosePage(page.get(), form.get());
+    }
+    form_callbacks.loaded_pages.clear();
+    Idle(form.get());
   }
 
   FORM_DoDocumentAAction(form.get(), FPDFDOC_AACTION_WC);
