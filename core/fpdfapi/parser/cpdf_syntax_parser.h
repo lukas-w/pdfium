@@ -40,13 +40,9 @@ class CPDF_SyntaxParser {
 
   static constexpr uint32_t kParserMaxRecursionDepth = 64;
 
-  static std::unique_ptr<CPDF_SyntaxParser> CreateForTesting(
-      RetainPtr<IFX_SeekableReadStream> pFileAccess,
-      FX_FILESIZE HeaderOffset);
-
-  explicit CPDF_SyntaxParser(RetainPtr<IFX_SeekableReadStream> pFileAccess);
-  CPDF_SyntaxParser(RetainPtr<CPDF_ReadValidator> pValidator,
-                    FX_FILESIZE HeaderOffset);
+  explicit CPDF_SyntaxParser(RetainPtr<IFX_SeekableReadStream> file_access);
+  CPDF_SyntaxParser(RetainPtr<CPDF_ReadValidator> validator,
+                    FX_FILESIZE header_offset);
   ~CPDF_SyntaxParser();
 
   void SetReadBufferSize(uint32_t read_buffer_size) {

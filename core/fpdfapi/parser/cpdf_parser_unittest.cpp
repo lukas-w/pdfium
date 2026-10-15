@@ -15,6 +15,7 @@
 #include "core/fpdfapi/parser/cpdf_dictionary.h"
 #include "core/fpdfapi/parser/cpdf_linearized_header.h"
 #include "core/fpdfapi/parser/cpdf_object.h"
+#include "core/fpdfapi/parser/cpdf_read_validator.h"
 #include "core/fpdfapi/parser/cpdf_syntax_parser.h"
 #include "core/fxcrt/cfx_fileaccess_stream.h"
 #include "core/fxcrt/cfx_read_only_span_stream.h"
@@ -121,8 +122,10 @@ class CPDF_TestParser final : public CPDF_Parser {
   // Setup reading from a buffer and initial states.
   bool InitTestFromBufferWithOffset(pdfium::span<const uint8_t> buffer,
                                     FX_FILESIZE header_offset) {
-    SetSyntaxParserForTesting(CPDF_SyntaxParser::CreateForTesting(
-        pdfium::MakeRetain<CFX_ReadOnlySpanStream>(buffer), header_offset));
+    SetSyntaxParserForTesting(std::make_unique<CPDF_SyntaxParser>(
+        pdfium::MakeRetain<CPDF_ReadValidator>(
+            pdfium::MakeRetain<CFX_ReadOnlySpanStream>(buffer), nullptr),
+        header_offset));
     return true;
   }
 

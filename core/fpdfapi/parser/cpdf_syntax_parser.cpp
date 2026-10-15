@@ -78,26 +78,17 @@ class ReadableSubStream final : public IFX_SeekableReadStream {
 // static
 uint32_t CPDF_SyntaxParser::s_CurrentRecursionDepth = 0;
 
-// static
-std::unique_ptr<CPDF_SyntaxParser> CPDF_SyntaxParser::CreateForTesting(
-    RetainPtr<IFX_SeekableReadStream> pFileAccess,
-    FX_FILESIZE HeaderOffset) {
-  return std::make_unique<CPDF_SyntaxParser>(
-      pdfium::MakeRetain<CPDF_ReadValidator>(std::move(pFileAccess), nullptr),
-      HeaderOffset);
-}
-
 CPDF_SyntaxParser::CPDF_SyntaxParser(
-    RetainPtr<IFX_SeekableReadStream> pFileAccess)
+    RetainPtr<IFX_SeekableReadStream> file_access)
     : CPDF_SyntaxParser(
-          pdfium::MakeRetain<CPDF_ReadValidator>(std::move(pFileAccess),
+          pdfium::MakeRetain<CPDF_ReadValidator>(std::move(file_access),
                                                  nullptr),
-          0) {}
+          /*header_offset_=*/0) {}
 
 CPDF_SyntaxParser::CPDF_SyntaxParser(RetainPtr<CPDF_ReadValidator> validator,
-                                     FX_FILESIZE HeaderOffset)
+                                     FX_FILESIZE header_offset)
     : file_access_(std::move(validator)),
-      header_offset_(HeaderOffset),
+      header_offset_(header_offset),
       file_len_(file_access_->GetSize()) {
   DCHECK_LE(header_offset_, file_len_);
 }
