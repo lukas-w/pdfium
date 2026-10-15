@@ -1,0 +1,27 @@
+SaveState
+SetBaseClip [0,0,300,300]
+SetClip_PathFill rule=winding matrix=none points=[move(0.0000,300.0000) line(0.0000,0.0000) line(300.0000,0.0000) line(300.0000,300.0000) line(0.0000,300.0000,close)]
+SaveState
+DrawDeviceText font="Arimo" size=12.0000 color=0xff000000 matrix=[1.0000,0.0000,0.0000,-1.0000,100.0000,150.0000] glyphs=[(idx=55,u=U+0054,origin=(0.0000,0.0000)) (idx=72,u=U+0065,origin=(7.3320,0.0000)) (idx=86,u=U+0073,origin=(14.0040,0.0000)) (idx=87,u=U+0074,origin=(20.0040,0.0000)) (idx=3,u=U+0020,origin=(23.3400,0.0000)) (idx=41,u=U+0046,origin=(26.6760,0.0000)) (idx=82,u=U+006F,origin=(34.0080,0.0000)) (idx=85,u=U+0072,origin=(40.6800,0.0000)) (idx=80,u=U+006D,origin=(44.6760,0.0000))]
+RestoreState
+RestoreState
+SaveState
+RestoreState
+SaveState
+DrawDeviceText font="Arimo" size=12.0000 color=0xff000000 matrix=[1.0000,0.0000,0.0000,-1.0000,101.0000,241.6640] glyphs=[(idx=40,u=U+0045,origin=(0.0000,0.0000)) (idx=79,u=U+006C,origin=(8.0040,0.0000)) (idx=72,u=U+0065,origin=(10.6680,0.0000)) (idx=83,u=U+0070,origin=(17.3400,0.0000)) (idx=75,u=U+0068,origin=(24.0120,0.0000)) (idx=68,u=U+0061,origin=(30.6840,0.0000)) (idx=81,u=U+006E,origin=(37.3560,0.0000)) (idx=87,u=U+0074,origin=(44.0280,0.0000))]
+RestoreState
+FillRect [100,250,200,225] color=0x64dde4ff
+SaveState
+RestoreState
+FillRect [100,290,200,265] color=0x64dde4ff
+FillRect [101,171,199,199] color=0x00000000
+DrawPath fill=0x00000000 stroke=0x00000000 rule=even-odd stroke_state=[none] matrix=[1.0000,0.0000,0.0000,-1.0000,100.0000,200.0000] points=[move(0.0000,0.0000) line(0.0000,30.0000) line(100.0000,30.0000) line(100.0000,0.0000) line(0.0000,0.0000,close) move(1.0000,1.0000) line(1.0000,29.0000) line(99.0000,29.0000) line(99.0000,1.0000) line(1.0000,1.0000,close)]
+SaveState
+SetClip_PathFill rule=winding matrix=none points=[move(101.0000,171.0000) line(101.0000,199.0000) line(199.0000,199.0000) line(199.0000,171.0000) line(101.0000,171.0000,close)]
+DrawDeviceText font="Arimo" size=12.0000 color=0xff000000 matrix=[1.0000,0.0000,0.0000,-1.0000,101.0000,189.1400] glyphs=[(idx=36,u=U+0041,origin=(0.0000,0.0000)) (idx=3,u=U+0020,origin=(8.0040,0.0000))]
+DrawDeviceText font="Tinos" size=12.0000 color=0xff000000 matrix=[1.0000,0.0000,0.0000,-1.0000,122.7800,189.1400] glyphs=[(idx=2507,u=U+05E9,origin=(0.0000,0.0000))]
+DrawDeviceText font="Arimo" size=12.0000 color=0xff000000 matrix=[1.0000,0.0000,0.0000,-1.0000,119.4440,189.1400] glyphs=[(idx=3,u=U+0020,origin=(0.0000,0.0000))]
+DrawDeviceText font="Tinos" size=12.0000 color=0xff000000 matrix=[1.0000,0.0000,0.0000,-1.0000,112.3400,189.1400] glyphs=[(idx=2496,u=U+05DE,origin=(0.0000,0.0000))]
+DrawDeviceText font="Arimo" size=12.0000 color=0xff000000 matrix=[1.0000,0.0000,0.0000,-1.0000,131.2760,189.1400] glyphs=[(idx=3,u=U+0020,origin=(0.0000,0.0000)) (idx=37,u=U+0042,origin=(3.3360,0.0000))]
+RestoreState
+DrawPath fill=0x00000000 stroke=0xff000000 rule=even-odd stroke_state=[width=0.4000 cap=butt join=miter miter=10.0000] matrix=[1.0000,0.0000,0.0000,-1.0000,100.0000,200.0000] points=[move(42.8160,8.3280) line(42.8160,21.7200)]

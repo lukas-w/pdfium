@@ -1,0 +1,11 @@
+SaveState
+SetBaseClip [0,0,300,300]
+SetClip_PathFill rule=winding matrix=none points=[move(0.0000,300.0000) line(0.0000,0.0000) line(300.0000,0.0000) line(300.0000,300.0000) line(0.0000,300.0000,close)]
+SaveState
+DrawDeviceText font="Arimo" size=12.0000 color=0xff000000 matrix=[1.0000,0.0000,0.0000,-1.0000,100.0000,150.0000] glyphs=[(idx=55,u=U+0054,origin=(0.0000,0.0000)) (idx=72,u=U+0065,origin=(7.3320,0.0000)) (idx=86,u=U+0073,origin=(14.0040,0.0000)) (idx=87,u=U+0074,origin=(20.0040,0.0000)) (idx=3,u=U+0020,origin=(23.3400,0.0000)) (idx=41,u=U+0046,origin=(26.6760,0.0000)) (idx=82,u=U+006F,origin=(34.0080,0.0000)) (idx=85,u=U+0072,origin=(40.6800,0.0000)) (idx=80,u=U+006D,origin=(44.6760,0.0000))]
+RestoreState
+RestoreState
+SaveState
+DrawDeviceText font="Arimo" size=12.0000 color=0xff000000 matrix=[1.0000,0.0000,0.0000,-1.0000,101.0000,189.1640] glyphs=[(idx=36,u=U+0041,origin=(0.0000,0.0000)) (idx=37,u=U+0042,origin=(8.0040,0.0000)) (idx=38,u=U+0043,origin=(16.0080,0.0000))]
+RestoreState
+FillRect [100,200,200,170] color=0x64dde4ff

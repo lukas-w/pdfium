@@ -1371,16 +1371,11 @@ TEST_F(FPDFFormFillEmbedderTest, Bug1477093) {
 #endif  // PDF_ENABLE_V8
 
 TEST_F(FPDFFormFillEmbedderTest, FormText) {
-  static constexpr char kFocusedTextFormWithAbcPng[] =
-      "focused_text_form_with_abc";
-  static constexpr char kUnfocusedTextFormWithAbcPng[] =
-      "unfocused_text_form_with_abc";
   {
     ASSERT_TRUE(OpenDocument("text_form.pdf"));
     ScopedPage page = LoadScopedPage(0);
     ASSERT_TRUE(page);
-    ScopedFPDFBitmap bitmap1 = RenderLoadedPage(page.get());
-    CompareBitmapWithExpectationSuffix(bitmap1.get(), kTextFormPng);
+    CompareDisplayList(RenderLoadedPageToDisplayList(page.get()), "text_form");
 
     // Click on the textfield
     EXPECT_EQ(
@@ -1396,30 +1391,27 @@ TEST_F(FPDFFormFillEmbedderTest, FormText) {
     FORM_OnChar(form_handle(), page.get(), 'A', 0);
     FORM_OnChar(form_handle(), page.get(), 'B', 0);
     FORM_OnChar(form_handle(), page.get(), 'C', 0);
-    ScopedFPDFBitmap bitmap2 = RenderLoadedPage(page.get());
-    CompareBitmapWithExpectationSuffix(bitmap2.get(),
-                                       kFocusedTextFormWithAbcPng);
+    CompareDisplayList(RenderLoadedPageToDisplayList(page.get()),
+                       "focused_text_form_with_abc");
 
     // Focus remains despite right clicking out of the textfield
     FORM_OnMouseMove(form_handle(), page.get(), 0, 15.0, 15.0);
     FORM_OnRButtonDown(form_handle(), page.get(), 0, 15.0, 15.0);
     FORM_OnRButtonUp(form_handle(), page.get(), 0, 15.0, 15.0);
-    ScopedFPDFBitmap bitmap3 = RenderLoadedPage(page.get());
-    CompareBitmapWithExpectationSuffix(bitmap3.get(),
-                                       kFocusedTextFormWithAbcPng);
+    CompareDisplayList(RenderLoadedPageToDisplayList(page.get()),
+                       "focused_text_form_with_abc");
 
     // Take out focus by clicking out of the textfield
     FORM_OnMouseMove(form_handle(), page.get(), 0, 15.0, 15.0);
     FORM_OnLButtonDown(form_handle(), page.get(), 0, 15.0, 15.0);
     FORM_OnLButtonUp(form_handle(), page.get(), 0, 15.0, 15.0);
-    ScopedFPDFBitmap bitmap4 = RenderLoadedPage(page.get());
-    CompareBitmapWithExpectationSuffix(bitmap4.get(),
-                                       kUnfocusedTextFormWithAbcPng);
+    CompareDisplayList(RenderLoadedPageToDisplayList(page.get()),
+                       "unfocused_text_form_with_abc");
 
     EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
   }
   // Check saved document
-  VerifySavedDocumentWithExpectationSuffix(kUnfocusedTextFormWithAbcPng);
+  VerifySavedDocumentWithDisplayList("unfocused_text_form_with_abc");
 }
 
 // Tests using FPDF_REVERSE_BYTE_ORDER with FPDF_FFLDraw(). The two rendered
@@ -1440,23 +1432,19 @@ TEST_F(FPDFFormFillEmbedderTest, Bug1281) {
 }
 
 TEST_F(FPDFFormFillEmbedderTest, Bug1302455RenderOnly) {
-  static constexpr char kBug1302455ReadOnlyPng[] = "bug_1302455_read_only";
   {
     ASSERT_TRUE(OpenDocument("bug_1302455.pdf"));
     ScopedPage page = LoadScopedPage(0);
     ASSERT_TRUE(page);
-
-    ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-    CompareBitmapWithExpectationSuffix(bitmap.get(), kBug1302455ReadOnlyPng);
+    CompareDisplayList(RenderLoadedPageToDisplayList(page.get()),
+                       "bug_1302455_read_only");
 
     EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
   }
-  VerifySavedDocumentWithExpectationSuffix(kBug1302455ReadOnlyPng);
+  VerifySavedDocumentWithDisplayList("bug_1302455_read_only");
 }
 
 TEST_F(FPDFFormFillEmbedderTest, Bug1302455EditFirstForm) {
-  static constexpr char kBug1302455EditFirstFormPng[] =
-      "bug_1302455_edit_first_form";
   {
     ASSERT_TRUE(OpenDocument("bug_1302455.pdf"));
     ScopedPage page = LoadScopedPage(0);
@@ -1471,18 +1459,15 @@ TEST_F(FPDFFormFillEmbedderTest, Bug1302455EditFirstForm) {
     FORM_OnChar(form_handle(), page.get(), 'A', 0);
 
     FORM_ForceToKillFocus(form_handle());
-    ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-    CompareBitmapWithExpectationSuffix(bitmap.get(),
-                                       kBug1302455EditFirstFormPng);
+    CompareDisplayList(RenderLoadedPageToDisplayList(page.get()),
+                       "bug_1302455_edit_first_form");
 
     EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
   }
-  VerifySavedDocumentWithExpectationSuffix(kBug1302455EditFirstFormPng);
+  VerifySavedDocumentWithDisplayList("bug_1302455_edit_first_form");
 }
 
 TEST_F(FPDFFormFillEmbedderTest, Bug1302455EditSecondForm) {
-  static constexpr char kBug1302455EditSecondFormPng[] =
-      "bug_1302455_edit_second_form";
   {
     ASSERT_TRUE(OpenDocument("bug_1302455.pdf"));
     ScopedPage page = LoadScopedPage(0);
@@ -1497,18 +1482,15 @@ TEST_F(FPDFFormFillEmbedderTest, Bug1302455EditSecondForm) {
     FORM_OnChar(form_handle(), page.get(), 'B', 0);
 
     FORM_ForceToKillFocus(form_handle());
-    ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-    CompareBitmapWithExpectationSuffix(bitmap.get(),
-                                       kBug1302455EditSecondFormPng);
+    CompareDisplayList(RenderLoadedPageToDisplayList(page.get()),
+                       "bug_1302455_edit_second_form");
 
     EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
   }
-  VerifySavedDocumentWithExpectationSuffix(kBug1302455EditSecondFormPng);
+  VerifySavedDocumentWithDisplayList("bug_1302455_edit_second_form");
 }
 
 TEST_F(FPDFFormFillEmbedderTest, Bug1302455EditBothForms) {
-  static constexpr char kBug1302455EditBothFormsPng[] =
-      "bug_1302455_edit_both_forms";
   {
     ASSERT_TRUE(OpenDocument("bug_1302455.pdf"));
     ScopedPage page = LoadScopedPage(0);
@@ -1531,31 +1513,28 @@ TEST_F(FPDFFormFillEmbedderTest, Bug1302455EditBothForms) {
     FORM_OnChar(form_handle(), page.get(), 'B', 0);
 
     FORM_ForceToKillFocus(form_handle());
-    ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-    CompareBitmapWithExpectationSuffix(bitmap.get(),
-                                       kBug1302455EditBothFormsPng);
+    CompareDisplayList(RenderLoadedPageToDisplayList(page.get()),
+                       "bug_1302455_edit_both_forms");
 
     EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
   }
-  VerifySavedDocumentWithExpectationSuffix(kBug1302455EditBothFormsPng);
+  VerifySavedDocumentWithDisplayList("bug_1302455_edit_both_forms");
 }
 
 TEST_F(FPDFFormFillEmbedderTest, RemoveFormFieldHighlight) {
   ASSERT_TRUE(OpenDocument("text_form.pdf"));
   ScopedPage page = LoadScopedPage(0);
   ASSERT_TRUE(page);
-  ScopedFPDFBitmap bitmap1 = RenderLoadedPage(page.get());
-  CompareBitmapWithExpectationSuffix(bitmap1.get(), kTextFormPng);
+  CompareDisplayList(RenderLoadedPageToDisplayList(page.get()), "text_form");
 
   // Removing the highlight changes the rendering.
   FPDF_RemoveFormFieldHighlight(form_handle());
-  ScopedFPDFBitmap bitmap2 = RenderLoadedPage(page.get());
-  CompareBitmapWithExpectationSuffix(bitmap2.get(), "text_form_no_highlight");
+  CompareDisplayList(RenderLoadedPageToDisplayList(page.get()),
+                     "text_form_no_highlight");
 
   // Restoring it gives the original rendering.
   SetInitialFormFieldHighlight(form_handle());
-  ScopedFPDFBitmap bitmap3 = RenderLoadedPage(page.get());
-  CompareBitmapWithExpectationSuffix(bitmap3.get(), kTextFormPng);
+  CompareDisplayList(RenderLoadedPageToDisplayList(page.get()), "text_form");
 }
 
 TEST_F(FPDFFormFillEmbedderTest, HasFormInfoNone) {
@@ -1719,9 +1698,7 @@ TEST_F(FPDFFormFillTextFormEmbedderTest, FormTextFieldBiDiLiveEdit) {
   constexpr auto kInput =
       std::to_array<uint32_t>({'A', ' ', 0x05E9, ' ', 0x05DE, ' ', 'B'});
   TypeCharactersIntoTextField(kInput, RegularFormBegin());
-
-  ScopedFPDFBitmap bitmap = RenderLoadedPage(page());
-  CompareBitmapWithExpectationSuffix(bitmap.get(), "bug_535730401");
+  CompareDisplayList(RenderLoadedPageToDisplayList(page()), "bug_535730401");
 }
 
 TEST_F(FPDFFormFillTextFormEmbedderTest, GetSelectedTextEmptyAndBasicKeyboard) {
@@ -1802,9 +1779,8 @@ TEST_F(FPDFFormFillComboBoxFormEmbedderTest, FormComboBoxBiDiLiveEdit) {
   constexpr auto kInput =
       std::to_array<uint32_t>({'A', ' ', 0x05E9, ' ', 0x05DE, ' ', 'B'});
   TypeCharactersIntoTextField(kInput, EditableFormBegin());
-
-  ScopedFPDFBitmap bitmap = RenderLoadedPage(page());
-  CompareBitmapWithExpectationSuffix(bitmap.get(), "bug_535730401_combobox");
+  CompareDisplayList(RenderLoadedPageToDisplayList(page()),
+                     "bug_535730401_combobox");
 }
 
 TEST_F(FPDFFormFillComboBoxFormEmbedderTest,
