@@ -1,0 +1,10 @@
+SaveState
+SetBaseClip [0,0,100,120]
+SetClip_PathFill rule=winding matrix=none points=[move(0.0000,120.0000) line(0.0000,0.0000) line(100.0000,0.0000) line(100.0000,120.0000) line(0.0000,120.0000,close)]
+SaveState
+RestoreState
+RestoreState
+SaveState
+DrawDeviceText font="Chrom Dingbats OTF" size=25.0000 color=0xff000000 matrix=[1.0000,0.0000,0.0000,-1.0000,40.0000,70.0000] glyphs=[(idx=109,u=U+2714,origin=(0.0000,0.0000))]
+RestoreState
+FillRect [40,70,60,50] color=0x64dde4ff

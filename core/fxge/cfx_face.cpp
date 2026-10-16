@@ -17,6 +17,7 @@
 #include "core/fxcrt/check_op.h"
 #include "core/fxcrt/compiler_specific.h"
 #include "core/fxcrt/fixed_size_data_vector.h"
+#include "core/fxcrt/fx_extension.h"
 #include "core/fxcrt/notreached.h"
 #include "core/fxcrt/numerics/clamped_math.h"
 #include "core/fxcrt/numerics/safe_conversions.h"
@@ -53,23 +54,20 @@
 
 namespace {
 
-#if defined(PDF_ENABLE_FREETYPE)
-constexpr int kThousandthMinInt = std::numeric_limits<int>::min() / 1000;
-constexpr int kThousandthMaxInt = std::numeric_limits<int>::max() / 1000;
-constexpr int kMaxGlyphDimension = 2048;
-#endif  // defined(PDF_ENABLE_FREETYPE)
-
 // Boundary value to avoid integer overflow when adding 1/64th of the value.
 constexpr int kMaxRectTop = 2114445437;
 
 #if defined(PDF_ENABLE_FREETYPE)
+constexpr int kThousandthMinInt = std::numeric_limits<int>::min() / 1000;
+constexpr int kThousandthMaxInt = std::numeric_limits<int>::max() / 1000;
+constexpr int kMaxGlyphDimension = 2048;
+constexpr float kCoordUnit = 64 * 64.0f;
+
 struct OUTLINE_PARAMS {
   UnownedPtr<CFX_Path> path_;
   FT_Pos cur_x_;
   FT_Pos cur_y_;
 };
-
-constexpr float kCoordUnit = 64 * 64.0f;
 
 int FTPosToCBoxInt(FT_Pos pos) {
   // Boundary values to avoid integer overflow when multiplied by 1000.
@@ -475,6 +473,57 @@ class ScopedFaceTransform {
 };
 #endif  // defined(PDF_ENABLE_FREETYPE)
 
+#if defined(PDF_ENABLE_FONTATIONS)
+wchar_t UnicodeFromZapfDingbatsName(const char* name) {
+  ByteStringView name_view(name);
+  if (name_view.GetLength() < 2) {
+    return 0;
+  }
+  if (name_view.Front() != 'a') {
+    return 0;
+  }
+  uint32_t val = 0;
+  for (char c : name_view.Substr(1)) {
+    if (!FXSYS_IsDecimalDigit(c)) {
+      return 0;
+    }
+    val = val * 10 + FXSYS_DecimalCharToInt(c);
+    if (val > 206) {
+      return 0;
+    }
+  }
+  if (val == 0) {
+    return 0;
+  }
+  static constexpr std::array<uint16_t, 206> kZapfGlyphs = {
+      0x2701, 0x2702, 0x2704, 0x260e, 0x2706, 0x271d, 0x271e, 0x271f, 0x2720,
+      0x2721, 0x261b, 0x261e, 0x270c, 0x270d, 0x270e, 0x270f, 0x2711, 0x2712,
+      0x2713, 0x2714, 0x2715, 0x2716, 0x2717, 0x2718, 0x2719, 0x271a, 0x271b,
+      0x271c, 0x2722, 0x2723, 0x2724, 0x2725, 0x2726, 0x2727, 0x2605, 0x2729,
+      0x272a, 0x272b, 0x272c, 0x272d, 0x272e, 0x272f, 0x2730, 0x2731, 0x2732,
+      0x2733, 0x2734, 0x2735, 0x2736, 0x2737, 0x2738, 0x2739, 0x273a, 0x273b,
+      0x273c, 0x273d, 0x273e, 0x273f, 0x2740, 0x2741, 0x2742, 0x2743, 0x2744,
+      0x2745, 0x2746, 0x2747, 0x2748, 0x2749, 0x274a, 0x274b, 0x25cf, 0x274d,
+      0x25a0, 0x274f, 0x2751, 0x25b2, 0x25bc, 0x25c6, 0x2756, 0x0000, 0x25d7,
+      0x2758, 0x2759, 0x275a, 0x276f, 0x2771, 0x2772, 0x2773, 0x2768, 0x2769,
+      0x276c, 0x276d, 0x276a, 0x276b, 0x2774, 0x2775, 0x275b, 0x275c, 0x275d,
+      0x275e, 0x2761, 0x2762, 0x2763, 0x2764, 0x2710, 0x2765, 0x2766, 0x2767,
+      0x2660, 0x2665, 0x2666, 0x2663, 0x0000, 0x0000, 0x0000, 0x0000, 0x2709,
+      0x2708, 0x2707, 0x2460, 0x2461, 0x2462, 0x2463, 0x2464, 0x2465, 0x2466,
+      0x2467, 0x2468, 0x2469, 0x2776, 0x2777, 0x2778, 0x2779, 0x277a, 0x277b,
+      0x277c, 0x277d, 0x277e, 0x277f, 0x2780, 0x2781, 0x2782, 0x2783, 0x2784,
+      0x2785, 0x2786, 0x2787, 0x2788, 0x2789, 0x278a, 0x278b, 0x278c, 0x278d,
+      0x278e, 0x278f, 0x2790, 0x2791, 0x2792, 0x2793, 0x2794, 0x2192, 0x27a3,
+      0x2194, 0x2195, 0x2799, 0x279b, 0x279c, 0x279d, 0x279e, 0x279f, 0x27a0,
+      0x27a1, 0x27a2, 0x27a4, 0x27a5, 0x27a6, 0x27a7, 0x27a8, 0x27a9, 0x27ab,
+      0x27ad, 0x27af, 0x27b2, 0x27b3, 0x27b5, 0x27b8, 0x27ba, 0x27bb, 0x27bc,
+      0x27bd, 0x27be, 0x279a, 0x27aa, 0x27b6, 0x27b9, 0x2798, 0x27b4, 0x27b7,
+      0x27ac, 0x27ae, 0x27b1, 0x2703, 0x2750, 0x2752, 0x276e, 0x2770,
+  };
+  return kZapfGlyphs[val - 1];
+}
+#endif  // defined(PDF_ENABLE_FONTATIONS)
+
 }  // namespace
 
 #if defined(PDF_ENABLE_FONTATIONS)
@@ -532,12 +581,14 @@ RetainPtr<CFX_Face> CFX_Face::New(RetainPtr<Retainable> cache_entry,
 
 // static
 wchar_t CFX_Face::UnicodeFromAdobeName(const char* name) {
+  CHECK(name);
 #if defined(PDF_ENABLE_FONTATIONS)
   if (CFX_GEModule::IsFontations()) {
     uint32_t unicode = 0;
-    return skrifa::agl_name_to_unicode(name, unicode)
-               ? static_cast<wchar_t>(unicode)
-               : 0;
+    if (skrifa::agl_name_to_unicode(name, unicode)) {
+      return static_cast<wchar_t>(unicode);
+    }
+    return UnicodeFromZapfDingbatsName(name);
   }
 #endif  // defined(PDF_ENABLE_FONTATIONS)
 #if defined(PDF_ENABLE_FREETYPE)
