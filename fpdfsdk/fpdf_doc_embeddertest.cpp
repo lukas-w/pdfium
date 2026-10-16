@@ -718,7 +718,7 @@ TEST_F(FPDFDocEmbedderTest, DeletePage) {
 }
 
 TEST_F(FPDFDocEmbedderTest, DeletePageAndRender) {
-  const std::array<const char*, 5> page_paths = {{
+  static constexpr std::array<const char*, 5> kPagePaths = {{
       "rectangles_multi_pages_1",
       "rectangles_multi_pages_2",
       "rectangles_multi_pages_3",
@@ -732,8 +732,8 @@ TEST_F(FPDFDocEmbedderTest, DeletePageAndRender) {
   for (int i = 0; i < 5; ++i) {
     ScopedPage page = LoadScopedPage(i);
     ASSERT_TRUE(page);
-    ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-    CompareBitmapWithExpectationSuffix(bitmap.get(), page_paths[i]);
+    CompareDisplayList(RenderLoadedPageToDisplayList(page.get()),
+                       kPagePaths[i]);
   }
 
   // Delete the first page and render again. (original page indices 1-4)
@@ -742,8 +742,8 @@ TEST_F(FPDFDocEmbedderTest, DeletePageAndRender) {
   for (int i = 0; i < 4; ++i) {
     ScopedPage page = LoadScopedPage(i);
     ASSERT_TRUE(page);
-    ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-    CompareBitmapWithExpectationSuffix(bitmap.get(), page_paths[i + 1]);
+    CompareDisplayList(RenderLoadedPageToDisplayList(page.get()),
+                       kPagePaths[i + 1]);
   }
 
   // Delete the last page and render again. (original page indices 1-3)
@@ -752,8 +752,8 @@ TEST_F(FPDFDocEmbedderTest, DeletePageAndRender) {
   for (int i = 0; i < 3; ++i) {
     ScopedPage page = LoadScopedPage(i);
     ASSERT_TRUE(page);
-    ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-    CompareBitmapWithExpectationSuffix(bitmap.get(), page_paths[i + 1]);
+    CompareDisplayList(RenderLoadedPageToDisplayList(page.get()),
+                       kPagePaths[i + 1]);
   }
 
   // Delete the middle page and render again. (original page indices 1, 3)
@@ -762,10 +762,9 @@ TEST_F(FPDFDocEmbedderTest, DeletePageAndRender) {
   for (int i = 0; i < 2; ++i) {
     ScopedPage page = LoadScopedPage(i);
     ASSERT_TRUE(page);
-    ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
     int adjusted_index = i == 0 ? 1 : 3;
-    CompareBitmapWithExpectationSuffix(bitmap.get(),
-                                       page_paths[adjusted_index]);
+    CompareDisplayList(RenderLoadedPageToDisplayList(page.get()),
+                       kPagePaths[adjusted_index]);
   }
 }
 
