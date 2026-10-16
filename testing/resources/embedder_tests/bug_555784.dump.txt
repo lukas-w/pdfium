@@ -1,0 +1,7 @@
+SaveState
+SetBaseClip [0,0,612,792]
+SetClip_PathFill rule=winding matrix=none points=[move(0.0000,792.0000) line(0.0000,0.0000) line(612.0000,0.0000) line(612.0000,792.0000) line(0.0000,792.0000,close)]
+SaveState
+StartDIBits size=[81915,1] bpp=24 matrix=[4178.0000,0.0000,0.0000,-1.0000,0.0000,792.0000] alpha=1.0000 color=0x00000000
+RestoreState
+RestoreState
