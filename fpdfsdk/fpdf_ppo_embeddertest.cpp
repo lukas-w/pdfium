@@ -27,7 +27,6 @@
 #include "public/fpdf_save.h"
 #include "public/fpdfview.h"
 #include "testing/embedder_test.h"
-#include "testing/embedder_test_constants.h"
 #include "testing/gtest/include/gtest/gtest.h"
 #include "testing/utils/file_util.h"
 #include "testing/utils/path_service.h"
@@ -152,14 +151,12 @@ TEST_F(FPDFPPOEmbedderTest, NupRenderImage) {
   ASSERT_TRUE(output_doc_3up);
   ASSERT_EQ(kRectanglesMultiPagesPageCount,
             FPDF_GetPageCount(output_doc_3up.get()));
+
   for (int i = 0; i < kRectanglesMultiPagesPageCount; ++i) {
     ScopedFPDFPage page(FPDF_LoadPage(output_doc_3up.get(), i));
     ASSERT_TRUE(page);
-    ScopedFPDFBitmap bitmap = RenderPage(page.get());
-    EXPECT_EQ(792, FPDFBitmap_GetWidth(bitmap.get()));
-    EXPECT_EQ(612, FPDFBitmap_GetHeight(bitmap.get()));
-    CompareBitmapWithExpectationSuffix(bitmap.get(),
-                                       RectanglesMultiPagesPagePath(i));
+    CompareDisplayList(RenderPageToDisplayList(page.get()),
+                       RectanglesMultiPagesPagePath(i));
   }
 }
 
@@ -188,9 +185,8 @@ TEST_F(FPDFPPOEmbedderTest, ImportPageToXObject) {
       FPDFPage_InsertObject(page.get(), page_object);
       EXPECT_TRUE(FPDFPage_GenerateContent(page.get()));
 
-      ScopedFPDFBitmap page_bitmap = RenderPage(page.get());
-      CompareBitmapWithExpectationSuffix(page_bitmap.get(),
-                                         "import_page_to_xobject");
+      CompareDisplayList(RenderPageToDisplayList(page.get()),
+                         "import_page_to_xobject");
 
       float left;
       float bottom;
@@ -225,11 +221,8 @@ TEST_F(FPDFPPOEmbedderTest, ImportPageToXObject) {
     ASSERT_EQ(FPDF_PAGEOBJ_FORM, FPDFPageObj_GetType(xobjects[i]));
     EXPECT_EQ(8, FPDFFormObj_CountObjects(xobjects[i]));
 
-    {
-      ScopedFPDFBitmap page_bitmap = RenderPage(saved_pages[i].get());
-      CompareBitmapWithExpectationSuffix(page_bitmap.get(),
-                                         "import_page_to_xobject");
-    }
+    CompareDisplayList(RenderSavedPageToDisplayList(saved_pages[i].get()),
+                       "import_page_to_xobject");
   }
 
   for (int i = 0; i < kExpectedPageCount; ++i) {
@@ -269,10 +262,7 @@ TEST_F(FPDFPPOEmbedderTest, ImportPageToXObjectWithSameDoc) {
   ScopedPage page = LoadScopedPage(0);
   ASSERT_TRUE(page);
 
-  {
-    ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-    CompareBitmapWithExpectationSuffix(bitmap.get(), pdfium::kRectanglesPng);
-  }
+  CompareDisplayList(RenderLoadedPageToDisplayList(page.get()), "rectangles");
 
   FPDF_PAGEOBJECT page_object = FPDF_NewFormObjectFromXObject(xobject);
   ASSERT_TRUE(page_object);
@@ -284,17 +274,14 @@ TEST_F(FPDFPPOEmbedderTest, ImportPageToXObjectWithSameDoc) {
   FPDFPage_InsertObject(page.get(), page_object);
   EXPECT_TRUE(FPDFPage_GenerateContent(page.get()));
 
-  {
-    ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-    CompareBitmapWithExpectationSuffix(bitmap.get(),
-                                       "import_page_to_xobject_with_same_doc");
-  }
+  CompareDisplayList(RenderLoadedPageToDisplayList(page.get()),
+                     "import_page_to_xobject_with_same_doc");
 
   FPDF_CloseXObject(xobject);
 
   EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
-  VerifySavedDocumentWithExpectationSuffix(
-      "import_page_to_xobject_with_same_doc");
+
+  VerifySavedDocumentWithDisplayList("import_page_to_xobject_with_same_doc");
 }
 
 TEST_F(FPDFPPOEmbedderTest, XObjectNullParams) {
@@ -340,9 +327,9 @@ TEST_F(FPDFPPOEmbedderTest, Bug1229106) {
   // Show all pages render the same.
   ASSERT_EQ(kPageCount, FPDF_GetPageCount(document()));
   for (int i = 0; i < kPageCount; ++i) {
-    ScopedPage page = LoadScopedPage(0);
-    ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-    CompareBitmap(bitmap.get(), "bug_1229106_rect");
+    ScopedPage page = LoadScopedPage(i);
+    CompareDisplayList(RenderLoadedPageToDisplayList(page.get()),
+                       "bug_1229106_rect");
   }
 
   // Create a 2-up PDF.
@@ -351,8 +338,8 @@ TEST_F(FPDFPPOEmbedderTest, Bug1229106) {
   ASSERT_EQ(kTwoUpPageCount, FPDF_GetPageCount(output_doc_2up.get()));
   for (int i = 0; i < kTwoUpPageCount; ++i) {
     ScopedFPDFPage page(FPDF_LoadPage(output_doc_2up.get(), i));
-    ScopedFPDFBitmap bitmap = RenderPage(page.get());
-    CompareBitmap(bitmap.get(), "bug_1229106_two_up");
+    CompareDisplayList(RenderPageToDisplayList(page.get()),
+                       "bug_1229106_two_up");
   }
 }
 
@@ -550,10 +537,8 @@ TEST_F(FPDFPPOEmbedderTest, Bug750568) {
   for (size_t i = 0; i < 4; ++i) {
     ScopedPage page = LoadScopedPage(i);
     ASSERT_TRUE(page);
-
-    ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-    CompareBitmapWithExpectationSuffix(
-        bitmap.get(), "bug_750568_page" + std::to_string(i + 1));
+    CompareDisplayList(RenderLoadedPageToDisplayList(page.get()),
+                       "bug_750568_page" + std::to_string(i + 1));
   }
 
   ScopedFPDFDocument output_doc(FPDF_CreateNewDocument());
@@ -566,10 +551,8 @@ TEST_F(FPDFPPOEmbedderTest, Bug750568) {
   for (size_t i = 0; i < 4; ++i) {
     ScopedFPDFPage page(FPDF_LoadPage(output_doc.get(), i));
     ASSERT_TRUE(page);
-
-    ScopedFPDFBitmap bitmap = RenderPage(page.get());
-    CompareBitmapWithExpectationSuffix(
-        bitmap.get(), "bug_750568_page" + std::to_string(i + 1));
+    CompareDisplayList(RenderPageToDisplayList(page.get()),
+                       "bug_750568_page" + std::to_string(i + 1));
   }
 }
 
@@ -577,8 +560,7 @@ TEST_F(FPDFPPOEmbedderTest, Bug40162073) {
   ASSERT_TRUE(OpenDocument("bug_40162073.pdf"));
   ScopedPage page = LoadScopedPage(0);
   ASSERT_TRUE(page);
-  ScopedFPDFBitmap bitmap = RenderPage(page.get());
-  CompareBitmap(bitmap.get(), "bug_40162073");
+  CompareDisplayList(RenderPageToDisplayList(page.get()), "bug_40162073");
 
   ScopedFPDFDocument new_doc(FPDF_CreateNewDocument());
   ASSERT_TRUE(new_doc);
@@ -590,9 +572,9 @@ TEST_F(FPDFPPOEmbedderTest, Bug40162073) {
   EXPECT_EQ(1, FPDF_GetPageCount(new_doc.get()));
   ScopedFPDFPage new_page(FPDF_LoadPage(new_doc.get(), 0));
   ASSERT_TRUE(new_page);
-  ScopedFPDFBitmap new_bitmap = RenderPage(new_page.get());
   // TODO(crbug.com/40162073): Should render with "bug_40162073" expectation.
-  CompareBitmap(new_bitmap.get(), "bug_40162073_wrong");
+  CompareDisplayList(RenderPageToDisplayList(new_page.get()),
+                     "bug_40162073_wrong");
 }
 
 TEST_F(FPDFPPOEmbedderTest, ImportWithZeroLengthStream) {
@@ -600,8 +582,7 @@ TEST_F(FPDFPPOEmbedderTest, ImportWithZeroLengthStream) {
   ScopedPage page = LoadScopedPage(0);
   ASSERT_TRUE(page);
 
-  ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-  CompareBitmapWithExpectationSuffix(bitmap.get(), pdfium::kHelloWorldPng);
+  CompareDisplayList(RenderLoadedPageToDisplayList(page.get()), "hello_world");
 
   ScopedFPDFDocument new_doc(FPDF_CreateNewDocument());
   ASSERT_TRUE(new_doc);
@@ -613,8 +594,7 @@ TEST_F(FPDFPPOEmbedderTest, ImportWithZeroLengthStream) {
   EXPECT_EQ(1, FPDF_GetPageCount(new_doc.get()));
   ScopedFPDFPage new_page(FPDF_LoadPage(new_doc.get(), 0));
   ASSERT_TRUE(new_page);
-  ScopedFPDFBitmap new_bitmap = RenderPage(new_page.get());
-  CompareBitmapWithExpectationSuffix(new_bitmap.get(), pdfium::kHelloWorldPng);
+  CompareDisplayList(RenderPageToDisplayList(new_page.get()), "hello_world");
 }
 
 TEST_F(FPDFPPOEmbedderTest, ImportWithSelfReferentialPageParent) {
@@ -682,14 +662,14 @@ TEST_F(FPDFPPOEmbedderTest, ImportIntoDocWithWrongPageType) {
   {
     ScopedPage page = LoadScopedPage(0);
     ASSERT_TRUE(page);
-    ScopedFPDFBitmap bitmap = RenderPage(page.get());
-    CompareBitmapWithExpectationSuffix(bitmap.get(), "bad_page_type_new_page1");
+    CompareDisplayList(RenderPageToDisplayList(page.get()),
+                       "bad_page_type_new_page1");
   }
   {
     ScopedPage page = LoadScopedPage(1);
     ASSERT_TRUE(page);
-    ScopedFPDFBitmap bitmap = RenderPage(page.get());
-    CompareBitmap(bitmap.get(), "bad_page_type_new_page2");
+    CompareDisplayList(RenderPageToDisplayList(page.get()),
+                       "bad_page_type_new_page2");
   }
 
   EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
@@ -700,14 +680,14 @@ TEST_F(FPDFPPOEmbedderTest, ImportIntoDocWithWrongPageType) {
   {
     ScopedSavedPage page = LoadScopedSavedPage(0);
     ASSERT_TRUE(page);
-    ScopedFPDFBitmap bitmap = RenderPage(page.get());
-    CompareBitmapWithExpectationSuffix(bitmap.get(), "bad_page_type_new_page1");
+    CompareDisplayList(RenderSavedPageToDisplayList(page.get()),
+                       "bad_page_type_new_page1");
   }
   {
     ScopedSavedPage page = LoadScopedSavedPage(1);
     ASSERT_TRUE(page);
-    ScopedFPDFBitmap bitmap = RenderPage(page.get());
-    CompareBitmap(bitmap.get(), "bad_page_type_new_page2");
+    CompareDisplayList(RenderSavedPageToDisplayList(page.get()),
+                       "bad_page_type_new_page2");
   }
 }
 

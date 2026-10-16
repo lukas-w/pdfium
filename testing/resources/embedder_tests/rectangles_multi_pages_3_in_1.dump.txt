@@ -1,0 +1,27 @@
+SaveState
+SetBaseClip [0,0,792,612]
+SetClip_PathFill rule=winding matrix=none points=[move(0.0000,612.0000) line(0.0000,0.0000) line(792.0000,0.0000) line(792.0000,612.0000) line(0.0000,612.0000,close)]
+SaveState
+SaveState
+RestoreState
+SetClip_PathFill rule=winding matrix=[1.3200,0.0000,0.0000,-1.3200,0.0000,471.0000] points=[move(0.0000,0.0000) line(0.0000,250.0000) line(200.0000,250.0000) line(200.0000,0.0000) line(0.0000,0.0000,close)]
+DrawPath fill=0xffffff00 stroke=0xff000000 rule=even-odd stroke_state=[width=1.0000 cap=butt join=miter miter=10.0000] matrix=[1.3200,0.0000,0.0000,-1.3200,0.0000,471.0000] points=[move(100.0000,0.0000) line(130.0000,0.0000) line(130.0000,50.0000) line(100.0000,50.0000) line(100.0000,0.0000,close)]
+RestoreState
+DrawPath fill=0xffffff00 stroke=0xff000000 rule=even-odd stroke_state=[width=1.0000 cap=butt join=miter miter=10.0000] matrix=[1.3200,0.0000,0.0000,-1.3200,0.0000,471.0000] points=[move(70.0000,67.0000) line(120.0000,67.0000) line(120.0000,97.0000) line(70.0000,97.0000) line(70.0000,67.0000,close)]
+RestoreState
+SaveState
+RestoreState
+SetClip_PathFill rule=winding matrix=[1.0560,0.0000,0.0000,-1.0560,264.0000,411.6000] points=[move(0.0000,200.0000) line(250.0000,200.0000) line(250.0000,0.0000) line(0.0000,0.0000) line(0.0000,200.0000,close)]
+DrawPath fill=0xff00ffff stroke=0xff000000 rule=even-odd stroke_state=[width=1.0000 cap=butt join=miter miter=10.0000] matrix=[0.0000,1.0560,1.0560,0.0000,264.0000,200.4000] points=[move(100.0000,0.0000) line(130.0000,0.0000) line(130.0000,50.0000) line(100.0000,50.0000) line(100.0000,0.0000,close)]
+RestoreState
+DrawPath fill=0xff00ffff stroke=0xff000000 rule=even-odd stroke_state=[width=1.0000 cap=butt join=miter miter=10.0000] matrix=[0.0000,1.0560,1.0560,0.0000,264.0000,200.4000] points=[move(70.0000,67.0000) line(120.0000,67.0000) line(120.0000,97.0000) line(70.0000,97.0000) line(70.0000,67.0000,close)]
+RestoreState
+SaveState
+RestoreState
+SetClip_PathFill rule=winding matrix=[1.3200,0.0000,0.0000,-1.3200,528.0000,471.0000] points=[move(0.0000,0.0000) line(0.0000,250.0000) line(200.0000,250.0000) line(200.0000,0.0000) line(0.0000,0.0000,close)]
+DrawPath fill=0xffff0000 stroke=0xff000000 rule=even-odd stroke_state=[width=1.0000 cap=butt join=miter miter=10.0000] matrix=[1.3200,0.0000,0.0000,-1.3200,528.0000,471.0000] points=[move(100.0000,0.0000) line(130.0000,0.0000) line(130.0000,50.0000) line(100.0000,50.0000) line(100.0000,0.0000,close)]
+RestoreState
+DrawPath fill=0xffff0000 stroke=0xff000000 rule=even-odd stroke_state=[width=1.0000 cap=butt join=miter miter=10.0000] matrix=[1.3200,0.0000,0.0000,-1.3200,528.0000,471.0000] points=[move(70.0000,67.0000) line(120.0000,67.0000) line(120.0000,97.0000) line(70.0000,97.0000) line(70.0000,67.0000,close)]
+RestoreState
+RestoreState
+RestoreState

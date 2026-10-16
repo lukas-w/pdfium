@@ -1,0 +1,7 @@
+SaveState
+SetBaseClip [0,0,200,200]
+SetClip_PathFill rule=winding matrix=none points=[move(0.0000,200.0000) line(0.0000,0.0000) line(200.0000,0.0000) line(200.0000,200.0000) line(0.0000,200.0000,close)]
+SaveState
+DrawPath fill=0xff000000 stroke=0xff000000 rule=even-odd stroke_state=[width=1.0000 cap=butt join=miter miter=10.0000] matrix=[1.0000,0.0000,0.0000,-1.0000,0.0000,200.0000] points=[move(10.0000,80.0000) line(60.0000,80.0000) line(60.0000,110.0000) line(10.0000,110.0000) line(10.0000,80.0000,close)]
+RestoreState
+RestoreState
