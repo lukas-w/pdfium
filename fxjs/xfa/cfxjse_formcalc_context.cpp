@@ -36,6 +36,7 @@
 #include "fxjs/xfa/cfxjse_class.h"
 #include "fxjs/xfa/cfxjse_context.h"
 #include "fxjs/xfa/cfxjse_engine.h"
+#include "fxjs/xfa/cfxjse_isolatetracker.h"
 #include "fxjs/xfa/cjx_object.h"
 #include "v8/include/v8-container.h"
 #include "v8/include/v8-function-callback.h"
@@ -5120,7 +5121,18 @@ CFXJSE_FormCalcContext::CFXJSE_FormCalcContext(v8::Isolate* pIsolate,
                                  ->GetTemplate(isolate_)));
 }
 
-CFXJSE_FormCalcContext::~CFXJSE_FormCalcContext() = default;
+CFXJSE_FormCalcContext::~CFXJSE_FormCalcContext() {
+  // Clear the binding the same way CFXJSE_Engine does for every other bound
+  // so later calls on the retained object do not see this binding.
+  if (!value_.IsEmpty()) {
+    CFXJSE_ScopeUtil_IsolateHandle scope(GetIsolate());
+    v8::Local<v8::Value> value =
+        v8::Local<v8::Value>::New(GetIsolate(), value_);
+    if (value->IsObject()) {
+      FXJSE_ClearObjectBinding(value.As<v8::Object>());
+    }
+  }
+}
 
 CFXJSE_FormCalcContext* CFXJSE_FormCalcContext::AsFormCalcContext() {
   return this;

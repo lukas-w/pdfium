@@ -45,14 +45,21 @@ FXJSE_CLASS_DESCRIPTOR* AsClassDescriptor(void* ptr) {
 
 void V8FunctionCallback_Wrapper(
     const v8::FunctionCallbackInfo<v8::Value>& info) {
-  const FXJSE_FUNCTION_DESCRIPTOR* pFunctionInfo =
+  const FXJSE_FUNCTION_DESCRIPTOR* function_info =
       AsFunctionDescriptor(info.DataV2().As<v8::External>()->Value(
           v8::kExternalPointerTypeTagDefault));
-  if (!pFunctionInfo) {
+  if (!function_info) {
     return;
   }
 
-  pFunctionInfo->callbackProc(CFXJSE_HostObject::FromV8(info.This()), info);
+  // Reject receivers whose binding has been cleared instead of handing a null
+  // host object to the callback.
+  CFXJSE_HostObject* host_object = CFXJSE_HostObject::FromV8(info.This());
+  if (!host_object) {
+    FXJSE_ThrowMessage(info.GetIsolate(), "Invalid receiver.");
+    return;
+  }
+  function_info->callbackProc(host_object, info);
 }
 
 void V8ConstructorCallback_Wrapper(
