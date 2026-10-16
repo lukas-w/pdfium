@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <string>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 #include "build/build_config.h"
@@ -438,11 +439,11 @@ TEST_F(FPDFAnnotEmbedderTest, RenderAnnotWithOnlyRolloverAP) {
   ASSERT_TRUE(page);
 
   // This annotation has a malformed appearance stream, which does not have its
-  // normal appearance defined, only its rollover appearance. In this case, its
-  // normal appearance should be generated, allowing the highlight annotation to
-  // still display.
-  ScopedFPDFBitmap bitmap = RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-  CompareBitmap(bitmap.get(), "fpdf_annot_render_annot_with_only_rollover_ap");
+  // normal appearance defined, only its rollover appearance. In this case, no
+  // normal appearance is rendered.
+  CompareDisplayList(
+      RenderLoadedPageWithFlagsToDisplayList(page.get(), FPDF_ANNOT),
+      "fpdf_annot_render_annot_with_only_rollover_ap");
 }
 
 TEST_F(FPDFAnnotEmbedderTest, RenderMultilineMarkupAnnotWithoutAP) {
@@ -687,10 +688,9 @@ TEST_F(FPDFAnnotEmbedderTest, AddAndSaveLinkAnnotation) {
   ASSERT_TRUE(OpenDocument("hello_world.pdf"));
   ScopedPage page = LoadScopedPage(0);
   ASSERT_TRUE(page);
-  {
-    ScopedFPDFBitmap bitmap = RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-    CompareBitmapWithExpectationSuffix(bitmap.get(), pdfium::kHelloWorldPng);
-  }
+  CompareDisplayList(
+      RenderLoadedPageWithFlagsToDisplayList(page.get(), FPDF_ANNOT),
+      "hello_world");
   EXPECT_EQ(0, FPDFPage_GetAnnotCount(page.get()));
 
   static constexpr char kUri[] = "https://pdfium.org/";
@@ -747,8 +747,9 @@ TEST_F(FPDFAnnotEmbedderTest, AddAndSaveLinkAnnotation) {
     ASSERT_TRUE(saved_doc);
     ScopedSavedPage saved_page = LoadScopedSavedPage(0);
     ASSERT_TRUE(saved_page);
-    VerifySavedRenderingWithExpectationSuffix(saved_page.get(),
-                                              pdfium::kHelloWorldPng);
+    CompareDisplayList(
+        RenderSavedPageWithFlagsToDisplayList(saved_page.get(), FPDF_ANNOT),
+        "hello_world");
     EXPECT_EQ(1, FPDFPage_GetAnnotCount(saved_page.get()));
 
     ScopedFPDFAnnotation annot(FPDFPage_GetAnnot(saved_page.get(), 0));
@@ -1240,12 +1241,9 @@ TEST_F(FPDFAnnotEmbedderTest, ModifyAnnotationFlags) {
   ASSERT_TRUE(page);
 
   // Check that the page renders correctly.
-  static constexpr char kAnnotationHighlightRolloverApPng[] =
-      "annotation_highlight_rollover_ap";
-  {
-    ScopedFPDFBitmap bitmap = RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-    CompareBitmap(bitmap.get(), kAnnotationHighlightRolloverApPng);
-  }
+  CompareDisplayList(
+      RenderLoadedPageWithFlagsToDisplayList(page.get(), FPDF_ANNOT),
+      "annotation_highlight_rollover_ap");
 
   {
     // Retrieve the annotation.
@@ -1272,11 +1270,9 @@ TEST_F(FPDFAnnotEmbedderTest, ModifyAnnotationFlags) {
     EXPECT_TRUE(flags & FPDF_ANNOT_FLAG_PRINT);
 
     // Check that the page renders correctly without rendering the annotation.
-    {
-      ScopedFPDFBitmap bitmap =
-          RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-      CompareBitmap(bitmap.get(), pdfium::kBlankPage612By792Png);
-    }
+    CompareDisplayList(
+        RenderLoadedPageWithFlagsToDisplayList(page.get(), FPDF_ANNOT),
+        "blank_page_612x792");
 
     // Unset the HIDDEN flag.
     EXPECT_TRUE(FPDFAnnot_SetFlags(annot.get(), FPDF_ANNOT_FLAG_NONE));
@@ -1288,11 +1284,9 @@ TEST_F(FPDFAnnotEmbedderTest, ModifyAnnotationFlags) {
     EXPECT_TRUE(flags & FPDF_ANNOT_FLAG_PRINT);
 
     // Check that the page renders correctly as before.
-    {
-      ScopedFPDFBitmap bitmap =
-          RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-      CompareBitmap(bitmap.get(), kAnnotationHighlightRolloverApPng);
-    }
+    CompareDisplayList(
+        RenderLoadedPageWithFlagsToDisplayList(page.get(), FPDF_ANNOT),
+        "annotation_highlight_rollover_ap");
   }
 }
 
@@ -3007,11 +3001,10 @@ TEST_F(FPDFAnnotEmbedderTest, FocusableAnnotRendering) {
   ScopedPage page = LoadScopedPage(0);
   ASSERT_TRUE(page);
 
-  {
-    // Check the initial rendering.
-    ScopedFPDFBitmap bitmap = RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-    CompareBitmapWithExpectationSuffix(bitmap.get(), "annots_page1");
-  }
+  // Check the initial rendering.
+  CompareDisplayList(
+      RenderLoadedPageWithFlagsToDisplayList(page.get(), FPDF_ANNOT),
+      "annots_page1");
 
   // Make links and highlights focusable.
   static constexpr FPDF_ANNOTATION_SUBTYPE kSubTypes[] = {FPDF_ANNOT_LINK,
@@ -3032,8 +3025,9 @@ TEST_F(FPDFAnnotEmbedderTest, FocusableAnnotRendering) {
     ASSERT_TRUE(annot);
     EXPECT_EQ(FPDF_ANNOT_LINK, FPDFAnnot_GetSubtype(annot.get()));
     EXPECT_TRUE(FORM_SetFocusedAnnot(form_handle(), annot.get()));
-    ScopedFPDFBitmap bitmap = RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-    CompareBitmapWithExpectationSuffix(bitmap.get(), "annots_page1_focus_link");
+    CompareDisplayList(
+        RenderLoadedPageWithFlagsToDisplayList(page.get(), FPDF_ANNOT),
+        "annots_page1_focus_link");
   }
 
   {
@@ -3042,9 +3036,9 @@ TEST_F(FPDFAnnotEmbedderTest, FocusableAnnotRendering) {
     ASSERT_TRUE(annot);
     EXPECT_EQ(FPDF_ANNOT_HIGHLIGHT, FPDFAnnot_GetSubtype(annot.get()));
     EXPECT_TRUE(FORM_SetFocusedAnnot(form_handle(), annot.get()));
-    ScopedFPDFBitmap bitmap = RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-    CompareBitmapWithExpectationSuffix(bitmap.get(),
-                                       "annots_page1_focus_highlight");
+    CompareDisplayList(
+        RenderLoadedPageWithFlagsToDisplayList(page.get(), FPDF_ANNOT),
+        "annots_page1_focus_highlight");
   }
 }
 
