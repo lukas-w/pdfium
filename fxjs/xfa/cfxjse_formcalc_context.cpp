@@ -303,54 +303,50 @@ const FXJSE_FUNCTION_DESCRIPTOR kFormCalcFunctions[] = {
     {kFuncTag, "var_filter", CFXJSE_FormCalcContext::fm_var_filter},
 };
 
-const uint8_t kAltTableDate[] = {
+constexpr auto kAltTableDate = std::to_array<const uint8_t>({
     255, 255, 255, 3,   9,   255, 255, 255, 255, 255, 255,
     255, 2,   255, 255, 255, 255, 255, 255, 255, 255, 255,
     255, 255, 1,   255, 255, 255, 255, 255, 255, 255, 255,
-};
-static_assert(std::size(kAltTableDate) == L'a' - L'A' + 1,
-              "Invalid kAltTableDate size.");
+});
+static_assert(kAltTableDate.size() == L'a' - L'A' + 1);
 
-const uint8_t kAltTableTime[] = {
+constexpr auto kAltTableTime = std::to_array<const uint8_t>({
     14,  255, 255, 3,   9,   255, 255, 15,  255, 255, 255,
     255, 6,   255, 255, 255, 255, 255, 7,   255, 255, 255,
     255, 255, 1,   17,  255, 255, 255, 255, 255, 255, 255,
-};
-static_assert(std::size(kAltTableTime) == L'a' - L'A' + 1,
-              "Invalid kAltTableTime size.");
+});
+static_assert(kAltTableTime.size() == L'a' - L'A' + 1);
 
 void AlternateDateTimeSymbols(WideString* pPattern,
                               const WideString& wsAltSymbols,
                               bool bIsDate) {
-  const uint8_t* pAltTable = bIsDate ? kAltTableDate : kAltTableTime;
+  const auto& alt_table = bIsDate ? kAltTableDate : kAltTableTime;
   int32_t nLength = pPattern->GetLength();
   bool bInConstRange = false;
   bool bEscape = false;
   int32_t i = 0;
-  UNSAFE_TODO({
-    while (i < nLength) {
-      wchar_t wc = (*pPattern)[i];
-      if (wc == L'\'') {
-        bInConstRange = !bInConstRange;
-        if (bEscape) {
-          i++;
-        } else {
-          pPattern->Delete(i);
-          nLength--;
-        }
-        bEscape = !bEscape;
-        continue;
+  while (i < nLength) {
+    wchar_t wc = (*pPattern)[i];
+    if (wc == L'\'') {
+      bInConstRange = !bInConstRange;
+      if (bEscape) {
+        i++;
+      } else {
+        pPattern->Delete(i);
+        nLength--;
       }
-      if (!bInConstRange && wc >= L'A' && wc <= L'a') {
-        uint8_t nAlt = pAltTable[wc - L'A'];
-        if (nAlt != 255) {
-          pPattern->SetAt(i, wsAltSymbols[nAlt]);
-        }
-      }
-      i++;
-      bEscape = false;
+      bEscape = !bEscape;
+      continue;
     }
-  });
+    if (!bInConstRange && wc >= L'A' && wc <= L'a') {
+      uint8_t nAlt = alt_table[wc - L'A'];
+      if (nAlt != 255) {
+        pPattern->SetAt(i, wsAltSymbols[nAlt]);
+      }
+    }
+    i++;
+    bEscape = false;
+  }
 }
 
 std::pair<bool, CXFA_LocaleValue::ValueType> PatternStringType(
