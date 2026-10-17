@@ -97,9 +97,9 @@ void sycc_to_rgb(int offset,
                  int* out_b) {
   cb -= offset;
   cr -= offset;
-  *out_r = std::clamp(y + static_cast<int>(1.402 * cr), 0, upb);
-  *out_g = std::clamp(y - static_cast<int>(0.344 * cb + 0.714 * cr), 0, upb);
-  *out_b = std::clamp(y + static_cast<int>(1.772 * cb), 0, upb);
+  *out_r = std::clamp(y + static_cast<int>(1.402f * cr), 0, upb);
+  *out_g = std::clamp(y - static_cast<int>(0.344f * cb + 0.714f * cr), 0, upb);
+  *out_b = std::clamp(y + static_cast<int>(1.772f * cb), 0, upb);
 }
 
 pdfium::span<opj_image_comp_t> components_span(opj_image_t* img) {
