@@ -64,30 +64,32 @@ class BarcodeTest : public testing::Test {
   RetainPtr<CFX_DIBitmap> bitmap_;
 };
 
-// https://crbug.com/42271707
-#if defined(PDF_USE_SKIA)
-#define MAYBE_Code39 DISABLED_Code39
-#else
-#define MAYBE_Code39 Code39
-#endif
-TEST_F(BarcodeTest, MAYBE_Code39) {
+TEST_F(BarcodeTest, Code39) {
   Create(BC_TYPE::kCode39);
   EXPECT_TRUE(barcode()->Encode(L"CLAMS"));
   RenderDevice();
-  EXPECT_EQ("cd4cd3f36da38ff58d9f621827018903", BitmapChecksum());
+#if defined(PDF_USE_SKIA)
+  static constexpr char kExpectedChecksum[] =
+      "f1a566abd7813ad9e2593e873b870653";
+#else
+  static constexpr char kExpectedChecksum[] =
+      "cd4cd3f36da38ff58d9f621827018903";
+#endif
+  EXPECT_EQ(kExpectedChecksum, BitmapChecksum());
 }
 
-// https://crbug.com/42271707
-#if defined(PDF_USE_SKIA)
-#define MAYBE_CodaBar DISABLED_CodaBar
-#else
-#define MAYBE_CodaBar CodaBar
-#endif
-TEST_F(BarcodeTest, MAYBE_CodaBar) {
+TEST_F(BarcodeTest, CodaBar) {
   Create(BC_TYPE::kCodabar);
   EXPECT_TRUE(barcode()->Encode(L"$123-456"));
   RenderDevice();
-  EXPECT_EQ("5fad4fc19f099001a0fe83c89430c977", BitmapChecksum());
+#if defined(PDF_USE_SKIA)
+  static constexpr char kExpectedChecksum[] =
+      "5f229b391517f1140b95770a57e31990";
+#else
+  static constexpr char kExpectedChecksum[] =
+      "5fad4fc19f099001a0fe83c89430c977";
+#endif
+  EXPECT_EQ(kExpectedChecksum, BitmapChecksum());
 }
 
 TEST_F(BarcodeTest, CodaBarLetters) {
@@ -95,69 +97,74 @@ TEST_F(BarcodeTest, CodaBarLetters) {
   EXPECT_FALSE(barcode()->Encode(L"clams"));
 }
 
-// https://crbug.com/42271707
-#if defined(PDF_USE_SKIA)
-#define MAYBE_Code128 DISABLED_Code128
-#else
-#define MAYBE_Code128 Code128
-#endif
-TEST_F(BarcodeTest, MAYBE_Code128) {
+TEST_F(BarcodeTest, Code128) {
   Create(BC_TYPE::kCode128);
   EXPECT_TRUE(barcode()->Encode(L"Clams"));
   RenderDevice();
-  EXPECT_EQ("6351f0f6e997050e4658bbb4777aef74", BitmapChecksum());
+#if defined(PDF_USE_SKIA)
+  static constexpr char kExpectedChecksum[] =
+      "a33a5f68755842561064e4f57fcab06b";
+#else
+  static constexpr char kExpectedChecksum[] =
+      "6351f0f6e997050e4658bbb4777aef74";
+#endif
+  EXPECT_EQ(kExpectedChecksum, BitmapChecksum());
 }
 
-// https://crbug.com/42271707
-#if defined(PDF_USE_SKIA)
-#define MAYBE_Code128B DISABLED_Code128B
-#else
-#define MAYBE_Code128B Code128B
-#endif
-TEST_F(BarcodeTest, MAYBE_Code128B) {
+TEST_F(BarcodeTest, Code128B) {
   Create(BC_TYPE::kCode128B);
   EXPECT_TRUE(barcode()->Encode(L"Clams"));
   RenderDevice();
-  EXPECT_EQ("6351f0f6e997050e4658bbb4777aef74", BitmapChecksum());
+#if defined(PDF_USE_SKIA)
+  static constexpr char kExpectedChecksum[] =
+      "a33a5f68755842561064e4f57fcab06b";
+#else
+  static constexpr char kExpectedChecksum[] =
+      "6351f0f6e997050e4658bbb4777aef74";
+#endif
+  EXPECT_EQ(kExpectedChecksum, BitmapChecksum());
 }
 
-// https://crbug.com/42271707
-#if defined(PDF_USE_SKIA)
-#define MAYBE_Code128C DISABLED_Code128C
-#else
-#define MAYBE_Code128C Code128C
-#endif
-TEST_F(BarcodeTest, MAYBE_Code128C) {
+TEST_F(BarcodeTest, Code128C) {
   Create(BC_TYPE::kCode128C);
   EXPECT_TRUE(barcode()->Encode(L"123456"));
   RenderDevice();
-  EXPECT_EQ("fba730a807ba6363f9bd2bc7f8c56d1f", BitmapChecksum());
+#if defined(PDF_USE_SKIA)
+  static constexpr char kExpectedChecksum[] =
+      "4e599185bfb9625664756e5009468c8e";
+#else
+  static constexpr char kExpectedChecksum[] =
+      "fba730a807ba6363f9bd2bc7f8c56d1f";
+#endif
+  EXPECT_EQ(kExpectedChecksum, BitmapChecksum());
 }
 
-// https://crbug.com/42271707
-#if defined(PDF_USE_SKIA)
-#define MAYBE_Code128CLetters DISABLED_Code128CLetters
-#else
-#define MAYBE_Code128CLetters Code128CLetters
-#endif
-TEST_F(BarcodeTest, MAYBE_Code128CLetters) {
+TEST_F(BarcodeTest, Code128CLetters) {
   Create(BC_TYPE::kCode128C);
   EXPECT_TRUE(barcode()->Encode(L"clams"));
   RenderDevice();
-  EXPECT_EQ("6284ec8503d5a948c9518108da33cdd3", BitmapChecksum());
+#if defined(PDF_USE_SKIA)
+  static constexpr char kExpectedChecksum[] =
+      "8276a6082d77c3db7abd8bc8850e8467";
+#else
+  static constexpr char kExpectedChecksum[] =
+      "6284ec8503d5a948c9518108da33cdd3";
+#endif
+  EXPECT_EQ(kExpectedChecksum, BitmapChecksum());
 }
 
-// https://crbug.com/42271707
-#if defined(PDF_USE_SKIA)
-#define MAYBE_Ean8 DISABLED_Ean8
-#else
-#define MAYBE_Ean8 Ean8
-#endif
-TEST_F(BarcodeTest, MAYBE_Ean8) {
+TEST_F(BarcodeTest, Ean8) {
   Create(BC_TYPE::kEAN8);
   EXPECT_TRUE(barcode()->Encode(L"123456"));
   RenderDevice();
-  EXPECT_EQ("aff88491ac46ca6217d780d185300cde", BitmapChecksum());
+#if defined(PDF_USE_SKIA)
+  static constexpr char kExpectedChecksum[] =
+      "a8969be3f36f6f4b155d58f8171d7827";
+#else
+  static constexpr char kExpectedChecksum[] =
+      "aff88491ac46ca6217d780d185300cde";
+#endif
+  EXPECT_EQ(kExpectedChecksum, BitmapChecksum());
 }
 
 TEST_F(BarcodeTest, Ean8Letters) {
@@ -165,17 +172,18 @@ TEST_F(BarcodeTest, Ean8Letters) {
   EXPECT_FALSE(barcode()->Encode(L"clams"));
 }
 
-// https://crbug.com/42271707
-#if defined(PDF_USE_SKIA)
-#define MAYBE_UPCA DISABLED_UPCA
-#else
-#define MAYBE_UPCA UPCA
-#endif
-TEST_F(BarcodeTest, MAYBE_UPCA) {
+TEST_F(BarcodeTest, UPCA) {
   Create(BC_TYPE::kUPCA);
   EXPECT_TRUE(barcode()->Encode(L"123456"));
   RenderDevice();
-  EXPECT_EQ("fe26a5714cff7ffe3f9b02183efc435b", BitmapChecksum());
+#if defined(PDF_USE_SKIA)
+  static constexpr char kExpectedChecksum[] =
+      "d9004b9e6feef54c91a6403a718bbe06";
+#else
+  static constexpr char kExpectedChecksum[] =
+      "fe26a5714cff7ffe3f9b02183efc435b";
+#endif
+  EXPECT_EQ(kExpectedChecksum, BitmapChecksum());
 }
 
 TEST_F(BarcodeTest, UPCALetters) {
@@ -183,17 +191,18 @@ TEST_F(BarcodeTest, UPCALetters) {
   EXPECT_FALSE(barcode()->Encode(L"clams"));
 }
 
-// https://crbug.com/42271707
-#if defined(PDF_USE_SKIA)
-#define MAYBE_Ean13 DISABLED_Ean13
-#else
-#define MAYBE_Ean13 Ean13
-#endif
-TEST_F(BarcodeTest, MAYBE_Ean13) {
+TEST_F(BarcodeTest, Ean13) {
   Create(BC_TYPE::kEAN13);
   EXPECT_TRUE(barcode()->Encode(L"123456"));
   RenderDevice();
-  EXPECT_EQ("72d2190b98d635c32834bf67552e561e", BitmapChecksum());
+#if defined(PDF_USE_SKIA)
+  static constexpr char kExpectedChecksum[] =
+      "efc7a49c967901efa6f63c59a10fedab";
+#else
+  static constexpr char kExpectedChecksum[] =
+      "72d2190b98d635c32834bf67552e561e";
+#endif
+  EXPECT_EQ(kExpectedChecksum, BitmapChecksum());
 }
 
 TEST_F(BarcodeTest, Ean13Letters) {
@@ -201,41 +210,44 @@ TEST_F(BarcodeTest, Ean13Letters) {
   EXPECT_FALSE(barcode()->Encode(L"clams"));
 }
 
-// https://crbug.com/42271707
-#if defined(PDF_USE_SKIA)
-#define MAYBE_Pdf417 DISABLED_Pdf417
-#else
-#define MAYBE_Pdf417 Pdf417
-#endif
-TEST_F(BarcodeTest, MAYBE_Pdf417) {
+TEST_F(BarcodeTest, Pdf417) {
   Create(BC_TYPE::kPDF417);
   EXPECT_TRUE(barcode()->Encode(L"clams"));
   RenderDevice();
-  EXPECT_EQ("191e35d11613901b7d5d51033689aa89", BitmapChecksum());
+#if defined(PDF_USE_SKIA)
+  static constexpr char kExpectedChecksum[] =
+      "63ee1988d3de512df2c3037d21bdf917";
+#else
+  static constexpr char kExpectedChecksum[] =
+      "191e35d11613901b7d5d51033689aa89";
+#endif
+  EXPECT_EQ(kExpectedChecksum, BitmapChecksum());
 }
 
-// https://crbug.com/42271707
-#if defined(PDF_USE_SKIA)
-#define MAYBE_DataMatrix DISABLED_DataMatrix
-#else
-#define MAYBE_DataMatrix DataMatrix
-#endif
-TEST_F(BarcodeTest, MAYBE_DataMatrix) {
+TEST_F(BarcodeTest, DataMatrix) {
   Create(BC_TYPE::kDataMatrix);
   EXPECT_TRUE(barcode()->Encode(L"clams"));
   RenderDevice();
-  EXPECT_EQ("5e5cd9a680b86fcd4ffd53ed36e3c980", BitmapChecksum());
+#if defined(PDF_USE_SKIA)
+  static constexpr char kExpectedChecksum[] =
+      "de33aa8fe06e24b6ab191643da8dd336";
+#else
+  static constexpr char kExpectedChecksum[] =
+      "5e5cd9a680b86fcd4ffd53ed36e3c980";
+#endif
+  EXPECT_EQ(kExpectedChecksum, BitmapChecksum());
 }
 
-// https://crbug.com/42271707
-#if defined(PDF_USE_SKIA)
-#define MAYBE_QrCode DISABLED_QrCode
-#else
-#define MAYBE_QrCode QrCode
-#endif
-TEST_F(BarcodeTest, MAYBE_QrCode) {
+TEST_F(BarcodeTest, QrCode) {
   Create(BC_TYPE::kQRCode);
   EXPECT_TRUE(barcode()->Encode(L"clams"));
   RenderDevice();
-  EXPECT_EQ("4751c6e0f67749fabe24f787128decee", BitmapChecksum());
+#if defined(PDF_USE_SKIA)
+  static constexpr char kExpectedChecksum[] =
+      "74d2e6de981088e69740a970b567efc0";
+#else
+  static constexpr char kExpectedChecksum[] =
+      "4751c6e0f67749fabe24f787128decee";
+#endif
+  EXPECT_EQ(kExpectedChecksum, BitmapChecksum());
 }
