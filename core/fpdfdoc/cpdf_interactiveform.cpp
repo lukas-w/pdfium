@@ -1035,13 +1035,7 @@ bool CPDF_InteractiveForm::CheckRequiredFields(
 
 std::unique_ptr<CFDF_Document> CPDF_InteractiveForm::ExportToFDF(
     const WideString& pdf_path) const {
-  std::vector<CPDF_FormField*> fields;
-  CFieldTree::Node* pRoot = field_tree_->GetRoot();
-  const size_t nCount = pRoot->CountFields();
-  for (size_t i = 0; i < nCount; ++i) {
-    fields.push_back(pRoot->GetFieldAtIndex(i));
-  }
-  return ExportToFDF(pdf_path, fields, true);
+  return ExportToFDF(pdf_path, /*fields=*/{}, /*bIncludeOrExclude=*/false);
 }
 
 std::unique_ptr<CFDF_Document> CPDF_InteractiveForm::ExportToFDF(
