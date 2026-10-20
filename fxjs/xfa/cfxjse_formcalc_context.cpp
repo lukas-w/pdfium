@@ -313,7 +313,7 @@ constexpr auto kAltTableTime =
                                   0,  0, 0, 0, 0, 7, 0, 0,  0, 0, 0, 1, 17});
 static_assert(kAltTableTime.size() == L'Z' - L'A' + 1);
 
-void AlternateDateTimeSymbols(WideString* pattern,
+bool AlternateDateTimeSymbols(WideString* pattern,
                               const WideString& alt_symbols,
                               bool is_date) {
   const auto& alt_table = is_date ? kAltTableDate : kAltTableTime;
@@ -337,12 +337,16 @@ void AlternateDateTimeSymbols(WideString* pattern,
     if (!is_in_const_range && wc >= L'A' && wc <= L'Z') {
       uint8_t alt_value = alt_table[wc - L'A'];
       if (alt_value != 0) {
+        if (alt_value >= alt_symbols.GetLength()) {
+          return false;
+        }
         pattern->SetAt(i, alt_symbols[alt_value]);
       }
     }
     i++;
     is_escape = false;
   }
+  return true;
 }
 
 std::pair<bool, CXFA_LocaleValue::ValueType> PatternStringType(
@@ -491,8 +495,9 @@ ByteString GetLocalDateTimeFormat(CXFA_Document* doc,
   LocaleIface::DateTimeSubcategory category = SubCategoryFromInt(iStyle);
   WideString local = is_date ? locale->GetDatePattern(category)
                              : locale->GetTimePattern(category);
-  if (!bStandard) {
-    AlternateDateTimeSymbols(&local, locale->GetDateTimeSymbols(), is_date);
+  if (!bStandard && !AlternateDateTimeSymbols(
+                        &local, locale->GetDateTimeSymbols(), is_date)) {
+    return ByteString();
   }
   return local.ToUTF8();
 }
