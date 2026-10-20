@@ -17,7 +17,7 @@
 #if defined(USE_SYSTEM_LCMS2)
 #include <lcms2.h>
 #else
-#include "third_party/lcms/include/lcms2.h"
+#include "third_party/lcms/src/include/lcms2.h"
 #endif
 
 namespace fxcodec {

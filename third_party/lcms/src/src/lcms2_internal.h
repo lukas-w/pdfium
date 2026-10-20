@@ -28,7 +28,7 @@
 
 // Include plug-in foundation
 #ifndef _lcms_plugin_H
-#   include "third_party/lcms/include/lcms2_plugin.h"
+#   include "third_party/lcms/src/include/lcms2_plugin.h"
 #endif
 
 // ctype is part of C99 as per 7.1.2
