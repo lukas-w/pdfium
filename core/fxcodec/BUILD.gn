@@ -130,11 +130,11 @@ source_set("fxcodec") {
   ]
   public_deps = [
     "../../third_party:fx_lcms2",
+    "../../third_party:libopenjpeg2",
     "../fxcrt",
   ]
   deps = [
     "../../third_party:lcms2",
-    "../../third_party:libopenjpeg2",
     "../../third_party:zlib",
     "../fxge",
   ]

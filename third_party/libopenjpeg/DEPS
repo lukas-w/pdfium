@@ -1,0 +1,5 @@
+# OpenJPEG does not depend on anything, but its upstream code includes
+# openjpwl/jpwl.h, which PDFium does not have (only with USE_JPWL).
+skip_child_includes = [
+  'src',
+]

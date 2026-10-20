@@ -407,6 +407,12 @@ config("fx_libopenjpeg_warnings") {
   }
 }
 
+# opj_config.h and opj_config_private.h are PDFium's, outside the upstream
+# copy in libopenjpeg/src.
+config("fx_libopenjpeg_config") {
+  include_dirs = [ "libopenjpeg" ]
+}
+
 source_set("fx_libopenjpeg") {
   configs -= [ "//build/config/compiler:chromium_code" ]
   configs += [
@@ -418,33 +424,34 @@ source_set("fx_libopenjpeg") {
     ":fx_libopenjpeg_warnings",
   ]
   sources = [
-    "libopenjpeg/bio.c",
-    "libopenjpeg/cio.c",
-    "libopenjpeg/dwt.c",
-    "libopenjpeg/event.c",
-    "libopenjpeg/function_list.c",
-    "libopenjpeg/ht_dec.c",
-    "libopenjpeg/image.c",
-    "libopenjpeg/invert.c",
-    "libopenjpeg/j2k.c",
-    "libopenjpeg/jp2.c",
-    "libopenjpeg/mct.c",
-    "libopenjpeg/mqc.c",
-    "libopenjpeg/openjpeg.c",
+    "libopenjpeg/src/bio.c",
+    "libopenjpeg/src/cio.c",
+    "libopenjpeg/src/dwt.c",
+    "libopenjpeg/src/event.c",
+    "libopenjpeg/src/function_list.c",
+    "libopenjpeg/src/ht_dec.c",
+    "libopenjpeg/src/image.c",
+    "libopenjpeg/src/invert.c",
+    "libopenjpeg/src/j2k.c",
+    "libopenjpeg/src/jp2.c",
+    "libopenjpeg/src/mct.c",
+    "libopenjpeg/src/mqc.c",
+    "libopenjpeg/src/openjpeg.c",
 
-    # NOTE: libopenjpeg/opj_clock.c is not used.
+    # NOTE: libopenjpeg/src/opj_clock.c is not used.
     "libopenjpeg/opj_malloc.cc",
-    "libopenjpeg/opj_malloc.h",
-    "libopenjpeg/pi.c",
-    "libopenjpeg/sparse_array.c",
-    "libopenjpeg/sparse_array.h",
-    "libopenjpeg/t1.c",
-    "libopenjpeg/t1_ht_luts.h",
-    "libopenjpeg/t2.c",
-    "libopenjpeg/tcd.c",
-    "libopenjpeg/tgt.c",
-    "libopenjpeg/thread.c",
+    "libopenjpeg/src/opj_malloc.h",
+    "libopenjpeg/src/pi.c",
+    "libopenjpeg/src/sparse_array.c",
+    "libopenjpeg/src/sparse_array.h",
+    "libopenjpeg/src/t1.c",
+    "libopenjpeg/src/t1_ht_luts.h",
+    "libopenjpeg/src/t2.c",
+    "libopenjpeg/src/tcd.c",
+    "libopenjpeg/src/tgt.c",
+    "libopenjpeg/src/thread.c",
   ]
+  public_configs = [ ":fx_libopenjpeg_config" ]
   deps = [ "../core/fxcrt" ]
 }
 

@@ -17,7 +17,7 @@
 #if defined(USE_SYSTEM_LIBOPENJPEG2)
 #include <openjpeg.h>
 #else
-#include "third_party/libopenjpeg/openjpeg.h"
+#include "third_party/libopenjpeg/src/openjpeg.h"
 #endif
 
 namespace fxcodec {

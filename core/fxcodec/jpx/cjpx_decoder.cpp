@@ -26,7 +26,7 @@
 #if defined(USE_SYSTEM_LIBOPENJPEG2)
 #include <stdlib.h>
 #else
-#include "third_party/libopenjpeg/opj_malloc.h"
+#include "third_party/libopenjpeg/src/opj_malloc.h"
 #endif
 
 namespace fxcodec {
