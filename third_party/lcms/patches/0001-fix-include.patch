@@ -1,0 +1,13 @@
+diff --git a/src/src/lcms2_internal.h b/src/src/lcms2_internal.h
+index 655c9af..a453dec 100644
+--- a/src/src/lcms2_internal.h
++++ b/src/src/lcms2_internal.h
+@@ -28,7 +28,7 @@
+ 
+ // Include plug-in foundation
+ #ifndef _lcms_plugin_H
+-#   include "lcms2_plugin.h"
++#   include "third_party/lcms/src/include/lcms2_plugin.h"
+ #endif
+ 
+ // ctype is part of C99 as per 7.1.2

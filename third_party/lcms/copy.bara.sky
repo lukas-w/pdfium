@@ -1,0 +1,27 @@
+load("//crowbar", "crowbar_workflow")
+
+crowbar_workflow(
+    origin_files = glob([
+        "LICENSE",
+        "include/*.h",
+        "src/*.c",
+        "src/*.h",
+    ]),
+    transformations = [
+        patch.apply(
+            patches = [
+                "patches/0000-cmserr-changes.patch",
+                "patches/0001-fix-include.patch",
+                "patches/0003-old-uninitialized-in-LUTevalFloat.patch",
+                "patches/0004-old-uninitialized-in-LUTeval16.patch",
+                "patches/0006-tag-type-confusion.patch",
+                "patches/0027-changes-from-beginning-of-time.patch",
+                "patches/0028-do-not-quickfloor.patch",
+                "patches/0029-drop-register-keyword.patch",
+                "patches/0033-opt-integer-overflow.patch",
+                "patches/0035-func-ptr-mixup.patch",
+                "patches/0037-theoretical-overflow.patch",
+            ],
+        ),
+    ],
+)

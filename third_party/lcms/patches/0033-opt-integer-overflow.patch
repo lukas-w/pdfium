@@ -1,7 +1,7 @@
-diff --git a/third_party/lcms/src/cmsopt.c b/third_party/lcms/src/cmsopt.c
-index 5ea1b4c85..8a1171820 100644
---- a/third_party/lcms/src/cmsopt.c
-+++ b/third_party/lcms/src/cmsopt.c
+diff --git a/src/src/cmsopt.c b/src/src/cmsopt.c
+index 2396dd2..12792e6 100644
+--- a/src/src/cmsopt.c
++++ b/src/src/cmsopt.c
 @@ -104,6 +104,39 @@ typedef struct {
  // Simple optimizations ----------------------------------------------------------------------------------------------------------
  
@@ -42,8 +42,8 @@ index 5ea1b4c85..8a1171820 100644
  // Remove an element in linked chain
  static
  void _RemoveElement(cmsStage** head)
-@@ -1527,7 +1560,8 @@ void MatShaperEval16(register const cmsUInt16Number In[],
-                      register const void* D)
+@@ -1544,7 +1577,8 @@ void MatShaperEval16(CMSREGISTER const cmsUInt16Number In[],
+                      CMSREGISTER const void* D)
  {
      MatShaper8Data* p = (MatShaper8Data*) D;
 -    cmsS1Fixed14Number l1, l2, l3, r, g, b;
@@ -52,7 +52,7 @@ index 5ea1b4c85..8a1171820 100644
      cmsUInt32Number ri, gi, bi;
  
      // In this case (and only in this case!) we can use this simplification since
-@@ -1537,14 +1571,14 @@ void MatShaperEval16(register const cmsUInt16Number In[],
+@@ -1554,14 +1588,14 @@ void MatShaperEval16(CMSREGISTER const cmsUInt16Number In[],
      bi = In[2] & 0xFFU;
  
      // Across first shaper, which also converts to 1.14 fixed point

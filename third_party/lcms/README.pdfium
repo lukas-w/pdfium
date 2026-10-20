@@ -13,6 +13,8 @@ Color Management Engine. See http://www.littlecms.com/
 
 Local Modifications:
 
+The patches are in patches/; copy.bara.sky applies them in this order.
+
 0000-cmserr-changes.patch: change LCMS memory management methods to use PDFium's.
 0001-fix-include.patch: fix include in lcms2_internal.h.
 0003-old-uninitialized-in-LUTevalFloat.patch: https://codereview.chromium.org/380293002/
@@ -24,3 +26,8 @@ Local Modifications:
 0033-opt-integer-overflow.patch: Protect against integer overflow.
 0035-func-ptr-mixup.patch: Prevent mixing up function pointer types.
 0037-theoretical-overflow.patch: Fix additional size overflows.
+
+Update instructions:
+Update commit hashes in crowbar.txtpb, then run from
+this directory:
+crowbar build --no-dry-run ./

@@ -1,7 +1,7 @@
-diff --git a/third_party/lcms/src/cmserr.c b/third_party/lcms/src/cmserr.c
-index ac89811a9..902b7762a 100644
---- a/third_party/lcms/src/cmserr.c
-+++ b/third_party/lcms/src/cmserr.c
+diff --git a/src/src/cmserr.c b/src/src/cmserr.c
+index ac89811..902b776 100644
+--- a/src/src/cmserr.c
++++ b/src/src/cmserr.c
 @@ -1,7 +1,7 @@
  //---------------------------------------------------------------------------------
  //

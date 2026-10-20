@@ -1,9 +1,9 @@
-diff --git a/third_party/lcms/include/lcms2.h b/third_party/lcms/include/lcms2.h
-index 739e6e1f8..c84a4fd93 100644
---- a/third_party/lcms/include/lcms2.h
-+++ b/third_party/lcms/include/lcms2.h
-@@ -38,7 +38,7 @@
- // #define CMS_DONT_USE_INT64        1
+diff --git a/src/include/lcms2.h b/src/include/lcms2.h
+index 7aa5d45..4c23d8c 100644
+--- a/src/include/lcms2.h
++++ b/src/include/lcms2.h
+@@ -45,7 +45,7 @@
+ // #define CMS_LARGE_FILE_SUPPORT    1
  
  // Uncomment this if your compiler doesn't work with fast floor function
 -// #define CMS_DONT_USE_FAST_FLOOR 1

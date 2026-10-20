@@ -1,7 +1,7 @@
-diff --git a/third_party/lcms/src/cmscgats.c b/third_party/lcms/src/cmscgats.c
-index a0c25c024..55f74ede8 100644
---- a/third_party/lcms/src/cmscgats.c
-+++ b/third_party/lcms/src/cmscgats.c
+diff --git a/src/src/cmscgats.c b/src/src/cmscgats.c
+index 39d6b91..236c22e 100644
+--- a/src/src/cmscgats.c
++++ b/src/src/cmscgats.c
 @@ -38,7 +38,10 @@
  #define DEFAULT_DBL_FORMAT  "%.10g" // Double formatting
  
@@ -14,11 +14,11 @@ index a0c25c024..55f74ede8 100644
  #    define DIR_CHAR    '\\'
  #else
  #    define DIR_CHAR    '/'
-diff --git a/third_party/lcms/src/cmsgamma.c b/third_party/lcms/src/cmsgamma.c
-index eb3dd881c..6e36cf462 100644
---- a/third_party/lcms/src/cmsgamma.c
-+++ b/third_party/lcms/src/cmsgamma.c
-@@ -749,14 +749,19 @@ void CMSEXPORT cmsFreeToneCurve(cmsToneCurve* Curve)
+diff --git a/src/src/cmsgamma.c b/src/src/cmsgamma.c
+index 7cc2deb..6bf0a8c 100644
+--- a/src/src/cmsgamma.c
++++ b/src/src/cmsgamma.c
+@@ -917,14 +917,19 @@ void CMSEXPORT cmsFreeToneCurve(cmsToneCurve* Curve)
  {
      cmsContext ContextID;
  
@@ -40,7 +40,7 @@ index eb3dd881c..6e36cf462 100644
  
      if (Curve ->Segments) {
  
-@@ -876,18 +881,25 @@ void CMSEXPORT cmsFreeToneCurve(cmsToneCurve* Curve)
+@@ -934,18 +939,25 @@ void CMSEXPORT cmsFreeToneCurve(cmsToneCurve* Curve)
  
              if (Curve ->Segments[i].SampledPoints) {
                  _cmsFree(ContextID, Curve ->Segments[i].SampledPoints);
@@ -68,12 +68,12 @@ index eb3dd881c..6e36cf462 100644
  
      _cmsFree(ContextID, Curve);
  }
-diff --git a/third_party/lcms/src/cmsio0.c b/third_party/lcms/src/cmsio0.c
-index 1b026488d..cc5f89064 100644
---- a/third_party/lcms/src/cmsio0.c
-+++ b/third_party/lcms/src/cmsio0.c
-@@ -479,6 +479,14 @@ cmsIOHANDLER* CMSEXPORT cmsGetProfileIOhandler(cmsHPROFILE hProfile)
-        return Icc->IOhandler;
+diff --git a/src/src/cmsio0.c b/src/src/cmsio0.c
+index ce18b0e..e00a0d2 100644
+--- a/src/src/cmsio0.c
++++ b/src/src/cmsio0.c
+@@ -581,6 +581,14 @@ cmsIOHANDLER* CMSEXPORT cmsGetProfileIOhandler(cmsHPROFILE hProfile)
+     return Icc->IOhandler;
  }
  
 +#ifdef _WIN32_WCE
@@ -87,7 +87,7 @@ index 1b026488d..cc5f89064 100644
  // Creates an empty structure holding all required parameters
  cmsHPROFILE CMSEXPORT cmsCreateProfilePlaceholder(cmsContext ContextID)
  {
-@@ -570,6 +578,14 @@ int _cmsSearchTag(_cmsICCPROFILE* Icc, cmsTagSignature sig, cmsBool lFollowLinks
+@@ -705,6 +713,14 @@ int _cmsSearchTag(_cmsICCPROFILE* Icc, cmsTagSignature sig, cmsBool lFollowLinks
  
          // Yes, follow link
          if (LinkedSig != (cmsTagSignature) 0) {
@@ -102,9 +102,9 @@ index 1b026488d..cc5f89064 100644
              sig = LinkedSig;
          }
  
-@@ -1363,6 +1379,12 @@ Error:
-     return 0;
- }
+@@ -1498,6 +1514,12 @@ cmsBool SaveTags(_cmsICCPROFILE* Icc, _cmsICCPROFILE* FileOrig)
+             return FALSE;
+     }
  
 +#ifdef _WIN32_WCE
 +int wceex_unlink(const char *filename);
@@ -113,5 +113,5 @@ index 1b026488d..cc5f89064 100644
 +#endif
 +#endif
  
- // Low-level save to disk.
- cmsBool  CMSEXPORT cmsSaveProfileToFile(cmsHPROFILE hProfile, const char* FileName)
+     return TRUE;
+ }

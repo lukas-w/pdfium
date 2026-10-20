@@ -1,0 +1,14 @@
+diff --git a/src/src/cmsio0.c b/src/src/cmsio0.c
+index d47b5f0..ce18b0e 100644
+--- a/src/src/cmsio0.c
++++ b/src/src/cmsio0.c
+@@ -951,7 +951,8 @@ cmsBool _cmsReadHeader(_cmsICCPROFILE* Icc)
+         for (j=0; j < Icc ->TagCount; j++) {
+            
+             if ((Icc ->TagOffsets[j] == Tag.offset) &&
+-                (Icc ->TagSizes[j]   == Tag.size)) {
++                (Icc ->TagSizes[j]   == Tag.size) &&
++                (Icc ->TagNames[j]   == Tag.sig)) {
+ 
+                 // Check types. 
+                 if (CompatibleTypes(_cmsGetTagDescriptor(Icc->ContextID, Icc->TagNames[j]),

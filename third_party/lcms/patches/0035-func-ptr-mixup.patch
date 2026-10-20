@@ -1,7 +1,7 @@
-diff --git a/third_party/lcms/src/cmsopt.c b/third_party/lcms/src/cmsopt.c
-index e3212fb4d..a5475709b 100644
---- a/third_party/lcms/src/cmsopt.c
-+++ b/third_party/lcms/src/cmsopt.c
+diff --git a/src/src/cmsopt.c b/src/src/cmsopt.c
+index 12792e6..0c5760d 100644
+--- a/src/src/cmsopt.c
++++ b/src/src/cmsopt.c
 @@ -100,6 +100,15 @@ typedef struct {
  
  } Curves16Data;
@@ -18,7 +18,7 @@ index e3212fb4d..a5475709b 100644
  
  // Simple optimizations ----------------------------------------------------------------------------------------------------------
  
-@@ -805,7 +814,7 @@ Error:
+@@ -811,7 +820,7 @@ Error:
  
      if (DataSetIn == NULL && DataSetOut == NULL) {
  

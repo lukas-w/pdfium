@@ -1,0 +1,15 @@
+upstream {
+  commit: "b76633e60c8387a77268fb3359277ca25b5fd75c"
+  artifacts {
+    git {
+      repository: "https://github.com/mm2/Little-CMS"
+      commit: "b76633e60c8387a77268fb3359277ca25b5fd75c"
+    }
+  }
+}
+stages {
+  input {
+    patch { copybara {} }
+  }
+  publish { git {} }
+}

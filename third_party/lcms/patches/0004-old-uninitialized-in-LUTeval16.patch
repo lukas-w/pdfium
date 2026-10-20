@@ -1,0 +1,13 @@
+diff --git a/src/src/cmslut.c b/src/src/cmslut.c
+index 73cf172..07a2f05 100644
+--- a/src/src/cmslut.c
++++ b/src/src/cmslut.c
+@@ -1330,7 +1330,7 @@ void _LUTeval16(CMSREGISTER const cmsUInt16Number In[], CMSREGISTER cmsUInt16Num
+ {
+     cmsPipeline* lut = (cmsPipeline*) D;
+     cmsStage *mpe;
+-    cmsFloat32Number Storage[2][MAX_STAGE_CHANNELS];
++    cmsFloat32Number Storage[2][MAX_STAGE_CHANNELS] = {0.0f};
+     int Phase = 0, NextPhase;
+ 
+     From16ToFloat(In, &Storage[Phase][0], lut ->InputChannels);
