@@ -303,19 +303,15 @@ const FXJSE_FUNCTION_DESCRIPTOR kFormCalcFunctions[] = {
     {kFuncTag, "var_filter", CFXJSE_FormCalcContext::fm_var_filter},
 };
 
-constexpr auto kAltTableDate = std::to_array<const uint8_t>({
-    255, 255, 255, 3,   9,   255, 255, 255, 255, 255, 255,
-    255, 2,   255, 255, 255, 255, 255, 255, 255, 255, 255,
-    255, 255, 1,   255, 255, 255, 255, 255, 255, 255, 255,
-});
-static_assert(kAltTableDate.size() == L'a' - L'A' + 1);
+constexpr auto kAltTableDate =
+    std::to_array<const uint8_t>({0, 0, 0, 3, 9, 0, 0, 0, 0, 0, 0, 0, 2,
+                                  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0});
+static_assert(kAltTableDate.size() == L'Z' - L'A' + 1);
 
-constexpr auto kAltTableTime = std::to_array<const uint8_t>({
-    14,  255, 255, 3,   9,   255, 255, 15,  255, 255, 255,
-    255, 6,   255, 255, 255, 255, 255, 7,   255, 255, 255,
-    255, 255, 1,   17,  255, 255, 255, 255, 255, 255, 255,
-});
-static_assert(kAltTableTime.size() == L'a' - L'A' + 1);
+constexpr auto kAltTableTime =
+    std::to_array<const uint8_t>({14, 0, 0, 3, 9, 0, 0, 15, 0, 0, 0, 0, 6,
+                                  0,  0, 0, 0, 0, 7, 0, 0,  0, 0, 0, 1, 17});
+static_assert(kAltTableTime.size() == L'Z' - L'A' + 1);
 
 void AlternateDateTimeSymbols(WideString* pattern,
                               const WideString& alt_symbols,
@@ -338,9 +334,9 @@ void AlternateDateTimeSymbols(WideString* pattern,
       is_escape = !is_escape;
       continue;
     }
-    if (!is_in_const_range && wc >= L'A' && wc <= L'a') {
+    if (!is_in_const_range && wc >= L'A' && wc <= L'Z') {
       uint8_t alt_value = alt_table[wc - L'A'];
-      if (alt_value != 255) {
+      if (alt_value != 0) {
         pattern->SetAt(i, alt_symbols[alt_value]);
       }
     }
