@@ -474,6 +474,12 @@ if (pdf_enable_xfa) {
       defines = [ "USE_SYSTEM_LIBTIFF" ]
     }
   } else {
+    # tiffconf.h and tiffvers.h are PDFium's, outside the upstream copy in
+    # libtiff/src.
+    config("fx_tiff_config") {
+      include_dirs = [ "libtiff" ]
+    }
+
     source_set("fx_tiff") {
       configs -= [ "//build/config/compiler:chromium_code" ]
       configs += [
@@ -484,48 +490,49 @@ if (pdf_enable_xfa) {
         # Need to undefine the macro since it is redefined in tif_jpeg.c.
         configs -= [ "//build/config/win:lean_and_mean" ]
       }
+      public_configs = [ ":fx_tiff_config" ]
       deps = [
         ":zlib",
         "../core/fxcrt",
         "//third_party:jpeg",
       ]
       sources = [
-        "libtiff/tif_aux.c",
-        "libtiff/tif_close.c",
-        "libtiff/tif_codec.c",
-        "libtiff/tif_color.c",
-        "libtiff/tif_compress.c",
-        "libtiff/tif_dir.c",
-        "libtiff/tif_dirinfo.c",
-        "libtiff/tif_dirread.c",
-        "libtiff/tif_dirwrite.c",
-        "libtiff/tif_dumpmode.c",
-        "libtiff/tif_error.c",
-        "libtiff/tif_extension.c",
-        "libtiff/tif_fax3.c",
-        "libtiff/tif_fax3sm.c",
-        "libtiff/tif_flush.c",
-        "libtiff/tif_getimage.c",
-        "libtiff/tif_hash_set.c",
-        "libtiff/tif_hash_set.h",
-        "libtiff/tif_jpeg.c",
-        "libtiff/tif_luv.c",
-        "libtiff/tif_lzw.c",
-        "libtiff/tif_next.c",
-        "libtiff/tif_open.c",
-        "libtiff/tif_packbits.c",
-        "libtiff/tif_pixarlog.c",
-        "libtiff/tif_predict.c",
-        "libtiff/tif_print.c",
-        "libtiff/tif_read.c",
-        "libtiff/tif_strip.c",
-        "libtiff/tif_swab.c",
-        "libtiff/tif_thunder.c",
-        "libtiff/tif_tile.c",
-        "libtiff/tif_version.c",
-        "libtiff/tif_warning.c",
-        "libtiff/tif_write.c",
-        "libtiff/tiffiop.h",
+        "libtiff/src/tif_aux.c",
+        "libtiff/src/tif_close.c",
+        "libtiff/src/tif_codec.c",
+        "libtiff/src/tif_color.c",
+        "libtiff/src/tif_compress.c",
+        "libtiff/src/tif_dir.c",
+        "libtiff/src/tif_dirinfo.c",
+        "libtiff/src/tif_dirread.c",
+        "libtiff/src/tif_dirwrite.c",
+        "libtiff/src/tif_dumpmode.c",
+        "libtiff/src/tif_error.c",
+        "libtiff/src/tif_extension.c",
+        "libtiff/src/tif_fax3.c",
+        "libtiff/src/tif_fax3sm.c",
+        "libtiff/src/tif_flush.c",
+        "libtiff/src/tif_getimage.c",
+        "libtiff/src/tif_hash_set.c",
+        "libtiff/src/tif_hash_set.h",
+        "libtiff/src/tif_jpeg.c",
+        "libtiff/src/tif_luv.c",
+        "libtiff/src/tif_lzw.c",
+        "libtiff/src/tif_next.c",
+        "libtiff/src/tif_open.c",
+        "libtiff/src/tif_packbits.c",
+        "libtiff/src/tif_pixarlog.c",
+        "libtiff/src/tif_predict.c",
+        "libtiff/src/tif_print.c",
+        "libtiff/src/tif_read.c",
+        "libtiff/src/tif_strip.c",
+        "libtiff/src/tif_swab.c",
+        "libtiff/src/tif_thunder.c",
+        "libtiff/src/tif_tile.c",
+        "libtiff/src/tif_version.c",
+        "libtiff/src/tif_warning.c",
+        "libtiff/src/tif_write.c",
+        "libtiff/src/tiffiop.h",
         "libtiff/tiffvers.h",
       ]
     }

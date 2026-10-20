@@ -31,7 +31,7 @@ extern "C" {
 #if defined(USE_SYSTEM_LIBTIFF)
 #include <tiffio.h>
 #else
-#include "third_party/libtiff/tiffio.h"
+#include "third_party/libtiff/src/tiffio.h"
 #endif
 }  // extern C
 
