@@ -9,12 +9,40 @@
 #include "core/fpdfapi/parser/cpdf_syntax_parser.h"
 #include "core/fxcrt/cfx_read_only_span_stream.h"
 #include "core/fxcrt/fx_extension.h"
+#include "core/fxcrt/retain_ptr.h"
+#include "core/fxcrt/span.h"
 #include "testing/gmock/include/gmock/gmock.h"
 #include "testing/gtest/include/gtest/gtest.h"
 #include "testing/utils/path_service.h"
 
 using testing::ElementsAre;
 using testing::IsEmpty;
+
+namespace {
+
+class FailAfterFirstReadStream final : public CFX_ReadOnlySpanStream {
+ public:
+  CONSTRUCT_VIA_MAKE_RETAIN;
+
+  // CFX_ReadOnlySpanStream:
+  bool ReadBlockAtOffset(pdfium::span<uint8_t> buffer,
+                         FX_FILESIZE offset) override {
+    if (did_read_) {
+      return false;
+    }
+    did_read_ = true;
+    return CFX_ReadOnlySpanStream::ReadBlockAtOffset(buffer, offset);
+  }
+
+ private:
+  explicit FailAfterFirstReadStream(pdfium::span<const uint8_t> data)
+      : CFX_ReadOnlySpanStream(data) {}
+  ~FailAfterFirstReadStream() override = default;
+
+  bool did_read_ = false;
+};
+
+}  // namespace
 
 TEST(SyntaxParserTest, ReadHexString) {
   {
@@ -146,4 +174,14 @@ TEST(SyntaxParserTest, PeekNextWord) {
   CPDF_SyntaxParser parser(pdfium::MakeRetain<CFX_ReadOnlySpanStream>(data));
   EXPECT_EQ("WORD", parser.PeekNextWord());
   EXPECT_EQ("WORD", parser.GetNextWord().word);
+}
+
+// TODO(crbug.com/572302944): Enable this test when it stops crashing.
+TEST(SyntaxParserTest, DISABLED_ReadStreamError) {
+  static constexpr char kData[] =
+      "1 0 obj\n<</Length 4>>stream\ntest\nendstream\nendobj";
+  CPDF_SyntaxParser parser(pdfium::MakeRetain<FailAfterFirstReadStream>(
+      ByteStringView(kData).unsigned_span()));
+  EXPECT_FALSE(
+      parser.GetIndirectObject(nullptr, CPDF_SyntaxParser::ParseType::kLoose));
 }
