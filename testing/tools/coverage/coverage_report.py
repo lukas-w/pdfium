@@ -25,41 +25,45 @@ import common
 # 'binary' is the file that is to be run for the test.
 # 'use_test_runner' indicates if 'binary' depends on test_runner.py and thus
 # requires special handling.
+# 'use_renderer' indicates if 'binary' uses a renderer and thus can take
+# '--use-renderer'.
 # 'opt_args' are optional arguments to pass to the test 'binary'.
-TestSpec = namedtuple('TestSpec', 'binary, use_test_runner, opt_args')
+TestSpec = namedtuple('TestSpec',
+                      'binary, use_test_runner, use_renderer, opt_args')
 
 # All of the coverage tests that the script knows how to run.
 COVERAGE_TESTS = {
     'pdfium_unittests':
-        TestSpec('pdfium_unittests', False, []),
+        TestSpec('pdfium_unittests', False, False, []),
     'pdfium_embeddertests':
-        TestSpec('pdfium_embeddertests', False, []),
+        TestSpec('pdfium_embeddertests', False, True, []),
     'corpus_tests':
-        TestSpec('run_corpus_tests.py', True, []),
+        TestSpec('run_corpus_tests.py', True, True, []),
     'corpus_tests_javascript_disabled':
-        TestSpec('run_corpus_tests.py', True, ['--disable-javascript']),
+        TestSpec('run_corpus_tests.py', True, True, ['--disable-javascript']),
     'corpus_tests_xfa_disabled':
-        TestSpec('run_corpus_tests.py', True, ['--disable-xfa']),
+        TestSpec('run_corpus_tests.py', True, True, ['--disable-xfa']),
     'corpus_tests_render_oneshot':
-        TestSpec('run_corpus_tests.py', True, ['--render-oneshot']),
+        TestSpec('run_corpus_tests.py', True, True, ['--render-oneshot']),
     'corpus_tests_reverse_byte_order':
-        TestSpec('run_corpus_tests.py', True, ['--reverse-byte-order']),
+        TestSpec('run_corpus_tests.py', True, True, ['--reverse-byte-order']),
     'javascript_tests':
-        TestSpec('run_javascript_tests.py', True, []),
+        TestSpec('run_javascript_tests.py', True, False, []),
     'javascript_tests_javascript_disabled':
-        TestSpec('run_javascript_tests.py', True, ['--disable-javascript']),
+        TestSpec('run_javascript_tests.py', True, False,
+                 ['--disable-javascript']),
     'javascript_tests_xfa_disabled':
-        TestSpec('run_javascript_tests.py', True, ['--disable-xfa']),
+        TestSpec('run_javascript_tests.py', True, False, ['--disable-xfa']),
     'pixel_tests':
-        TestSpec('run_pixel_tests.py', True, []),
+        TestSpec('run_pixel_tests.py', True, True, []),
     'pixel_tests_javascript_disabled':
-        TestSpec('run_pixel_tests.py', True, ['--disable-javascript']),
+        TestSpec('run_pixel_tests.py', True, True, ['--disable-javascript']),
     'pixel_tests_xfa_disabled':
-        TestSpec('run_pixel_tests.py', True, ['--disable-xfa']),
+        TestSpec('run_pixel_tests.py', True, True, ['--disable-xfa']),
     'pixel_tests_render_oneshot':
-        TestSpec('run_pixel_tests.py', True, ['--render-oneshot']),
+        TestSpec('run_pixel_tests.py', True, True, ['--render-oneshot']),
     'pixel_tests_reverse_byte_order':
-        TestSpec('run_pixel_tests.py', True, ['--reverse-byte-order']),
+        TestSpec('run_pixel_tests.py', True, True, ['--reverse-byte-order']),
 }
 
 
@@ -121,7 +125,7 @@ class CoverageExecutor:
       print("Would have run '%s'" % ' '.join(args))
       return ''
 
-    output = subprocess.check_output(args, env=env)
+    output = subprocess.check_output(args, env=env).decode('utf8')
 
     if self.verbose:
       print("check_output(%s) returned '%s'" % (args, output))
@@ -169,17 +173,64 @@ class CoverageExecutor:
         binary_path = os.path.join(self.build_directory, test_spec.binary)
         build_targets.add(name)
       coverage_tests[name] = TestSpec(binary_path, test_spec.use_test_runner,
+                                      test_spec.use_renderer,
                                       test_spec.opt_args)
 
     build_targets = list(build_targets)
 
     return coverage_tests, build_targets
 
+  def use_renderer(self):
+    """Return whether any test in coverage_tests uses a renderer."""
+    return any(spec.use_renderer for spec in self.coverage_tests.values())
+
+  def get_renderers(self):
+    """Detect which renderers pdfium_test in build_directory supports."""
+    pdfium_test_path = os.path.join(self.build_directory, 'pdfium_test')
+    dry_run = self.dry_run and not os.path.exists(pdfium_test_path)
+    env = {'LLVM_PROFILE_FILE': os.devnull}
+    output = self.check_output([pdfium_test_path, '--show-config'],
+                               dry_run=dry_run,
+                               env=env)
+    features = set(output.strip().split(','))
+    # Hard-code AGG as always available because `pdfium_test --show-config`
+    # makes that assumption. TODO(crbug.com/576312222): Avoid hard-coding this.
+    renderers = ['agg']
+    if 'SKIA' in features:
+      renderers.append('skia')
+    return renderers
+
+  def maybe_expand_renderer_tests(self):
+    """Expand renderer tests if multiple renderers are available."""
+    if not self.use_renderer():
+      return
+
+    renderers = self.get_renderers()
+    if len(renderers) <= 1:
+      return
+
+    expanded_tests = {}
+    for name, spec in self.coverage_tests.items():
+      if spec.use_renderer:
+        for renderer in renderers:
+          renderer_name = f'{name}_{renderer}'
+          renderer_args = spec.opt_args + [f'--use-renderer={renderer}']
+          expanded_tests[renderer_name] = TestSpec(spec.binary,
+                                                   spec.use_test_runner,
+                                                   spec.use_renderer,
+                                                   renderer_args)
+      else:
+        expanded_tests[name] = spec
+    self.coverage_tests = expanded_tests
+
   def build_binaries(self):
     """Build all the binaries that are going to be needed for coverage
     generation."""
+    build_targets = set(self.build_targets)
+    if self.use_renderer():
+      build_targets.add('pdfium_test')
     call_args = ['autoninja', '-C', self.build_directory]
-    call_args.extend(self.build_targets)
+    call_args.extend(build_targets)
     return self.call(call_args, dry_run=self.dry_run) == 0
 
   def generate_coverage(self, name, spec):
@@ -274,6 +325,7 @@ class CoverageExecutor:
       print('Failed to successfully build binaries')
       return False
 
+    self.maybe_expand_renderer_tests()
     for name in self.coverage_tests:
       if not self.generate_coverage(name, self.coverage_tests[name]):
         print('Failed to successfully generate coverage data')
