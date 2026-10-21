@@ -18,6 +18,7 @@
 #include "core/fxcrt/check_op.h"
 #include "core/fxcrt/compiler_specific.h"
 #include "core/fxcrt/fx_safe_types.h"
+#include "core/fxcrt/numerics/safe_conversions.h"
 #include "core/fxcrt/notreached.h"
 #include "core/fxcrt/ptr_util.h"
 #include "core/fxcrt/span.h"
@@ -666,7 +667,7 @@ bool CFX_RenderDevice::DrawPath(const CFX_Path& path,
         return false;
       }
 
-      int width = static_cast<int>(ceil(rect_f.right - rect_f.left));
+      int width = pdfium::ClampCeil<int>(rect_f.right - rect_f.left);
       if (width < 1) {
         width = 1;
         if (rect_i.left == rect_i.right) {
@@ -675,7 +676,7 @@ bool CFX_RenderDevice::DrawPath(const CFX_Path& path,
           }
         }
       }
-      int height = static_cast<int>(ceil(rect_f.top - rect_f.bottom));
+      int height = pdfium::ClampCeil<int>(rect_f.top - rect_f.bottom);
       if (height < 1) {
         height = 1;
         if (rect_i.bottom == rect_i.top) {
@@ -685,7 +686,7 @@ bool CFX_RenderDevice::DrawPath(const CFX_Path& path,
           }
         }
       }
-      if (rect_i.Width() >= width + 1) {
+      if (rect_i.Width() > width) {
         if (rect_f.left - static_cast<float>(rect_i.left) >
             static_cast<float>(rect_i.right) - rect_f.right) {
           if (!pdfium::CheckAdd(rect_i.left, 1).AssignIfValid(&rect_i.left)) {
@@ -697,7 +698,7 @@ bool CFX_RenderDevice::DrawPath(const CFX_Path& path,
           }
         }
       }
-      if (rect_i.Height() >= height + 1) {
+      if (rect_i.Height() > height) {
         if (rect_f.top - static_cast<float>(rect_i.top) >
             static_cast<float>(rect_i.bottom) - rect_f.bottom) {
           if (!pdfium::CheckAdd(rect_i.top, 1).AssignIfValid(&rect_i.top)) {
