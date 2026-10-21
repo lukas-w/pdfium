@@ -848,8 +848,9 @@ RetainPtr<CPDF_Stream> CPDF_SyntaxParser::ReadStream(
     // changing object lifetimes by handing `substream` to `stream`, make a
     // copy of the data here.
     auto data = FixedSizeDataVector<uint8_t>::Uninit(substream->GetSize());
-    bool did_read = substream->ReadBlockAtOffset(data.span(), 0);
-    CHECK(did_read);
+    if (!substream->ReadBlockAtOffset(data.span(), 0)) {
+      return nullptr;
+    }
     auto data_as_stream =
         pdfium::MakeRetain<CFX_ReadOnlyFixedSizeDataVectorStream>(
             std::move(data));

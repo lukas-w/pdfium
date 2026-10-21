@@ -176,8 +176,7 @@ TEST(SyntaxParserTest, PeekNextWord) {
   EXPECT_EQ("WORD", parser.GetNextWord().word);
 }
 
-// TODO(crbug.com/572302944): Enable this test when it stops crashing.
-TEST(SyntaxParserTest, DISABLED_ReadStreamError) {
+TEST(SyntaxParserTest, ReadStreamError) {
   static constexpr char kData[] =
       "1 0 obj\n<</Length 4>>stream\ntest\nendstream\nendobj";
   CPDF_SyntaxParser parser(pdfium::MakeRetain<FailAfterFirstReadStream>(
