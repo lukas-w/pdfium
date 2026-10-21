@@ -6,6 +6,7 @@
 
 #include <cctype>
 #include <string>
+#include <string_view>
 
 #include "core/fxcrt/compiler_specific.h"
 #include "public/fpdf_formfill.h"
@@ -81,15 +82,27 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
   if (!IsValidForFuzzing(data, size)) {
     return 0;
   }
-  std::string xfa_string = "<xdp xmlns=\"http://ns.adobe.com/xdp/\">";
-  xfa_string += std::string(reinterpret_cast<const char*>(data), size);
-  xfa_string += "</xdp>";
+  static constexpr std::string_view kPrefix =
+      "<xdp xmlns=\"http://ns.adobe.com/xdp/\">";
+  static constexpr std::string_view kSuffix = "</xdp>";
+  static constexpr std::string_view kTemplate = kSimplePdfTemplate;
+
+  std::string_view data_view(reinterpret_cast<const char*>(data), size);
+
+  std::string xfa_string;
+  xfa_string.reserve(kPrefix.size() + data_view.size() + kSuffix.size());
+  xfa_string.append(kPrefix);
+  xfa_string.append(data_view);
+  xfa_string.append(kSuffix);
 
   // Add 1 for newline before endstream.
   std::string xfa_stream_len = std::to_string(xfa_string.size() + 1);
 
   // Compose the fuzzer
-  std::string xfa_final_str = std::string(kSimplePdfTemplate);
+  std::string xfa_final_str;
+  xfa_final_str.reserve(
+      kTemplate.size() + xfa_stream_len.size() + xfa_string.size());
+  xfa_final_str = kTemplate;
   xfa_final_str.replace(xfa_final_str.find("$1"), 2, xfa_stream_len);
   xfa_final_str.replace(xfa_final_str.find("$2"), 2, xfa_string);
 
