@@ -826,21 +826,31 @@ void CPDF_TextPage::CloseTempLine() {
     return;
   }
 
-  WideString str = temp_text_buf_.MakeString();
-  bool prev_char_is_space = false;
-  for (size_t i = 0; i < str.GetLength(); ++i) {
-    if (str[i] != ' ') {
-      prev_char_is_space = false;
-      continue;
+  {
+    // Since `temp_text_buf_` gets cleared later, give this span a limited scope
+    // to avoid potential dangling pointers.
+    pdfium::span<wchar_t> text_span = temp_text_buf_.GetWideSpan();
+    CHECK_EQ(text_span.size(), temp_char_list_.size());
+    size_t write_index = 0;
+    bool prev_char_is_space = false;
+    for (size_t read_index = 0; read_index < text_span.size(); ++read_index) {
+      wchar_t ch = text_span[read_index];
+      if (ch == ' ' && prev_char_is_space) {
+        continue;
+      }
+      prev_char_is_space = ch == ' ';
+      if (write_index != read_index) {
+        temp_char_list_[write_index] = temp_char_list_[read_index];
+        text_span[write_index] = ch;
+      }
+      ++write_index;
     }
-    if (prev_char_is_space) {
-      temp_text_buf_.Delete(i, 1);
-      temp_char_list_.erase(temp_char_list_.begin() + i);
-      str.Delete(i);
-      --i;
-    }
-    prev_char_is_space = true;
+    temp_char_list_.erase(temp_char_list_.begin() + write_index,
+                          temp_char_list_.end());
+    temp_text_buf_.Delete(write_index, text_span.size() - write_index);
   }
+
+  const WideString str = temp_text_buf_.MakeString();
   CFX_BidiString bidi(str, /*auto_order=*/true);
   if (rtl_) {
     bidi.SetOverallDirectionRight();
@@ -878,7 +888,7 @@ void CPDF_TextPage::CloseTempLine() {
     }
   }
   temp_char_list_.clear();
-  temp_text_buf_.Delete(0, temp_text_buf_.GetLength());
+  temp_text_buf_.Clear();
 }
 
 void CPDF_TextPage::ProcessTextObject(
