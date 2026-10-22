@@ -1,0 +1,44 @@
+diff --git a/src/tif_hash_set.c b/src/tif_hash_set.c
+index 7c27191..aefcaad 100644
+--- a/src/tif_hash_set.c
++++ b/src/tif_hash_set.c
+@@ -26,7 +26,7 @@
+  * DEALINGS IN THE SOFTWARE.
+  ****************************************************************************/
+ 
+-#include "tif_config.h"
++#include "tiffconf.h"
+ 
+ #include "tif_hash_set.h"
+ 
+diff --git a/src/tif_jpeg.c b/src/tif_jpeg.c
+index b9a85cb..1f17d0c 100644
+--- a/src/tif_jpeg.c
++++ b/src/tif_jpeg.c
+@@ -70,8 +70,13 @@ int TIFFReInitJPEG_12(TIFF *tif, const JPEGOtherSettings *otherSettings,
+                       int scheme, int is_encode);
+ int TIFFJPEGIsFullStripRequired_12(TIFF *tif);
+ 
++#if defined(USE_SYSTEM_LIBJPEG)
++#include <jerror.h>
++#include <jpeglib.h>
++#else
+ #include "jerror.h"
+ #include "jpeglib.h"
++#endif
+ 
+ /* Do optional compile-time version check */
+ #if defined(EXPECTED_JPEG_LIB_VERSION) && !defined(LIBJPEG_12_PATH)
+diff --git a/src/tiffiop.h b/src/tiffiop.h
+index 4f4a29c..8df0e84 100644
+--- a/src/tiffiop.h
++++ b/src/tiffiop.h
+@@ -28,7 +28,7 @@
+  * ``Library-private'' definitions.
+  */
+ 
+-#include "tif_config.h"
++#include "tiffconf.h"
+ 
+ #ifdef HAVE_FCNTL_H
+ #include <fcntl.h>

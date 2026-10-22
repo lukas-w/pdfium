@@ -14,9 +14,22 @@ TIFF library. See http://www.simplesystems.org/libtiff/
 
 Local Modifications:
 
+tiffconf.h and tiffvers.h are PDFium's, outside src/. Upstream has only
+their templates (tiffconf.h.in, tiffvers.h.in); update tiffvers.h when
+the version changes.
+
+The patches are in patches/; copy.bara.sky applies them in this order.
+
 0000-build-config.patch: Local build configuration changes.
 0001-no-error-handlers.patch: Set default error handlers.
 0028-nstrips-OOM.patch: return error for excess number of tiles/strips.
 0031-safe_size_ingtStripContig.patch: return error if the size to read overflow from int32.
 0033-avail-out-overflow.patch: signed comparison in PixarLogDecode().
 0034-shrink-TIFFFaxTabEnt.patch: make Param member of TIFFFaxTabEnt uint16_t.
+
+Update instructions:
+Update commit hashes in crowbar.txtpb, then run from
+this directory:
+crowbar build --no-dry-run ./
+copy.bara.sky lists every file it imports. If the new upstream version
+adds a file PDFium needs, add it there and to BUILD.gn.

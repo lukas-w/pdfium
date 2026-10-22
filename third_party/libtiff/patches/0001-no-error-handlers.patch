@@ -1,7 +1,7 @@
-diff --git a/third_party/libtiff/tif_error.c b/third_party/libtiff/tif_error.c
-index ac0b9c373..3d320eeff 100644
---- a/third_party/libtiff/tif_error.c
-+++ b/third_party/libtiff/tif_error.c
+diff --git a/src/tif_error.c b/src/tif_error.c
+index ac0b9c3..3d320ee 100644
+--- a/src/tif_error.c
++++ b/src/tif_error.c
 @@ -29,6 +29,9 @@
  
  TIFFErrorHandlerExt _TIFFerrorHandlerExt = NULL;

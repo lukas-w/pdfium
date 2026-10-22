@@ -1,7 +1,7 @@
-diff --git a/third_party/libtiff/tif_fax3.h b/third_party/libtiff/tif_fax3.h
-index 60d709c7e5..494914f9f3 100644
---- a/third_party/libtiff/tif_fax3.h
-+++ b/third_party/libtiff/tif_fax3.h
+diff --git a/src/tif_fax3.h b/src/tif_fax3.h
+index 60d709c..494914f 100644
+--- a/src/tif_fax3.h
++++ b/src/tif_fax3.h
 @@ -89,8 +89,7 @@ typedef struct
  {                        /* state table entry */
      unsigned char State; /* see above */

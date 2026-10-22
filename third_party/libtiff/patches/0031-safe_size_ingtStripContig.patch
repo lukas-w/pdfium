@@ -1,0 +1,17 @@
+diff --git a/src/tif_getimage.c b/src/tif_getimage.c
+index 4a759a6..316284d 100644
+--- a/src/tif_getimage.c
++++ b/src/tif_getimage.c
+@@ -1179,6 +1179,12 @@ static int gtStripContig(TIFFRGBAImage *img, uint32_t *raster, uint32_t w,
+         return 0;
+     }
+ 
++    if ((tmsize_t)img->row_offset > TIFF_SSIZE_T_MAX ||
++        (size_t)h > (size_t)TIFF_SSIZE_T_MAX)
++    {
++        return (0);
++    }
++
+     TIFFGetFieldDefaulted(tif, TIFFTAG_YCBCRSUBSAMPLING, &subsamplinghor,
+                           &subsamplingver);
+     if (subsamplingver == 0)
