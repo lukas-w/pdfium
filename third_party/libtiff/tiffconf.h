@@ -189,6 +189,9 @@
 /* Support LZW algorithm */
 #define LZW_SUPPORT 1
 
+/* Set LZW as read-only to exclude LZW encoding capability */
+#define LZW_READ_ONLY 1
+
 /* Support NeXT 2-bit RLE algorithm */
 #define NEXT_SUPPORT 1
 
