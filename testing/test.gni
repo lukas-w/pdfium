@@ -276,7 +276,11 @@ template("pdfium_unittest_source_set") {
       deps += invoker.deps
     }
     visibility = [ _pdfium_root_dir + ":*" ]
-    forward_variables_from(invoker, [ "cflags" ])
+    forward_variables_from(invoker,
+                           [
+                             "cflags",
+                             "data",
+                           ])
   }
 }
 
@@ -298,6 +302,10 @@ template("pdfium_embeddertest_source_set") {
       deps += invoker.deps
     }
     visibility = [ _pdfium_root_dir + ":*" ]
-    forward_variables_from(invoker, [ "cflags" ])
+    forward_variables_from(invoker,
+                           [
+                             "cflags",
+                             "data",
+                           ])
   }
 }

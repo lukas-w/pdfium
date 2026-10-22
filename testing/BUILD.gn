@@ -14,6 +14,7 @@ source_set("test_support") {
     "command_line_helpers.h",
     "font_renamer.cpp",
     "font_renamer.h",
+    "free_deleter.h",
     "fx_string_testhelpers.cpp",
     "fx_string_testhelpers.h",
     "invalid_seekable_read_stream.cpp",

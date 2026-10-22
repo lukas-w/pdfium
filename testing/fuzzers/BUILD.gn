@@ -118,7 +118,10 @@ if (pdf_enable_xfa) {
 
 source_set("fuzzer_init_public") {
   testonly = true
-  sources = [ "pdf_fuzzer_init_public.cc" ]
+  sources = [
+    "pdf_fuzzer_init_public.cc",
+    "pdf_fuzzer_init_public.h",
+  ]
   include_dirs = [ "../.." ]
   configs += [ "../../:pdfium_core_config" ]
   deps = [
@@ -183,6 +186,7 @@ source_set("fuzzer_utils") {
     "pdfium_fuzzer_util.h",
   ]
   public_deps = [ "../../:pdfium_public_headers" ]
+  deps = [ "../../core/fxcrt" ]
   include_dirs = [ "../.." ]
 }
 

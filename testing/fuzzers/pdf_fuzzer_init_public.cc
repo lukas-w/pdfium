@@ -13,13 +13,13 @@
 #include "testing/fuzzers/pdfium_fuzzer_util.h"
 
 #ifdef PDF_ENABLE_V8
-#include "testing/free_deleter.h"
-#include "testing/v8_initializer.h"
-#include "v8/include/v8-platform.h"
+#include "testing/free_deleter.h"    // nogncheck
+#include "testing/v8_initializer.h"  // nogncheck
+#include "v8/include/v8-platform.h"  // nogncheck
 #ifdef PDF_ENABLE_XFA
-#include "testing/fuzzers/xfa_process_state.h"
-#include "v8/include/v8-array-buffer.h"
-#include "v8/include/v8-isolate.h"
+#include "testing/fuzzers/xfa_process_state.h"  // nogncheck
+#include "v8/include/v8-array-buffer.h"         // nogncheck
+#include "v8/include/v8-isolate.h"              // nogncheck
 #endif  // PDF_ENABLE_XFA
 #endif  // PDF_ENABLE_V8
 

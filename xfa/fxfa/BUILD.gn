@@ -61,6 +61,7 @@ source_set("fxfa") {
     "cxfa_fftextedit.h",
     "cxfa_ffwidget.cpp",
     "cxfa_ffwidget.h",
+    "cxfa_ffwidget_type.h",
     "cxfa_ffwidgethandler.cpp",
     "cxfa_ffwidgethandler.h",
     "cxfa_fontmgr.cpp",

@@ -177,6 +177,11 @@ pdfium_embeddertest_source_set("embeddertests") {
     "fpdf_view_c_api_test.h",
     "fpdf_view_embeddertest.cpp",
   ]
+  data = [
+    "../third_party/NotoSansBengali2/NotoSansBengali-Regular.subset.ttf",
+    "../third_party/NotoSansBengali3/NotoSansBengali-Regular.subset.ttf",
+    "../third_party/NotoSansCJK/NotoSansSC-Regular.subset.otf",
+  ]
   deps = [
     ":fpdfsdk",
     "../constants",

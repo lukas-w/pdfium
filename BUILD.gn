@@ -214,6 +214,7 @@ source_set("pdfium_public_headers_impl") {
     "public/fpdf_structtree.h",
     "public/fpdf_sysfontinfo.h",
     "public/fpdf_text.h",
+    "public/fpdf_thumbnail.h",
     "public/fpdf_transformpage.h",
     "public/fpdfview.h",
   ]

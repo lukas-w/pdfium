@@ -77,6 +77,8 @@ if (pdf_enable_freetype && pdf_bundle_freetype) {
 
     defines = [ "FT2_BUILD_LIBRARY" ]
     sources = [
+      "//third_party/freetype/include/freetype-custom-config/ftmodule.h",
+      "//third_party/freetype/include/freetype-custom-config/ftoption.h",
       "//third_party/freetype/include/pstables.h",
       "//third_party/freetype/src/include/freetype/config/ftconfig.h",
       "//third_party/freetype/src/include/freetype/config/ftheader.h",
@@ -311,6 +313,7 @@ source_set("fx_lcms2") {
     "lcms/src/src/cmsvirt.c",
     "lcms/src/src/cmswtpnt.c",
     "lcms/src/src/cmsxform.c",
+    "lcms/src/src/lcms2_internal.h",
   ]
   deps = [ "../core/fxcrt" ]
 }
@@ -424,32 +427,59 @@ source_set("fx_libopenjpeg") {
     ":fx_libopenjpeg_warnings",
   ]
   sources = [
+    "libopenjpeg/opj_config.h",
+    "libopenjpeg/opj_config_private.h",
+    "libopenjpeg/opj_malloc.cc",
     "libopenjpeg/src/bio.c",
+    "libopenjpeg/src/bio.h",
     "libopenjpeg/src/cio.c",
+    "libopenjpeg/src/cio.h",
     "libopenjpeg/src/dwt.c",
+    "libopenjpeg/src/dwt.h",
     "libopenjpeg/src/event.c",
+    "libopenjpeg/src/event.h",
     "libopenjpeg/src/function_list.c",
+    "libopenjpeg/src/function_list.h",
     "libopenjpeg/src/ht_dec.c",
     "libopenjpeg/src/image.c",
+    "libopenjpeg/src/image.h",
     "libopenjpeg/src/invert.c",
+    "libopenjpeg/src/invert.h",
     "libopenjpeg/src/j2k.c",
+    "libopenjpeg/src/j2k.h",
     "libopenjpeg/src/jp2.c",
+    "libopenjpeg/src/jp2.h",
     "libopenjpeg/src/mct.c",
+    "libopenjpeg/src/mct.h",
     "libopenjpeg/src/mqc.c",
+    "libopenjpeg/src/mqc.h",
+    "libopenjpeg/src/mqc_inl.h",
     "libopenjpeg/src/openjpeg.c",
+    "libopenjpeg/src/openjpeg.h",
 
     # NOTE: libopenjpeg/src/opj_clock.c is not used.
-    "libopenjpeg/opj_malloc.cc",
+    "libopenjpeg/src/opj_codec.h",
+    "libopenjpeg/src/opj_common.h",
+    "libopenjpeg/src/opj_includes.h",
+    "libopenjpeg/src/opj_intmath.h",
     "libopenjpeg/src/opj_malloc.h",
     "libopenjpeg/src/pi.c",
+    "libopenjpeg/src/pi.h",
     "libopenjpeg/src/sparse_array.c",
     "libopenjpeg/src/sparse_array.h",
     "libopenjpeg/src/t1.c",
+    "libopenjpeg/src/t1.h",
     "libopenjpeg/src/t1_ht_luts.h",
+    "libopenjpeg/src/t1_luts.h",
     "libopenjpeg/src/t2.c",
+    "libopenjpeg/src/t2.h",
     "libopenjpeg/src/tcd.c",
+    "libopenjpeg/src/tcd.h",
     "libopenjpeg/src/tgt.c",
+    "libopenjpeg/src/tgt.h",
     "libopenjpeg/src/thread.c",
+    "libopenjpeg/src/thread.h",
+    "libopenjpeg/src/tls_keys.h",
   ]
   public_configs = [ ":fx_libopenjpeg_config" ]
   deps = [ "../core/fxcrt" ]
@@ -504,12 +534,14 @@ if (pdf_enable_xfa) {
         "//third_party:jpeg",
       ]
       sources = [
+        "libtiff/src/t4.h",
         "libtiff/src/tif_aux.c",
         "libtiff/src/tif_close.c",
         "libtiff/src/tif_codec.c",
         "libtiff/src/tif_color.c",
         "libtiff/src/tif_compress.c",
         "libtiff/src/tif_dir.c",
+        "libtiff/src/tif_dir.h",
         "libtiff/src/tif_dirinfo.c",
         "libtiff/src/tif_dirread.c",
         "libtiff/src/tif_dirwrite.c",
@@ -517,6 +549,7 @@ if (pdf_enable_xfa) {
         "libtiff/src/tif_error.c",
         "libtiff/src/tif_extension.c",
         "libtiff/src/tif_fax3.c",
+        "libtiff/src/tif_fax3.h",
         "libtiff/src/tif_fax3sm.c",
         "libtiff/src/tif_flush.c",
         "libtiff/src/tif_getimage.c",
@@ -530,6 +563,7 @@ if (pdf_enable_xfa) {
         "libtiff/src/tif_packbits.c",
         "libtiff/src/tif_pixarlog.c",
         "libtiff/src/tif_predict.c",
+        "libtiff/src/tif_predict.h",
         "libtiff/src/tif_print.c",
         "libtiff/src/tif_read.c",
         "libtiff/src/tif_strip.c",
@@ -539,7 +573,11 @@ if (pdf_enable_xfa) {
         "libtiff/src/tif_version.c",
         "libtiff/src/tif_warning.c",
         "libtiff/src/tif_write.c",
+        "libtiff/src/tiff.h",
+        "libtiff/src/tiffio.h",
         "libtiff/src/tiffiop.h",
+        "libtiff/src/uvcode.h",
+        "libtiff/tiffconf.h",
         "libtiff/tiffvers.h",
       ]
     }

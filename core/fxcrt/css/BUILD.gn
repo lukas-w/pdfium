@@ -50,6 +50,8 @@ source_set("css") {
     "cfx_cssvaluelist.h",
     "cfx_cssvaluelistparser.cpp",
     "cfx_cssvaluelistparser.h",
+    "properties.inc",
+    "property_values.inc",
   ]
   configs += [
     "../../../:pdfium_strict_config",
