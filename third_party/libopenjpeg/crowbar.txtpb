@@ -1,5 +1,5 @@
 upstream {
-  commit: "6c4a29b00211eb0430fa0e5e890f1ce5c80f409f"
+  version: "v2.5.4"
   artifacts {
     git {
       repository: "https://github.com/uclouvain/openjpeg"
@@ -12,4 +12,11 @@ stages {
     patch { copybara {} }
   }
   publish { git {} }
+}
+latest {
+  semver {}
+  git {
+    repository: "https://github.com/uclouvain/openjpeg"
+    tags {}
+  }
 }
