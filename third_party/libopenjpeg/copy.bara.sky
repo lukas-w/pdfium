@@ -29,8 +29,6 @@ crowbar_workflow(
         "src/lib/openjp2/mqc_inl.h",
         "src/lib/openjp2/openjpeg.c",
         "src/lib/openjp2/openjpeg.h",
-        "src/lib/openjp2/opj_clock.c",
-        "src/lib/openjp2/opj_clock.h",
         "src/lib/openjp2/opj_codec.h",
         "src/lib/openjp2/opj_common.h",
         "src/lib/openjp2/opj_includes.h",

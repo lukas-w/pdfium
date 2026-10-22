@@ -456,8 +456,6 @@ source_set("fx_libopenjpeg") {
     "libopenjpeg/src/mqc_inl.h",
     "libopenjpeg/src/openjpeg.c",
     "libopenjpeg/src/openjpeg.h",
-
-    # NOTE: libopenjpeg/src/opj_clock.c is not used.
     "libopenjpeg/src/opj_codec.h",
     "libopenjpeg/src/opj_common.h",
     "libopenjpeg/src/opj_includes.h",
