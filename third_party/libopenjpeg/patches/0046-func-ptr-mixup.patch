@@ -1,7 +1,7 @@
-diff --git a/third_party/libopenjpeg/j2k.c b/third_party/libopenjpeg/j2k.c
-index c56ec72c1..5e9d75076 100644
---- a/third_party/libopenjpeg/j2k.c
-+++ b/third_party/libopenjpeg/j2k.c
+diff --git a/src/j2k.c b/src/j2k.c
+index c56ec72..5e9d750 100644
+--- a/src/j2k.c
++++ b/src/j2k.c
 @@ -6749,8 +6749,9 @@ static OPJ_BOOL opj_j2k_read_cpf(opj_j2k_t *p_j2k,
  /* J2K / JPT decoder interface                                             */
  /* ----------------------------------------------------------------------- */
@@ -310,10 +310,10 @@ index c56ec72c1..5e9d75076 100644
      if (! opj_j2k_pre_write_tile(p_j2k, p_tile_index, p_stream, p_manager)) {
          opj_event_msg(p_manager, EVT_ERROR,
                        "Error while opj_j2k_pre_write_tile with tile index = %d\n", p_tile_index);
-diff --git a/third_party/libopenjpeg/j2k.h b/third_party/libopenjpeg/j2k.h
-index bcf70a419..01baf4750 100644
---- a/third_party/libopenjpeg/j2k.h
-+++ b/third_party/libopenjpeg/j2k.h
+diff --git a/src/j2k.h b/src/j2k.h
+index bcf70a4..01baf47 100644
+--- a/src/j2k.h
++++ b/src/j2k.h
 @@ -658,15 +658,15 @@ opj_j2k_t;
  
  /**
@@ -581,10 +581,10 @@ index bcf70a419..01baf4750 100644
                                opj_stream_private_t *cio,
                                opj_event_mgr_t * p_manager);
  
-diff --git a/third_party/libopenjpeg/jp2.c b/third_party/libopenjpeg/jp2.c
-index 9007c9736..6b4d5dbaa 100644
---- a/third_party/libopenjpeg/jp2.c
-+++ b/third_party/libopenjpeg/jp2.c
+diff --git a/src/jp2.c b/src/jp2.c
+index bb998b5..b85c5cd 100644
+--- a/src/jp2.c
++++ b/src/jp2.c
 @@ -1643,11 +1643,12 @@ static OPJ_BOOL opj_jp2_apply_color_postprocessing(opj_jp2_t *jp2,
      return OPJ_TRUE;
  }
@@ -642,7 +642,7 @@ index 9007c9736..6b4d5dbaa 100644
      OPJ_UINT32 i;
      OPJ_UINT32 depth_0;
      OPJ_UINT32 sign;
-@@ -2108,18 +2113,20 @@ OPJ_BOOL opj_jp2_setup_encoder(opj_jp2_t *jp2,
+@@ -2114,18 +2119,20 @@ OPJ_BOOL opj_jp2_setup_encoder(opj_jp2_t *jp2,
      return OPJ_TRUE;
  }
  
@@ -665,7 +665,7 @@ index 9007c9736..6b4d5dbaa 100644
      /* preconditions */
      assert(jp2 != 00);
      assert(cio != 00);
-@@ -2138,11 +2145,12 @@ OPJ_BOOL opj_jp2_end_decompress(opj_jp2_t *jp2,
+@@ -2144,11 +2151,12 @@ OPJ_BOOL opj_jp2_end_decompress(opj_jp2_t *jp2,
      return opj_j2k_end_decompress(jp2->j2k, cio, p_manager);
  }
  
@@ -679,7 +679,7 @@ index 9007c9736..6b4d5dbaa 100644
      /* preconditions */
      assert(jp2 != 00);
      assert(cio != 00);
-@@ -2466,12 +2474,13 @@ static OPJ_BOOL opj_jp2_exec(opj_jp2_t * jp2,
+@@ -2472,12 +2480,13 @@ static OPJ_BOOL opj_jp2_exec(opj_jp2_t * jp2,
      return l_result;
  }
  
@@ -694,7 +694,7 @@ index 9007c9736..6b4d5dbaa 100644
      /* preconditions */
      assert(jp2 != 00);
      assert(stream != 00);
-@@ -2844,11 +2853,12 @@ static OPJ_BOOL opj_jp2_read_boxhdr_char(opj_jp2_box_t *box,
+@@ -2850,11 +2859,12 @@ static OPJ_BOOL opj_jp2_read_boxhdr_char(opj_jp2_box_t *box,
  }
  
  OPJ_BOOL opj_jp2_read_header(opj_stream_private_t *p_stream,
@@ -708,7 +708,7 @@ index 9007c9736..6b4d5dbaa 100644
      int ret;
  
      /* preconditions */
-@@ -2997,7 +3007,7 @@ static OPJ_BOOL opj_jp2_setup_header_reading(opj_jp2_t *jp2,
+@@ -3003,7 +3013,7 @@ static OPJ_BOOL opj_jp2_setup_header_reading(opj_jp2_t *jp2,
      return OPJ_TRUE;
  }
  
@@ -717,7 +717,7 @@ index 9007c9736..6b4d5dbaa 100644
                                    OPJ_UINT32 * p_tile_index,
                                    OPJ_UINT32 * p_data_size,
                                    OPJ_INT32 * p_tile_x0,
-@@ -3010,7 +3020,8 @@ OPJ_BOOL opj_jp2_read_tile_header(opj_jp2_t * p_jp2,
+@@ -3016,7 +3026,8 @@ OPJ_BOOL opj_jp2_read_tile_header(opj_jp2_t * p_jp2,
                                    opj_event_mgr_t * p_manager
                                   )
  {
@@ -727,7 +727,7 @@ index 9007c9736..6b4d5dbaa 100644
                                      p_tile_index,
                                      p_data_size,
                                      p_tile_x0, p_tile_y0,
-@@ -3021,7 +3032,7 @@ OPJ_BOOL opj_jp2_read_tile_header(opj_jp2_t * p_jp2,
+@@ -3027,7 +3038,7 @@ OPJ_BOOL opj_jp2_read_tile_header(opj_jp2_t * p_jp2,
                                      p_manager);
  }
  
@@ -736,7 +736,7 @@ index 9007c9736..6b4d5dbaa 100644
                              OPJ_UINT32 p_tile_index,
                              OPJ_BYTE * p_data,
                              OPJ_UINT32 p_data_size,
-@@ -3030,11 +3041,12 @@ OPJ_BOOL opj_jp2_write_tile(opj_jp2_t *p_jp2,
+@@ -3036,11 +3047,12 @@ OPJ_BOOL opj_jp2_write_tile(opj_jp2_t *p_jp2,
                             )
  
  {
@@ -751,7 +751,7 @@ index 9007c9736..6b4d5dbaa 100644
                               OPJ_UINT32 p_tile_index,
                               OPJ_BYTE * p_data,
                               OPJ_UINT32 p_data_size,
-@@ -3042,12 +3054,14 @@ OPJ_BOOL opj_jp2_decode_tile(opj_jp2_t * p_jp2,
+@@ -3048,12 +3060,14 @@ OPJ_BOOL opj_jp2_decode_tile(opj_jp2_t * p_jp2,
                               opj_event_mgr_t * p_manager
                              )
  {
@@ -768,7 +768,7 @@ index 9007c9736..6b4d5dbaa 100644
      if (jp2) {
          /* destroy the J2K codec */
          opj_j2k_destroy(jp2->j2k);
-@@ -3114,34 +3128,37 @@ void opj_jp2_destroy(opj_jp2_t *jp2)
+@@ -3120,34 +3134,37 @@ void opj_jp2_destroy(opj_jp2_t *jp2)
      }
  }
  
@@ -811,7 +811,7 @@ index 9007c9736..6b4d5dbaa 100644
      if (!p_image) {
          return OPJ_FALSE;
      }
-@@ -3204,41 +3221,46 @@ opj_jp2_t* opj_jp2_create(OPJ_BOOL p_is_decoder)
+@@ -3210,41 +3227,46 @@ opj_jp2_t* opj_jp2_create(OPJ_BOOL p_is_decoder)
      return jp2;
  }
  
@@ -868,10 +868,10 @@ index 9007c9736..6b4d5dbaa 100644
  }
  
  /* ----------------------------------------------------------------------- */
-diff --git a/third_party/libopenjpeg/jp2.h b/third_party/libopenjpeg/jp2.h
-index 173f25119..fd9175a4e 100644
---- a/third_party/libopenjpeg/jp2.h
-+++ b/third_party/libopenjpeg/jp2.h
+diff --git a/src/jp2.h b/src/jp2.h
+index 173f251..fd9175a 100644
+--- a/src/jp2.h
++++ b/src/jp2.h
 @@ -230,38 +230,38 @@ opj_jp2_img_header_writer_handler_t;
  /**
  Setup the decoder decoding parameters using user parameters.
@@ -1119,10 +1119,10 @@ index 173f25119..fd9175a4e 100644
  
  
  /*@}*/
-diff --git a/third_party/libopenjpeg/openjpeg.c b/third_party/libopenjpeg/openjpeg.c
-index 382d8f4f0..b8a4bfb0d 100644
---- a/third_party/libopenjpeg/openjpeg.c
-+++ b/third_party/libopenjpeg/openjpeg.c
+diff --git a/src/openjpeg.c b/src/openjpeg.c
+index 382d8f4..b8a4bfb 100644
+--- a/src/openjpeg.c
++++ b/src/openjpeg.c
 @@ -194,85 +194,48 @@ opj_codec_t* OPJ_CALLCONV opj_create_decompress(OPJ_CODEC_FORMAT p_format)
  
      switch (p_format) {

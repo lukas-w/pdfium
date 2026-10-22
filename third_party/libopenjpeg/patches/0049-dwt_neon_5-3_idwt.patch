@@ -1,7 +1,7 @@
-diff --git a/third_party/libopenjpeg/dwt.c b/third_party/libopenjpeg/dwt.c
-index e17e9f90b..726f08ace 100644
---- a/third_party/libopenjpeg/dwt.c
-+++ b/third_party/libopenjpeg/dwt.c
+diff --git a/src/dwt.c b/src/dwt.c
+index e17e9f9..726f08a 100644
+--- a/src/dwt.c
++++ b/src/dwt.c
 @@ -73,7 +73,7 @@
  /** Number of int32 values in a AVX2 register */
  #define VREG_INT_COUNT       8

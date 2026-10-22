@@ -1,7 +1,7 @@
-diff --git a/third_party/libopenjpeg/mqc.c b/third_party/libopenjpeg/mqc.c
-index 4cbfabd03..3caab9e7c 100644
---- a/third_party/libopenjpeg/mqc.c
-+++ b/third_party/libopenjpeg/mqc.c
+diff --git a/src/mqc.c b/src/mqc.c
+index 4cbfabd..3caab9e 100644
+--- a/src/mqc.c
++++ b/src/mqc.c
 @@ -370,11 +370,6 @@ void opj_mqc_erterm_enc(opj_mqc_t *mqc)
      }
  }

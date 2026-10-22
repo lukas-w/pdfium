@@ -6,11 +6,11 @@ Date:   Sun Apr 5 13:25:27 2026 +0200
     
     Fixes #1619
 
-diff --git a/src/lib/openjp2/pi.c b/src/lib/openjp2/pi.c
-index 15ac3314..4abb87af 100644
---- a/src/lib/openjp2/pi.c
-+++ b/src/lib/openjp2/pi.c
-@@ -1694,9 +1694,12 @@ opj_pi_iterator_t *opj_pi_initialise_encode(const opj_image_t *p_image,
+diff --git a/src/pi.c b/src/pi.c
+index ad96f47..b199a7b 100644
+--- a/src/pi.c
++++ b/src/pi.c
+@@ -1703,9 +1703,12 @@ opj_pi_iterator_t *opj_pi_initialise_encode(const opj_image_t *p_image,
      l_current_pi = l_pi;
  
      /* memory allocation for include*/

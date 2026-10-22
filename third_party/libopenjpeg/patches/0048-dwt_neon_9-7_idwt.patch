@@ -1,7 +1,7 @@
-diff --git a/third_party/libopenjpeg/dwt.c b/third_party/libopenjpeg/dwt.c
-index 731e7b2c9..e17e9f90b 100644
---- a/third_party/libopenjpeg/dwt.c
-+++ b/third_party/libopenjpeg/dwt.c
+diff --git a/src/dwt.c b/src/dwt.c
+index 731e7b2..e17e9f9 100644
+--- a/src/dwt.c
++++ b/src/dwt.c
 @@ -55,6 +55,9 @@
  #if (defined(__AVX2__) || defined(__AVX512F__))
  #include <immintrin.h>

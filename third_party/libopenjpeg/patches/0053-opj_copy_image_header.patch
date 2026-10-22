@@ -1,7 +1,7 @@
-diff --git a/third_party/libopenjpeg/image.c b/third_party/libopenjpeg/image.c
+diff --git a/src/image.c b/src/image.c
 index 017201a..9af8a06 100644
---- a/third_party/libopenjpeg/image.c
-+++ b/third_party/libopenjpeg/image.c
+--- a/src/image.c
++++ b/src/image.c
 @@ -160,9 +160,10 @@ void opj_image_comp_header_update(opj_image_t * p_image_header,
   * @param   p_image_src     the src image
   * @param   p_image_dest    the dest image
@@ -53,10 +53,10 @@ index 017201a..9af8a06 100644
  }
  
  opj_image_t* OPJ_CALLCONV opj_image_tile_create(OPJ_UINT32 numcmpts,
-diff --git a/third_party/libopenjpeg/image.h b/third_party/libopenjpeg/image.h
+diff --git a/src/image.h b/src/image.h
 index bad83c6..95c8d1a 100644
---- a/third_party/libopenjpeg/image.h
-+++ b/third_party/libopenjpeg/image.h
+--- a/src/image.h
++++ b/src/image.h
 @@ -61,8 +61,8 @@ opj_image_t* opj_image_create0(void);
  void opj_image_comp_header_update(opj_image_t * p_image,
                                    const struct opj_cp* p_cp);
@@ -68,10 +68,10 @@ index bad83c6..95c8d1a 100644
  
  /*@}*/
  
-diff --git a/third_party/libopenjpeg/j2k.c b/third_party/libopenjpeg/j2k.c
+diff --git a/src/j2k.c b/src/j2k.c
 index 2835adb..6ddbcba 100644
---- a/third_party/libopenjpeg/j2k.c
-+++ b/third_party/libopenjpeg/j2k.c
+--- a/src/j2k.c
++++ b/src/j2k.c
 @@ -8546,7 +8546,11 @@ OPJ_BOOL opj_j2k_read_header(opj_stream_private_t *p_stream,
      }
  

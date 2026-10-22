@@ -14,6 +14,11 @@ JPEG 2000 library. See http://www.openjpeg.org/
 
 Local Modifications:
 
+opj_config.h, opj_config_private.h and opj_malloc.cc are PDFium's,
+outside src/. opj_malloc.cc replaces upstream opj_malloc.c.
+
+The patches are in patches/; copy.bara.sky applies them in this order.
+
 0003-dwt-decode.patch: Check array bounds for opj_dwt_decode_1() and friends.
 0005-jp2_apply_pclr.patch: Fix out of bounds access.
 0006-tcd_init_tile.patch: Fix a divide by zero bug in opj_tcd_init_tile().
@@ -43,3 +48,10 @@ Local Modifications:
 Note:
 
 Also update the version numbers in opj_config*.
+
+Update instructions:
+Update commit hashes in crowbar.txtpb, then run from
+this directory:
+crowbar build --no-dry-run ./
+copy.bara.sky lists every file it imports. If the new upstream version
+adds a file PDFium needs, add it there and to BUILD.gn.

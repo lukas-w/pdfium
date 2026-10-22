@@ -1,7 +1,7 @@
-diff --git a/third_party/libopenjpeg/dwt.c b/third_party/libopenjpeg/dwt.c
-index 11aae472d..731e7b2c9 100644
---- a/third_party/libopenjpeg/dwt.c
-+++ b/third_party/libopenjpeg/dwt.c
+diff --git a/src/dwt.c b/src/dwt.c
+index 11aae47..731e7b2 100644
+--- a/src/dwt.c
++++ b/src/dwt.c
 @@ -63,9 +63,6 @@
  /** @defgroup DWT DWT - Implementation of a discrete wavelet transform */
  /*@{*/

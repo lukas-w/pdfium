@@ -1,0 +1,15 @@
+upstream {
+  commit: "6c4a29b00211eb0430fa0e5e890f1ce5c80f409f"
+  artifacts {
+    git {
+      repository: "https://github.com/uclouvain/openjpeg"
+      commit: "6c4a29b00211eb0430fa0e5e890f1ce5c80f409f"
+    }
+  }
+}
+stages {
+  input {
+    patch { copybara {} }
+  }
+  publish { git {} }
+}

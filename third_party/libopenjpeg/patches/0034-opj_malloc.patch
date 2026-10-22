@@ -1,0 +1,42 @@
+diff --git a/src/opj_malloc.h b/src/opj_malloc.h
+index cbc4106..c215c24 100644
+--- a/src/opj_malloc.h
++++ b/src/opj_malloc.h
+@@ -33,6 +33,11 @@
+ #define OPJ_MALLOC_H
+ 
+ #include <stddef.h>
++
++#ifdef __cplusplus
++extern "C" {
++#endif
++
+ /**
+ @file opj_malloc.h
+ @brief Internal functions
+@@ -68,7 +73,6 @@ Allocate memory aligned to a 16 byte boundary
+ @return Returns a void pointer to the allocated space, or NULL if there is insufficient memory available
+ */
+ void * opj_aligned_malloc(size_t size);
+-void * opj_aligned_realloc(void *ptr, size_t size);
+ void opj_aligned_free(void* ptr);
+ 
+ /**
+@@ -77,7 +81,6 @@ Allocate memory aligned to a 32 byte boundary
+ @return Returns a void pointer to the allocated space, or NULL if there is insufficient memory available
+ */
+ void * opj_aligned_32_malloc(size_t size);
+-void * opj_aligned_32_realloc(void *ptr, size_t size);
+ 
+ /**
+ Reallocate memory blocks.
+@@ -102,5 +105,8 @@ void opj_free(void * m);
+ 
+ /*@}*/
+ 
+-#endif /* OPJ_MALLOC_H */
++#ifdef __cplusplus
++}  // extern "C"
++#endif
+ 
++#endif /* OPJ_MALLOC_H */

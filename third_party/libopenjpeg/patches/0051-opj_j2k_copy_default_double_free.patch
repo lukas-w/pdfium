@@ -1,7 +1,7 @@
-diff --git a/third_party/libopenjpeg/j2k.c b/third_party/libopenjpeg/j2k.c
-index fc5ce62df..1fb83f8b5 100644
---- a/third_party/libopenjpeg/j2k.c
-+++ b/third_party/libopenjpeg/j2k.c
+diff --git a/src/j2k.c b/src/j2k.c
+index fc5ce62..1fb83f8 100644
+--- a/src/j2k.c
++++ b/src/j2k.c
 @@ -9246,8 +9246,10 @@ static OPJ_BOOL opj_j2k_copy_default_tcp_and_create_tcd(opj_j2k_t * p_j2k,
          /* Remove memory not owned by this tile in case of early error return. */
          l_tcp->m_mct_decoding_matrix = 00;

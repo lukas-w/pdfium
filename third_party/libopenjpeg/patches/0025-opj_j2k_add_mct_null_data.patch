@@ -1,8 +1,8 @@
-diff --git a/third_party/libopenjpeg/j2k.c b/third_party/libopenjpeg/j2k.c
-index d24564cc2..889c2cfc8 100644
---- a/third_party/libopenjpeg/j2k.c
-+++ b/third_party/libopenjpeg/j2k.c
-@@ -6397,7 +6397,7 @@ static OPJ_BOOL opj_j2k_add_mct(opj_tcp_t * p_tcp, opj_image_t * p_image,
+diff --git a/src/j2k.c b/src/j2k.c
+index f80c6ed..c56ec72 100644
+--- a/src/j2k.c
++++ b/src/j2k.c
+@@ -6520,7 +6520,7 @@ static OPJ_BOOL opj_j2k_add_mct(opj_tcp_t * p_tcp, opj_image_t * p_image,
      if (l_deco_array) {
          l_data_size = MCT_ELEMENT_SIZE[l_deco_array->m_element_type] * p_image->numcomps
                        * p_image->numcomps;
@@ -11,7 +11,7 @@ index d24564cc2..889c2cfc8 100644
              return OPJ_FALSE;
          }
  
-@@ -6418,7 +6418,7 @@ static OPJ_BOOL opj_j2k_add_mct(opj_tcp_t * p_tcp, opj_image_t * p_image,
+@@ -6541,7 +6541,7 @@ static OPJ_BOOL opj_j2k_add_mct(opj_tcp_t * p_tcp, opj_image_t * p_image,
      if (l_offset_array) {
          l_data_size = MCT_ELEMENT_SIZE[l_offset_array->m_element_type] *
                        p_image->numcomps;

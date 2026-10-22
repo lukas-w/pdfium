@@ -1,7 +1,7 @@
-diff --git a/third_party/libopenjpeg/j2k.c b/third_party/libopenjpeg/j2k.c
-index 1fb83f8b5f..2835adbbb4 100644
---- a/third_party/libopenjpeg/j2k.c
-+++ b/third_party/libopenjpeg/j2k.c
+diff --git a/src/j2k.c b/src/j2k.c
+index 1fb83f8..2835adb 100644
+--- a/src/j2k.c
++++ b/src/j2k.c
 @@ -9306,6 +9306,7 @@ static OPJ_BOOL opj_j2k_copy_default_tcp_and_create_tcd(opj_j2k_t * p_j2k,
          }
          memcpy(l_tcp->m_mcc_records, l_default_tcp->m_mcc_records, l_mcc_records_size);
