@@ -5,27 +5,31 @@
 #ifndef CORE_FXCRT_AUTORESTORER_H_
 #define CORE_FXCRT_AUTORESTORER_H_
 
+#include <type_traits>
+#include <utility>
+
 #include "core/fxcrt/fx_memory.h"
 #include "core/fxcrt/unowned_ptr.h"
 
 namespace fxcrt {
 
 template <typename T>
-class AutoRestorer {
+class [[maybe_unused, nodiscard]] AutoRestorer {
  public:
   FX_STACK_ALLOCATED();
 
   explicit AutoRestorer(T* location)
       : location_(location), old_value_(*location) {}
 
-  AutoRestorer(T* location, const T& new_value)
-      : location_(location), old_value_(*location) {
-    *location = new_value;
-  }
+  template <typename U>
+    requires std::is_assignable_v<T&, U>
+  AutoRestorer(T* location, U&& new_value)
+      : location_(location),
+        old_value_(std::exchange(*location, std::forward<U>(new_value))) {}
 
   ~AutoRestorer() {
     if (location_) {
-      *location_ = old_value_;
+      *location_ = std::move(old_value_);
     }
   }
 
@@ -33,7 +37,7 @@ class AutoRestorer {
 
  private:
   UnownedPtr<T> location_;
-  const T old_value_;
+  T old_value_;
 };
 
 }  // namespace fxcrt

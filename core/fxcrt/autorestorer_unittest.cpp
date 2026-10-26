@@ -3,6 +3,10 @@
 // found in the LICENSE file.
 
 #include "core/fxcrt/autorestorer.h"
+
+#include <memory>
+#include <utility>
+
 #include "core/fxcrt/retain_ptr.h"
 #include "core/fxcrt/unowned_ptr.h"
 #include "testing/gtest/include/gtest/gtest.h"
@@ -52,6 +56,11 @@ TEST(fxcrt, AutoRestorerUnownedPtr) {
     EXPECT_EQ(&y, ptr);
   }
   EXPECT_EQ(&x, ptr);
+  {
+    AutoRestorer<UnownedPtr<int>> restorer(&ptr, &y);
+    EXPECT_EQ(&y, ptr);
+  }
+  EXPECT_EQ(&x, ptr);
 }
 
 TEST(fxcrt, AutoRestorerUnownedNoOp) {
@@ -80,35 +89,140 @@ TEST(fxcrt, AutoRestorerUnownedPtrAbandon) {
 TEST(fxcrt, AutoRestorerRetainPtr) {
   PseudoRetainable obj1;
   PseudoRetainable obj2;
-  RetainPtr<PseudoRetainable> ptr(&obj1);
-  EXPECT_EQ(1, obj1.retain_count());
-  EXPECT_EQ(0, obj1.release_count());
   {
-    AutoRestorer<RetainPtr<PseudoRetainable>> restorer(&ptr);
-    // |obj1| is kept alive by restorer in case it need to be restored.
-    EXPECT_EQ(2, obj1.retain_count());
+    RetainPtr<PseudoRetainable> ptr(&obj1);
+    EXPECT_EQ(1, obj1.retain_count());
     EXPECT_EQ(0, obj1.release_count());
-    ptr.Reset(&obj2);
-    EXPECT_EQ(&obj2, ptr.Get());
+    {
+      AutoRestorer<RetainPtr<PseudoRetainable>> restorer(&ptr);
+      // `obj1` is kept alive by restorer in case it need to be restored.
+      EXPECT_EQ(2, obj1.retain_count());
+      EXPECT_EQ(0, obj1.release_count());
+      ptr.Reset(&obj2);
+      EXPECT_EQ(&obj2, ptr.Get());
 
-    // |obj1| released by |ptr| assignment.
+      // `obj1` released by `ptr` assignment, but kept alive by `AutoRestorer`'s
+      // `old_value_`.
+      EXPECT_TRUE(obj1.alive());
+      EXPECT_EQ(2, obj1.retain_count());
+      EXPECT_EQ(1, obj1.release_count());
+
+      // `obj2` now kept alive by `ptr`.
+      EXPECT_TRUE(obj1.alive());
+      EXPECT_EQ(1, obj2.retain_count());
+      EXPECT_EQ(0, obj2.release_count());
+    }
+    EXPECT_EQ(&obj1, ptr.Get());
+
+    // Moving from `AutoRestorer`'s `old_value_` into `ptr` avoided ref churn.
     EXPECT_TRUE(obj1.alive());
     EXPECT_EQ(2, obj1.retain_count());
     EXPECT_EQ(1, obj1.release_count());
 
-    // |obj2| now kept alive by |ptr|.
-    EXPECT_TRUE(obj1.alive());
+    // `obj2` dead.
+    EXPECT_FALSE(obj2.alive());
+    EXPECT_EQ(1, obj2.retain_count());
+    EXPECT_EQ(1, obj2.release_count());
+  }
+  EXPECT_FALSE(obj1.alive());
+  EXPECT_EQ(2, obj1.retain_count());
+  EXPECT_EQ(2, obj1.release_count());
+  EXPECT_FALSE(obj2.alive());
+  EXPECT_EQ(1, obj2.retain_count());
+  EXPECT_EQ(1, obj2.release_count());
+}
+
+TEST(fxcrt, AutoRestorerRetainPtrCopy) {
+  PseudoRetainable obj1;
+  PseudoRetainable obj2;
+  {
+    RetainPtr<PseudoRetainable> ptr1(&obj1);
+    RetainPtr<PseudoRetainable> ptr2(&obj2);
+    EXPECT_EQ(1, obj1.retain_count());
+    EXPECT_EQ(0, obj1.release_count());
     EXPECT_EQ(1, obj2.retain_count());
     EXPECT_EQ(0, obj2.release_count());
+    {
+      AutoRestorer<RetainPtr<PseudoRetainable>> restorer(&ptr1, ptr2);
+      EXPECT_EQ(&obj2, ptr1.Get());
+      EXPECT_EQ(&obj2, ptr2.Get());
+
+      // `obj1` was moved into `restorer`'s `old_value_` without ref churn,
+      // where it is kept alive until restoration.
+      EXPECT_TRUE(obj1.alive());
+      EXPECT_EQ(1, obj1.retain_count());
+      EXPECT_EQ(0, obj1.release_count());
+
+      // `obj2` was copied into `ptr1`, incrementing its retain count.
+      EXPECT_TRUE(obj2.alive());
+      EXPECT_EQ(2, obj2.retain_count());
+      EXPECT_EQ(0, obj2.release_count());
+    }
+    EXPECT_EQ(&obj1, ptr1.Get());
+    EXPECT_EQ(&obj2, ptr2.Get());
+
+    // `obj1` moved back to `ptr1` on destruction, with zero ref churn.
+    EXPECT_TRUE(obj1.alive());
+    EXPECT_EQ(1, obj1.retain_count());
+    EXPECT_EQ(0, obj1.release_count());
+
+    // `ptr1`'s copy of `obj2` was released when overwritten by restoration.
+    EXPECT_TRUE(obj2.alive());
+    EXPECT_EQ(2, obj2.retain_count());
+    EXPECT_EQ(1, obj2.release_count());
   }
-  EXPECT_EQ(&obj1, ptr.Get());
+  EXPECT_FALSE(obj1.alive());
+  EXPECT_EQ(1, obj1.retain_count());
+  EXPECT_EQ(1, obj1.release_count());
+  EXPECT_FALSE(obj2.alive());
+  EXPECT_EQ(2, obj2.retain_count());
+  EXPECT_EQ(2, obj2.release_count());
+}
 
-  // |obj1| now kept alive again by |ptr|.
-  EXPECT_TRUE(obj1.alive());
-  EXPECT_EQ(3, obj1.retain_count());
-  EXPECT_EQ(2, obj1.release_count());
+TEST(fxcrt, AutoRestorerRetainPtrMove) {
+  PseudoRetainable obj1;
+  PseudoRetainable obj2;
+  {
+    RetainPtr<PseudoRetainable> ptr1(&obj1);
+    RetainPtr<PseudoRetainable> ptr2(&obj2);
+    EXPECT_EQ(1, obj1.retain_count());
+    EXPECT_EQ(0, obj1.release_count());
+    EXPECT_EQ(1, obj2.retain_count());
+    EXPECT_EQ(0, obj2.release_count());
+    {
+      AutoRestorer<RetainPtr<PseudoRetainable>> restorer(&ptr1,
+                                                         std::move(ptr2));
+      EXPECT_EQ(&obj2, ptr1.Get());
+      EXPECT_FALSE(ptr2);
 
-  // |obj2| dead.
+      // `obj1` was moved into `restorer`'s `old_value_` without ref churn,
+      // where it is kept alive until restoration.
+      EXPECT_TRUE(obj1.alive());
+      EXPECT_EQ(1, obj1.retain_count());
+      EXPECT_EQ(0, obj1.release_count());
+
+      // `ptr2` was moved into `ptr1` without ref churn.
+      EXPECT_TRUE(obj2.alive());
+      EXPECT_EQ(1, obj2.retain_count());
+      EXPECT_EQ(0, obj2.release_count());
+    }
+    EXPECT_EQ(&obj1, ptr1.Get());
+    EXPECT_FALSE(ptr2);
+
+    // `obj1` moved back to `ptr1` on destruction, with zero ref churn.
+    EXPECT_TRUE(obj1.alive());
+    EXPECT_EQ(1, obj1.retain_count());
+    EXPECT_EQ(0, obj1.release_count());
+
+    // `ptr1`'s sole reference to `obj2` was released on restoration, so `obj2`
+    // dies.
+    EXPECT_FALSE(obj2.alive());
+    EXPECT_EQ(1, obj2.retain_count());
+    EXPECT_EQ(1, obj2.release_count());
+  }
+  EXPECT_FALSE(obj1.alive());
+  EXPECT_EQ(1, obj1.retain_count());
+  EXPECT_EQ(1, obj1.release_count());
   EXPECT_FALSE(obj2.alive());
   EXPECT_EQ(1, obj2.retain_count());
   EXPECT_EQ(1, obj2.release_count());
@@ -116,55 +230,91 @@ TEST(fxcrt, AutoRestorerRetainPtr) {
 
 TEST(fxcrt, AutoRestorerRetainPtrNoOp) {
   PseudoRetainable obj1;
-  RetainPtr<PseudoRetainable> ptr(&obj1);
-  EXPECT_EQ(1, obj1.retain_count());
-  EXPECT_EQ(0, obj1.release_count());
   {
-    AutoRestorer<RetainPtr<PseudoRetainable>> restorer(&ptr);
-    EXPECT_EQ(2, obj1.retain_count());
+    RetainPtr<PseudoRetainable> ptr(&obj1);
+    EXPECT_EQ(1, obj1.retain_count());
     EXPECT_EQ(0, obj1.release_count());
-  }
-  EXPECT_EQ(&obj1, ptr.Get());
+    {
+      AutoRestorer<RetainPtr<PseudoRetainable>> restorer(&ptr);
+      EXPECT_EQ(2, obj1.retain_count());
+      EXPECT_EQ(0, obj1.release_count());
+    }
+    EXPECT_EQ(&obj1, ptr.Get());
 
-  // Self-reassignement avoided ref churn.
-  EXPECT_TRUE(obj1.alive());
+    // Self-reassignement avoided ref churn.
+    EXPECT_TRUE(obj1.alive());
+    EXPECT_EQ(2, obj1.retain_count());
+    EXPECT_EQ(1, obj1.release_count());
+  }
+  EXPECT_FALSE(obj1.alive());
   EXPECT_EQ(2, obj1.retain_count());
-  EXPECT_EQ(1, obj1.release_count());
+  EXPECT_EQ(2, obj1.release_count());
 }
 
 TEST(fxcrt, AutoRestorerRetainPtrAbandon) {
   PseudoRetainable obj1;
   PseudoRetainable obj2;
-  RetainPtr<PseudoRetainable> ptr(&obj1);
-  EXPECT_EQ(1, obj1.retain_count());
-  EXPECT_EQ(0, obj1.release_count());
   {
-    AutoRestorer<RetainPtr<PseudoRetainable>> restorer(&ptr);
-    // |obj1| is kept alive by restorer in case it need to be restored.
-    EXPECT_EQ(2, obj1.retain_count());
+    RetainPtr<PseudoRetainable> ptr(&obj1);
+    EXPECT_EQ(1, obj1.retain_count());
     EXPECT_EQ(0, obj1.release_count());
-    ptr.Reset(&obj2);
+    {
+      AutoRestorer<RetainPtr<PseudoRetainable>> restorer(&ptr);
+      // `obj1` is kept alive by restorer in case it need to be restored.
+      EXPECT_EQ(2, obj1.retain_count());
+      EXPECT_EQ(0, obj1.release_count());
+      ptr.Reset(&obj2);
+      EXPECT_EQ(&obj2, ptr.Get());
+
+      // `obj1` released by `ptr` assignment.
+      EXPECT_EQ(2, obj1.retain_count());
+      EXPECT_EQ(1, obj1.release_count());
+
+      // `obj2` now kept alive by `ptr`.
+      EXPECT_EQ(1, obj2.retain_count());
+      EXPECT_EQ(0, obj2.release_count());
+
+      restorer.AbandonRestoration();
+    }
     EXPECT_EQ(&obj2, ptr.Get());
 
-    // |obj1| released by |ptr| assignment.
+    // `obj1` now dead as a result of abandonment.
+    EXPECT_FALSE(obj1.alive());
     EXPECT_EQ(2, obj1.retain_count());
-    EXPECT_EQ(1, obj1.release_count());
+    EXPECT_EQ(2, obj1.release_count());
 
-    // |obj2| now kept alive by |ptr|.
+    // `obj2` kept alive by `ptr`.
+    EXPECT_TRUE(obj2.alive());
     EXPECT_EQ(1, obj2.retain_count());
     EXPECT_EQ(0, obj2.release_count());
-
-    restorer.AbandonRestoration();
   }
-  EXPECT_EQ(&obj2, ptr.Get());
-
-  // |obj1| now dead as a result of abandonment.
   EXPECT_FALSE(obj1.alive());
   EXPECT_EQ(2, obj1.retain_count());
   EXPECT_EQ(2, obj1.release_count());
-
-  // |obj2| kept alive by |ptr|.
-  EXPECT_TRUE(obj2.alive());
+  EXPECT_FALSE(obj2.alive());
   EXPECT_EQ(1, obj2.retain_count());
-  EXPECT_EQ(0, obj2.release_count());
+  EXPECT_EQ(1, obj2.release_count());
+}
+
+TEST(fxcrt, AutoRestorerMoveOnlyType) {
+  auto ptr1 = std::make_unique<int>(5);
+  auto ptr2 = std::make_unique<int>(6);
+  {
+    AutoRestorer<std::unique_ptr<int>> restorer(&ptr1, std::move(ptr2));
+    EXPECT_FALSE(ptr2);
+    EXPECT_EQ(6, *ptr1);
+  }
+  EXPECT_EQ(5, *ptr1);
+}
+
+TEST(fxcrt, AutoRestorerMoveOnlyTypeAbandon) {
+  auto ptr1 = std::make_unique<int>(5);
+  auto ptr2 = std::make_unique<int>(6);
+  {
+    AutoRestorer<std::unique_ptr<int>> restorer(&ptr1, std::move(ptr2));
+    EXPECT_FALSE(ptr2);
+    EXPECT_EQ(6, *ptr1);
+    restorer.AbandonRestoration();
+  }
+  EXPECT_EQ(6, *ptr1);
 }
