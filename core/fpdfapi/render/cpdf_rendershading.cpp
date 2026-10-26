@@ -148,18 +148,21 @@ void DrawAxialShading(const RetainPtr<CFX_DIBitmap>& pBitmap,
     return;
   }
 
-  CFX_Matrix matrix = mtObject2Bitmap.GetInverse();
+  const CFX_Matrix matrix = mtObject2Bitmap.GetInverse();
+  const float delta_num = (matrix.a * x_span) + (matrix.b * y_span);
+  const float delta_scale = delta_num / axis_len_square;
   for (int row = 0; row < height; row++) {
     auto dest_buf = pBitmap->GetWritableScanlineAs<uint32_t>(row).first(
         static_cast<size_t>(width));
-    size_t column_counter = 0;
+    const CFX_PointF pos =
+        matrix.Transform(CFX_PointF(0.0f, static_cast<float>(row)));
+    const float num_0 =
+        ((pos.x - start_x) * x_span) + ((pos.y - start_y) * y_span);
+    const float scale_0 = num_0 / axis_len_square;
+    float column = 0.0f;
     for (auto& pix : dest_buf) {
-      const float column = static_cast<float>(column_counter++);
-      const CFX_PointF pos =
-          matrix.Transform(CFX_PointF(column, static_cast<float>(row)));
-      float scale =
-          (((pos.x - start_x) * x_span) + ((pos.y - start_y) * y_span)) /
-          axis_len_square;
+      const float scale = scale_0 + (column * delta_scale);
+      ++column;
       int index = static_cast<int32_t>(scale * (kShadingSteps - 1));
       if (index < 0) {
         if (!bStartExtend) {
