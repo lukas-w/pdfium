@@ -139,6 +139,9 @@ void DrawAxialShading(const RetainPtr<CFX_DIBitmap>& pBitmap,
   float x_span = end_x - start_x;
   float y_span = end_y - start_y;
   float axis_len_square = (x_span * x_span) + (y_span * y_span);
+  if (axis_len_square == 0.0f) {
+    return;
+  }
 
   std::array<FX_ARGB, kShadingSteps> shading_steps;
   if (!GetShadingSteps(t_min, t_max, funcs, pCS, alpha, &shading_steps)) {
