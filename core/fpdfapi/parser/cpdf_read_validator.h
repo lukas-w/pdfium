@@ -13,7 +13,7 @@
 
 class CPDF_ReadValidator final : public IFX_SeekableReadStream {
  public:
-  class ScopedSession {
+  class [[maybe_unused, nodiscard]] ScopedSession {
    public:
     FX_STACK_ALLOCATED();
 

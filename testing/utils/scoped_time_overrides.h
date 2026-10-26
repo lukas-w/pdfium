@@ -8,7 +8,7 @@
 #include "core/fxcrt/fx_extension.h"
 #include "core/fxcrt/fx_memory.h"
 
-class ScopedTimeFunction {
+class [[maybe_unused, nodiscard]] ScopedTimeFunction {
  public:
   FX_STACK_ALLOCATED();
 
@@ -21,7 +21,7 @@ class ScopedTimeFunction {
   const TimeFunction old_func_;
 };
 
-class ScopedLocaltimeFunction {
+class [[maybe_unused, nodiscard]] ScopedLocaltimeFunction {
  public:
   FX_STACK_ALLOCATED();
 

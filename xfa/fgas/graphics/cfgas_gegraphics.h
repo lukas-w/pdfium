@@ -24,7 +24,7 @@ class CFX_RenderDevice;
 
 class CFGAS_GEGraphics {
  public:
-  class StateRestorer {
+  class [[maybe_unused, nodiscard]] StateRestorer {
    public:
     FX_STACK_ALLOCATED();
 

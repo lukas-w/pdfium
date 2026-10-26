@@ -455,7 +455,7 @@ FT_Render_Mode FtRenderModeFromFontAntiAliasingMode(
 
 // Sets the given transform on the FaceRec, and resets it to the identity when
 // it goes out of scope.
-class ScopedFaceTransform {
+class [[maybe_unused, nodiscard]] ScopedFaceTransform {
  public:
   FX_STACK_ALLOCATED();
 

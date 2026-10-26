@@ -170,7 +170,7 @@ class CPDF_Document : public Observable,
   void ResizePageListForTesting(size_t size);
 
  private:
-  class StockFontClearer {
+  class [[maybe_unused, nodiscard]] StockFontClearer {
    public:
     FX_STACK_ALLOCATED();
 

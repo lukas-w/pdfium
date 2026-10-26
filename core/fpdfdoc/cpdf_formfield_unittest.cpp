@@ -27,7 +27,7 @@ namespace {
 
 // Create and destroys the page module that is necessary when instantiating a
 // CPDF_Document.
-class ScopedCPDF_PageModule {
+class [[maybe_unused, nodiscard]] ScopedCPDF_PageModule {
  public:
   FX_STACK_ALLOCATED();
 

@@ -308,7 +308,7 @@ uint32_t GetChecksumFromTT(pdfium::span<const uint8_t> font_data) {
   return checksum;
 }
 
-class ScopedFontDeleter {
+class [[maybe_unused, nodiscard]] ScopedFontDeleter {
  public:
   FX_STACK_ALLOCATED();
 

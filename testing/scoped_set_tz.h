@@ -10,7 +10,7 @@
 
 #include "core/fxcrt/fx_memory.h"
 
-class ScopedSetTZ {
+class [[maybe_unused, nodiscard]] ScopedSetTZ {
  public:
   FX_STACK_ALLOCATED();
 

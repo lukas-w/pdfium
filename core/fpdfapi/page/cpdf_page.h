@@ -39,9 +39,10 @@ class CPDF_Page final : public IPDF_Page, public CPDF_PageObjectHolder {
     virtual ~RenderContextIface() = default;
   };
 
-  class RenderContextClearer {
+  class [[maybe_unused, nodiscard]] RenderContextClearer {
    public:
     FX_STACK_ALLOCATED();
+
     explicit RenderContextClearer(CPDF_Page* pPage);
     ~RenderContextClearer();
 

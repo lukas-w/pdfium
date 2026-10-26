@@ -13,7 +13,7 @@
 
 class CFXJSE_Context;
 
-class CFXJSE_ScopeUtil_IsolateHandle {
+class [[maybe_unused, nodiscard]] CFXJSE_ScopeUtil_IsolateHandle {
  public:
   FX_STACK_ALLOCATED();
 
@@ -29,7 +29,7 @@ class CFXJSE_ScopeUtil_IsolateHandle {
   v8::HandleScope handle_scope_;
 };
 
-class CFXJSE_ScopeUtil_Context {
+class [[maybe_unused, nodiscard]] CFXJSE_ScopeUtil_Context {
  public:
   FX_STACK_ALLOCATED();
 
@@ -42,7 +42,7 @@ class CFXJSE_ScopeUtil_Context {
   v8::Context::Scope context_scope_;
 };
 
-class CFXJSE_ScopeUtil_IsolateHandleContext {
+class [[maybe_unused, nodiscard]] CFXJSE_ScopeUtil_IsolateHandleContext {
  public:
   FX_STACK_ALLOCATED();
 
@@ -58,7 +58,7 @@ class CFXJSE_ScopeUtil_IsolateHandleContext {
   CFXJSE_ScopeUtil_Context context_;
 };
 
-class CFXJSE_ScopeUtil_RootContext {
+class [[maybe_unused, nodiscard]] CFXJSE_ScopeUtil_RootContext {
  public:
   FX_STACK_ALLOCATED();
 
@@ -72,7 +72,7 @@ class CFXJSE_ScopeUtil_RootContext {
   v8::Context::Scope context_scope_;
 };
 
-class CFXJSE_ScopeUtil_IsolateHandleRootContext {
+class [[maybe_unused, nodiscard]] CFXJSE_ScopeUtil_IsolateHandleRootContext {
  public:
   FX_STACK_ALLOCATED();
 

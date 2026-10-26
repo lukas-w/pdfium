@@ -11,7 +11,7 @@
 namespace fxcrt {
 
 template <typename T>
-class AutoNuller {
+class [[maybe_unused, nodiscard]] AutoNuller {
  public:
   FX_STACK_ALLOCATED();
 
