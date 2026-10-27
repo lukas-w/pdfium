@@ -12,6 +12,7 @@
 
 #include "core/fxcrt/check_op.h"
 #include "core/fxcrt/stl_util.h"
+#include "core/fxcrt/zip.h"
 #include "core/fxge/dib/cfx_dibitmap.h"
 
 CFX_AggClipRgn::CFX_AggClipRgn(int width, int height)
@@ -51,16 +52,22 @@ void CFX_AggClipRgn::IntersectMask(int left,
     box_ = new_box;
     return;
   }
+  const int width = new_box.Width();
   auto new_dib = pdfium::MakeRetain<CFX_DIBitmap>();
-  CHECK(new_dib->Create(new_box.Width(), new_box.Height(),
-                        FXDIB_Format::k8bppMask));
+  CHECK(new_dib->Create(width, new_box.Height(), FXDIB_Format::k8bppMask));
+  const size_t width_size = static_cast<size_t>(width);
+  const size_t old_offset = static_cast<size_t>(new_box.left - box_.left);
+  const size_t mask_offset = static_cast<size_t>(new_box.left - left);
   for (int row = new_box.top; row < new_box.bottom; row++) {
-    pdfium::span<const uint8_t> old_scan = mask_->GetScanline(row - box_.top);
-    pdfium::span<const uint8_t> mask_scan = pMask->GetScanline(row - top);
-    auto new_scan = new_dib->GetWritableScanline(row - new_box.top);
-    for (int col = new_box.left; col < new_box.right; col++) {
-      new_scan[col - new_box.left] =
-          old_scan[col - box_.left] * mask_scan[col - left] / 255;
+    pdfium::span<const uint8_t> old_scan =
+        mask_->GetScanline(row - box_.top).subspan(old_offset, width_size);
+    pdfium::span<const uint8_t> mask_scan =
+        pMask->GetScanline(row - top).subspan(mask_offset);
+    pdfium::span<uint8_t> new_scan =
+        new_dib->GetWritableScanline(row - new_box.top);
+    for (auto [old_val, mask_val, new_val] :
+         fxcrt::Zip(old_scan, mask_scan, new_scan)) {
+      new_val = old_val * mask_val / 255;
     }
   }
   box_ = new_box;
