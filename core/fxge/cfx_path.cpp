@@ -17,6 +17,10 @@
 
 namespace {
 
+bool PointsFloatEqual(const CFX_PointF& p1, const CFX_PointF& p2) {
+  return FXSYS_IsFloatEqual(p1.x, p2.x) && FXSYS_IsFloatEqual(p1.y, p2.y);
+}
+
 bool IsRectPreTransform(const std::vector<CFX_Path::Point>& points) {
   if (points.size() != 5 && points.size() != 4) {
     return false;
@@ -26,12 +30,13 @@ bool IsRectPreTransform(const std::vector<CFX_Path::Point>& points) {
     return false;
   }
 
-  if (points.size() == 5 && points[0].point_ != points[4].point_) {
+  if (points.size() == 5 &&
+      !PointsFloatEqual(points[0].point_, points[4].point_)) {
     return false;
   }
 
-  if (points[0].point_ == points[2].point_ ||
-      points[1].point_ == points[3].point_) {
+  if (PointsFloatEqual(points[0].point_, points[2].point_) ||
+      PointsFloatEqual(points[1].point_, points[3].point_)) {
     return false;
   }
 
@@ -44,7 +49,7 @@ bool IsRectPreTransform(const std::vector<CFX_Path::Point>& points) {
 }
 
 bool XYBothNotEqual(const CFX_PointF& p1, const CFX_PointF& p2) {
-  return p1.x != p2.x && p1.y != p2.y;
+  return !FXSYS_IsFloatEqual(p1.x, p2.x) && !FXSYS_IsFloatEqual(p1.y, p2.y);
 }
 
 bool IsRectImpl(const std::vector<CFX_Path::Point>& points) {
@@ -73,7 +78,8 @@ CFX_FloatRect CreateRectFromPoints(const CFX_PointF& p1, const CFX_PointF& p2) {
 
 bool PathPointsNeedNormalization(const std::vector<CFX_Path::Point>& points) {
   return points.size() > 5 ||
-         (points.size() == 5 && points[0].point_ != points[4].point_);
+         (points.size() == 5 &&
+          !PointsFloatEqual(points[0].point_, points[4].point_));
 }
 
 // Returns whether `point` lies strictly between `prev` and `next` on a
@@ -81,11 +87,13 @@ bool PathPointsNeedNormalization(const std::vector<CFX_Path::Point>& points) {
 bool IsBetweenOnAxisAlignedLine(const CFX_PointF& prev,
                                 const CFX_PointF& point,
                                 const CFX_PointF& next) {
-  if (prev.y == point.y && point.y == next.y) {
+  if (FXSYS_IsFloatEqual(prev.y, point.y) &&
+      FXSYS_IsFloatEqual(point.y, next.y)) {
     return (prev.x < point.x && point.x < next.x) ||
            (prev.x > point.x && point.x > next.x);
   }
-  if (prev.x == point.x && point.x == next.x) {
+  if (FXSYS_IsFloatEqual(prev.x, point.x) &&
+      FXSYS_IsFloatEqual(point.x, next.x)) {
     return (prev.y < point.y && point.y < next.y) ||
            (prev.y > point.y && point.y > next.y);
   }
@@ -96,7 +104,8 @@ std::vector<CFX_Path::Point> GetNormalizedPoints(
     const std::vector<CFX_Path::Point>& points) {
   DCHECK(PathPointsNeedNormalization(points));
 
-  const size_t expected_size = points[0].point_ == points.back().point_ ? 5 : 4;
+  const size_t expected_size =
+      PointsFloatEqual(points[0].point_, points.back().point_) ? 5 : 4;
   if (expected_size == 4 && !points.back().close_figure_) {
     return {};
   }
@@ -118,7 +127,7 @@ std::vector<CFX_Path::Point> GetNormalizedPoints(
       const auto next = std::next(it);
       if (!point.close_figure_) {
         // If the line does not move, skip this point.
-        if (point.point_ == normalized.back().point_) {
+        if (PointsFloatEqual(point.point_, normalized.back().point_)) {
           continue;
         }
 
@@ -132,7 +141,7 @@ std::vector<CFX_Path::Point> GetNormalizedPoints(
           continue;
         }
       } else if (next == points.end()) {
-        if (point.point_ == normalized.back().point_ ||
+        if (PointsFloatEqual(point.point_, normalized.back().point_) ||
             IsBetweenOnAxisAlignedLine(normalized.back().point_, point.point_,
                                        points[0].point_)) {
           normalized.back().close_figure_ = true;

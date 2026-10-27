@@ -84,9 +84,14 @@ TEST(CFXPath, MicroShearTransformTolerance) {
   const CFX_Matrix kMicroDeviationMatrix(1.0f, 0.0f, -4.69486423e-08f, 1.0f,
                                          0.0f, 0.0f);
   EXPECT_TRUE(path.IsRect());
-  // TODO(crbug.com/550515869): Update expectation to CFX_FloatRect(1, 2, 3, 5)
-  // once micro-shear tolerance is supported.
-  EXPECT_FALSE(path.GetRect(&kMicroDeviationMatrix).has_value());
+  // Use EXPECT_FLOAT_EQ() instead of EXPECT_EQ() with `CFX_FloatRect` because
+  // `CFX_FloatRect` uses exact floating-point equality.
+  std::optional<CFX_FloatRect> rect = path.GetRect(&kMicroDeviationMatrix);
+  ASSERT_TRUE(rect.has_value());
+  EXPECT_FLOAT_EQ(1.0f, rect->left);
+  EXPECT_FLOAT_EQ(2.0f, rect->bottom);
+  EXPECT_FLOAT_EQ(3.0f, rect->right);
+  EXPECT_FLOAT_EQ(5.0f, rect->top);
 }
 
 TEST(CFXPath, FivePointRectFuzzyEndpoints) {
@@ -96,10 +101,8 @@ TEST(CFXPath, FivePointRectFuzzyEndpoints) {
   path.AppendPoint({2, 1}, CFX_Path::Point::Type::kLine);
   path.AppendPoint({0, 1}, CFX_Path::Point::Type::kLine);
   path.AppendPoint({1e-7f, -1e-7f}, CFX_Path::Point::Type::kLine);
-  // TODO(crbug.com/550515869): Update expectations to true and
-  // CFX_FloatRect(0, 0, 2, 1) once fuzzy endpoint matching is supported.
-  EXPECT_FALSE(path.IsRect());
-  EXPECT_FALSE(path.GetRect(nullptr).has_value());
+  EXPECT_TRUE(path.IsRect());
+  EXPECT_EQ(CFX_FloatRect(0, 0, 2, 1), path.GetRect(nullptr));
 }
 
 TEST(CFXPath, Hexagon) {
