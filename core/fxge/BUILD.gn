@@ -332,6 +332,10 @@ pdfium_unittest_source_set("unittests") {
     sources += [ "win32/cfx_psrenderer_unittest.cpp" ]
   }
 
+  if (pdf_use_agg) {
+    sources += [ "agg/cfx_agg_cliprgn_unittest.cpp" ]
+  }
+
   if (pdf_enable_fontations) {
     sources += [ "skrifa/fx_skrifa_unittest.cpp" ]
     deps += [
