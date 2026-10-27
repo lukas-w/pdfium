@@ -35,7 +35,6 @@ ALL_DEPS_ENTRIES = (
     'nasm_source_revision',
     'ninja_version',
     'partition_allocator_revision',
-    'reclient_version',
     'result_adapter_revision',
     'rust_revision',
     'siso_version',

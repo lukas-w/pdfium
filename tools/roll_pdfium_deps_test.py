@@ -2547,10 +2547,6 @@ class RollDepTest(unittest.TestCase):
     self.assertTrue(success)
     self.assertEqual('Revisions are the same.', message)
 
-    success, message = _run_roll_dep('reclient_version')
-    self.assertTrue(success)
-    self.assertEqual('Revisions are the same.', message)
-
     success, message = _run_roll_dep('result_adapter_revision')
     self.assertTrue(success)
     self.assertEqual('Revisions are the same.', message)

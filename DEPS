@@ -74,10 +74,6 @@ vars = {
   # RBE project to download rewrapper config files for. Only needed if
   # different from the project used in 'rbe_instance'
   'rewrapper_cfg_project': Str(''),
-  # reclient CIPD package
-  'reclient_package': 'infra/rbe/client/',
-  # reclient CIPD package version
-  'reclient_version': 're_client_version:0.185.0.db415f21-gomaip',
 
   'chromium_git': 'https://chromium.googlesource.com',
   'pdfium_git': 'https://pdfium.googlesource.com',
@@ -324,16 +320,6 @@ deps = {
     ],
     'dep_type': 'cipd',
     'condition': 'host_os == "mac"',
-  },
-
-  'buildtools/reclient': {
-    'packages': [
-      {
-        'package': Var('reclient_package') + '${{platform}}',
-        'version': Var('reclient_version'),
-      }
-    ],
-    'dep_type': 'cipd',
   },
 
   'buildtools/win': {
