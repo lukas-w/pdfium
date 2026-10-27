@@ -31,6 +31,7 @@ ALL_DEPS_ENTRIES = (
     'libcxx_revision',
     'libcxxabi_revision',
     'libunwind_revision',
+    'libyuv_revision',
     'llvm_libc_revision',
     'nasm_source_revision',
     'ninja_version',

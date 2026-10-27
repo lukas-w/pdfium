@@ -1131,9 +1131,6 @@ deps = {
   'src/third_party/ink/src':
     Var('chromium_git') + '/external/github.com/google/ink.git' + '@' + Var('ink_revision'),
 
-  'src/third_party/ink_stroke_modeler/src':
-    Var('chromium_git') + '/external/github.com/google/ink-stroke-modeler.git' + '@' + Var('ink_stroke_modeler_revision'),
-
   'src/third_party/instrumented_libs': {
     'url': Var('chromium_git') + '/chromium/third_party/instrumented_libraries.git' + '@' + '69015643b3f68dbd438c010439c59adc52cac808',
     'condition': 'checkout_instrumented_libraries',
@@ -1156,6 +1153,9 @@ deps = {
 
   'src/third_party/libjpeg_turbo':
     Var('chromium_git') + '/chromium/deps/libjpeg_turbo.git' + '@' + '6383cf609c1f63c18af0f59b2738caa0c6c7e379',
+
+  'src/third_party/libyuv':
+    Var('chromium_git') + '/libyuv/libyuv.git' + '@' + '1e2e3a35993609da1d89ac170b907719d555f4b3',
 
   'src/third_party/lss': {
       'url': Var('chromium_git') + '/linux-syscall-support.git' + '@' + Var('lss_revision'),
@@ -1746,6 +1746,10 @@ vars = {
   # and whatever else without interference from each other.
   'libunwind_revision': '14b9dee79c12dd8cdd3d662ee0be49200c6d9b71',
   # Three lines of non-changing comments so that
+  # the commit queue can handle CLs rolling libyuv
+  # and whatever else without interference from each other.
+  'libyuv_revision': 'eb8eda9c7973704d1103a535059224df7a6063b5',
+  # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling llvm-libc
   # and whatever else without interference from each other.
   'llvm_libc_revision': '006672b9b6481bae04b9428100ed0486ab99f452',
@@ -2032,6 +2036,9 @@ deps = {
         Var('libpng_revision'),
     'condition': 'checkout_libpng',
   },
+
+  'third_party/libyuv':
+    Var('chromium_git') + '/libyuv/libyuv.git@' + Var('libyuv_revision'),
 
   'third_party/llvm-build/Release+Asserts': {
     'dep_type': 'gcs',
@@ -2612,6 +2619,13 @@ class RollDepTest(unittest.TestCase):
         '--roll-to 88fc07ed143a5b3bbf45d430b72a4617ee9e235f '
         '--ignore-dirty-tree --no-log', message)
 
+    success, message = _run_roll_dep('libyuv_revision')
+    self.assertTrue(success)
+    self.assertEqual(
+        'roll-dep third_party/libyuv '
+        '--roll-to 1e2e3a35993609da1d89ac170b907719d555f4b3 '
+        '--ignore-dirty-tree --no-log', message)
+
     success, message = _run_roll_dep('llvm_libc_revision')
     self.assertTrue(success)
     self.assertEqual(
@@ -2767,6 +2781,9 @@ class RollAllDepsTest(unittest.TestCase):
         '--ignore-dirty-tree --no-log',
         'roll-dep third_party/libunwind/src '
         '--roll-to 88fc07ed143a5b3bbf45d430b72a4617ee9e235f '
+        '--ignore-dirty-tree --no-log',
+        'roll-dep third_party/libyuv '
+        '--roll-to 1e2e3a35993609da1d89ac170b907719d555f4b3 '
         '--ignore-dirty-tree --no-log',
         'roll-dep third_party/llvm-libc/src '
         '--roll-to 03f822d2a88c8f68f6a92c5cb3e79ccc3002e8a9 '
