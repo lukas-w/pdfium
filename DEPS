@@ -200,7 +200,7 @@ vars = {
   # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling libyuv
   # and whatever else without interference from each other.
-  'libyuv_revision': 'eb8eda9c7973704d1103a535059224df7a6063b5',
+  'libyuv_revision': '1e2e3a35993609da1d89ac170b907719d555f4b3',
   # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling llvm-libc
   # and whatever else without interference from each other.
