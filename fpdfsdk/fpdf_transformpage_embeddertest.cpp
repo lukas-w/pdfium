@@ -7,7 +7,6 @@
 #include "build/build_config.h"
 #include "core/fxge/cfx_renderdevice.h"
 #include "testing/embedder_test.h"
-#include "testing/embedder_test_constants.h"
 
 #if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
 #include "core/fxcrt/scoped_locale.h"
@@ -206,8 +205,8 @@ TEST_F(FPDFTransformEmbedderTest, SetCropBox) {
       const int page_height = static_cast<int>(FPDF_GetPageHeight(page.get()));
       EXPECT_EQ(200, page_width);
       EXPECT_EQ(300, page_height);
-      ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-      CompareBitmapWithExpectationSuffix(bitmap.get(), pdfium::kRectanglesPng);
+      CompareDisplayList(RenderLoadedPageToDisplayList(page.get()),
+                         "rectangles");
     }
 
     FPDFPage_SetCropBox(page.get(), 10, 20, 100, 150);
@@ -228,8 +227,8 @@ TEST_F(FPDFTransformEmbedderTest, SetCropBox) {
       const int page_height = static_cast<int>(FPDF_GetPageHeight(page.get()));
       EXPECT_EQ(90, page_width);
       EXPECT_EQ(130, page_height);
-      ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-      CompareBitmapWithExpectationSuffix(bitmap.get(), "rectangles_cropped");
+      CompareDisplayList(RenderLoadedPageToDisplayList(page.get()),
+                         "rectangles_cropped");
     }
   }
 
@@ -256,8 +255,8 @@ TEST_F(FPDFTransformEmbedderTest, SetCropBox) {
         static_cast<int>(FPDF_GetPageHeight(saved_page.get()));
     EXPECT_EQ(90, page_width);
     EXPECT_EQ(130, page_height);
-    ScopedFPDFBitmap bitmap = RenderSavedPage(saved_page.get());
-    CompareBitmapWithExpectationSuffix(bitmap.get(), "rectangles_cropped");
+    CompareDisplayList(RenderSavedPageToDisplayList(saved_page.get()),
+                       "rectangles_cropped");
   }
 }
 
@@ -277,8 +276,8 @@ TEST_F(FPDFTransformEmbedderTest, SetMediaBox) {
       const int page_height = static_cast<int>(FPDF_GetPageHeight(page.get()));
       EXPECT_EQ(200, page_width);
       EXPECT_EQ(300, page_height);
-      ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-      CompareBitmapWithExpectationSuffix(bitmap.get(), pdfium::kRectanglesPng);
+      CompareDisplayList(RenderLoadedPageToDisplayList(page.get()),
+                         "rectangles");
     }
 
     FPDFPage_SetMediaBox(page.get(), 20, 30, 100, 150);
@@ -299,8 +298,8 @@ TEST_F(FPDFTransformEmbedderTest, SetMediaBox) {
       const int page_height = static_cast<int>(FPDF_GetPageHeight(page.get()));
       EXPECT_EQ(80, page_width);
       EXPECT_EQ(120, page_height);
-      ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-      CompareBitmapWithExpectationSuffix(bitmap.get(), "rectangles_media_box");
+      CompareDisplayList(RenderLoadedPageToDisplayList(page.get()),
+                         "rectangles_media_box");
     }
   }
 
@@ -327,8 +326,8 @@ TEST_F(FPDFTransformEmbedderTest, SetMediaBox) {
         static_cast<int>(FPDF_GetPageHeight(saved_page.get()));
     EXPECT_EQ(80, page_width);
     EXPECT_EQ(120, page_height);
-    ScopedFPDFBitmap bitmap = RenderSavedPage(saved_page.get());
-    CompareBitmapWithExpectationSuffix(bitmap.get(), "rectangles_media_box");
+    CompareDisplayList(RenderSavedPageToDisplayList(saved_page.get()),
+                       "rectangles_media_box");
   }
 }
 
@@ -395,8 +394,8 @@ TEST_F(FPDFTransformEmbedderTest, TransFormWithClipAndSave) {
       const int page_height = static_cast<int>(FPDF_GetPageHeight(page.get()));
       EXPECT_EQ(200, page_width);
       EXPECT_EQ(300, page_height);
-      ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-      CompareBitmapWithExpectationSuffix(bitmap.get(), pdfium::kRectanglesPng);
+      CompareDisplayList(RenderLoadedPageToDisplayList(page.get()),
+                         "rectangles");
     }
 
     {
@@ -412,8 +411,8 @@ TEST_F(FPDFTransformEmbedderTest, TransFormWithClipAndSave) {
       const int page_height = static_cast<int>(FPDF_GetPageHeight(page.get()));
       EXPECT_EQ(200, page_width);
       EXPECT_EQ(300, page_height);
-      ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-      CompareBitmapWithExpectationSuffix(bitmap.get(), pdfium::kRectanglesPng);
+      CompareDisplayList(RenderLoadedPageToDisplayList(page.get()),
+                         "rectangles");
     }
   }
 
@@ -432,8 +431,8 @@ TEST_F(FPDFTransformEmbedderTest, TransFormWithClipAndSave) {
         static_cast<int>(FPDF_GetPageHeight(saved_page.get()));
     EXPECT_EQ(200, page_width);
     EXPECT_EQ(300, page_height);
-    ScopedFPDFBitmap bitmap = RenderSavedPage(saved_page.get());
-    CompareBitmapWithExpectationSuffix(bitmap.get(), "rectangles_shrunk");
+    CompareDisplayList(RenderSavedPageToDisplayList(saved_page.get()),
+                       "rectangles_shrunk");
   }
 }
 
@@ -452,8 +451,8 @@ TEST_F(FPDFTransformEmbedderTest, TransFormWithClipAndSaveWithLocale) {
       const int page_height = static_cast<int>(FPDF_GetPageHeight(page.get()));
       EXPECT_EQ(200, page_width);
       EXPECT_EQ(300, page_height);
-      ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-      CompareBitmapWithExpectationSuffix(bitmap.get(), pdfium::kRectanglesPng);
+      CompareDisplayList(RenderLoadedPageToDisplayList(page.get()),
+                         "rectangles");
     }
 
     {
@@ -469,8 +468,8 @@ TEST_F(FPDFTransformEmbedderTest, TransFormWithClipAndSaveWithLocale) {
       const int page_height = static_cast<int>(FPDF_GetPageHeight(page.get()));
       EXPECT_EQ(200, page_width);
       EXPECT_EQ(300, page_height);
-      ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-      CompareBitmapWithExpectationSuffix(bitmap.get(), pdfium::kRectanglesPng);
+      CompareDisplayList(RenderLoadedPageToDisplayList(page.get()),
+                         "rectangles");
     }
   }
 
@@ -489,8 +488,8 @@ TEST_F(FPDFTransformEmbedderTest, TransFormWithClipAndSaveWithLocale) {
         static_cast<int>(FPDF_GetPageHeight(saved_page.get()));
     EXPECT_EQ(200, page_width);
     EXPECT_EQ(300, page_height);
-    ScopedFPDFBitmap bitmap = RenderSavedPage(saved_page.get());
-    CompareBitmapWithExpectationSuffix(bitmap.get(), "rectangles_shrunk");
+    CompareDisplayList(RenderSavedPageToDisplayList(saved_page.get()),
+                       "rectangles_shrunk");
   }
 }
 #endif  // BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
