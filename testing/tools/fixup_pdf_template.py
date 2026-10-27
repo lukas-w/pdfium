@@ -8,7 +8,10 @@ There are several places in a PDF file where byte-offsets are required. This
 script replaces {{name}}-style variables in the input with calculated results
 
   {{include path/to/file}} - inserts file's contents into stream.
-  {{header}} - expands to the header comment required for PDF files.
+  {{header}} - expands to the header comment required for PDF files, but with
+               a fixed version of 1.7.
+  {{header x.y}} - expands to the header comment required for PDF files, with
+                   the version being x.y.
   {{xref}} - expands to a generated xref table, noting the offset.
   {{trailer}} - expands to a standard trailer with "1 0 R" as the /Root.
   {{trailersize}} - expands to `/Size n`, to be used in non-standard trailers.
@@ -45,8 +48,11 @@ class StreamLenState:
 
 
 class TemplateProcessor:
-  HEADER_TOKEN = b'{{header}}'
-  HEADER_REPLACEMENT = b'%PDF-1.7\n%\xa0\xf2\xa4\xf4'
+  FIXED_HEADER_TOKEN = b'{{header}}'
+  FIXED_HEADER_REPLACEMENT = b'%PDF-1.7\n%\xa0\xf2\xa4\xf4'
+
+  HEADER_PATTERN = re.compile(rb'\{\{header (\d+\.\d+)\}\}')
+  HEADER_REPLACEMENT = b'%PDF-\\g<1>\n%\xa0\xf2\xa4\xf4'
 
   XREF_TOKEN = b'{{xref}}'
   XREF_REPLACEMENT = b'xref\n%d %d\n'
@@ -116,8 +122,10 @@ class TemplateProcessor:
         self.streamlens[-1] += len(line)
 
   def process_line(self, line):
-    if self.HEADER_TOKEN in line:
-      line = line.replace(self.HEADER_TOKEN, self.HEADER_REPLACEMENT)
+    line = self.HEADER_PATTERN.sub(self.HEADER_REPLACEMENT, line)
+    if self.FIXED_HEADER_TOKEN in line:
+      line = line.replace(self.FIXED_HEADER_TOKEN,
+                          self.FIXED_HEADER_REPLACEMENT)
     if self.STREAMLEN_TOKEN in line:
       sub = self.STREAMLEN_REPLACEMENT % self.streamlens.pop(0)
       line = re.sub(self.STREAMLEN_TOKEN, sub, line)
