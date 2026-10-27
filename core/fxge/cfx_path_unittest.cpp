@@ -77,6 +77,31 @@ TEST(CFXPath, ShearTransform) {
   EXPECT_EQ(CFX_FloatRect(1, 2, 3, 5), path.GetBoundingBox());
 }
 
+TEST(CFXPath, MicroShearTransformTolerance) {
+  CFX_Path path;
+  path.AppendRect(/*left=*/1, /*bottom=*/2, /*right=*/3, /*top=*/5);
+
+  const CFX_Matrix kMicroDeviationMatrix(1.0f, 0.0f, -4.69486423e-08f, 1.0f,
+                                         0.0f, 0.0f);
+  EXPECT_TRUE(path.IsRect());
+  // TODO(crbug.com/550515869): Update expectation to CFX_FloatRect(1, 2, 3, 5)
+  // once micro-shear tolerance is supported.
+  EXPECT_FALSE(path.GetRect(&kMicroDeviationMatrix).has_value());
+}
+
+TEST(CFXPath, FivePointRectFuzzyEndpoints) {
+  CFX_Path path;
+  path.AppendPoint({0, 0}, CFX_Path::Point::Type::kMove);
+  path.AppendPoint({2, 0}, CFX_Path::Point::Type::kLine);
+  path.AppendPoint({2, 1}, CFX_Path::Point::Type::kLine);
+  path.AppendPoint({0, 1}, CFX_Path::Point::Type::kLine);
+  path.AppendPoint({1e-7f, -1e-7f}, CFX_Path::Point::Type::kLine);
+  // TODO(crbug.com/550515869): Update expectations to true and
+  // CFX_FloatRect(0, 0, 2, 1) once fuzzy endpoint matching is supported.
+  EXPECT_FALSE(path.IsRect());
+  EXPECT_FALSE(path.GetRect(nullptr).has_value());
+}
+
 TEST(CFXPath, Hexagon) {
   CFX_Path path;
   path.AppendPoint({1, 0}, CFX_Path::Point::Type::kMove);
