@@ -317,6 +317,18 @@ TEST_F(FPDFSaveEmbedderTest, IncrementalSaveWithModifications) {
   EXPECT_EQ(1, count_text_objects(saved_page.get()));
 }
 
+TEST_F(FPDFSaveEmbedderTest, Pdf2FileVersion) {
+  ASSERT_TRUE(OpenDocument("pdf20_minimal.pdf"));
+  int version = 0;
+  ASSERT_TRUE(FPDF_GetFileVersion(document(), &version));
+  ASSERT_EQ(version, 20);
+
+  ASSERT_TRUE(FPDF_SaveAsCopy(document(), this, FPDF_NO_INCREMENTAL));
+
+  // TODO(crbug.com/576363144): Needs to be 2.0
+  EXPECT_THAT(GetString(), StartsWith("%PDF-1.0\r\n"));
+}
+
 class FPDFSaveWithFontSubsetEmbedderTest : public FPDFSaveEmbedderTest {
  public:
   static constexpr std::array<FPDF_WCHAR, 38> kExpectedSingleTextAdded = {
