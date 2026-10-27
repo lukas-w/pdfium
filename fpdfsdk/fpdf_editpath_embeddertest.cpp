@@ -7,14 +7,11 @@
 #include "core/fxge/cfx_renderdevice.h"
 #include "public/fpdf_edit.h"
 #include "testing/embedder_test.h"
-#include "testing/embedder_test_constants.h"
 #include "testing/gtest/include/gtest/gtest.h"
 
 using FPDFEditPathEmbedderTest = EmbedderTest;
 
 namespace {
-
-constexpr char kRectanglesAndTrianglePng[] = "rectangles_and_triangle";
 
 ScopedFPDFPageObject CreateBlackTriangle() {
   ScopedFPDFPageObject path(FPDFPageObj_CreateNewPath(100, 50));
@@ -85,10 +82,8 @@ TEST_F(FPDFEditPathEmbedderTest, GetAndSetMatrixForPath) {
   ScopedPage page = LoadScopedPage(0);
   ASSERT_TRUE(page);
 
-  {
-    ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-    CompareBitmapWithExpectationSuffix(bitmap.get(), pdfium::kRectanglesPng);
-  }
+  CompareDisplayList(RenderLoadedPageToDisplayList(page.get()),
+                     "rectangles_double_flipped");
 
   FPDF_PAGEOBJECT path = FPDFPage_GetObject(page.get(), 0);
   ASSERT_TRUE(path);
@@ -104,20 +99,15 @@ TEST_F(FPDFEditPathEmbedderTest, GetAndSetMatrixForPath) {
   EXPECT_FLOAT_EQ(300.0f, matrix.f);
 
   ASSERT_TRUE(FPDFPageObj_SetMatrix(path, &matrix));
-  {
-    ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-    CompareBitmapWithExpectationSuffix(bitmap.get(), pdfium::kRectanglesPng);
-  }
+  CompareDisplayList(RenderLoadedPageToDisplayList(page.get()),
+                     "rectangles_double_flipped");
 
   ASSERT_TRUE(FPDFPage_GenerateContent(page.get()));
   ASSERT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
 
-  {
-    ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-    CompareBitmapWithExpectationSuffix(bitmap.get(), pdfium::kRectanglesPng);
-  }
-
-  VerifySavedDocumentWithExpectationSuffix(pdfium::kRectanglesPng);
+  CompareDisplayList(RenderLoadedPageToDisplayList(page.get()),
+                     "rectangles_double_flipped");
+  VerifySavedDocumentWithDisplayList("rectangles_double_flipped");
 }
 
 TEST_F(FPDFEditPathEmbedderTest, GetAndSetMatrixForFormWithPath) {
@@ -125,10 +115,8 @@ TEST_F(FPDFEditPathEmbedderTest, GetAndSetMatrixForFormWithPath) {
   ScopedPage page = LoadScopedPage(0);
   ASSERT_TRUE(page);
 
-  {
-    ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-    CompareBitmapWithExpectationSuffix(bitmap.get(), pdfium::kRectanglesPng);
-  }
+  CompareDisplayList(RenderLoadedPageToDisplayList(page.get()),
+                     "form_object_with_path");
 
   FPDF_PAGEOBJECT form = FPDFPage_GetObject(page.get(), 0);
   ASSERT_TRUE(form);
@@ -144,10 +132,8 @@ TEST_F(FPDFEditPathEmbedderTest, GetAndSetMatrixForFormWithPath) {
   EXPECT_FLOAT_EQ(300.0f, matrix.f);
 
   ASSERT_TRUE(FPDFPageObj_SetMatrix(form, &matrix));
-  {
-    ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-    CompareBitmapWithExpectationSuffix(bitmap.get(), pdfium::kRectanglesPng);
-  }
+  CompareDisplayList(RenderLoadedPageToDisplayList(page.get()),
+                     "form_object_with_path");
 
   FPDF_PAGEOBJECT path = FPDFFormObj_GetObject(form, 0);
   ASSERT_TRUE(path);
@@ -162,20 +148,15 @@ TEST_F(FPDFEditPathEmbedderTest, GetAndSetMatrixForFormWithPath) {
   EXPECT_FLOAT_EQ(300.0f, matrix.f);
 
   ASSERT_TRUE(FPDFPageObj_SetMatrix(path, &matrix));
-  {
-    ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-    CompareBitmapWithExpectationSuffix(bitmap.get(), pdfium::kRectanglesPng);
-  }
+  CompareDisplayList(RenderLoadedPageToDisplayList(page.get()),
+                     "form_object_with_path");
 
   ASSERT_TRUE(FPDFPage_GenerateContent(page.get()));
   ASSERT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
 
-  {
-    ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-    CompareBitmapWithExpectationSuffix(bitmap.get(), pdfium::kRectanglesPng);
-  }
-
-  VerifySavedDocumentWithExpectationSuffix(pdfium::kRectanglesPng);
+  CompareDisplayList(RenderLoadedPageToDisplayList(page.get()),
+                     "form_object_with_path");
+  VerifySavedDocumentWithDisplayList("form_object_with_path");
 }
 
 TEST_F(FPDFEditPathEmbedderTest, AddPathToRectangles) {
@@ -183,29 +164,20 @@ TEST_F(FPDFEditPathEmbedderTest, AddPathToRectangles) {
   ScopedPage page = LoadScopedPage(0);
   ASSERT_TRUE(page);
 
-  {
-    ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-    CompareBitmapWithExpectationSuffix(bitmap.get(), pdfium::kRectanglesPng);
-  }
+  CompareDisplayList(RenderLoadedPageToDisplayList(page.get()), "rectangles");
 
   ScopedFPDFPageObject path = CreateBlackTriangle();
   ASSERT_TRUE(path);
   FPDFPage_InsertObject(page.get(), path.release());
 
-  {
-    ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-    CompareBitmapWithExpectationSuffix(bitmap.get(), kRectanglesAndTrianglePng);
-  }
-
+  CompareDisplayList(RenderLoadedPageToDisplayList(page.get()),
+                     "rectangles_and_triangle");
   EXPECT_TRUE(FPDFPage_GenerateContent(page.get()));
+  CompareDisplayList(RenderLoadedPageToDisplayList(page.get()),
+                     "rectangles_and_triangle");
+
   EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
-
-  {
-    ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-    CompareBitmapWithExpectationSuffix(bitmap.get(), kRectanglesAndTrianglePng);
-  }
-
-  VerifySavedDocumentWithExpectationSuffix(kRectanglesAndTrianglePng);
+  VerifySavedDocumentWithDisplayList("rectangles_and_triangle_saved");
 }
 
 TEST_F(FPDFEditPathEmbedderTest, AddPathToRectanglesWithLeakyCTM) {
@@ -213,27 +185,18 @@ TEST_F(FPDFEditPathEmbedderTest, AddPathToRectanglesWithLeakyCTM) {
   ScopedPage page = LoadScopedPage(0);
   ASSERT_TRUE(page);
 
-  {
-    ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-    CompareBitmapWithExpectationSuffix(bitmap.get(), pdfium::kRectanglesPng);
-  }
+  CompareDisplayList(RenderLoadedPageToDisplayList(page.get()), "rectangles");
 
   ScopedFPDFPageObject path = CreateBlackTriangle();
   ASSERT_TRUE(path);
   FPDFPage_InsertObject(page.get(), path.release());
 
-  {
-    ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-    CompareBitmapWithExpectationSuffix(bitmap.get(), kRectanglesAndTrianglePng);
-  }
-
+  CompareDisplayList(RenderLoadedPageToDisplayList(page.get()),
+                     "rectangles_and_triangle");
   EXPECT_TRUE(FPDFPage_GenerateContent(page.get()));
+  CompareDisplayList(RenderLoadedPageToDisplayList(page.get()),
+                     "rectangles_and_triangle");
+
   EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
-
-  {
-    ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-    CompareBitmapWithExpectationSuffix(bitmap.get(), kRectanglesAndTrianglePng);
-  }
-
-  VerifySavedDocumentWithExpectationSuffix(kRectanglesAndTrianglePng);
+  VerifySavedDocumentWithDisplayList("rectangles_and_triangle_saved");
 }
