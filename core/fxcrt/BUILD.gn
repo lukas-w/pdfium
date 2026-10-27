@@ -208,6 +208,8 @@ source_set("test_support") {
   sources = [
     "fx_coordinates_test_support.cpp",
     "fx_coordinates_test_support.h",
+    "scoped_locale.cpp",
+    "scoped_locale.h",
     "string_test_support.cpp",
   ]
   configs += [ "../../:pdfium_strict_config" ]

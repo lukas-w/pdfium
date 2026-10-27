@@ -2,15 +2,15 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef TESTING_SCOPED_LOCALE_H_
-#define TESTING_SCOPED_LOCALE_H_
+#ifndef CORE_FXCRT_SCOPED_LOCALE_H_
+#define CORE_FXCRT_SCOPED_LOCALE_H_
 
 #include <string>
 
 namespace pdfium {
 
-// Sets the given |locale| on construction, and restores the previous locale
-// on destruction.
+// On certain platforms, sets the given `locale` on construction, and restores
+// the previous locale on destruction.
 class ScopedLocale {
  public:
   explicit ScopedLocale(const std::string& locale);
@@ -25,4 +25,4 @@ class ScopedLocale {
 
 }  // namespace pdfium
 
-#endif  // TESTING_SCOPED_LOCALE_H_
+#endif  // CORE_FXCRT_SCOPED_LOCALE_H_

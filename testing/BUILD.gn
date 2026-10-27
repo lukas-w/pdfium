@@ -59,12 +59,6 @@ source_set("test_support") {
     ":pdfium_test_allocator_config",
   ]
   visibility = [ "../*" ]
-  if (is_posix) {
-    sources += [
-      "scoped_locale.cc",
-      "scoped_locale.h",
-    ]
-  }
   if (pdf_use_partition_alloc) {
     sources += [
       "allocator_shim_config.cpp",

@@ -11,6 +11,7 @@
 #include "core/fxcrt/bytestring.h"
 #include "core/fxcrt/check_op.h"
 #include "core/fxcrt/fx_coordinates.h"
+#include "core/fxcrt/scoped_locale.h"
 #include "core/fxcrt/span.h"
 #include "core/fxge/cfx_fillrenderoptions.h"
 #include "core/fxge/cfx_font.h"
@@ -180,6 +181,7 @@ bool DisplayListDeviceDriver::SetClip_PathFill(
     const CFX_Path& path,
     const CFX_Matrix* pObject2Device,
     const CFX_FillRenderOptions& fill_options) {
+  pdfium::ScopedLocale scoped_locale("C");
   const char* rule = FormatFillType(fill_options.fill_type);
   ByteString mat_str =
       pObject2Device ? FormatMatrix(*pObject2Device) : ByteString("none");
@@ -193,6 +195,7 @@ bool DisplayListDeviceDriver::SetClip_PathStroke(
     const CFX_Path& path,
     const CFX_Matrix* pObject2Device,
     const CFX_GraphStateData* pGraphState) {
+  pdfium::ScopedLocale scoped_locale("C");
   ByteString mat_str =
       pObject2Device ? FormatMatrix(*pObject2Device) : ByteString("none");
   display_list_ +=
@@ -209,6 +212,7 @@ bool DisplayListDeviceDriver::DrawPath(
     uint32_t stroke_color,
     bool group_knockout,
     const CFX_FillRenderOptions& fill_options) {
+  pdfium::ScopedLocale scoped_locale("C");
   ByteString mat_str =
       pObject2Device ? FormatMatrix(*pObject2Device) : ByteString("none");
   ByteString stroke_str;
@@ -242,6 +246,7 @@ bool DisplayListDeviceDriver::FillRect(const FX_RECT& rect,
 bool DisplayListDeviceDriver::DrawCosmeticLine(const CFX_PointF& ptMoveTo,
                                                const CFX_PointF& ptLineTo,
                                                uint32_t color) {
+  pdfium::ScopedLocale scoped_locale("C");
   display_list_ += ByteString::Format(
       "DrawCosmeticLine (%.4f,%.4f)->(%.4f,%.4f) color=0x%08x\n", ptMoveTo.x,
       ptMoveTo.y, ptLineTo.x, ptLineTo.y, color);
@@ -290,6 +295,7 @@ RenderDeviceDriverIface::StartResult DisplayListDeviceDriver::StartDIBits(
     const CFX_Matrix& matrix,
     const FXDIB_ResampleOptions& options,
     BlendMode blend_type) {
+  pdfium::ScopedLocale scoped_locale("C");
   display_list_ +=
       ByteString({"StartDIBits ", FormatDIBInfo(*bitmap).AsStringView(),
                   " matrix=", FormatMatrix(matrix).AsStringView(),
@@ -305,6 +311,7 @@ bool DisplayListDeviceDriver::DrawDeviceText(
     float font_size,
     uint32_t color,
     const CFX_TextRenderOptions& options) {
+  pdfium::ScopedLocale scoped_locale("C");
   ByteString font_name = font ? font->GetFamilyName() : ByteString();
   if (font_name.IsEmpty() && font) {
     font_name = font->GetPsName();
@@ -326,6 +333,7 @@ bool DisplayListDeviceDriver::DrawDeviceText(
 }
 
 bool DisplayListDeviceDriver::MultiplyAlpha(float alpha) {
+  pdfium::ScopedLocale scoped_locale("C");
   display_list_ += ByteString::Format("MultiplyAlpha alpha=%.4f\n", alpha);
   return true;
 }

@@ -10,7 +10,7 @@
 #include "testing/embedder_test_constants.h"
 
 #if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
-#include "testing/scoped_locale.h"
+#include "core/fxcrt/scoped_locale.h"
 #endif
 
 class FPDFTransformEmbedderTest : public EmbedderTest {};

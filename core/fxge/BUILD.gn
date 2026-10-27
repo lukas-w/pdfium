@@ -282,6 +282,7 @@ source_set("test_support") {
   deps = [
     ":fxge",
     "../fxcrt",
+    "../fxcrt:test_support",
   ]
 }
 
