@@ -88,3 +88,29 @@ TEST_F(CPDFCreatorEmbedderTest, SaveLinearizedInfo) {
 
   EXPECT_THAT(saved_doc, ::testing::HasSubstr("/Info"));
 }
+
+TEST_F(CPDFCreatorEmbedderTest, SingleSubsectionXrefWithFreeObjectLinkedList) {
+  ASSERT_TRUE(OpenDocument("xref_free_objects.pdf"));
+  ASSERT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
+
+  static constexpr char kExpectedXrefAndTrailerPrefix[] =
+      "xref\r\n"
+      "0 1\r\n"
+      "0000000000 65535 f\r\n"
+      "2 1\r\n"
+      "0000000017 00000 n\r\n"
+      "4 1\r\n"
+      "0000000066 00000 n\r\n"
+      "7 1\r\n"
+      "0000000122 00000 n\r\n"
+      "trailer\r\n";
+
+  // TODO(crbug.com/42271313): xref section should not have gaps.
+  EXPECT_THAT(GetString(), testing::HasSubstr(kExpectedXrefAndTrailerPrefix));
+
+  // Also make sure the saved PDF still loads.
+  ScopedSavedDoc saved_document = OpenScopedSavedDocument();
+  ASSERT_TRUE(saved_document);
+  ScopedSavedPage saved_page = LoadScopedSavedPage(0);
+  EXPECT_TRUE(saved_page);
+}

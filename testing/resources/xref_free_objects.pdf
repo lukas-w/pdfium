@@ -1,0 +1,40 @@
+%PDF-1.7
+% ò¤ô
+% Omit object 1 to test a free entry immediately following object 0.
+2 0 obj <<
+  /Type /Catalog
+  /Pages 4 0 R
+>>
+endobj
+% Omit object 3 to test a single free entry between in-use objects.
+4 0 obj <<
+  /Type /Pages
+  /Count 1
+  /Kids [7 0 R]
+>>
+endobj
+% Omit objects 5 and 6 to test consecutive free entries before the last
+% in-use object.
+7 0 obj <<
+  /Type /Page
+  /Parent 4 0 R
+  /MediaBox [0 0 200 200]
+>>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000000 65535 f 
+0000000084 00000 n 
+0000000000 65535 f 
+0000000205 00000 n 
+0000000000 65535 f 
+0000000000 65535 f 
+0000000357 00000 n 
+trailer <<
+  /Root 2 0 R
+  /Size 8
+>>
+startxref
+434
+%%EOF
