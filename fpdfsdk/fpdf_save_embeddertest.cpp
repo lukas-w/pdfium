@@ -325,8 +325,7 @@ TEST_F(FPDFSaveEmbedderTest, Pdf2FileVersion) {
 
   ASSERT_TRUE(FPDF_SaveAsCopy(document(), this, FPDF_NO_INCREMENTAL));
 
-  // TODO(crbug.com/576363144): Needs to be 2.0
-  EXPECT_THAT(GetString(), StartsWith("%PDF-1.0\r\n"));
+  EXPECT_THAT(GetString(), StartsWith("%PDF-2.0\r\n"));
 }
 
 class FPDFSaveWithFontSubsetEmbedderTest : public FPDFSaveEmbedderTest {

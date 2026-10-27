@@ -252,18 +252,19 @@ CPDF_Creator::Stage CPDF_Creator::WriteDoc_Stage1() {
   }
   if (stage_ == Stage::kWriteHeader10) {
     if (!is_incremental_) {
-      if (!archive_->WriteString("%PDF-1.")) {
+      if (!archive_->WriteString("%PDF-")) {
         return Stage::kInvalid;
       }
 
-      int32_t version = 7;
+      int32_t version = 17;
       if (file_version_) {
         version = file_version_;
       } else if (parser_) {
         version = parser_->GetFileVersion();
       }
 
-      if (!archive_->WriteDWord(version % 10) ||
+      if (!archive_->WriteDWord(version / 10) || !archive_->WriteString(".") ||
+          !archive_->WriteDWord(version % 10) ||
           !archive_->WriteString("\r\n%\xA1\xB3\xC5\xD7\r\n")) {
         return Stage::kInvalid;
       }
