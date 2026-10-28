@@ -1,0 +1,11 @@
+SaveState
+SetBaseClip [0,0,200,200]
+SetClip_PathFill rule=winding matrix=none points=[move(0.0000,200.0000) line(0.0000,0.0000) line(200.0000,0.0000) line(200.0000,200.0000) line(0.0000,200.0000,close)]
+SaveState
+RestoreState
+SaveState
+FillRect [100,125,149,149] color=0xffff0000
+DrawPath fill=0xff3c78b4 stroke=0x00000000 rule=even-odd stroke_state=[width=1.0000 cap=butt join=miter miter=10.0000] matrix=[1.0000,0.0000,0.0000,-1.0000,0.0000,200.0000] points=[move(100.0000,50.0000) line(150.0000,50.0000) line(150.0000,75.0000) line(100.0000,75.0000) line(100.0000,50.0000,close) move(101.0000,51.0000) line(149.0000,51.0000) line(149.0000,74.0000) line(101.0000,74.0000) line(101.0000,51.0000,close)]
+DrawDeviceText font="Arimo" size=12.0000 color=0xff3c78b4 matrix=[1.0000,0.0000,0.0000,-1.0000,101.0000,141.6640] glyphs=[(idx=43,u=U+0048,origin=(0.0000,0.0000)) (idx=72,u=U+0065,origin=(8.6640,0.0000)) (idx=79,u=U+006C,origin=(15.3360,0.0000)) (idx=79,u=U+006C,origin=(18.0000,0.0000)) (idx=82,u=U+006F,origin=(20.6640,0.0000)) (idx=4,u=U+0021,origin=(27.3360,0.0000))]
+RestoreState
+RestoreState

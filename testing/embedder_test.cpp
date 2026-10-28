@@ -5,6 +5,7 @@
 #include "testing/embedder_test.h"
 
 #include <algorithm>
+#include <fstream>
 #include <memory>
 #include <string>
 #include <utility>
@@ -1260,7 +1261,7 @@ void EmbedderTest::CompareBitmap(FPDF_BITMAP bitmap,
     options = kFontationsDiffOptions;
   }
   CompareBitmapToPngFile(bitmap, png_path, options);
-  if (EmbedderTestEnvironment::GetInstance()->write_pngs()) {
+  if (EmbedderTestEnvironment::GetInstance()->write_results()) {
     WriteBitmapToPng(bitmap, png_path);
   }
 }
@@ -1296,7 +1297,7 @@ void EmbedderTest::CompareBitmapWithExpectationSuffix(
     SCOPED_TRACE(testing::Message()
                  << "CompareBitmapWithExpectationSuffix() with " << png_path);
     CompareBitmapToPngFile(bitmap, png_path, effective_options);
-    if (EmbedderTestEnvironment::GetInstance()->write_pngs()) {
+    if (EmbedderTestEnvironment::GetInstance()->write_results()) {
       WriteBitmapToPng(bitmap, png_path);
     }
     return;
@@ -1311,6 +1312,10 @@ void EmbedderTest::CompareDisplayList(const std::string& display_list,
   std::string path =
       GetEmbedderTestDisplayListExpectationPath(expectation_name);
   SCOPED_TRACE(testing::Message() << "CompareDisplayList() with " << path);
+  if (EmbedderTestEnvironment::GetInstance()->write_results()) {
+    std::ofstream out(path, std::ios::binary);
+    out << display_list;
+  }
   std::vector<uint8_t> expected_data = GetFileContents(path.c_str());
   if (expected_data.empty()) {
     ADD_FAILURE() << "Missing or empty expectation file: " << path;

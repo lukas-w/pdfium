@@ -30,8 +30,7 @@ class EmbedderTestEnvironment : public testing::Environment {
   int GetVersion() const { return version_; }
 
   void AddFlags(int argc, char** argv);
-
-  bool write_pngs() const { return write_pngs_; }
+  bool write_results() const { return write_results_; }
   bool fontations() const {
     return font_library_type_ == FPDF_FONTBACKENDTYPE_FONTATIONS;
   }
@@ -42,7 +41,7 @@ class EmbedderTestEnvironment : public testing::Environment {
   int version_ = 6;
   FPDF_RENDERER_TYPE renderer_type_;
   FPDF_FONT_BACKEND_TYPE font_library_type_;
-  bool write_pngs_ = false;
+  bool write_results_ = false;
   bool brotli_enabled_ = false;
   TestFonts test_fonts_;
 };

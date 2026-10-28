@@ -69,8 +69,8 @@ void EmbedderTestEnvironment::AddFlags(int argc, char** argv) {
 }
 
 void EmbedderTestEnvironment::AddFlag(const std::string& flag) {
-  if (flag == "--write-pngs") {
-    write_pngs_ = true;
+  if (flag == "--write-pngs" || flag == "--write-results") {
+    write_results_ = true;
     return;
   }
 

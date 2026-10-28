@@ -1,0 +1,11 @@
+SaveState
+SetBaseClip [0,0,200,200]
+SetClip_PathFill rule=winding matrix=none points=[move(0.0000,200.0000) line(0.0000,0.0000) line(200.0000,0.0000) line(200.0000,200.0000) line(0.0000,200.0000,close)]
+SaveState
+RestoreState
+SetClip_PathFill rule=winding matrix=[1.0000,0.0000,0.0000,-1.0000,0.0000,200.0000] points=[move(12.0000,40.0000) line(112.0000,40.0000) line(112.0000,70.0000) line(12.0000,70.0000) line(12.0000,40.0000,close)]
+DrawDeviceText font="Tinos" size=12.0000 color=0xff000000 matrix=[1.0000,0.0000,0.0000,-1.0000,20.0000,100.0000] glyphs=[(idx=38,u=U+0043,origin=(0.0000,0.0000)) (idx=79,u=U+006C,origin=(8.0040,0.0000)) (idx=76,u=U+0069,origin=(11.3400,0.0000)) (idx=83,u=U+0070,origin=(14.6760,0.0000)) (idx=83,u=U+0070,origin=(20.6760,0.0000)) (idx=72,u=U+0065,origin=(26.6760,0.0000)) (idx=71,u=U+0064,origin=(32.0040,0.0000)) (idx=3,u=U+0020,origin=(38.0040,0.0000)) (idx=55,u=U+0054,origin=(41.0040,0.0000)) (idx=72,u=U+0065,origin=(48.3360,0.0000)) (idx=91,u=U+0078,origin=(53.6640,0.0000)) (idx=87,u=U+0074,origin=(59.6640,0.0000))]
+RestoreState
+DrawDeviceText font="Tinos" size=12.0000 color=0xff000000 matrix=[1.0000,0.0000,0.0000,-1.0000,20.0000,150.0000] glyphs=[(idx=56,u=U+0055,origin=(0.0000,0.0000)) (idx=81,u=U+006E,origin=(8.6640,0.0000)) (idx=70,u=U+0063,origin=(14.6640,0.0000)) (idx=79,u=U+006C,origin=(19.9920,0.0000)) (idx=76,u=U+0069,origin=(23.3280,0.0000)) (idx=83,u=U+0070,origin=(26.6640,0.0000)) (idx=83,u=U+0070,origin=(32.6640,0.0000)) (idx=72,u=U+0065,origin=(38.6640,0.0000)) (idx=71,u=U+0064,origin=(43.9920,0.0000)) (idx=3,u=U+0020,origin=(49.9920,0.0000)) (idx=55,u=U+0054,origin=(52.9920,0.0000)) (idx=72,u=U+0065,origin=(60.3240,0.0000)) (idx=91,u=U+0078,origin=(65.6520,0.0000)) (idx=87,u=U+0074,origin=(71.6520,0.0000))]
+RestoreState
+RestoreState
