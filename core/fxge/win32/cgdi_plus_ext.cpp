@@ -12,16 +12,13 @@
 
 #include <algorithm>
 #include <array>
-#include <sstream>
 #include <utility>
 #include <vector>
 
 #include "core/fxcrt/check_op.h"
 #include "core/fxcrt/compiler_specific.h"
-#include "core/fxcrt/fx_memcpy_wrappers.h"
 #include "core/fxcrt/fx_memory.h"
 #include "core/fxcrt/fx_string.h"
-#include "core/fxcrt/fx_string_wrappers.h"
 #include "core/fxcrt/fx_system.h"
 #include "core/fxcrt/numerics/safe_conversions.h"
 #include "core/fxcrt/span.h"
@@ -65,13 +62,7 @@ enum {
   FuncId_GdipDrawImagePointsI,
   FuncId_GdiplusStartup,
   FuncId_GdipDrawLineI,
-  FuncId_GdipCreatePath,
   FuncId_GdipSetPathFillMode,
-  FuncId_GdipSetClipRegion,
-  FuncId_GdipWidenPath,
-  FuncId_GdipAddPathLine,
-  FuncId_GdipAddPathRectangle,
-  FuncId_GdipDeleteRegion,
   FuncId_GdipSetPenLineCap197819,
   FuncId_GdipSetPenDashOffset,
   FuncId_GdipCreateMatrix2,
@@ -102,13 +93,7 @@ LPCSTR g_GdipFuncNames[] = {
     "GdipDrawImagePointsI",
     "GdiplusStartup",
     "GdipDrawLineI",
-    "GdipCreatePath",
     "GdipSetPathFillMode",
-    "GdipSetClipRegion",
-    "GdipWidenPath",
-    "GdipAddPathLine",
-    "GdipAddPathRectangle",
-    "GdipDeleteRegion",
     "GdipSetPenLineCap197819",
     "GdipSetPenDashOffset",
     "GdipCreateMatrix2",
@@ -155,18 +140,8 @@ using FuncType_GdipDrawImagePointsI =
     decltype(&Gdiplus::DllExports::GdipDrawImagePointsI);
 using FuncType_GdiplusStartup = decltype(&Gdiplus::GdiplusStartup);
 using FuncType_GdipDrawLineI = decltype(&Gdiplus::DllExports::GdipDrawLineI);
-using FuncType_GdipCreatePath = decltype(&Gdiplus::DllExports::GdipCreatePath);
 using FuncType_GdipSetPathFillMode =
     decltype(&Gdiplus::DllExports::GdipSetPathFillMode);
-using FuncType_GdipSetClipRegion =
-    decltype(&Gdiplus::DllExports::GdipSetClipRegion);
-using FuncType_GdipWidenPath = decltype(&Gdiplus::DllExports::GdipWidenPath);
-using FuncType_GdipAddPathLine =
-    decltype(&Gdiplus::DllExports::GdipAddPathLine);
-using FuncType_GdipAddPathRectangle =
-    decltype(&Gdiplus::DllExports::GdipAddPathRectangle);
-using FuncType_GdipDeleteRegion =
-    decltype(&Gdiplus::DllExports::GdipDeleteRegion);
 using FuncType_GdipSetPenLineCap197819 =
     decltype(&Gdiplus::DllExports::GdipSetPenLineCap197819);
 using FuncType_GdipSetPenDashOffset =
@@ -371,153 +346,6 @@ std::optional<std::pair<size_t, size_t>> IsSmallTriangle(
   }
   return std::nullopt;
 }
-
-class GpStream final : public IStream {
- public:
-  GpStream() = default;
-  ~GpStream() = default;
-
-  // IUnknown
-  HRESULT STDMETHODCALLTYPE QueryInterface(REFIID iid,
-                                           void** ppvObject) override {
-    if (iid == __uuidof(IUnknown) || iid == __uuidof(IStream) ||
-        iid == __uuidof(ISequentialStream)) {
-      *ppvObject = static_cast<IStream*>(this);
-      AddRef();
-      return S_OK;
-    }
-    return E_NOINTERFACE;
-  }
-  ULONG STDMETHODCALLTYPE AddRef() override {
-    return (ULONG)InterlockedIncrement(&ref_count_);
-  }
-  ULONG STDMETHODCALLTYPE Release() override {
-    ULONG res = (ULONG)InterlockedDecrement(&ref_count_);
-    if (res == 0) {
-      delete this;
-    }
-    return res;
-  }
-
-  // ISequentialStream
-  HRESULT STDMETHODCALLTYPE Read(void* output,
-                                 ULONG cb,
-                                 ULONG* pcbRead) override {
-    if (pcbRead) {
-      *pcbRead = 0;
-    }
-
-    if (read_pos_ >= inter_stream_.tellp()) {
-      return HRESULT_FROM_WIN32(ERROR_END_OF_MEDIA);
-    }
-
-    size_t bytes_left = pdfium::checked_cast<size_t>(
-        std::streamoff(inter_stream_.tellp()) - read_pos_);
-    size_t bytes_out = std::min(pdfium::checked_cast<size_t>(cb), bytes_left);
-    UNSAFE_TODO(FXSYS_memcpy(output, inter_stream_.str().c_str() + read_pos_,
-                             bytes_out));
-    read_pos_ += bytes_out;
-    if (pcbRead) {
-      *pcbRead = (ULONG)bytes_out;
-    }
-
-    return S_OK;
-  }
-  HRESULT STDMETHODCALLTYPE Write(const void* input,
-                                  ULONG cb,
-                                  ULONG* pcbWritten) override {
-    if (cb <= 0) {
-      if (pcbWritten) {
-        *pcbWritten = 0;
-      }
-      return S_OK;
-    }
-    inter_stream_.write(reinterpret_cast<const char*>(input), cb);
-    if (pcbWritten) {
-      *pcbWritten = cb;
-    }
-    return S_OK;
-  }
-
-  // IStream
-  HRESULT STDMETHODCALLTYPE SetSize(ULARGE_INTEGER) override {
-    return E_NOTIMPL;
-  }
-  HRESULT STDMETHODCALLTYPE CopyTo(IStream*,
-                                   ULARGE_INTEGER,
-                                   ULARGE_INTEGER*,
-                                   ULARGE_INTEGER*) override {
-    return E_NOTIMPL;
-  }
-  HRESULT STDMETHODCALLTYPE Commit(DWORD) override { return E_NOTIMPL; }
-  HRESULT STDMETHODCALLTYPE Revert() override { return E_NOTIMPL; }
-  HRESULT STDMETHODCALLTYPE LockRegion(ULARGE_INTEGER,
-                                       ULARGE_INTEGER,
-                                       DWORD) override {
-    return E_NOTIMPL;
-  }
-  HRESULT STDMETHODCALLTYPE UnlockRegion(ULARGE_INTEGER,
-                                         ULARGE_INTEGER,
-                                         DWORD) override {
-    return E_NOTIMPL;
-  }
-  HRESULT STDMETHODCALLTYPE Clone(IStream** stream) override {
-    return E_NOTIMPL;
-  }
-  HRESULT STDMETHODCALLTYPE Seek(LARGE_INTEGER liDistanceToMove,
-                                 DWORD dwOrigin,
-                                 ULARGE_INTEGER* lpNewFilePointer) override {
-    std::streamoff start;
-    std::streamoff new_read_position;
-    switch (dwOrigin) {
-      case STREAM_SEEK_SET:
-        start = 0;
-        break;
-      case STREAM_SEEK_CUR:
-        start = read_pos_;
-        break;
-      case STREAM_SEEK_END:
-        if (inter_stream_.tellp() < 0) {
-          return STG_E_SEEKERROR;
-        }
-        start = inter_stream_.tellp();
-        break;
-      default:
-        return STG_E_INVALIDFUNCTION;
-    }
-    new_read_position = start + liDistanceToMove.QuadPart;
-    if (new_read_position > inter_stream_.tellp()) {
-      return STG_E_SEEKERROR;
-    }
-
-    read_pos_ = new_read_position;
-    if (lpNewFilePointer) {
-      lpNewFilePointer->QuadPart = read_pos_;
-    }
-
-    return S_OK;
-  }
-  HRESULT STDMETHODCALLTYPE Stat(STATSTG* pStatstg,
-                                 DWORD grfStatFlag) override {
-    if (!pStatstg) {
-      return STG_E_INVALIDFUNCTION;
-    }
-
-    UNSAFE_TODO(ZeroMemory(pStatstg, sizeof(STATSTG)));
-
-    if (inter_stream_.tellp() < 0) {
-      return STG_E_SEEKERROR;
-    }
-
-    pStatstg->cbSize.QuadPart = inter_stream_.tellp();
-    return S_OK;
-  }
-
- private:
-  LONG ref_count_ = 1;
-  std::streamoff read_pos_ = 0;
-  fxcrt::ostringstream inter_stream_;
-};
 
 }  // namespace
 
