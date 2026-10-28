@@ -4,7 +4,6 @@
 
 #include "public/fpdfview.h"
 #include "testing/embedder_test.h"
-#include "testing/embedder_test_constants.h"
 #include "testing/embedder_test_environment.h"
 #include "testing/gtest/include/gtest/gtest.h"
 
@@ -50,38 +49,24 @@ class BrotliV5EmbedderTest : public BrotliEnabledEmbedderTest {
 
 TEST_F(BrotliEnabledEmbedderTest, ManyRectanglesBrotli) {
   ASSERT_TRUE(OpenDocument("many_rectangles_brotli.pdf"));
-
   ScopedPage page = LoadScopedPage(0);
   ASSERT_TRUE(page);
-
-  ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-  ASSERT_TRUE(bitmap);
-
-  CompareBitmapWithExpectationSuffix(bitmap.get(), pdfium::kManyRectanglesPng);
+  CompareDisplayList(RenderLoadedPageToDisplayList(page.get()),
+                     "many_rectangles");
 }
 
 TEST_F(BrotliEnabledEmbedderTest, SimpleBrotliWithText) {
   ASSERT_TRUE(OpenDocument("hello_world_brotli.pdf"));
-
   ScopedPage page = LoadScopedPage(0);
   ASSERT_TRUE(page);
-
-  ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-  ASSERT_TRUE(bitmap);
-
-  CompareBitmapWithExpectationSuffix(bitmap.get(), pdfium::kHelloWorldPng);
+  CompareDisplayList(RenderLoadedPageToDisplayList(page.get()), "hello_world");
 }
 
 TEST_F(BrotliEnabledEmbedderTest, BrotliRectangles) {
   ASSERT_TRUE(OpenDocument("rectangles_brotli.pdf"));
-
   ScopedPage page = LoadScopedPage(0);
   ASSERT_TRUE(page);
-
-  ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-  ASSERT_TRUE(bitmap);
-
-  CompareBitmapWithExpectationSuffix(bitmap.get(), pdfium::kRectanglesPng);
+  CompareDisplayList(RenderLoadedPageToDisplayList(page.get()), "rectangles");
 }
 
 TEST_F(BrotliEnabledEmbedderTest, BrotliDecodeParms) {
@@ -98,36 +83,23 @@ TEST_F(BrotliEnabledEmbedderTest, BrotliDecodeParms) {
 
 TEST_F(BrotliEnabledEmbedderTest, BrotliWithLength1Argument) {
   ASSERT_TRUE(OpenDocument("hello_world_brotli_with_length1.pdf"));
-
   ScopedPage page = LoadScopedPage(0);
   ASSERT_TRUE(page);
-
-  ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-  ASSERT_TRUE(bitmap);
-
-  CompareBitmapWithExpectationSuffix(bitmap.get(), pdfium::kHelloWorldPng);
+  CompareDisplayList(RenderLoadedPageToDisplayList(page.get()), "hello_world");
 }
 
 TEST_F(BrotliDisabledEmbedderTest, BrotliDecodeDisabled) {
   ASSERT_TRUE(OpenDocument("hello_world_brotli.pdf"));
-
   ScopedPage page = LoadScopedPage(0);
   ASSERT_TRUE(page);
-
-  ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-  ASSERT_TRUE(bitmap);
-
-  CompareBitmap(bitmap.get(), "blank_200x200");
+  CompareDisplayList(RenderLoadedPageToDisplayList(page.get()),
+                     "blank_page_200x200");
 }
 
 TEST_F(BrotliV5EmbedderTest, WrongBrotliVersion) {
   ASSERT_TRUE(OpenDocument("hello_world_brotli.pdf"));
-
   ScopedPage page = LoadScopedPage(0);
   ASSERT_TRUE(page);
-
-  ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-  ASSERT_TRUE(bitmap);
-
-  CompareBitmap(bitmap.get(), "blank_200x200");
+  CompareDisplayList(RenderLoadedPageToDisplayList(page.get()),
+                     "blank_page_200x200");
 }
