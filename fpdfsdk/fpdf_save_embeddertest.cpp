@@ -19,7 +19,6 @@
 #include "public/fpdf_text.h"
 #include "public/fpdfview.h"
 #include "testing/embedder_test.h"
-#include "testing/embedder_test_constants.h"
 #include "testing/fx_string_testhelpers.h"
 #include "testing/gmock/include/gmock/gmock-matchers.h"
 #include "testing/gtest/include/gtest/gtest.h"
@@ -201,8 +200,8 @@ TEST_F(FPDFSaveEmbedderTest, Bug1409) {
   ASSERT_TRUE(saved_document);
   ScopedSavedPage saved_page = LoadScopedSavedPage(0);
   ASSERT_TRUE(saved_page);
-  ScopedFPDFBitmap bitmap = RenderSavedPage(saved_page.get());
-  CompareBitmap(bitmap.get(), pdfium::kBlankPage612By792Png);
+  CompareDisplayList(RenderSavedPageToDisplayList(saved_page.get()),
+                     "blank_page_612x792");
 
   EXPECT_THAT(GetString(), StartsWith("%PDF-1.7\r\n"));
   EXPECT_THAT(GetString(), HasSubstr("/Root "));
