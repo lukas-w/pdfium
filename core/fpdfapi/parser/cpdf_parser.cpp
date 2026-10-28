@@ -203,8 +203,9 @@ bool CPDF_Parser::InitSyntaxParser(RetainPtr<CPDF_ReadValidator> validator) {
     return false;
   }
 
-  syntax_ = std::make_unique<CPDF_SyntaxParser>(std::move(validator),
-                                                header_offset.value());
+  syntax_ = std::make_unique<CPDF_SyntaxParser>(
+      std::move(validator), header_offset.value(),
+      objects_holder_->GetByteStringPool());
   return ParseFileVersion();
 }
 

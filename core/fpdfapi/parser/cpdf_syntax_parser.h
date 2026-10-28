@@ -43,6 +43,9 @@ class CPDF_SyntaxParser {
   explicit CPDF_SyntaxParser(RetainPtr<IFX_SeekableReadStream> file_access);
   CPDF_SyntaxParser(RetainPtr<CPDF_ReadValidator> validator,
                     FX_FILESIZE header_offset);
+  CPDF_SyntaxParser(RetainPtr<CPDF_ReadValidator> validator,
+                    FX_FILESIZE header_offset,
+                    WeakPtr<ByteStringPool> pool);
   ~CPDF_SyntaxParser();
 
   void SetReadBufferSize(uint32_t read_buffer_size) {
