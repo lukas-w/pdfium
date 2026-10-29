@@ -4,7 +4,6 @@
 
 #![allow(dead_code)]
 use read_fonts::{
-    model::pen::OutlinePen,
     ps::{
         cff::{
             charset::Charset as CffCharset, CffFontRef, Encoding as CffEncoding,
@@ -23,7 +22,9 @@ use skrifa::{
     charmap::Charmap,
     instance::{LocationRef, Size},
     metrics::Metrics,
-    outline::{DrawSettings, Engine, HintingInstance, HintingOptions, OutlineGlyphFormat},
+    outline::{
+        DrawSettings, Engine, HintingInstance, HintingOptions, OutlineGlyphFormat, OutlinePen,
+    },
     string::StringId,
     FontRef, GlyphNameSource, GlyphNames, MetadataProvider, OutlineGlyphCollection,
 };
@@ -300,7 +301,7 @@ impl SkrifaFont<'_> {
             Self::Cff(cff) => {
                 if cff.font.is_cid() {
                     let charset = cff.charset.as_ref()?;
-                    let actual_gid = charset.glyph_id(Sid::new(gid as u16)).ok()?;
+                    let actual_gid = charset.glyph_id(Sid::new(gid as u16))?;
                     Some(actual_gid.to_u32())
                 } else {
                     Some(gid)
@@ -452,7 +453,7 @@ impl SkrifaFont<'_> {
             Self::Cff(cff) if cff.font.is_cid() => cff
                 .charset
                 .as_ref()
-                .and_then(|charset| charset.glyph_id(Sid::new(cid)).ok())
+                .and_then(|charset| charset.glyph_id(Sid::new(cid)))
                 .unwrap_or_default()
                 .to_u32(),
             _ => 0,
@@ -947,7 +948,7 @@ impl SkrifaFont<'_> {
             Self::Cff(cff) if cff.charset.is_some() && !cff.font.is_cid() => cff
                 .charset
                 .as_ref()
-                .and_then(|charset| charset.string_id(gid.into()).ok())
+                .and_then(|charset| charset.string_id(gid.into()))
                 .and_then(|sid| cff.font.string(sid))
                 .and_then(|s| core::str::from_utf8(s).ok())
                 .map(|s| s.to_string())
