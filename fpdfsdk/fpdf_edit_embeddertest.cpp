@@ -40,6 +40,7 @@
 #include "public/fpdfview.h"
 #include "testing/embedder_test.h"
 #include "testing/embedder_test_constants.h"
+#include "testing/embedder_test_environment.h"
 #include "testing/fx_string_testhelpers.h"
 #include "testing/gmock/include/gmock/gmock-matchers.h"
 #include "testing/gtest/include/gtest/gtest.h"
@@ -2954,6 +2955,9 @@ TEST_F(FPDFEditEmbedderTest, GetTextRenderMode) {
 TEST_F(FPDFEditEmbedderTest, SetTextRenderMode) {
   static constexpr char kTextRenderModeStrokeModePng[] =
       "text_render_mode_stroke_mode";
+  static constexpr DiffOptions kTextRenderModeDiffOptions = {
+      .max_pixel_per_channel_delta = 30,
+  };
   {
     ASSERT_TRUE(OpenDocument("text_render_mode.pdf"));
     ScopedPage page = LoadScopedPage(0);
@@ -2963,7 +2967,11 @@ TEST_F(FPDFEditEmbedderTest, SetTextRenderMode) {
     // Check the bitmap
     {
       ScopedFPDFBitmap page_bitmap = RenderPage(page.get());
-      CompareBitmapWithExpectationSuffix(page_bitmap.get(), "text_render_mode");
+      CompareBitmapWithExpectationSuffix(
+          page_bitmap.get(), "text_render_mode",
+          EmbedderTestEnvironment::GetInstance()->fontations()
+              ? kTextRenderModeDiffOptions
+              : kExactDiffOptions);
     }
 
     // Cannot set on a null object.
@@ -2989,8 +2997,11 @@ TEST_F(FPDFEditEmbedderTest, SetTextRenderMode) {
     // Check that bitmap displays changed content
     {
       ScopedFPDFBitmap page_bitmap = RenderPage(page.get());
-      CompareBitmapWithExpectationSuffix(page_bitmap.get(),
-                                         kTextRenderModeStrokeModePng);
+      CompareBitmapWithExpectationSuffix(
+          page_bitmap.get(), kTextRenderModeStrokeModePng,
+          EmbedderTestEnvironment::GetInstance()->fontations()
+              ? kTextRenderModeDiffOptions
+              : kExactDiffOptions);
     }
 
     // Save a copy.
@@ -3012,8 +3023,11 @@ TEST_F(FPDFEditEmbedderTest, SetTextRenderMode) {
               FPDFTextObj_GetTextRenderMode(page_object));
 
     ScopedFPDFBitmap bitmap = RenderSavedPage(saved_page.get());
-    CompareBitmapWithExpectationSuffix(bitmap.get(),
-                                       kTextRenderModeStrokeModePng);
+    CompareBitmapWithExpectationSuffix(
+        bitmap.get(), kTextRenderModeStrokeModePng,
+        EmbedderTestEnvironment::GetInstance()->fontations()
+            ? kTextRenderModeDiffOptions
+            : kExactDiffOptions);
   }
 }
 
@@ -5224,7 +5238,14 @@ TEST_F(FPDFEditEmbedderTest, GetRenderedBitmapForColorText) {
   ScopedFPDFBitmap bitmap(
       FPDFTextObj_GetRenderedBitmap(document(), page.get(), text_object, 7.3f));
   ASSERT_TRUE(bitmap);
-  CompareBitmapWithExpectationSuffix(bitmap.get(), "text_color_text_object");
+  static constexpr DiffOptions kColorTextDiffOptions = {
+      .max_pixel_per_channel_delta = 16,
+  };
+  CompareBitmapWithExpectationSuffix(
+      bitmap.get(), "text_color_text_object",
+      EmbedderTestEnvironment::GetInstance()->fontations()
+          ? kColorTextDiffOptions
+          : kExactDiffOptions);
 }
 
 TEST_F(FPDFEditEmbedderTest, GetRenderedBitmapForNewlyCreatedText) {

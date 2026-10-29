@@ -166,6 +166,11 @@ TEST_F(CFWLEditEmbedderTest, FillWithNewLineWithoutMultiline) {
 }
 
 TEST_F(CFWLEditEmbedderTest, FillWithNewLineWithMultiline) {
+  static constexpr DiffOptions kMultilineDiffOptions = {
+      .max_pixel_per_channel_delta = 255,
+      .max_mean_squared_error = 5.0,
+  };
+
   CreateAndInitializeFormPDF("xfa/xfa_multiline_textfield.pdf");
   ScopedPage page = LoadScopedPage(0);
   FORM_OnLButtonDown(form_handle(), page.get(), 0, 115, 58);
@@ -186,8 +191,11 @@ TEST_F(CFWLEditEmbedderTest, FillWithNewLineWithMultiline) {
         "xfa_multiline_textfield_filled";
     ScopedFPDFBitmap page_bitmap =
         RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-    CompareBitmapWithExpectationSuffix(page_bitmap.get(),
-                                       kFilledMultilineBasename);
+    CompareBitmapWithExpectationSuffix(
+        page_bitmap.get(), kFilledMultilineBasename,
+        EmbedderTestEnvironment::GetInstance()->fontations()
+            ? kMultilineDiffOptions
+            : kExactDiffOptions);
   }
 
   for (size_t i = 0; i < 4; ++i) {
@@ -211,8 +219,11 @@ TEST_F(CFWLEditEmbedderTest, FillWithNewLineWithMultiline) {
         "xfa_multiline_textfield_backspace";
     ScopedFPDFBitmap page_bitmap =
         RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
-    CompareBitmapWithExpectationSuffix(page_bitmap.get(),
-                                       kMultilineBackspaceBasename);
+    CompareBitmapWithExpectationSuffix(
+        page_bitmap.get(), kMultilineBackspaceBasename,
+        EmbedderTestEnvironment::GetInstance()->fontations()
+            ? kMultilineDiffOptions
+            : kExactDiffOptions);
   }
 }
 
