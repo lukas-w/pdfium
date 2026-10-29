@@ -215,10 +215,10 @@ Chromium provides code coverage reports for PDFium
 `third_party/pdfium` in Chromium's source code.
 This includes code coverage from PDFium's fuzzers.
 
-## Waterfall
+## Infrastructure
 
-The current health of the source tree can be found
-[here](https://ci.chromium.org/p/pdfium/g/main/console).
+See [docs/infra.md](/docs/infra.md) for details about PDFium's continuous
+integration and build infrastructure.
 
 ## Community
 
