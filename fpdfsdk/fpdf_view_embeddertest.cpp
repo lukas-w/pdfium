@@ -1614,7 +1614,7 @@ TEST_F(FPDFViewEmbedderTest, RenderManyRectanglesWithAndWithoutExternalMemory) {
   TestRenderPageBitmapWithExternalMemoryAndNoStride(page.get(), FPDFBitmap_BGR,
                                                     kBGRBasename);
 
-  const char* kGrayBasename = "many_rectangles_grayscale_memory";
+  constexpr char kGrayBasename[] = "many_rectangles_grayscale_memory";
 
   TestRenderPageBitmapWithInternalMemory(page.get(), FPDFBitmap_Gray,
                                          kGrayBasename, /*fuzzy=*/true);

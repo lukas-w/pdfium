@@ -1436,7 +1436,7 @@ TEST(WideString, EqualsASCIINoCase) {
 }
 
 TEST(WideString, ToASCII) {
-  const char* kResult =
+  constexpr char kResult[] =
       "x"
       "\x02"
       "\x7f"
@@ -1453,7 +1453,7 @@ TEST(WideString, ToASCII) {
 }
 
 TEST(WideString, ToLatin1) {
-  const char* kResult =
+  constexpr char kResult[] =
       "x"
       "\x82"
       "\xff"
@@ -1472,7 +1472,7 @@ TEST(WideString, ToLatin1) {
 TEST(WideString, ToDefANSI) {
   EXPECT_EQ("", WideString().ToDefANSI());
 #if BUILDFLAG(IS_WIN)
-  const char* kResult =
+  constexpr char kResult[] =
       "x"
       "?"
       "\xff"
@@ -1480,7 +1480,7 @@ TEST(WideString, ToDefANSI) {
       "?"
       "y";
 #else
-  const char* kResult =
+  constexpr char kResult[] =
       "x"
       "\x80"
       "\xff"
