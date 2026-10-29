@@ -2596,3 +2596,44 @@ TEST_F(FPDFTextEmbedderTest, Arabic) {
   EXPECT_THAT(pdfium::span(buffer).first<kExpectedTextSize>(),
               ElementsAreArray(kExpectedText));
 }
+
+TEST_F(FPDFTextEmbedderTest, ArabicActualTextOrdering) {
+  ASSERT_TRUE(OpenDocument("arabic_actual_text_ordering.pdf"));
+
+  // The 4 pages represent 4 PDF variants containing the Arabic word "بِسْمِ",
+  // testing combinations of visual vs logical span order and diacritic vs base
+  // character stream order within each span. All 4 should have the exact same
+  // extracted text.
+  //
+  // Variant 2 (visual order of spans, base character first within span)
+  // is the only one that extracts correctly as:
+  // {0x0628, 0x0650, 0x0633, 0x0652, 0x0645, 0x0650, '\0'}
+  //
+  // TODO(crbug.com/525093248): Text extraction for the remaining variants
+  // currently produces differing results with unintended linebreaks/spaces
+  // and reversed characters within spans.
+  const std::vector<unsigned short> kExpectedPages[] = {
+      {0x0650, 0x0645, '\r', '\n', 0x0628, 0x0650, 0x0633, 0x0652, '\0'},
+      {0x0628, 0x0650, 0x0633, 0x0652, 0x0645, 0x0650, '\0'},
+      {0x0628, 0x0650, 0x0633, 0x0652, ' ', 0x0650, 0x0628, '\r', '\n', 0x0645,
+       0x0650, '\0'},
+      {0x0628, 0x0650, 0x0633, 0x0652, ' ', 0x0628, 0x0650, '\r', '\n', 0x0633,
+       0x0652, 0x0645, 0x0650, '\r', '\n', 0x0650, 0x0645, '\0'},
+  };
+
+  int page_index = 0;
+  for (const std::vector<unsigned short>& expected_page : kExpectedPages) {
+    ScopedPage page = LoadScopedPage(page_index++);
+    ASSERT_TRUE(page);
+
+    ScopedFPDFTextPage text_page(FPDFText_LoadPage(page.get()));
+    ASSERT_TRUE(text_page);
+
+    std::array<unsigned short, 256> buffer = {};
+    int num_chars =
+        FPDFText_GetText(text_page.get(), 0, buffer.size(), buffer.data());
+    ASSERT_GE(num_chars, 0);
+    EXPECT_THAT(pdfium::span(buffer).first(static_cast<size_t>(num_chars)),
+                ElementsAreArray(expected_page));
+  }
+}

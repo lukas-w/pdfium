@@ -1,0 +1,229 @@
+{{header}}
+{{object 1 0}} <<
+  /Type /Catalog
+  /Pages 2 0 R
+>>
+endobj
+{{object 2 0}} <<
+  /Type /Pages
+  /Count 4
+  /Kids [3 0 R 4 0 R 5 0 R 6 0 R]
+  /MediaBox [0 0 200 200]
+  /Resources <<
+    /Font <<
+      /FXF1 11 0 R
+    >>
+  >>
+>>
+endobj
+{{object 3 0}} <<
+  /Type /Page
+  /Parent 2 0 R
+  /Contents 7 0 R
+>>
+endobj
+{{object 4 0}} <<
+  /Type /Page
+  /Parent 2 0 R
+  /Contents 8 0 R
+>>
+endobj
+{{object 5 0}} <<
+  /Type /Page
+  /Parent 2 0 R
+  /Contents 9 0 R
+>>
+endobj
+{{object 6 0}} <<
+  /Type /Page
+  /Parent 2 0 R
+  /Contents 10 0 R
+>>
+endobj
+% Page 0: Variant 1 - Visual order of spans, diacritic first within span
+{{object 7 0}} <<
+  {{streamlen}}
+>>
+stream
+/Span <</ActualText<FEFF06450650>>> BDC
+q 0 0 0 rg 0 0 0 RG BT 1 0 0 1 100.41156 98.06628 Tm /FXF1 9 Tf 0 Tr [<01>] TJ ET Q
+q 0 0 0 rg 0 0 0 RG BT 1 0 0 1 99.921432 102.05713 Tm /FXF1 9 Tf 0 Tr [<05>] TJ ET Q
+EMC
+/Span <</ActualText<FEFF06330652>>> BDC
+q 0 0 0 rg 0 0 0 RG BT 1 0 0 1 104.315842 101.99542 Tm /FXF1 9 Tf 0 Tr [<02>] TJ ET Q
+q 0 0 0 rg 0 0 0 RG BT 1 0 0 1 102.958832 102.05713 Tm /FXF1 9 Tf 0 Tr [<04>] TJ ET Q
+EMC
+/Span <</ActualText<FEFF06280650>>> BDC
+q 0 0 0 rg 0 0 0 RG BT 1 0 0 1 107.798752 99.43768 Tm /FXF1 9 Tf 0 Tr [<01>] TJ ET Q
+q 0 0 0 rg 0 0 0 RG BT 1 0 0 1 107.730003 102.05713 Tm /FXF1 9 Tf 0 Tr [<03>] TJ ET Q
+EMC
+endstream
+endobj
+% Page 1: Variant 2 - Visual order of spans, base char first within span
+{{object 8 0}} <<
+  {{streamlen}}
+>>
+stream
+/Span <</ActualText<FEFF06450650>>> BDC
+q 0 0 0 rg 0 0 0 RG BT 1 0 0 1 99.921432 102.05713 Tm /FXF1 9 Tf 0 Tr [<05>] TJ ET Q
+q 0 0 0 rg 0 0 0 RG BT 1 0 0 1 100.41156 98.06628 Tm /FXF1 9 Tf 0 Tr [<01>] TJ ET Q
+EMC
+/Span <</ActualText<FEFF06330652>>> BDC
+q 0 0 0 rg 0 0 0 RG BT 1 0 0 1 102.958832 102.05713 Tm /FXF1 9 Tf 0 Tr [<04>] TJ ET Q
+q 0 0 0 rg 0 0 0 RG BT 1 0 0 1 104.315842 101.99542 Tm /FXF1 9 Tf 0 Tr [<02>] TJ ET Q
+EMC
+/Span <</ActualText<FEFF06280650>>> BDC
+q 0 0 0 rg 0 0 0 RG BT 1 0 0 1 107.730003 102.05713 Tm /FXF1 9 Tf 0 Tr [<03>] TJ ET Q
+q 0 0 0 rg 0 0 0 RG BT 1 0 0 1 107.798752 99.43768 Tm /FXF1 9 Tf 0 Tr [<01>] TJ ET Q
+EMC
+endstream
+endobj
+% Page 2: Variant 3 - Logical order of spans, diacritic first within span
+{{object 9 0}} <<
+  {{streamlen}}
+>>
+stream
+/Span <</ActualText<FEFF06280650>>> BDC
+q 0 0 0 rg 0 0 0 RG BT 1 0 0 1 107.798752 99.43768 Tm /FXF1 9 Tf 0 Tr [<01>] TJ ET Q
+q 0 0 0 rg 0 0 0 RG BT 1 0 0 1 107.730003 102.05713 Tm /FXF1 9 Tf 0 Tr [<03>] TJ ET Q
+EMC
+/Span <</ActualText<FEFF06330652>>> BDC
+q 0 0 0 rg 0 0 0 RG BT 1 0 0 1 104.315842 101.99542 Tm /FXF1 9 Tf 0 Tr [<02>] TJ ET Q
+q 0 0 0 rg 0 0 0 RG BT 1 0 0 1 102.958832 102.05713 Tm /FXF1 9 Tf 0 Tr [<04>] TJ ET Q
+EMC
+/Span <</ActualText<FEFF06450650>>> BDC
+q 0 0 0 rg 0 0 0 RG BT 1 0 0 1 100.41156 98.06628 Tm /FXF1 9 Tf 0 Tr [<01>] TJ ET Q
+q 0 0 0 rg 0 0 0 RG BT 1 0 0 1 99.921432 102.05713 Tm /FXF1 9 Tf 0 Tr [<05>] TJ ET Q
+EMC
+endstream
+endobj
+% Page 3: Variant 4 - Logical order of spans, base char first within span
+{{object 10 0}} <<
+  {{streamlen}}
+>>
+stream
+/Span <</ActualText<FEFF06280650>>> BDC
+q 0 0 0 rg 0 0 0 RG BT 1 0 0 1 107.730003 102.05713 Tm /FXF1 9 Tf 0 Tr [<03>] TJ ET Q
+q 0 0 0 rg 0 0 0 RG BT 1 0 0 1 107.798752 99.43768 Tm /FXF1 9 Tf 0 Tr [<01>] TJ ET Q
+EMC
+/Span <</ActualText<FEFF06330652>>> BDC
+q 0 0 0 rg 0 0 0 RG BT 1 0 0 1 102.958832 102.05713 Tm /FXF1 9 Tf 0 Tr [<04>] TJ ET Q
+q 0 0 0 rg 0 0 0 RG BT 1 0 0 1 104.315842 101.99542 Tm /FXF1 9 Tf 0 Tr [<02>] TJ ET Q
+EMC
+/Span <</ActualText<FEFF06450650>>> BDC
+q 0 0 0 rg 0 0 0 RG BT 1 0 0 1 99.921432 102.05713 Tm /FXF1 9 Tf 0 Tr [<05>] TJ ET Q
+q 0 0 0 rg 0 0 0 RG BT 1 0 0 1 100.41156 98.06628 Tm /FXF1 9 Tf 0 Tr [<01>] TJ ET Q
+EMC
+endstream
+endobj
+{{object 11 0}} <<
+  /Type /Font
+  /Subtype /TrueType
+  /BaseFont /BAAAAA+NotoSansArabic-Regular
+  /FirstChar 1
+  /FontDescriptor 12 0 R
+  /LastChar 5
+  /ToUnicode 13 0 R
+  /Widths [0 0 269 850 562]
+>>
+endobj
+{{object 12 0}} <<
+  /Type /FontDescriptor
+  /Ascent 1374
+  /CapHeight 1374
+  /Descent -738
+  /Flags 4
+  /FontBBox [-220 -548 7175 1359]
+  /FontFile2 14 0 R
+  /FontName /BAAAAA+NotoSansArabic-Regular
+  /ItalicAngle 0
+  /StemV 80
+>>
+endobj
+{{object 13 0}} <<
+  {{streamlen}}
+>>
+stream
+/CIDInit /ProcSet findresource begin
+12 dict begin
+begincmap
+/CIDSystemInfo <<
+  /Registry (Adobe)
+  /Ordering (UCS)
+  /Supplement 0
+>> def
+/CMapName /Adobe-Identity-UCS def
+/CMapType 2 def
+1 begincodespacerange
+  <00> <FF>
+endcodespacerange
+5 beginbfchar
+  <01> <0650>
+  <02> <0652>
+  <03> <FE91>
+  <04> <FEB4>
+  <05> <FEE2>
+endbfchar
+endcmap
+CMapName currentdict /CMap defineresource pop
+end
+end
+endstream
+endobj
+% Font: NotoSansArabic-Regular Version 2.005
+% URL: https://github.com/notofonts/arabic
+% License: SIL Open Font License 1.1 (OFL-1.1)
+%
+% Step 1: Subset the 5 glyphs used in this test:
+%   $ pyftsubset NotoSansArabic-Regular.ttf \
+%       --unicodes="U+0650,U+0652,U+FE91,U+FEB4,U+FEE2" \
+%       --output-file=subset.ttf
+%
+% Step 2: Add a format 0 cmap mapping byte codes 1-5 to those glyphs for simple
+% TrueType font support:
+%   $ python3 -c '
+%   from fontTools.ttLib import TTFont
+%   from fontTools.ttLib.tables._c_m_a_p import CmapSubtable
+%   f = TTFont("subset.ttf")
+%   sub = CmapSubtable.newSubtable(0)
+%   sub.platformID, sub.platEncID, sub.language = 1, 0, 0
+%   sub.cmap = {1:"uni0650", 2:"uni0652", 3:"uniFE91", 4:"uniFEB4", 5:"uniFEE2"}
+%   f["cmap"].tables.append(sub)
+%   f.save("subset.ttf")'
+{{object 14 0}} <<
+  /Filter [/ASCII85Decode /FlateDecode]
+  {{streamlen}}
+  /Length1 2748
+>>
+stream
+GhV7[92&Sj)#hjpo4!5Y?s_&21CO]99VKgAQl2Pnb+$h2]N]2UjAMkf+,-E8-B6#'WTh:,WN"Tn@GJBW
+_M+sp\568H(cCTqW/45YU'kIQ@FD$=nN5o?>"VJIC[]OD+6WS%J,]J[kAc=jObI*cR3oL,3kK'cr'[Ce
+k\]W,kT>9FlA]eXX<o,,miENeZe[+@9OqJGG]3WO^=^to-_2*DJNe'g;-D#A[X8N)rbQUY=lX[+`;:S1
+1qdkr['=926R$f>8@ggF;PqTTs)nua^S3#ecscc"ZOYkJk[cQ.l-8#Xkn!!M5`[NKT2O_XdPpY[!St)\
+Cp&kjVD*H)H=0<I9NAL-^J/7C,C]7,nliW>7JRNoO'ql4nQI5^W,)($Y?o:cqNHm/0Bf)OoNrATrj1Rq
+2i+n#j@aLs<!,^f54I$^56`b2&B5g5QUIX?:QFY\TbdEf!6]#q-+l9aP[,RuPUk0!qMqMENDkf(Tf61/
+l1@#.d\2b>58,F#rVbQR`A"N=?d1l$0&9TM!]eH\ig!F`@Z@^!aKLdtE2!WE4QTJ"bWL57`EL$X26W>5
+#q^'KkthVg`l.I,$lF`-Y&1k]F[)&j-p+ekG95UP.r:H(G2pCI*'Z7&1=?.#ai8Wd5_jo.MH8qNk%/D2
+O,.;6Br1:OFX\TM!`iOqA)QRmFO5`c47FIrBdaQhf#F3i]:mj8o/Z/$hZl?Wh=%i-I:<@j*q9N#8*$V,
+-'O11-sYr%?uE.#mg2#[F'[@BrD677H"a=r*uGpc:Q9>.Lif/TY`CKA/Q(\eglmcM[l%h2=UXomQ05(r
+&Mj[:bi5jPSbaLreQRX=,FMD@b'Y?MYtjMd8"u/DmY+:*U(Y@2^?3[E)q#FiUC+$=4Om=RhCPE=Vop`m
+2$HW?@0<Et3UD4:AW%kPThquC@.[*?%_jmT4#ZGHLW\tldYNZ+&ZiCpP/ZO8LPss=*1P.LRE&f\PrkQ8
+!U%:O>8r"Be)&"*:UZQK>FHKL*B[bsh,b<WLk^qTG`PQK@<O"pgsZohYA3WCou`WRo5meOfIYR`GUC^>
++^0Dl'=*@n]IW<G\XN\`U-e/XK/FA7LYVUi?J/l5%>SFn3`D(_cPP?R;m5Z3[h%'>2HgIB%lj8OZ9<X4
+Trdg96On=,cg<TF7X?Thn_/AKgJUld*,O1:c86=-!b.ikd-!''R=2f_KcJ]RBoYBt$'e4;i4<EXKLMb'
+%r&4K<n9a_U9R8'gQQ8k32O01Yd4'i31Pdd$Z']VIXt-tKD=;D`KMrfG,q[p8B:O?TZ_pL,L-TJ1Rp9X
+ROmFKGX[g-C82`:XJ71lX3#[6Q^K\`5^V0iC8YY0Joe:kZS[YDBgdorUP9C\,p_=Ke.'$$==dk3"K3,T
+4&nX_7F)&1ckHF:Tr#P'LjBhY$C9#S4,k#K@8^c1=LDUCTh0L#&g#N/N`ZX7A+5<69i*'Hm`4&kBfj=X
+KUr*B]-@1-I">Ss7n'k%(gD`;i0auTLm4dcYZhnuB4/+mOG]^F)HbRce^>N2<!bDHKsV2U&Em+;Ihc$b
+gB=XP\<&d;'eM5ET*AR6=ep_RJ=]&=B7r/I>)N'h?pWQAB''kLpnoJE>>J]`dkO!A0I&BY/7rMI/B>97
+1u$R6:h-)#:/@`&Q8b&Y*-=W5aj02)V:i4Q..L&l7oc.:Wd])-.dr=q]Ig:GCO09Q\2P;VI3(@T_<Ot8
+Ha037hI<eS@2bK^S>ebe#!pMf*F&StbciUm]p'eAUT8TllBP@\&mn(2<*&1]H?"CR*pDpC7lC4Hi([[q
+EN'i#^\scJcsrdrB`e2\nE)f4;KKksLkmI54(KDo.,('X`%HM%-iVQ$Cq8=IipMTO!j5$LihXmeja'=O
+A#'8d^%e2oS%q3sF=f9LH<r3)I8shI,5Y?df0JM=K/$PnGg@+BaVo0U1WBq;`bmTVc!JC1`TXmhE*96h
+$06A$*b(&,WEE3(ioUucWW+1OaK!f@dM?h+B='BjjknNBHCO~>
+endstream
+endobj
+{{xref}}
+{{trailer}}
+{{startxref}}
+%%EOF
