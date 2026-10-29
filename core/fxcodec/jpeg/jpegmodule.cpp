@@ -27,6 +27,7 @@
 #include "core/fxcrt/fx_safe_types.h"
 #include "core/fxcrt/numerics/safe_conversions.h"
 #include "core/fxcrt/retain_ptr.h"
+#include "core/fxcrt/zip.h"
 #include "core/fxge/dib/cfx_dibbase.h"
 #include "core/fxge/dib/fx_dib.h"
 #endif  // BUILDFLAG(IS_WIN)
@@ -130,14 +131,14 @@ bool JpegModule::JpegEncode(const RetainPtr<const CFX_DIBBase>& pSource,
     compress_common.common.cinfo.in_color_space = JCS_CMYK;
   }
 
-  std::unique_ptr<uint8_t, FxFreeDeleter> line_buf;
-  if (nComponents > 1) {
-    line_buf.reset(FX_Alloc2D(uint8_t, width, nComponents));
-  }
-
   if (!jpeg_common_set_defaults(&compress_common.common) ||
       !jpeg_common_start_compress(&compress_common.common, TRUE)) {
     return false;
+  }
+
+  std::unique_ptr<uint8_t, FxFreeDeleter> line_buf;
+  if (nComponents > 1) {
+    line_buf.reset(FX_Alloc2D(uint8_t, width, nComponents));
   }
 
   JSAMPROW row_pointer;
@@ -147,8 +148,8 @@ bool JpegModule::JpegEncode(const RetainPtr<const CFX_DIBBase>& pSource,
     pdfium::span<const uint8_t> src_scan =
         pSource->GetScanline(compress_common.common.cinfo.next_scanline);
     if (nComponents > 1) {
-      uint8_t* dest_scan = line_buf.get();
       if (nComponents == 3) {
+        uint8_t* dest_scan = line_buf.get();
         UNSAFE_TODO({
           for (uint32_t i = 0; i < width; i++) {
             ReverseCopy3Bytes(dest_scan, src_scan.data());
@@ -157,12 +158,13 @@ bool JpegModule::JpegEncode(const RetainPtr<const CFX_DIBBase>& pSource,
           }
         });
       } else {
-        UNSAFE_TODO({
-          for (uint32_t i = 0; i < pitch; i++) {
-            *dest_scan++ = ~src_scan.front();
-            src_scan = src_scan.subspan<1u>();
-          }
-        });
+        // SAFETY: Matches FX_Alloc2D() call above.
+        pdfium::span<uint8_t> dest_span = UNSAFE_BUFFERS(
+            pdfium::span<uint8_t>(line_buf.get(), width * nComponents));
+        for (auto [in, out] :
+             fxcrt::Zip(src_scan.first(pitch), dest_span.first(pitch))) {
+          out = ~in;
+        }
       }
       row_pointer = line_buf.get();
     } else {
