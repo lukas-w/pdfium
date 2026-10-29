@@ -34,8 +34,8 @@ namespace fxcrt {
 //
 // Differences include:
 // - Only zips together two or three views instead of N.
-// - Size is determined by the first view, which must be smaller than the
-//   other view(s).
+// - Size is determined by the first view, which must be smaller than or equal
+//   to the other view(s).
 // - Views are passed as forwarding-references, so non-const views may be
 //   assigned-to in the body of the loop.
 // - Only those methods required to support use in a range-based for-loop
