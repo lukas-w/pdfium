@@ -56,9 +56,8 @@ void ReverseRGB(pdfium::span<uint8_t> pDestBuf,
           count);
 
 #if defined(PDF_USE_LIBYUV)
-  libyuv::RGB24ToRAW(pdfium::as_bytes(src_span).data(), pixels * 3,
-                     pdfium::as_writable_bytes(dst_span).data(), pixels * 3,
-                     pixels, 1);
+  libyuv::RGB24ToRAW(pdfium::as_bytes(src_span).data(), 0,
+                     pdfium::as_writable_bytes(dst_span).data(), 0, pixels, 1);
 #else
   if (dst_span.data() == src_span.data()) {
     for (auto& pix : dst_span) {

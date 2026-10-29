@@ -451,12 +451,10 @@ void CompositeRow_Bgr2Bgra_NoBlend_NoClip(
     const uint8_t* src_bytes = pdfium::as_bytes(bgr_span).data();
     uint8_t* dest_bytes = pdfium::as_writable_bytes(dest_span).data();
     if constexpr (std::is_same_v<DestPixelStruct, FX_BGRA_STRUCT<uint8_t>>) {
-      libyuv::RGB24ToARGB(src_bytes, pixel_count * 3, dest_bytes,
-                          pixel_count * 4, pixel_count, 1);
+      libyuv::RGB24ToARGB(src_bytes, 0, dest_bytes, 0, pixel_count, 1);
     } else {
       static_assert(std::is_same_v<DestPixelStruct, FX_RGBA_STRUCT<uint8_t>>);
-      libyuv::RAWToARGB(src_bytes, pixel_count * 3, dest_bytes, pixel_count * 4,
-                        pixel_count, 1);
+      libyuv::RAWToARGB(src_bytes, 0, dest_bytes, 0, pixel_count, 1);
     }
 #else
     CopyRowToOpaqueBgra(dest_span, bgr_span);
