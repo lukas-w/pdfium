@@ -30,15 +30,15 @@ TEST_F(CPDFXFAContextEmbedderTest, HasHeap) {
 
 TEST_F(CPDFXFAContextEmbedderTest, UnattachedPDFiumCreatedIsolate) {
   FPDF_DestroyLibrary();
-
+  auto* env = EmbedderTestEnvironment::GetInstance();
   const FPDF_LIBRARY_CONFIG kConfig = {
       .version = 7,
       .m_pUserFontPaths = nullptr,
       .m_pIsolate = nullptr,
       .m_v8EmbedderSlot = 0,
       .m_pPlatform = V8TestEnvironment::GetInstance()->platform(),
-      .m_RendererType = FPDF_RENDERERTYPE_AGG,
-      .m_FontLibraryType = FPDF_FONTBACKENDTYPE_FREETYPE,
+      .m_RendererType = env->GetRendererType(),
+      .m_FontLibraryType = env->GetFontLibraryType(),
       .m_BrotliEnabled = false,
       .m_IsolatePerDocument = false,
   };
@@ -59,12 +59,13 @@ TEST_F(CPDFXFAContextEmbedderTest, UnattachedPDFiumCreatedIsolate) {
 
   FPDF_DestroyLibrary();
 
-  EmbedderTestEnvironment::GetInstance()->TearDown();
-  EmbedderTestEnvironment::GetInstance()->SetUp();
+  env->TearDown();
+  env->SetUp();
 }
 
 TEST_F(CPDFXFAContextEmbedderTest, IsolatePerDocument) {
   FPDF_DestroyLibrary();
+  auto* env = EmbedderTestEnvironment::GetInstance();
 
   const FPDF_LIBRARY_CONFIG kConfig = {
       .version = 7,
@@ -72,8 +73,8 @@ TEST_F(CPDFXFAContextEmbedderTest, IsolatePerDocument) {
       .m_pIsolate = nullptr,
       .m_v8EmbedderSlot = 0,
       .m_pPlatform = V8TestEnvironment::GetInstance()->platform(),
-      .m_RendererType = FPDF_RENDERERTYPE_AGG,
-      .m_FontLibraryType = FPDF_FONTBACKENDTYPE_FREETYPE,
+      .m_RendererType = env->GetRendererType(),
+      .m_FontLibraryType = env->GetFontLibraryType(),
       .m_BrotliEnabled = false,
       .m_IsolatePerDocument = true,
   };
@@ -94,6 +95,6 @@ TEST_F(CPDFXFAContextEmbedderTest, IsolatePerDocument) {
 
   FPDF_DestroyLibrary();
 
-  EmbedderTestEnvironment::GetInstance()->TearDown();
-  EmbedderTestEnvironment::GetInstance()->SetUp();
+  env->TearDown();
+  env->SetUp();
 }

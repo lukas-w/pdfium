@@ -2052,6 +2052,7 @@ TEST_F(FPDFViewEmbedderTest, RenderXfaPageToSkp) {
 #if defined(PDF_USE_AGG) && defined(PDF_USE_SKIA)
 TEST_F(FPDFViewEmbedderTest, Bug2087) {
   FPDF_DestroyLibrary();
+  auto* env = EmbedderTestEnvironment::GetInstance();
 
   std::string agg_checksum;
   const FPDF_LIBRARY_CONFIG kAggConfig = {
@@ -2061,7 +2062,7 @@ TEST_F(FPDFViewEmbedderTest, Bug2087) {
       .m_v8EmbedderSlot = 0,
       .m_pPlatform = nullptr,
       .m_RendererType = FPDF_RENDERERTYPE_AGG,
-      .m_FontLibraryType = FPDF_FONTBACKENDTYPE_FREETYPE,
+      .m_FontLibraryType = env->GetFontLibraryType(),
   };
   FPDF_InitLibraryWithConfig(&kAggConfig);
   ASSERT_TRUE(OpenDocument("rectangles.pdf"));
@@ -2075,10 +2076,13 @@ TEST_F(FPDFViewEmbedderTest, Bug2087) {
 
   std::string skia_checksum;
   const FPDF_LIBRARY_CONFIG kSkiaConfig = {
-      .version = 2,
+      .version = 5,
       .m_pUserFontPaths = nullptr,
       .m_pIsolate = nullptr,
       .m_v8EmbedderSlot = 0,
+      .m_pPlatform = nullptr,
+      .m_RendererType = FPDF_RENDERERTYPE_SKIA,
+      .m_FontLibraryType = env->GetFontLibraryType(),
   };
   FPDF_InitLibraryWithConfig(&kSkiaConfig);
   ASSERT_TRUE(OpenDocument("rectangles.pdf"));
@@ -2091,22 +2095,73 @@ TEST_F(FPDFViewEmbedderTest, Bug2087) {
 
   EXPECT_NE(agg_checksum, skia_checksum);
 
-  EmbedderTestEnvironment::GetInstance()->TearDown();
-  EmbedderTestEnvironment::GetInstance()->SetUp();
+  env->TearDown();
+  env->SetUp();
+}
+#endif  // defined(PDF_USE_AGG) && defined(PDF_USE_SKIA)
+
+#if defined(PDF_ENABLE_FREETYPE) && defined(PDF_ENABLE_FONTATIONS)
+TEST_F(FPDFViewEmbedderTest, ToggleFreetypeFontationsInit) {
+  FPDF_DestroyLibrary();
+  auto* env = EmbedderTestEnvironment::GetInstance();
+
+  std::string freetype_checksum;
+  const FPDF_LIBRARY_CONFIG kFreetypeConfig = {
+      .version = 5,
+      .m_pUserFontPaths = nullptr,
+      .m_pIsolate = nullptr,
+      .m_v8EmbedderSlot = 0,
+      .m_pPlatform = nullptr,
+      .m_RendererType = env->GetRendererType(),
+      .m_FontLibraryType = FPDF_FONTBACKENDTYPE_FREETYPE,
+  };
+  FPDF_InitLibraryWithConfig(&kFreetypeConfig);
+  ASSERT_TRUE(OpenDocument("text_color.pdf"));
+  {
+    ScopedPage page = LoadScopedPage(0);
+    ScopedFPDFBitmap bitmap = RenderPage(page.get());
+    freetype_checksum = HashBitmap(bitmap.get());
+  }
+  CloseDocument();
+  FPDF_DestroyLibrary();
+
+  std::string fontations_checksum;
+  const FPDF_LIBRARY_CONFIG kFontationsConfig = {
+      .version = 5,
+      .m_pUserFontPaths = nullptr,
+      .m_pIsolate = nullptr,
+      .m_v8EmbedderSlot = 0,
+      .m_pPlatform = nullptr,
+      .m_RendererType = env->GetRendererType(),
+      .m_FontLibraryType = FPDF_FONTBACKENDTYPE_FONTATIONS,
+  };
+  FPDF_InitLibraryWithConfig(&kFontationsConfig);
+  ASSERT_TRUE(OpenDocument("text_color.pdf"));
+  {
+    ScopedPage page = LoadScopedPage(0);
+    ScopedFPDFBitmap bitmap = RenderPage(page.get());
+    fontations_checksum = HashBitmap(bitmap.get());
+  }
+  CloseDocument();
+
+  EXPECT_NE(freetype_checksum, fontations_checksum);
+
+  env->TearDown();
+  env->SetUp();
 }
 #endif  // defined(PDF_USE_AGG) && defined(PDF_USE_SKIA)
 
 TEST_F(FPDFViewEmbedderTest, BadIsolatePerDocumentConfig) {
   FPDF_DestroyLibrary();
-
+  auto* env = EmbedderTestEnvironment::GetInstance();
   const FPDF_LIBRARY_CONFIG kBadConfig = {
       .version = 7,
       .m_pUserFontPaths = nullptr,
       .m_pIsolate = reinterpret_cast<void*>(1),
       .m_v8EmbedderSlot = 0,
       .m_pPlatform = nullptr,
-      .m_RendererType = FPDF_RENDERERTYPE_AGG,
-      .m_FontLibraryType = FPDF_FONTBACKENDTYPE_FREETYPE,
+      .m_RendererType = env->GetRendererType(),
+      .m_FontLibraryType = env->GetFontLibraryType(),
       .m_BrotliEnabled = false,
       .m_IsolatePerDocument = true,
   };
@@ -2117,7 +2172,8 @@ TEST_F(FPDFViewEmbedderTest, BadIsolatePerDocumentConfig) {
 }
 
 TEST_F(FPDFViewEmbedderTest, NoSmoothTextItalicOverlappingGlyphs) {
-  if (EmbedderTestEnvironment::GetInstance()->fontations()) {
+  auto* env = EmbedderTestEnvironment::GetInstance();
+  if (env->GetFontLibraryType() == FPDF_FONTBACKENDTYPE_FONTATIONS) {
     // Monochrome 1-bit text rendering (FPDF_RENDER_NO_SMOOTHTEXT) produces
     // binary 0/255 pixel transitions at glyph boundaries where subpixel contour
     // differences cross pixel centers, which cannot be fuzzy matched.

@@ -28,12 +28,13 @@ class EmbedderTestEnvironment : public testing::Environment {
   void SetVersion(int version) { version_ = version; }
   bool GetBrotli() const { return brotli_enabled_; }
   int GetVersion() const { return version_; }
+  FPDF_RENDERER_TYPE GetRendererType() const { return renderer_type_; }
+  FPDF_FONT_BACKEND_TYPE GetFontLibraryType() const {
+    return font_library_type_;
+  }
 
   void AddFlags(int argc, char** argv);
   bool write_results() const { return write_results_; }
-  bool fontations() const {
-    return font_library_type_ == FPDF_FONTBACKENDTYPE_FONTATIONS;
-  }
 
  private:
   void AddFlag(const std::string& flag);

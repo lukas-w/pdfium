@@ -1252,16 +1252,18 @@ void EmbedderTest::WriteBitmapToPng(FPDF_BITMAP bitmap,
 
 // static
 void EmbedderTest::CompareBitmap(FPDF_BITMAP bitmap,
+
                                  std::string_view expectation_png_name) {
+  auto* env = EmbedderTestEnvironment::GetInstance();
   std::string png_path =
       GetEmbedderTestPngExpectationPath(expectation_png_name);
   SCOPED_TRACE(testing::Message() << "CompareBitmap() with " << png_path);
   DiffOptions options = kExactDiffOptions;
-  if (EmbedderTestEnvironment::GetInstance()->fontations()) {
+  if (env->GetFontLibraryType() == FPDF_FONTBACKENDTYPE_FONTATIONS) {
     options = kFontationsDiffOptions;
   }
   CompareBitmapToPngFile(bitmap, png_path, options);
-  if (EmbedderTestEnvironment::GetInstance()->write_results()) {
+  if (env->write_results()) {
     WriteBitmapToPng(bitmap, png_path);
   }
 }
@@ -1271,8 +1273,9 @@ void EmbedderTest::CompareBitmapWithExpectationSuffix(
     FPDF_BITMAP bitmap,
     std::string_view expectation_png_name,
     const DiffOptions& options) {
+  auto* env = EmbedderTestEnvironment::GetInstance();
   DiffOptions effective_options = options;
-  if (EmbedderTestEnvironment::GetInstance()->fontations()) {
+  if (env->GetFontLibraryType() == FPDF_FONTBACKENDTYPE_FONTATIONS) {
     effective_options.max_pixel_per_channel_delta =
         std::max(options.max_pixel_per_channel_delta,
                  kFontationsDiffOptions.max_pixel_per_channel_delta);

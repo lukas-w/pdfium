@@ -166,6 +166,7 @@ TEST_F(CFWLEditEmbedderTest, FillWithNewLineWithoutMultiline) {
 }
 
 TEST_F(CFWLEditEmbedderTest, FillWithNewLineWithMultiline) {
+  auto* env = EmbedderTestEnvironment::GetInstance();
   static constexpr DiffOptions kMultilineDiffOptions = {
       .max_pixel_per_channel_delta = 255,
       .max_mean_squared_error = 5.0,
@@ -193,7 +194,7 @@ TEST_F(CFWLEditEmbedderTest, FillWithNewLineWithMultiline) {
         RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
     CompareBitmapWithExpectationSuffix(
         page_bitmap.get(), kFilledMultilineBasename,
-        EmbedderTestEnvironment::GetInstance()->fontations()
+        env->GetFontLibraryType() == FPDF_FONTBACKENDTYPE_FONTATIONS
             ? kMultilineDiffOptions
             : kExactDiffOptions);
   }
@@ -221,7 +222,7 @@ TEST_F(CFWLEditEmbedderTest, FillWithNewLineWithMultiline) {
         RenderLoadedPageWithFlags(page.get(), FPDF_ANNOT);
     CompareBitmapWithExpectationSuffix(
         page_bitmap.get(), kMultilineBackspaceBasename,
-        EmbedderTestEnvironment::GetInstance()->fontations()
+        env->GetFontLibraryType() == FPDF_FONTBACKENDTYPE_FONTATIONS
             ? kMultilineDiffOptions
             : kExactDiffOptions);
   }

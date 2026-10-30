@@ -2953,6 +2953,7 @@ TEST_F(FPDFEditEmbedderTest, GetTextRenderMode) {
 }
 
 TEST_F(FPDFEditEmbedderTest, SetTextRenderMode) {
+  auto* env = EmbedderTestEnvironment::GetInstance();
   static constexpr char kTextRenderModeStrokeModePng[] =
       "text_render_mode_stroke_mode";
   static constexpr DiffOptions kTextRenderModeDiffOptions = {
@@ -2969,7 +2970,7 @@ TEST_F(FPDFEditEmbedderTest, SetTextRenderMode) {
       ScopedFPDFBitmap page_bitmap = RenderPage(page.get());
       CompareBitmapWithExpectationSuffix(
           page_bitmap.get(), "text_render_mode",
-          EmbedderTestEnvironment::GetInstance()->fontations()
+          env->GetFontLibraryType() == FPDF_FONTBACKENDTYPE_FONTATIONS
               ? kTextRenderModeDiffOptions
               : kExactDiffOptions);
     }
@@ -2999,7 +3000,7 @@ TEST_F(FPDFEditEmbedderTest, SetTextRenderMode) {
       ScopedFPDFBitmap page_bitmap = RenderPage(page.get());
       CompareBitmapWithExpectationSuffix(
           page_bitmap.get(), kTextRenderModeStrokeModePng,
-          EmbedderTestEnvironment::GetInstance()->fontations()
+          env->GetFontLibraryType() == FPDF_FONTBACKENDTYPE_FONTATIONS
               ? kTextRenderModeDiffOptions
               : kExactDiffOptions);
     }
@@ -3025,7 +3026,7 @@ TEST_F(FPDFEditEmbedderTest, SetTextRenderMode) {
     ScopedFPDFBitmap bitmap = RenderSavedPage(saved_page.get());
     CompareBitmapWithExpectationSuffix(
         bitmap.get(), kTextRenderModeStrokeModePng,
-        EmbedderTestEnvironment::GetInstance()->fontations()
+        env->GetFontLibraryType() == FPDF_FONTBACKENDTYPE_FONTATIONS
             ? kTextRenderModeDiffOptions
             : kExactDiffOptions);
   }
@@ -5228,6 +5229,8 @@ TEST_F(FPDFEditEmbedderTest, GetRenderedBitmapForRotatedText) {
 }
 
 TEST_F(FPDFEditEmbedderTest, GetRenderedBitmapForColorText) {
+  auto* env = EmbedderTestEnvironment::GetInstance();
+
   ASSERT_TRUE(OpenDocument("text_color.pdf"));
   ScopedPage page = LoadScopedPage(0);
   ASSERT_TRUE(page);
@@ -5243,7 +5246,7 @@ TEST_F(FPDFEditEmbedderTest, GetRenderedBitmapForColorText) {
   };
   CompareBitmapWithExpectationSuffix(
       bitmap.get(), "text_color_text_object",
-      EmbedderTestEnvironment::GetInstance()->fontations()
+      env->GetFontLibraryType() == FPDF_FONTBACKENDTYPE_FONTATIONS
           ? kColorTextDiffOptions
           : kExactDiffOptions);
 }
