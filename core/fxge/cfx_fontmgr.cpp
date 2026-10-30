@@ -39,9 +39,6 @@ namespace {
 // otherwise get access to system fonts.
 sk_sp<SkFontMgr> CreateSkiaFontManagerFallback(
     CFX_FontMgr::FontBackend backend) {
-#if defined(PDF_USE_SKIA_CUSTOM_FONT_MANAGER)
-  return pdfium_skia_custom_font_manager();
-#else  // defined(PDF_USE_SKIA_CUSTOM_FONT_MANAGER)
 #if defined(PDF_ENABLE_FONTATIONS)
   if (backend == CFX_FontMgr::FontBackend::kFontations) {
     // This is a SkFontMgr which will use Fontations to decode font data.
@@ -54,7 +51,6 @@ sk_sp<SkFontMgr> CreateSkiaFontManagerFallback(
 #else
   return nullptr;
 #endif  // defined(PDF_ENABLE_FREETYPE)
-#endif  // defined(PDF_USE_SKIA_CUSTOM_FONT_MANAGER)
 }
 
 // static

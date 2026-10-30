@@ -74,8 +74,4 @@ class CFX_FontMgr {
 #endif
 };
 
-#if defined(PDF_USE_SKIA) && defined(PDF_USE_SKIA_CUSTOM_FONT_MANAGER)
-extern sk_sp<SkFontMgr> pdfium_skia_custom_font_manager();
-#endif  // defined(PDF_USE_SKIA) && defined(PDF_USE_SKIA_CUSTOM_FONT_MANAGER)
-
 #endif  // CORE_FXGE_CFX_FONTMGR_H_

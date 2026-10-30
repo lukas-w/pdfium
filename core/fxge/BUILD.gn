@@ -230,11 +230,6 @@ source_set("fxge") {
       "skia/fx_skia_device.h",
     ]
     public_deps += [ "//skia" ]
-
-    if (pdf_skia_font_manager_target != "") {
-      defines += [ "PDF_USE_SKIA_CUSTOM_FONT_MANAGER" ]
-      deps += [ pdf_skia_font_manager_target ]
-    }
   }
 
   visibility = [ "../../*" ]
