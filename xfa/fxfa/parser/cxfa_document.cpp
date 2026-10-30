@@ -18,6 +18,7 @@
 #include "core/fxcrt/xml/cfx_xmlelement.h"
 #include "fxjs/cjs_runtime.h"
 #include "fxjs/gc/container_trace.h"
+#include "fxjs/gc/containers.h"
 #include "fxjs/xfa/cfxjse_engine.h"
 #include "fxjs/xfa/cfxjse_resolveprocessor.h"
 #include "fxjs/xfa/cjx_object.h"
@@ -1612,28 +1613,32 @@ void CXFA_Document::DoProtoMerge() {
     return;
   }
 
-  std::map<uint32_t, CXFA_Node*> mIDMap;
-  std::set<CXFA_Node*> sUseNodes;
+  cppgc::Persistent<GCedMap<uint32_t, CXFA_Node>> id_map =
+      cppgc::MakeGarbageCollected<GCedMap<uint32_t, CXFA_Node>>(
+          GetHeap()->GetAllocationHandle());
+  cppgc::Persistent<GCedVector<CXFA_Node>> use_nodes =
+      cppgc::MakeGarbageCollected<GCedVector<CXFA_Node>>(
+          GetHeap()->GetAllocationHandle());
   CXFA_NodeIterator sIterator(pTemplateRoot);
   for (CXFA_Node* pNode = sIterator.GetCurrent(); pNode;
        pNode = sIterator.MoveToNext()) {
     WideString wsIDVal = pNode->JSObject()->GetCData(XFA_Attribute::Id);
     if (!wsIDVal.IsEmpty()) {
-      mIDMap[FX_HashCode_GetW(wsIDVal.AsStringView())] = pNode;
+      id_map->storage[FX_HashCode_GetW(wsIDVal.AsStringView())] = pNode;
     }
 
     WideString wsUseVal = pNode->JSObject()->GetCData(XFA_Attribute::Use);
     if (!wsUseVal.IsEmpty()) {
-      sUseNodes.insert(pNode);
+      use_nodes->storage.push_back(pNode);
     } else {
       wsUseVal = pNode->JSObject()->GetCData(XFA_Attribute::Usehref);
       if (!wsUseVal.IsEmpty()) {
-        sUseNodes.insert(pNode);
+        use_nodes->storage.push_back(pNode);
       }
     }
   }
 
-  for (CXFA_Node* pUseHrefNode : sUseNodes) {
+  for (CXFA_Node* pUseHrefNode : use_nodes->storage) {
     // Must outlive the WideStringViews below.
     WideString wsUseVal =
         pUseHrefNode->JSObject()->GetCData(XFA_Attribute::Usehref);
@@ -1666,8 +1671,8 @@ void CXFA_Document::DoProtoMerge() {
         }
       }
     } else if (!wsID.IsEmpty()) {
-      auto it = mIDMap.find(FX_HashCode_GetW(wsID));
-      if (it == mIDMap.end()) {
+      auto it = id_map->storage.find(FX_HashCode_GetW(wsID));
+      if (it == id_map->storage.end()) {
         continue;
       }
       pProtoNode = it->second;

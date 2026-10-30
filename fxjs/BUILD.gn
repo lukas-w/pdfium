@@ -223,6 +223,7 @@ if (pdf_enable_v8) {
     source_set("gc") {
       sources = [
         "gc/container_trace.h",
+        "gc/containers.h",
         "gc/gced_tree_node.h",
         "gc/gced_tree_node_mixin.h",
         "gc/heap.cpp",
@@ -262,6 +263,7 @@ if (pdf_enable_v8) {
     if (pdf_enable_xfa) {
       sources += [
         "gc/container_trace_unittest.cpp",
+        "gc/containers_unittest.cpp",
         "gc/gced_tree_node_mixin_unittest.cpp",
         "gc/gced_tree_node_unittest.cpp",
         "gc/heap_unittest.cpp",

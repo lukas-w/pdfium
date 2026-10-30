@@ -139,6 +139,9 @@ FXGCScopedHeap FXGC_CreateHeap(v8::Isolate* isolate) {
       std::make_shared<CFXGC_Platform>(),
       cppgc::Heap::HeapOptions{
           {},
+          // Do not enable conservative stack scanning. STL containers have
+          // backing stores that are "malloc'd" and therefore scanning will
+          // *not* try to trace them.
           cppgc::Heap::StackSupport::kNoConservativeStackScan,
           cppgc::Heap::MarkingType::kAtomic,
           cppgc::Heap::SweepingType::kIncrementalAndConcurrent,
