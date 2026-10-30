@@ -77,6 +77,8 @@ source_set("fxge") {
     "dib/cfx_imagetransformer.h",
     "dib/cfx_scanlinecompositor.cpp",
     "dib/cfx_scanlinecompositor.h",
+    "dib/cfx_scanlinecompositor_hwy.cpp",
+    "dib/cfx_scanlinecompositor_hwy.h",
     "dib/cstretchengine.cpp",
     "dib/cstretchengine.h",
     "dib/cstretchengine_hwy.cpp",

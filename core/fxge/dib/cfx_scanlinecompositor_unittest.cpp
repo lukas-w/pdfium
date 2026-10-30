@@ -7,10 +7,13 @@
 #include <stdint.h>
 
 #include <array>
+#include <vector>
 
 #include "build/build_config.h"
 #include "core/fxcrt/span.h"
 #include "core/fxcrt/stl_util.h"
+#include "core/fxcrt/zip.h"
+#include "core/fxge/dib/cfx_scanlinecompositor_hwy.h"
 #include "core/fxge/dib/fx_dib.h"
 #include "testing/gmock/include/gmock/gmock.h"
 #include "testing/gtest/include/gtest/gtest.h"
@@ -101,6 +104,77 @@ void RunPreMultiplyTest(
   EXPECT_THAT(dest_scan, ElementsAreArray(expectations));
 }
 #endif  // defined(PDF_USE_SKIA)
+
+// Independent re-derivation of CompositeRowBgra2BgraSimd's contract
+// (AlphaUnion()/AlphaMerge(), fx_dib.h); not copied from the kernel.
+FX_BGRA_STRUCT<uint8_t> RefBgra2Bgra(const FX_BGRA_STRUCT<uint8_t>& src,
+                                     const FX_BGRA_STRUCT<uint8_t>& back) {
+  if (back.alpha == 0) {
+    return src;
+  }
+  if (src.alpha == 0) {
+    return back;
+  }
+  const int dest_alpha = back.alpha + src.alpha - back.alpha * src.alpha / 255;
+  const int ratio = src.alpha * 255 / dest_alpha;
+  return {
+      .blue = static_cast<uint8_t>(AlphaMerge(back.blue, src.blue, ratio)),
+      .green = static_cast<uint8_t>(AlphaMerge(back.green, src.green, ratio)),
+      .red = static_cast<uint8_t>(AlphaMerge(back.red, src.red, ratio)),
+      .alpha = static_cast<uint8_t>(dest_alpha),
+  };
+}
+
+void CheckBgra2Bgra(size_t width) {
+  // alpha cycle; dest phase `(i / 4) % 4`
+  static constexpr std::array<uint8_t, 4> kAlphaCycle = {0, 255, 100, 200};
+  std::vector<FX_BGRA_STRUCT<uint8_t>> src(width);
+  std::vector<FX_BGRA_STRUCT<uint8_t>> dest(width);
+  for (size_t i = 0; i < width; ++i) {
+    // per 32 px: [0,16) src a in {0,255} -> all-copy/keep fast path;
+    // [16,32) mid a -> divide path, incl. mid-over-mid
+    const uint8_t src_a = (i % 32 < 16)
+                              ? static_cast<uint8_t>((i & 1) ? 255 : 0)
+                              : kAlphaCycle[i % 4];
+    src[i] = {.blue = static_cast<uint8_t>(i * 7 + 1),
+              .green = static_cast<uint8_t>(i * 13 + 2),
+              .red = static_cast<uint8_t>(i * 29 + 3),
+              .alpha = src_a};
+    dest[i] = {.blue = static_cast<uint8_t>(i * 31 + 5),
+               .green = static_cast<uint8_t>(i * 17 + 7),
+               .red = static_cast<uint8_t>(i * 11 + 9),
+               .alpha = kAlphaCycle[(i / 4) % 4]};
+  }
+  std::vector<FX_BGRA_STRUCT<uint8_t>> expected(width);
+  for (auto [input, back, want] : fxcrt::Zip(src, dest, expected)) {
+    want = RefBgra2Bgra(input, back);
+  }
+  CompositeRowBgra2BgraSimd(src, dest);
+  for (size_t i = 0; i < width; ++i) {
+    EXPECT_EQ(expected[i], dest[i]) << "width " << width << " pixel " << i;
+  }
+}
+
+void CheckBgra2BgrxForceOpaque(size_t width) {
+  std::vector<FX_BGRA_STRUCT<uint8_t>> src(width);
+  for (size_t i = 0; i < width; ++i) {
+    src[i] = {.blue = static_cast<uint8_t>(i * 5 + 1),
+              .green = static_cast<uint8_t>(i * 9 + 2),
+              .red = static_cast<uint8_t>(i * 19 + 3),
+              .alpha = static_cast<uint8_t>(i * 3 + 4)};  // src alpha ignored
+  }
+  // sentinel dest; expect src.rgb, alpha 0xFF
+  std::vector<FX_BGRA_STRUCT<uint8_t>> dest(
+      width, {.blue = 0xAA, .green = 0xAA, .red = 0xAA, .alpha = 0xAA});
+  CompositeRowBgra2BgrxForceOpaqueSimd(src, dest);
+  for (size_t i = 0; i < width; ++i) {
+    const FX_BGRA_STRUCT<uint8_t> want = {.blue = src[i].blue,
+                                          .green = src[i].green,
+                                          .red = src[i].red,
+                                          .alpha = 255};
+    EXPECT_EQ(want, dest[i]) << "width " << width << " pixel " << i;
+  }
+}
 
 }  // namespace
 
@@ -908,5 +982,52 @@ TEST(ScanlineCompositorTest, CompositeRgbBitmapLineBgrToBgraNormal) {
         {.blue = 150, .green = 140, .red = 130, .alpha = 255},
     };
     EXPECT_THAT(dest_scan, ElementsAreArray(kExpectedRgba));
+  }
+}
+
+// Vector body + sub-vector tail across widths spanning the SSE4/AVX2/AVX-512
+// lane counts (4/8/16).
+TEST(ScanlineCompositorSimdTest, Bgra2BgraMatchesScalar) {
+  for (size_t width : {1u,  2u,  3u,  4u,  5u,  6u,  7u,  8u,  9u,   15u,
+                       16u, 17u, 31u, 32u, 33u, 63u, 64u, 65u, 100u, 257u}) {
+    CheckBgra2Bgra(width);
+  }
+}
+
+// Opaque copy: rgb preserved, alpha forced 0xFF, across vector/tail widths.
+TEST(ScanlineCompositorSimdTest, Bgra2BgrxForceOpaqueMatchesScalar) {
+  for (size_t width : {1u,  2u,  3u,  4u,  5u,  6u,  7u,  8u,  9u,   15u,
+                       16u, 17u, 31u, 32u, 33u, 63u, 64u, 65u, 100u, 257u}) {
+    CheckBgra2BgrxForceOpaque(width);
+  }
+}
+
+// BGR24 -> BGRx expand via public path. RGB copied verbatim; padding byte
+// 0xFF under libyuv, untouched by scalar (kBgrx padding, not displayed).
+TEST(ScanlineCompositorSimdTest, CompositeRgbBitmapLineBgr24ToBgrx) {
+  constexpr int kWidth = 67;  // non-multiple-of-16: exercises libyuv tail
+
+  std::vector<uint8_t> src(static_cast<size_t>(kWidth) * 3);
+  for (size_t i = 0; i < src.size(); ++i) {
+    src[i] = static_cast<uint8_t>(i * 7 + 1);
+  }
+  constexpr uint8_t kPad = 0x3C;  // sentinel: 0xFF-stamp vs left-as-is
+  std::vector<uint8_t> dest(static_cast<size_t>(kWidth) * 4, kPad);
+
+  CFX_ScanlineCompositor compositor;
+  ASSERT_TRUE(compositor.Init(FXDIB_Format::kBgrx, FXDIB_Format::kBgr,
+                              /*src_palette=*/{}, /*mask_color=*/0,
+                              BlendMode::kNormal, /*bRgbByteOrder=*/false));
+  compositor.CompositeRgbBitmapLine(dest, src, kWidth, /*clip_scan=*/{});
+
+  for (int i = 0; i < kWidth; ++i) {
+    EXPECT_EQ(dest[i * 4 + 0], src[i * 3 + 0]) << "blue @ " << i;
+    EXPECT_EQ(dest[i * 4 + 1], src[i * 3 + 1]) << "green @ " << i;
+    EXPECT_EQ(dest[i * 4 + 2], src[i * 3 + 2]) << "red @ " << i;
+#if defined(PDF_USE_LIBYUV)
+    EXPECT_EQ(dest[i * 4 + 3], 0xFF) << "padding @ " << i;  // libyuv 0xFF
+#else
+    EXPECT_EQ(dest[i * 4 + 3], kPad) << "padding @ " << i;  // scalar leaves it
+#endif
   }
 }

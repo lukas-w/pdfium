@@ -19,6 +19,7 @@
 #include "core/fxcrt/stl_util.h"
 #include "core/fxcrt/zip.h"
 #include "core/fxge/dib/blend.h"
+#include "core/fxge/dib/cfx_scanlinecompositor_hwy.h"
 #include "core/fxge/dib/fx_dib.h"
 
 #if defined(PDF_USE_LIBYUV)
@@ -444,8 +445,9 @@ void CompositeRow_Bgr2Bgra_NoBlend_NoClip(
     int src_Bpp) {
   const size_t width = dest_span.size();
   if (src_Bpp == 3) {
-    auto bgr_span = fxcrt::reinterpret_span<const FX_BGR_STRUCT<uint8_t>>(
-        src_span.first(width * 3));
+    auto bgr_span =
+        fxcrt::reinterpret_span<const FX_BGR_STRUCT<uint8_t>>(src_span).first(
+            width);
 #if defined(PDF_USE_LIBYUV)
     const int pixel_count = pdfium::checked_cast<int>(width);
     const uint8_t* src_bytes = pdfium::as_bytes(bgr_span).data();
@@ -462,9 +464,16 @@ void CompositeRow_Bgr2Bgra_NoBlend_NoClip(
     return;
   }
   CHECK_EQ(src_Bpp, 4);
-  CopyRowToOpaqueBgra(dest_span,
-                      fxcrt::reinterpret_span<const FX_BGRA_STRUCT<uint8_t>>(
-                          src_span.first(width * 4)));
+  auto bgra_src =
+      fxcrt::reinterpret_span<const FX_BGRA_STRUCT<uint8_t>>(src_span).first(
+          width);
+  if constexpr (std::is_same_v<DestPixelStruct, FX_BGRA_STRUCT<uint8_t>>) {
+    // SIMD: packed-BGRA src/dest, opaque copy (alpha forced 0xFF)
+    CompositeRowBgra2BgrxForceOpaqueSimd(bgra_src, dest_span);
+  } else {
+    static_assert(std::is_same_v<DestPixelStruct, FX_RGBA_STRUCT<uint8_t>>);
+    CopyRowToOpaqueBgra(dest_span, bgra_src);
+  }
 }
 
 template <typename DestPixelStruct>
@@ -651,16 +660,23 @@ void CompositeRowBgra2Bgra(pdfium::span<const FX_BGRA_STRUCT<uint8_t>> src_span,
       }
       return;
     }
-    for (auto [input, output] : fxcrt::Zip(src_span, dest_span)) {
-      const uint8_t src_alpha =
-          CompositePixelBgra2BgraCommon(input, /*clip=*/255, output);
-      if (src_alpha == 255) {
-        // Fully opaque source: AlphaUnion() would be 255, the ratio 255, and
-        // AlphaMerge(..., 255) returns the source, so the general path in
-        // CompositePixelBgra2BgraNoBlend() reduces to a plain copy.
-        CopyPixelToOpaqueBgra(input, output);
-      } else if (src_alpha != 0) {
-        CompositePixelBgra2BgraNoBlend(input, src_alpha, output);
+    if constexpr (std::is_same_v<DestPixelStruct, FX_BGRA_STRUCT<uint8_t>>) {
+      // SIMD: packed-BGRA, normal, no clip
+      CompositeRowBgra2BgraSimd(src_span, dest_span);
+    } else {
+      static_assert(std::is_same_v<DestPixelStruct, FX_RGBA_STRUCT<uint8_t>>);
+      for (auto [input, output] : fxcrt::Zip(src_span, dest_span)) {
+        const uint8_t src_alpha =
+            CompositePixelBgra2BgraCommon(input, /*clip=*/255, output);
+        if (src_alpha == 255) {
+          // Fully opaque source: CompositePixelBgra2BgraNoBlend() reduces to a
+          // plain copy.
+          CopyPixelToOpaqueBgra(input, output);
+        } else if (src_alpha != 0) {
+          CompositePixelBgra2BgraNoBlend(input, src_alpha, output);
+        }
+        // src_alpha == 0: invisible source, or dest already set by
+        // CompositePixelBgra2BgraCommon(). Nothing to do.
       }
     }
     return;
@@ -826,6 +842,14 @@ void CompositeRow_Rgb2Rgb_NoBlend_NoClip(pdfium::span<uint8_t> dest_span,
       FXSYS_memcpy(dest_scan, src_scan, width * dest_Bpp);
       return;
     }
+#if defined(PDF_USE_LIBYUV)
+    if (src_Bpp == 3 && dest_Bpp == 4) {
+      // BGR24 -> BGRx expand; libyuv stamps 4th byte 0xFF vs scalar's
+      // untouched. kBgrx padding, non-displayed: no output impact.
+      libyuv::RGB24ToARGB(src_scan, width * 3, dest_scan, width * 4, width, 1);
+      return;
+    }
+#endif
     for (int col = 0; col < width; col++) {
       FXSYS_memcpy(dest_scan, src_scan, 3);
       dest_scan += dest_Bpp;
