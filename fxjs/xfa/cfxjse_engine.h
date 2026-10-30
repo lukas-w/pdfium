@@ -12,6 +12,7 @@
 #include <type_traits>
 #include <vector>
 
+#include "core/fxcrt/autorestorer.h"
 #include "core/fxcrt/mask.h"
 #include "core/fxcrt/unowned_ptr.h"
 #include "fxjs/cfx_isolate_wrapper.h"
@@ -129,6 +130,19 @@ class CFXJSE_Engine final : public CFX_IsolateWrapper {
   };
   friend class EventParamScope;
 
+  class ScriptNodeArrayScope {
+    CPPGC_STACK_ALLOCATED();
+
+   public:
+    ScriptNodeArrayScope(CFXJSE_Engine* engine,
+                         std::vector<cppgc::Persistent<CXFA_Node>>* array);
+    ~ScriptNodeArrayScope();
+
+   private:
+    AutoRestorer<UnownedPtr<std::vector<cppgc::Persistent<CXFA_Node>>>>
+        restorer_;
+  };
+
   CXFA_Node* GetEventTarget() const { return target_; }
   CXFA_EventParam* GetEventParam() const { return event_param_; }
 
@@ -152,7 +166,6 @@ class CFXJSE_Engine final : public CFX_IsolateWrapper {
   CFXJSE_Class* GetJseNormalClass() const { return js_class_; }
   CXFA_Document* GetDocument() const { return document_.Get(); }
 
-  void SetNodesOfRunScript(std::vector<cppgc::Persistent<CXFA_Node>>* pArray);
   void AddNodesOfRunScript(CXFA_Node* pNode);
 
   void SetRunAtType(XFA_AttributeValue eRunAt) { run_at_type_ = eRunAt; }

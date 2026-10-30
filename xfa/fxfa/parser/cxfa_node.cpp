@@ -2934,11 +2934,15 @@ CXFA_Node::BoolScriptResult CXFA_Node::ExecuteBoolScript(
       context, pEventParam->targeted_ ? this : nullptr, pEventParam);
   context->SetRunAtType(script->GetRunAt());
 
+  // Avoid wasted work in non-calculate events by not attaching a ref node
+  // array. Always attaching ref nodes would be functionally equivalent, but
+  // every node whose value is read during a non-calculate script would be
+  // pinned until ExecuteBoolScript() exits.
+  const bool needs_ref_nodes = pEventParam->type_ == XFA_EVENT_InitCalculate ||
+                               pEventParam->type_ == XFA_EVENT_Calculate;
   std::vector<cppgc::Persistent<CXFA_Node>> refNodes;
-  if (pEventParam->type_ == XFA_EVENT_InitCalculate ||
-      pEventParam->type_ == XFA_EVENT_Calculate) {
-    context->SetNodesOfRunScript(&refNodes);
-  }
+  CFXJSE_Engine::ScriptNodeArrayScope node_array_scope(
+      context, needs_ref_nodes ? &refNodes : nullptr);
 
   CFXJSE_Context::ExecutionResult exec_result;
   {
@@ -2988,7 +2992,6 @@ CXFA_Node::BoolScriptResult CXFA_Node::ExecuteBoolScript(
       }
     }
   }
-  context->SetNodesOfRunScript(nullptr);
 
   return {iRet, !value.IsEmpty() && fxv8::IsBoolean(value) &&
                     fxv8::ReentrantToBooleanHelper(isolate, value)};

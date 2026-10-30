@@ -191,6 +191,13 @@ CFXJSE_Engine::EventParamScope::~EventParamScope() {
   engine_->event_param_ = prev_event_param_;
 }
 
+CFXJSE_Engine::ScriptNodeArrayScope::ScriptNodeArrayScope(
+    CFXJSE_Engine* engine,
+    std::vector<cppgc::Persistent<CXFA_Node>>* array)
+    : restorer_(&engine->script_node_array_, array) {}
+
+CFXJSE_Engine::ScriptNodeArrayScope::~ScriptNodeArrayScope() = default;
+
 // The runtime belongs to the form fill environment, which may depart before
 // this object does, so look it up rather than holding it.
 CJS_Runtime* CFXJSE_Engine::GetCJSRuntime() const {
@@ -949,11 +956,6 @@ v8::Local<v8::Object> CFXJSE_Engine::GetOrCreateJSBindingFromMap(
   }
 
   return NewNormalXFAObject(pObject);
-}
-
-void CFXJSE_Engine::SetNodesOfRunScript(
-    std::vector<cppgc::Persistent<CXFA_Node>>* pArray) {
-  script_node_array_ = pArray;
 }
 
 void CFXJSE_Engine::AddNodesOfRunScript(CXFA_Node* pNode) {
