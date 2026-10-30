@@ -1687,8 +1687,8 @@ cmsBool SetDataFormat(cmsIT8* it8, int n, const char *label)
             return FALSE;
     }
 
-    if (n >= t -> nSamples) {
-        SynError(it8, "More than NUMBER_OF_FIELDS fields.");
+    if (n < 0 || n >= t -> nSamples) {
+        SynError(it8, "Invalid or more than NUMBER_OF_FIELDS fields.");
         return FALSE;
     }
 
@@ -1701,9 +1701,11 @@ cmsBool SetDataFormat(cmsIT8* it8, int n, const char *label)
 }
 
 
-cmsBool CMSEXPORT cmsIT8SetDataFormat(cmsHANDLE  h, int n, const char *Sample)
+cmsBool CMSEXPORT cmsIT8SetDataFormat(cmsHANDLE h, int n, const char *Sample)
 {
     cmsIT8* it8 = (cmsIT8*)h;
+
+    _cmsAssert(n >= 0);
     return SetDataFormat(it8, n, Sample);
 }
 

@@ -1,9 +1,9 @@
 upstream {
-  commit: "b76633e60c8387a77268fb3359277ca25b5fd75c"
+  version: "lcms2.19.1"
   artifacts {
     git {
       repository: "https://github.com/mm2/Little-CMS"
-      commit: "b76633e60c8387a77268fb3359277ca25b5fd75c"
+      commit: "21c582a594fe5279f90c0b93437c398f93bf62b0"
     }
   }
 }
@@ -12,4 +12,16 @@ stages {
     patch { copybara {} }
   }
   publish { git {} }
+}
+latest {
+  generic {
+    format: "lcms${n0}.${n1}${n2}"
+    regex_groups { key: "n0" value: "[0-9]+" }
+    regex_groups { key: "n1" value: "[0-9]+" }
+    regex_groups { key: "n2" value: "(\\.[0-9]+)?" }
+  }
+  git {
+    repository: "https://github.com/mm2/Little-CMS"
+    tags {}
+  }
 }
