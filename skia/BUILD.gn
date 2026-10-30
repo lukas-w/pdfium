@@ -23,6 +23,10 @@ if (pdf_enable_fontations || pdf_enable_rust_png) {
   import("//build/rust/rust_static_library.gni")
 }
 
+if (pdf_use_partition_alloc) {
+  import("//base/allocator/partition_allocator/partition_alloc.gni")
+}
+
 skia_use_ganesh_backend = !is_ios
 skia_support_pdf = false
 
@@ -159,6 +163,13 @@ config("skia_config") {
     "SK_DISABLE_LEGACY_XPS_FACTORIES",
     "SK_ENABLE_LEGACY_SHADERCONTEXT",
   ]
+
+  if (pdf_use_partition_alloc) {
+    defines += [ "SK_USE_PARTITION_ALLOC" ]
+    if (use_partition_alloc_as_malloc) {
+      defines += [ "SK_USE_PARTITION_ALLOC_AS_MALLOC" ]
+    }
+  }
 
   if (pdf_enable_freetype && is_win) {
     defines += [ "SK_FREETYPE_MINIMUM_RUNTIME_VERSION=(((FREETYPE_MAJOR) * 0x01000000) | ((FREETYPE_MINOR) * 0x00010000) | ((FREETYPE_PATCH) * 0x00000100))" ]
@@ -435,6 +446,9 @@ component("skia") {
     ":skia_opts",
     "../third_party:zlib",
   ]
+  if (pdf_use_partition_alloc) {
+    deps += [ "../third_party:pdfium_pa" ]
+  }
   public_deps = [ ":skia_core_and_effects" ]
 
   if (is_linux || is_chromeos) {
@@ -503,6 +517,13 @@ template("skia_source_set") {
     forward_variables_from(invoker, "*")
 
     check_includes = false
+
+    if (pdf_use_partition_alloc) {
+      if (!defined(deps)) {
+        deps = []
+      }
+      deps += [ "../third_party:pdfium_pa" ]
+    }
 
     if (!is_debug) {
       configs -= [ "//build/config/compiler:default_optimization" ]
