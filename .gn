@@ -35,6 +35,9 @@ default_args = {
   # PDFium does not include the temporal_rs library.
   v8_enable_temporal_support = false
 
+  # PDFium does not use ICU4X implementations for ECMA-402 features.
+  v8_enable_ecma402_icu4x = false
+
   # PDFium has its own unsafe-buffers enforcement directories.
   clang_unsafe_buffers_paths = "//unsafe_buffers_paths.txt"
 
