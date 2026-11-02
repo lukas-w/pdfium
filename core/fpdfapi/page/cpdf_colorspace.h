@@ -123,7 +123,7 @@ class CPDF_ColorSpace : public Retainable, public Observable {
                                   int pixels,
                                   int image_width,
                                   int image_height,
-                                  bool bTransMask) const;
+                                  bool is_transparency_mask) const;
   virtual void EnableStdConversion(bool bEnabled);
   virtual bool IsNormal() const;
 

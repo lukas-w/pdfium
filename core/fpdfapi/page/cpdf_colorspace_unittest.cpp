@@ -22,8 +22,8 @@ TEST(CPDFCalGrayTest, TranslateImageLine) {
   const uint8_t kSrc[12] = {255, 0, 0, 0, 255, 0, 0, 0, 255, 128, 128, 128};
   uint8_t dst[12];
   std::ranges::fill(dst, 0xbd);
-  // `bTransMask` only applies to CYMK colorspaces.
-  pCal->TranslateImageLine(dst, kSrc, 4, 4, 1, /*bTransMask=*/false);
+  // Transparency masks are only used with CMYK colorspaces, not CalGray.
+  pCal->TranslateImageLine(dst, kSrc, 4, 4, 1, /*is_transparency_mask=*/false);
   EXPECT_THAT(dst, ElementsAre(255, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0));
 }
 
@@ -34,7 +34,7 @@ TEST(CPDFCalRGBTest, TranslateImageLine) {
   const uint8_t kSrc[12] = {255, 0, 0, 0, 255, 0, 0, 0, 255, 128, 128, 128};
   uint8_t dst[12];
   std::ranges::fill(dst, 0xbd);
-  // `bTransMask` only applies to CYMK colorspaces.
-  pCal->TranslateImageLine(dst, kSrc, 4, 4, 1, /*bTransMask=*/false);
+  // Transparency masks are only used with CMYK colorspaces, not CalRGB.
+  pCal->TranslateImageLine(dst, kSrc, 4, 4, 1, /*is_transparency_mask=*/false);
   EXPECT_THAT(dst, ElementsAre(0, 0, 255, 0, 255, 0, 255, 0, 0, 128, 128, 128));
 }

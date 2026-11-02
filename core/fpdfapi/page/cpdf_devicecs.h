@@ -25,7 +25,7 @@ class CPDF_DeviceCS final : public CPDF_ColorSpace {
                           int pixels,
                           int image_width,
                           int image_height,
-                          bool bTransMask) const override;
+                          bool is_transparency_mask) const override;
   uint32_t v_Load(CPDF_Document* doc,
                   const CPDF_Array* pArray,
                   std::set<const CPDF_Object*>* pVisited) override;
