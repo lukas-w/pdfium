@@ -389,6 +389,11 @@ bool CPDF_DIB::LoadColorInfo(const CPDF_Dictionary* pFormResources,
   // decoded.
   components_ = color_space_->ComponentCount();
   family_ = color_space_->GetFamily();
+  if (family_ == CPDF_ColorSpace::Family::kPattern) {
+    // Per ISO 32000-1:2008, section 8.9.5.1, table 89, the ColorSpace entry of
+    // an image dictionary can be any type of color space except Pattern.
+    return false;
+  }
   if (family_ == CPDF_ColorSpace::Family::kICCBased && pCSObj->IsName()) {
     ByteString cs = pCSObj->GetString();
     if (cs == "DeviceGray") {
@@ -879,8 +884,7 @@ CPDF_DIB::LoadState CPDF_DIB::StartLoadMask() {
   }
 
   RetainPtr<const CPDF_Array> pMatte = mask->GetDict()->GetArrayFor("Matte");
-  if (pMatte && color_space_ && family_ != CPDF_ColorSpace::Family::kPattern &&
-      pMatte->size() == components_ &&
+  if (pMatte && color_space_ && pMatte->size() == components_ &&
       color_space_->ComponentCount() <= components_) {
     std::vector<float> colors =
         ReadArrayElementsToVector(pMatte.Get(), components_);
@@ -941,7 +945,7 @@ CPDF_DIB::LoadState CPDF_DIB::StartLoadMaskDIB(
 }
 
 void CPDF_DIB::LoadPalette() {
-  if (!color_space_ || family_ == CPDF_ColorSpace::Family::kPattern) {
+  if (!color_space_) {
     return;
   }
 
@@ -1090,7 +1094,7 @@ void CPDF_DIB::TranslateScanline24bpp(
       rgb.red = (1.0f - color_values[0]) * k;
       rgb.green = (1.0f - color_values[1]) * k;
       rgb.blue = (1.0f - color_values[2]) * k;
-    } else if (family_ != CPDF_ColorSpace::Family::kPattern) {
+    } else {
       rgb = color_space_->GetRGBOrZerosOnError(color_values);
     }
     const float R = std::clamp(rgb.red, 0.0f, 1.0f);

@@ -24,3 +24,12 @@ TEST_F(FPDFRenderPatternEmbedderTest, ZeroTilingPatternStep509964646) {
   ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
   ASSERT_TRUE(bitmap);
 }
+
+TEST_F(FPDFRenderPatternEmbedderTest, ImagePatternColorSpace) {
+  // Rendering an image with a Pattern color space should not crash.
+  ASSERT_TRUE(OpenDocument("image_pattern_colorspace.pdf"));
+  ScopedPage page = LoadScopedPage(0);
+  ASSERT_TRUE(page);
+  ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
+  ASSERT_TRUE(bitmap);
+}
