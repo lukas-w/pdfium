@@ -1,0 +1,65 @@
+{{header}}
+{{include ../../xfa_catalog_1_0.fragment}}
+{{include ../../xfa_object_2_0.fragment}}
+{{include ../../xfa_preamble_3_0.fragment}}
+{{include ../../xfa_config_4_0.fragment}}
+{{object 5 0}} <<
+  {{streamlen}}
+>>
+stream
+<form>
+</form>
+<template>
+  <subform layout="tb" name="my_subform">
+    <pageSet id="page" relation="orderedOccurrence">
+      <occur initial="1" max="1" min="1"/>
+      <pageArea id="Page1" name="Page1">
+        <contentArea x="0.25in" y="0.25in" w="8in" h="10.5in"/>
+        <medium long="11in" short="8.5in" stock="letter"/>
+      </pageArea>
+    </pageSet>
+    <field name="source1">
+      <value><text>1</text></value>
+      <ui><textEdit/></ui>
+    </field>
+    <field name="intermediate">
+      <calculate>
+        <script contentType="application/x-javascript">
+          "inter";
+        </script>
+      </calculate>
+      <ui><textEdit/></ui>
+    </field>
+    <field name="source2">
+      <value><text>2</text></value>
+      <ui><textEdit/></ui>
+    </field>
+    <field name="target">
+      <calculate>
+        <script contentType="application/x-javascript">
+          var v1 = source1.rawValue;
+          intermediate.execCalculate();
+          var v2 = source2.rawValue;
+          var res = v1 + "+" + v2;
+          app.alert("target: " + res);
+          res;
+        </script>
+      </calculate>
+      <ui><textEdit/></ui>
+    </field>
+    <event activity="docReady" ref="$host">
+      <script contentType="application/x-javascript">
+        source2.rawValue = "99";
+      </script>
+    </event>
+  </subform>
+</template>
+endstream
+endobj
+{{include ../../xfa_locale_6_0.fragment}}
+{{include ../../xfa_postamble_7_0.fragment}}
+{{include ../../xfa_pages_8_0.fragment}}
+{{xref}}
+{{trailer}}
+{{startxref}}
+%%EOF
