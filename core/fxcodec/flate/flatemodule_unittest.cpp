@@ -72,3 +72,17 @@ TEST(FlateModule, Encode) {
     ++i;
   }
 }
+
+TEST(FlateModule, LZWDecode) {
+  // Encoded LZW stream for "AB":
+  // Codes: 256 (Clear Table), 65 ('A'), 66 ('B'), 257 (EOD)
+  static constexpr uint8_t kLzwInput[] = {0x80, 0x10, 0x48, 0x50, 0x10};
+  static constexpr uint8_t kExpected[] = {'A', 'B'};
+
+  DataAndBytesConsumed result = FlateModule::FlateOrLZWDecode(
+      /*bLZW=*/true, kLzwInput, /*bEarlyChange=*/false, /*predictor=*/0,
+      /*Colors=*/0, /*BitsPerComponent=*/0, /*Columns=*/0,
+      /*estimated_size=*/0);
+  EXPECT_THAT(result.data, ElementsAreArray(kExpected));
+  EXPECT_EQ(5u, result.bytes_consumed);
+}

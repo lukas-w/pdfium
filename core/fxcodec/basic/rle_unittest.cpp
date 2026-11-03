@@ -11,7 +11,9 @@
 #include "core/fpdfapi/parser/fpdf_parser_decode.h"
 #include "core/fxcodec/basic/basicmodule.h"
 #include "core/fxcodec/data_and_bytes_consumed.h"
+#include "core/fxcodec/scanlinedecoder.h"
 #include "core/fxcrt/data_vector.h"
+#include "core/fxcrt/span.h"
 #include "testing/gmock/include/gmock/gmock.h"
 #include "testing/gtest/include/gtest/gtest.h"
 
@@ -97,4 +99,27 @@ TEST(fxcodec, RLEFullLengthInputs) {
     DataAndBytesConsumed result = RunLengthDecode(dest_buf);
     EXPECT_THAT(result.data, ElementsAreArray(src_buf_4));
   }
+}
+
+// Check that trailing leftover unmatched characters following matched runs
+// are encoded properly.
+TEST(fxcodec, RLELeftoverCharacter) {
+  const uint8_t src_buf[] = {1, 1, 2};
+  DataVector<uint8_t> dest_buf = BasicModule::RunLengthEncode(src_buf);
+  DataAndBytesConsumed result = RunLengthDecode(dest_buf);
+  EXPECT_THAT(result.data, ElementsAreArray(src_buf));
+}
+
+TEST(fxcodec, RLEScanlineDecoder) {
+  const uint8_t src_buf[] = {1, 1, 2};
+  DataVector<uint8_t> encoded = BasicModule::RunLengthEncode(src_buf);
+  std::unique_ptr<ScanlineDecoder> decoder =
+      BasicModule::CreateRunLengthDecoder(encoded, 3, 1, 1, 8);
+  ASSERT_TRUE(decoder);
+  EXPECT_EQ(3, decoder->GetWidth());
+  EXPECT_EQ(1, decoder->GetHeight());
+  pdfium::span<const uint8_t> line = decoder->GetScanline(0);
+  ASSERT_FALSE(line.empty());
+  EXPECT_THAT(line.first(3u), ElementsAreArray(src_buf));
+  EXPECT_GT(decoder->GetSrcOffset(), 0u);
 }
