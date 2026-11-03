@@ -58,7 +58,7 @@ TEST_F(CPDFPageImageCacheTest, RenderBug1924) {
 
     // Render with small scale.
     bool should_continue = page_image_cache->StartGetCachedBitmap(
-        image->GetImage(), nullptr, page->GetMutablePageResources(), true,
+        image->GetImage(), nullptr, page->GetMutablePageResources(),
         CPDF_ColorSpace::Family::kICCBased, false, {50, 50});
     while (should_continue) {
       should_continue = page_image_cache->Continue(nullptr);
@@ -68,7 +68,7 @@ TEST_F(CPDFPageImageCacheTest, RenderBug1924) {
 
     // And render with large scale.
     should_continue = page_image_cache->StartGetCachedBitmap(
-        image->GetImage(), nullptr, page->GetMutablePageResources(), true,
+        image->GetImage(), nullptr, page->GetMutablePageResources(),
         CPDF_ColorSpace::Family::kICCBased, false, {100, 100});
     while (should_continue) {
       should_continue = page_image_cache->Continue(nullptr);
@@ -117,7 +117,7 @@ TEST_F(CPDFPageImageCacheTest, RenderReducedDctThenFullSize) {
 
   // Render with small scale: 400/50 -> 1/8, so a 50x50 bitmap.
   bool should_continue = page_image_cache->StartGetCachedBitmap(
-      image->GetImage(), nullptr, page->GetMutablePageResources(), true,
+      image->GetImage(), nullptr, page->GetMutablePageResources(),
       CPDF_ColorSpace::Family::kUnknown, false, {50, 50});
   while (should_continue) {
     should_continue = page_image_cache->Continue(nullptr);
@@ -130,7 +130,7 @@ TEST_F(CPDFPageImageCacheTest, RenderReducedDctThenFullSize) {
   // Render with large scale: 400/100 -> 1/4, so a 100x100 bitmap. The cached
   // 50x50 bitmap is too small, so this forces a higher-resolution re-decode.
   should_continue = page_image_cache->StartGetCachedBitmap(
-      image->GetImage(), nullptr, page->GetMutablePageResources(), true,
+      image->GetImage(), nullptr, page->GetMutablePageResources(),
       CPDF_ColorSpace::Family::kUnknown, false, {100, 100});
   while (should_continue) {
     should_continue = page_image_cache->Continue(nullptr);
@@ -178,7 +178,7 @@ TEST_F(CPDFPageImageCacheTest, RenderReducedDctWithSMask) {
 
   // Draw small so the 400x400 base is decoded at reduced resolution.
   bool should_continue = page_image_cache->StartGetCachedBitmap(
-      image->GetImage(), nullptr, page->GetMutablePageResources(), true,
+      image->GetImage(), nullptr, page->GetMutablePageResources(),
       CPDF_ColorSpace::Family::kUnknown, /*bLoadMask=*/true, {50, 50});
   while (should_continue) {
     should_continue = page_image_cache->Continue(nullptr);
@@ -236,7 +236,7 @@ TEST_F(CPDFPageImageCacheTest, NonMcuAlignedDctIsNotReduced) {
   // Draw small: an MCU-aligned image would be reduced here, but this one must
   // not be, so the decoded bitmap stays at the full 408x408.
   bool should_continue = page_image_cache->StartGetCachedBitmap(
-      image->GetImage(), nullptr, page->GetMutablePageResources(), true,
+      image->GetImage(), nullptr, page->GetMutablePageResources(),
       CPDF_ColorSpace::Family::kUnknown, false, {50, 50});
   while (should_continue) {
     should_continue = page_image_cache->Continue(nullptr);

@@ -359,8 +359,7 @@ FPDFImageObj_GetRenderedBitmap(FPDF_DOCUMENT document,
   }
 
   // Do the actual rendering.
-  bool should_continue =
-      renderer.Start(image, image_render_matrix, /*bStdCS=*/false);
+  bool should_continue = renderer.Start(image, image_render_matrix);
   while (should_continue) {
     should_continue = renderer.Continue(/*pPause=*/nullptr);
   }
@@ -527,7 +526,7 @@ FPDFImageObj_GetImageMetadata(FPDF_PAGEOBJECT image_object,
 
   RetainPtr<CPDF_DIB> pSource = pImg->CreateNewDIB();
   CPDF_DIB::LoadState ret = pSource->StartLoadDIBBase(
-      false, nullptr, pPage->GetPageResources().Get(), false,
+      false, nullptr, pPage->GetPageResources().Get(),
       CPDF_ColorSpace::Family::kUnknown, false, {0, 0});
   if (ret == CPDF_DIB::LoadState::kFail) {
     return true;

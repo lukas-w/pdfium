@@ -24,7 +24,6 @@ bool CPDF_ImageLoader::Start(const CPDF_ImageObject* pImage,
                              CPDF_PageImageCache* pPageImageCache,
                              const CPDF_Dictionary* pFormResource,
                              const CPDF_Dictionary* pPageResource,
-                             bool bStdCS,
                              CPDF_ColorSpace::Family eFamily,
                              bool bLoadMask,
                              const CFX_Size& max_size_required) {
@@ -33,12 +32,11 @@ bool CPDF_ImageLoader::Start(const CPDF_ImageObject* pImage,
   bool should_continue;
   if (cache_) {
     should_continue = cache_->StartGetCachedBitmap(
-        image_object_->GetImage(), pFormResource, pPageResource, bStdCS,
-        eFamily, bLoadMask, max_size_required);
+        image_object_->GetImage(), pFormResource, pPageResource, eFamily,
+        bLoadMask, max_size_required);
   } else {
     should_continue = image_object_->GetImage()->StartLoadDIBBase(
-        pFormResource, pPageResource, bStdCS, eFamily, bLoadMask,
-        max_size_required);
+        pFormResource, pPageResource, eFamily, bLoadMask, max_size_required);
   }
   if (!should_continue) {
     Finish();

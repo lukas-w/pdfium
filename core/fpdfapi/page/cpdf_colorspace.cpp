@@ -659,14 +659,6 @@ void CPDF_ColorSpace::TranslateImageLine(pdfium::span<uint8_t> dest_span,
   });
 }
 
-void CPDF_ColorSpace::EnableStdConversion(bool bEnabled) {
-  if (bEnabled) {
-    std_conversion_++;
-  } else if (std_conversion_) {
-    std_conversion_--;
-  }
-}
-
 bool CPDF_ColorSpace::IsNormal() const {
   return GetFamily() == Family::kDeviceGray ||
          GetFamily() == Family::kDeviceRGB ||

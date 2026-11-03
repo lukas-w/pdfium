@@ -27,7 +27,6 @@ class CPDF_ImageLoader {
              CPDF_PageImageCache* pPageImageCache,
              const CPDF_Dictionary* pFormResource,
              const CPDF_Dictionary* pPageResource,
-             bool bStdCS,
              CPDF_ColorSpace::Family eFamily,
              bool bLoadMask,
              const CFX_Size& max_size_required);

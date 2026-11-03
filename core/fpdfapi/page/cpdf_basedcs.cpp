@@ -9,10 +9,3 @@
 CPDF_BasedCS::CPDF_BasedCS(Family family) : CPDF_ColorSpace(family) {}
 
 CPDF_BasedCS::~CPDF_BasedCS() = default;
-
-void CPDF_BasedCS::EnableStdConversion(bool bEnabled) {
-  CPDF_ColorSpace::EnableStdConversion(bEnabled);
-  if (base_cs_) {
-    base_cs_->EnableStdConversion(bEnabled);
-  }
-}

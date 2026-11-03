@@ -18,8 +18,6 @@ class CPDF_BasedCS : public CPDF_ColorSpace {
   CONSTRUCT_VIA_MAKE_RETAIN;
   ~CPDF_BasedCS() override;
 
-  void EnableStdConversion(bool bEnabled) final;
-
  protected:
   explicit CPDF_BasedCS(Family family);
 

@@ -36,15 +36,12 @@ class CPDF_ImageRenderer {
   explicit CPDF_ImageRenderer(CPDF_RenderStatus* pStatus);
   ~CPDF_ImageRenderer();
 
-  bool Start(CPDF_ImageObject* pImageObject,
-             const CFX_Matrix& mtObj2Device,
-             bool bStdCS);
+  bool Start(CPDF_ImageObject* pImageObject, const CFX_Matrix& mtObj2Device);
 
   bool Start(RetainPtr<CFX_DIBBase> pDIBBase,
              FX_ARGB bitmap_argb,
              const CFX_Matrix& mtImage2Device,
-             const FXDIB_ResampleOptions& options,
-             bool bStdCS);
+             const FXDIB_ResampleOptions& options);
 
   bool Continue(PauseIndicatorIface* pPause);
   bool GetResult() const { return result_; }
@@ -106,7 +103,6 @@ class CPDF_ImageRenderer {
   FX_ARGB fill_argb_ = 0;
   FXDIB_ResampleOptions resample_options_;
   bool pattern_color_ = false;
-  bool std_cs_ = false;
   bool result_ = true;
 };
 

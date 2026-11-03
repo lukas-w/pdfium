@@ -162,14 +162,6 @@ bool CPDF_DIB::Load() {
   return ContinueInternal();
 }
 
-bool CPDF_DIB::ContinueToLoadMask() {
-  if (color_space_ && std_cs_) {
-    color_space_->EnableStdConversion(true);
-  }
-
-  return ContinueInternal();
-}
-
 bool CPDF_DIB::ContinueInternal() {
   if (image_mask_) {
     SetMaskProperties();
@@ -213,11 +205,9 @@ CPDF_DIB::LoadState CPDF_DIB::StartLoadDIBBase(
     bool bHasMask,
     const CPDF_Dictionary* pFormResources,
     const CPDF_Dictionary* pPageResources,
-    bool bStdCS,
     CPDF_ColorSpace::Family GroupFamily,
     bool bLoadMask,
     const CFX_Size& max_size_required) {
-  std_cs_ = bStdCS;
   has_mask_ = bHasMask;
   group_family_ = GroupFamily;
   load_mask_ = bLoadMask;
@@ -242,7 +232,7 @@ CPDF_DIB::LoadState CPDF_DIB::StartLoadDIBBase(
     return LoadState::kFail;
   }
 
-  if (!ContinueToLoadMask()) {
+  if (!ContinueInternal()) {
     return LoadState::kFail;
   }
 
@@ -254,9 +244,6 @@ CPDF_DIB::LoadState CPDF_DIB::StartLoadDIBBase(
 
   DCHECK_EQ(iCreatedDecoder, LoadState::kSuccess);
   DCHECK_EQ(iLoadedMask, LoadState::kSuccess);
-  if (color_space_ && std_cs_) {
-    color_space_->EnableStdConversion(false);
-  }
   return LoadState::kSuccess;
 }
 
@@ -327,13 +314,6 @@ CPDF_DIB::LoadState CPDF_DIB::ContinueLoadDIBBase(PauseIndicatorIface* pPause) {
       iContinueStatus = LoadState::kContinue;
       status_ = LoadState::kContinue;
     }
-  }
-  if (iContinueStatus == LoadState::kContinue) {
-    return LoadState::kContinue;
-  }
-
-  if (color_space_ && std_cs_) {
-    color_space_->EnableStdConversion(false);
   }
   return iContinueStatus;
 }
@@ -907,10 +887,6 @@ CPDF_DIB::LoadState CPDF_DIB::ContinueLoadMaskDIB(PauseIndicatorIface* pPause) {
     return LoadState::kContinue;
   }
 
-  if (color_space_ && std_cs_) {
-    color_space_->EnableStdConversion(false);
-  }
-
   if (ret == LoadState::kFail) {
     mask_.Reset();
     return LoadState::kFail;
@@ -930,7 +906,7 @@ CPDF_DIB::LoadState CPDF_DIB::StartLoadMaskDIB(
     RetainPtr<const CPDF_Stream> mask_stream) {
   mask_ = pdfium::MakeRetain<CPDF_DIB>(document_, std::move(mask_stream));
   LoadState ret =
-      mask_->StartLoadDIBBase(false, nullptr, nullptr, true,
+      mask_->StartLoadDIBBase(false, nullptr, nullptr,
                               CPDF_ColorSpace::Family::kUnknown, false, {0, 0});
   if (ret == LoadState::kContinue) {
     if (status_ == LoadState::kFail) {

@@ -59,7 +59,6 @@ class CPDF_RenderStatus {
   void SetFillColor(FX_ARGB color) { t3_fill_color_ = color; }
   void SetDropObjects(bool bDropObjects) { drop_objects_ = bDropObjects; }
   void SetLoadMask(bool bLoadMask) { load_mask_ = bLoadMask; }
-  void SetStdCS(bool bStdCS) { std_cs_ = bStdCS; }
   void SetGroupFamily(CPDF_ColorSpace::Family family) {
     group_family_ = family;
   }
@@ -210,7 +209,6 @@ class CPDF_RenderStatus {
   bool print_ = false;
 #endif
   bool drop_objects_ = false;
-  bool std_cs_ = false;
   bool load_mask_ = false;
   bool in_group_ = false;
   CPDF_ColorSpace::Family group_family_ = CPDF_ColorSpace::Family::kUnknown;

@@ -170,7 +170,6 @@ bool CPDF_PageImageCache::StartGetCachedBitmap(
     RetainPtr<CPDF_Image> pImage,
     const CPDF_Dictionary* pFormResources,
     const CPDF_Dictionary* pPageResources,
-    bool bStdCS,
     CPDF_ColorSpace::Family eFamily,
     bool bLoadMask,
     const CFX_Size& max_size_required) {
@@ -188,7 +187,7 @@ bool CPDF_PageImageCache::StartGetCachedBitmap(
     cur_image_cache_entry_ = std::make_unique<Entry>(std::move(pImage));
   }
   CPDF_DIB::LoadState ret = cur_image_cache_entry_->StartGetCachedBitmap(
-      this, pFormResources, pPageResources, bStdCS, eFamily, bLoadMask,
+      this, pFormResources, pPageResources, eFamily, bLoadMask,
       max_size_required);
   if (ret == CPDF_DIB::LoadState::kContinue) {
     return true;
@@ -268,7 +267,6 @@ CPDF_DIB::LoadState CPDF_PageImageCache::Entry::StartGetCachedBitmap(
     CPDF_PageImageCache* pPageImageCache,
     const CPDF_Dictionary* pFormResources,
     const CPDF_Dictionary* pPageResources,
-    bool bStdCS,
     CPDF_ColorSpace::Family eFamily,
     bool bLoadMask,
     const CFX_Size& max_size_required) {
@@ -280,7 +278,7 @@ CPDF_DIB::LoadState CPDF_PageImageCache::Entry::StartGetCachedBitmap(
 
   cur_bitmap_ = image_->CreateNewDIB();
   CPDF_DIB::LoadState ret = cur_bitmap_.AsRaw<CPDF_DIB>()->StartLoadDIBBase(
-      true, pFormResources, pPageResources, bStdCS, eFamily, bLoadMask,
+      true, pFormResources, pPageResources, eFamily, bLoadMask,
       max_size_required);
   cached_set_max_size_required_ =
       (max_size_required.width != 0 && max_size_required.height != 0);

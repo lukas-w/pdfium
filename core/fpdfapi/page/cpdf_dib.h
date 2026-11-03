@@ -60,7 +60,6 @@ class CPDF_DIB final : public CFX_DIBBase {
   LoadState StartLoadDIBBase(bool bHasMask,
                              const CPDF_Dictionary* pFormResources,
                              const CPDF_Dictionary* pPageResources,
-                             bool bStdCS,
                              CPDF_ColorSpace::Family GroupFamily,
                              bool bLoadMask,
                              const CFX_Size& max_size_required);
@@ -85,7 +84,6 @@ class CPDF_DIB final : public CFX_DIBBase {
   bool ContinueInternal();
   LoadState StartLoadMask();
   LoadState StartLoadMaskDIB(RetainPtr<const CPDF_Stream> mask_stream);
-  bool ContinueToLoadMask();
   LoadState ContinueLoadMaskDIB(PauseIndicatorIface* pPause);
   bool LoadColorInfo(const CPDF_Dictionary* pFormResources,
                      const CPDF_Dictionary* pPageResources);
@@ -137,7 +135,6 @@ class CPDF_DIB final : public CFX_DIBBase {
   bool do_bpc_check_ = true;
   bool color_key_ = false;
   bool has_mask_ = false;
-  bool std_cs_ = false;
   std::vector<DIB_COMP_DATA> comp_data_;
   mutable DataVector<uint8_t> line_buf_;
   mutable DataVector<uint8_t> mask_buf_;

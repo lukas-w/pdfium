@@ -62,13 +62,6 @@ std::optional<FX_RGB_STRUCT<float>> CPDF_DeviceCS::GetRGB(
     case Family::kDeviceCMYK: {
       const auto& cmyk =
           fxcrt::reinterpret_span<const FX_CMYK_STRUCT<float>>(pBuf).front();
-      if (IsStdConversionEnabled()) {
-        return FX_RGB_STRUCT<float>{
-            1.0f - std::min(1.0f, cmyk.cyan + cmyk.key),
-            1.0f - std::min(1.0f, cmyk.magenta + cmyk.key),
-            1.0f - std::min(1.0f, cmyk.yellow + cmyk.key),
-        };
-      }
       return AdobeCmykToStandardRgbF(
           NormalizeChannel(cmyk.cyan), NormalizeChannel(cmyk.magenta),
           NormalizeChannel(cmyk.yellow), NormalizeChannel(cmyk.key));
@@ -114,18 +107,6 @@ void CPDF_DeviceCS::TranslateImageLine(pdfium::span<uint8_t> dest_span,
           rgb_out.front().red = ((255 - cmyk.cyan) * k) / 255;
           rgb_out.front().green = ((255 - cmyk.magenta) * k) / 255;
           rgb_out.front().blue = ((255 - cmyk.yellow) * k) / 255;
-          rgb_out = rgb_out.subspan<1u>();
-        }
-        break;
-      }
-      if (IsStdConversionEnabled()) {
-        // Compiler can't conclude src/dest don't overlap, avoid interleaved
-        // loads and stores by not using am auto& reference here,
-        for (const auto cmyk : cmyk_in.first(static_cast<size_t>(pixels))) {
-          const uint8_t k = cmyk.key;
-          rgb_out.front().blue = 255 - std::min(255, cmyk.cyan + k);
-          rgb_out.front().green = 255 - std::min(255, cmyk.magenta + k);
-          rgb_out.front().red = 255 - std::min(255, cmyk.yellow + k);
           rgb_out = rgb_out.subspan<1u>();
         }
         break;

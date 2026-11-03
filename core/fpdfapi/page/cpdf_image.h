@@ -63,7 +63,6 @@ class CPDF_Image final : public Retainable {
   // Returns whether to Continue() or not.
   bool StartLoadDIBBase(const CPDF_Dictionary* pFormResource,
                         const CPDF_Dictionary* pPageResource,
-                        bool bStdCS,
                         CPDF_ColorSpace::Family GroupFamily,
                         bool bLoadMask,
                         const CFX_Size& max_size_required);

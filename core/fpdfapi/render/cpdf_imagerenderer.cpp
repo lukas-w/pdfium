@@ -73,8 +73,7 @@ bool CPDF_ImageRenderer::StartLoadDIBBase() {
   if (!loader_->Start(
           image_object_, render_status_->GetContext()->GetPageCache(),
           render_status_->GetFormResource(), render_status_->GetPageResource(),
-          std_cs_, render_status_->GetGroupFamily(),
-          render_status_->GetLoadMask(),
+          render_status_->GetGroupFamily(), render_status_->GetLoadMask(),
           {render_status_->GetRenderDevice()->GetWidth(),
            render_status_->GetRenderDevice()->GetHeight()})) {
     return false;
@@ -186,10 +185,8 @@ bool CPDF_ImageRenderer::StartRenderDIBBase() {
 }
 
 bool CPDF_ImageRenderer::Start(CPDF_ImageObject* pImageObject,
-                               const CFX_Matrix& mtObj2Device,
-                               bool bStdCS) {
+                               const CFX_Matrix& mtObj2Device) {
   DCHECK(pImageObject);
-  std_cs_ = bStdCS;
   image_object_ = pImageObject;
   blend_type_ = BlendMode::kNormal;
   obj_to_device_ = mtObj2Device;
@@ -209,14 +206,12 @@ bool CPDF_ImageRenderer::Start(CPDF_ImageObject* pImageObject,
 bool CPDF_ImageRenderer::Start(RetainPtr<CFX_DIBBase> pDIBBase,
                                FX_ARGB bitmap_argb,
                                const CFX_Matrix& mtImage2Device,
-                               const FXDIB_ResampleOptions& options,
-                               bool bStdCS) {
+                               const FXDIB_ResampleOptions& options) {
   dibbase_ = std::move(pDIBBase);
   fill_argb_ = bitmap_argb;
   alpha_ = 1.0f;
   image_matrix_ = mtImage2Device;
   resample_options_ = options;
-  std_cs_ = bStdCS;
   blend_type_ = BlendMode::kNormal;
   return StartDIBBase();
 }
@@ -281,12 +276,11 @@ RetainPtr<const CFX_DIBitmap> CPDF_ImageRenderer::CalculateDrawImage(
     CPDF_RenderStatus mask_status(render_status_->GetContext(),
                                   mask_device.get());
     mask_status.SetDropObjects(render_status_->GetDropObjects());
-    mask_status.SetStdCS(true);
     mask_status.Initialize(nullptr, nullptr);
 
     CPDF_ImageRenderer mask_renderer(&mask_status);
     if (mask_renderer.Start(std::move(pDIBBase), 0xffffffff, mtNewMatrix,
-                            resample_options_, true)) {
+                            resample_options_)) {
       mask_renderer.Continue(nullptr);
     }
     if (loader_->MatteColor() != 0xffffffff) {
@@ -349,7 +343,6 @@ bool CPDF_ImageRenderer::DrawPatternImage() {
                                   bitmap_device.get());
   bitmap_status.SetOptions(GetRenderOptions());
   bitmap_status.SetDropObjects(render_status_->GetDropObjects());
-  bitmap_status.SetStdCS(true);
   bitmap_status.Initialize(nullptr, nullptr);
 
   CFX_Matrix pattern_matrix = obj_to_device_;
@@ -404,10 +397,9 @@ bool CPDF_ImageRenderer::DrawMaskedImage() {
   CPDF_RenderStatus bitmap_status(render_status_->GetContext(),
                                   bitmap_device.get());
   bitmap_status.SetDropObjects(render_status_->GetDropObjects());
-  bitmap_status.SetStdCS(true);
   bitmap_status.Initialize(nullptr, nullptr);
   CPDF_ImageRenderer bitmap_renderer(&bitmap_status);
-  if (bitmap_renderer.Start(dibbase_, 0, new_matrix, resample_options_, true)) {
+  if (bitmap_renderer.Start(dibbase_, 0, new_matrix, resample_options_)) {
     bitmap_renderer.Continue(nullptr);
   }
   RetainPtr<const CFX_DIBitmap> mask_bitmap = CalculateDrawImage(

@@ -284,8 +284,7 @@ bool CPDF_RenderStatus::ContinueSingleObject(CPDF_PageObject* pObj,
   }
 
   image_renderer_ = std::make_unique<CPDF_ImageRenderer>(this);
-  if (!image_renderer_->Start(pObj->AsImage(), mtObj2Device,
-                              /*bStdCS=*/false)) {
+  if (!image_renderer_->Start(pObj->AsImage(), mtObj2Device)) {
     if (!image_renderer_->GetResult()) {
       DrawObjWithBackground(pObj, mtObj2Device);
     }
@@ -720,7 +719,6 @@ bool CPDF_RenderStatus::ProcessTransparency(CPDF_PageObject* pPageObj,
   CPDF_RenderStatus bitmap_render(context_, bitmap_device.get());
   bitmap_render.SetOptions(options_);
   bitmap_render.SetStopObject(stop_obj_);
-  bitmap_render.SetStdCS(true);
   bitmap_render.SetDropObjects(drop_objects_);
   bitmap_render.SetFormResource(std::move(pFormResource));
   bitmap_render.SetInGroup(transparency.IsGroup());
@@ -1056,7 +1054,7 @@ bool CPDF_RenderStatus::ProcessType3Text(CPDF_TextObject* textobj,
         CFX_Matrix image_matrix = pType3Char->matrix() * matrix;
         CPDF_ImageRenderer renderer(this);
         if (renderer.Start(pType3Char->GetBitmap(), fill_argb, image_matrix,
-                           FXDIB_ResampleOptions(), false)) {
+                           FXDIB_ResampleOptions())) {
           renderer.Continue(nullptr);
         }
         if (!renderer.GetResult()) {
@@ -1299,7 +1297,7 @@ void CPDF_RenderStatus::ProcessPathPattern(
 bool CPDF_RenderStatus::ProcessImage(CPDF_ImageObject* pImageObj,
                                      const CFX_Matrix& mtObj2Device) {
   CPDF_ImageRenderer render(this);
-  if (render.Start(pImageObj, mtObj2Device, std_cs_)) {
+  if (render.Start(pImageObj, mtObj2Device)) {
     render.Continue(nullptr);
   }
   return render.GetResult();
@@ -1489,7 +1487,6 @@ RetainPtr<CFX_DIBitmap> CPDF_RenderStatus::LoadSMask(
   status.SetOptions(options);
   status.SetGroupFamily(nCSFamily);
   status.SetLoadMask(bLuminosity);
-  status.SetStdCS(true);
   status.SetFormResource(std::move(pFormResource));
   status.SetDropObjects(drop_objects_);
   status.Initialize(nullptr, nullptr);
