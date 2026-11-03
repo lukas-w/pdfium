@@ -4,6 +4,10 @@
 
 import("//build/dotfile_settings.gni")
 
+# This enables check_includes_strict_exceptions, which is necessary for V8 to
+# pass `gn check` with `check_includes_strict = true`.
+# TODO(thestig): Remove once V8 supports `check_includes_strict = true`.
+import("//build/strict_deps_failures.gni")
 buildconfig = "//build/config/BUILDCONFIG.gn"
 
 # The python interpreter to use by default. On Windows, this will look
