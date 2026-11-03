@@ -15,6 +15,7 @@
 #include "core/fxcrt/widetext_buffer.h"
 #include "fxjs/cjs_runtime.h"
 #include "fxjs/fxv8.h"
+#include "fxjs/gc/containers.h"
 #include "fxjs/xfa/cfxjse_class.h"
 #include "fxjs/xfa/cfxjse_context.h"
 #include "fxjs/xfa/cfxjse_formcalc_context.h"
@@ -193,8 +194,8 @@ CFXJSE_Engine::EventParamScope::~EventParamScope() {
 
 CFXJSE_Engine::ScriptNodeArrayScope::ScriptNodeArrayScope(
     CFXJSE_Engine* engine,
-    std::vector<cppgc::Persistent<CXFA_Node>>* array)
-    : restorer_(&engine->script_node_array_, array) {}
+    cppgc::Persistent<GCedVector<CXFA_Node>>&& array)
+    : restorer_(&engine->script_node_array_, std::move(array)) {}
 
 CFXJSE_Engine::ScriptNodeArrayScope::~ScriptNodeArrayScope() = default;
 
@@ -960,9 +961,9 @@ v8::Local<v8::Object> CFXJSE_Engine::GetOrCreateJSBindingFromMap(
 
 void CFXJSE_Engine::AddNodesOfRunScript(CXFA_Node* pNode) {
   if (script_node_array_ &&
-      !pdfium::Contains(*script_node_array_, pNode,
-                        &cppgc::Persistent<CXFA_Node>::Get)) {
-    script_node_array_->emplace_back(pNode);
+      !pdfium::Contains(script_node_array_->storage, pNode,
+                        &cppgc::Member<CXFA_Node>::Get)) {
+    script_node_array_->storage.emplace_back(pNode);
   }
 }
 

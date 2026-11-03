@@ -44,7 +44,7 @@ CXFA_Node* XFA_NodeMerge_CloneOrMergeContainer(
     CXFA_Node* pFormParent,
     CXFA_Node* pTemplateNode,
     bool bRecursive,
-    std::vector<CXFA_Node*>* pSubformArray) {
+    std::vector<cppgc::Member<CXFA_Node>>* pSubformArray) {
   if (pTemplateNode->GetPacketType() != XFA_PacketType::Template) {
     return nullptr;
   }

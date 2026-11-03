@@ -16,6 +16,7 @@
 #include "core/fxcrt/mask.h"
 #include "core/fxcrt/unowned_ptr.h"
 #include "fxjs/cfx_isolate_wrapper.h"
+#include "fxjs/gc/containers.h"
 #include "fxjs/xfa/cfxjse_context.h"
 #include "v8/include/cppgc/persistent.h"
 #include "v8/include/v8-forward.h"
@@ -135,12 +136,11 @@ class CFXJSE_Engine final : public CFX_IsolateWrapper {
 
    public:
     ScriptNodeArrayScope(CFXJSE_Engine* engine,
-                         std::vector<cppgc::Persistent<CXFA_Node>>* array);
+                         cppgc::Persistent<GCedVector<CXFA_Node>>&& array);
     ~ScriptNodeArrayScope();
 
    private:
-    AutoRestorer<UnownedPtr<std::vector<cppgc::Persistent<CXFA_Node>>>>
-        restorer_;
+    AutoRestorer<cppgc::Persistent<GCedVector<CXFA_Node>>> restorer_;
   };
 
   CXFA_Node* GetEventTarget() const { return target_; }
@@ -165,6 +165,10 @@ class CFXJSE_Engine final : public CFX_IsolateWrapper {
   CXFA_Object* GetThisObject() const { return this_object_; }
   CFXJSE_Class* GetJseNormalClass() const { return js_class_; }
   CXFA_Document* GetDocument() const { return document_.Get(); }
+
+  GCedVector<CXFA_Node>* GetScriptNodeArray() const {
+    return script_node_array_.Get();
+  }
 
   void AddNodesOfRunScript(CXFA_Node* pNode);
 
@@ -222,7 +226,7 @@ class CFXJSE_Engine final : public CFX_IsolateWrapper {
   cppgc::Persistent<CXFA_Node> target_;
   UnownedPtr<CXFA_EventParam> event_param_;
   std::vector<cppgc::Persistent<CXFA_Node>> up_object_array_;
-  UnownedPtr<std::vector<cppgc::Persistent<CXFA_Node>>> script_node_array_;
+  cppgc::Persistent<GCedVector<CXFA_Node>> script_node_array_;
   std::unique_ptr<CFXJSE_NodeHelper> const node_helper_;
   std::unique_ptr<CFXJSE_ResolveProcessor> const resolve_processor_;
   std::unique_ptr<CFXJSE_FormCalcContext> form_calc_context_;

@@ -14,7 +14,7 @@
 #include "core/fxcrt/fx_extension.h"
 #include "core/fxcrt/stl_util.h"
 #include "core/fxcrt/xml/cfx_xmlparser.h"
-#include "fxjs/gc/container_trace.h"
+#include "fxjs/gc/containers.h"
 #include "fxjs/xfa/cfxjse_engine.h"
 #include "fxjs/xfa/cjx_object.h"
 #include "xfa/fxfa/cxfa_ffapp.h"
@@ -555,11 +555,13 @@ bool CXFA_FFDocView::RunLayout() {
 }
 
 void CXFA_FFDocView::RunSubformIndexChange() {
-  std::set<CXFA_Node*> seen;
+  cppgc::Persistent<GCedSet<CXFA_Node>> seen =
+      cppgc::MakeGarbageCollected<GCedSet<CXFA_Node>>(
+          doc_->GetHeap()->GetAllocationHandle());
   while (!index_changed_subforms_.empty()) {
     CXFA_Node* pSubformNode = index_changed_subforms_.front();
     index_changed_subforms_.pop_front();
-    bool bInserted = seen.insert(pSubformNode).second;
+    bool bInserted = seen->storage.insert(pSubformNode).second;
     if (!bInserted || !pSubformNode->IsWidgetReady()) {
       continue;
     }

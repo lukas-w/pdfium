@@ -188,10 +188,11 @@ void MergeNode(CXFA_Node* pDestNode, CXFA_Node* pProtoNode) {
   }
 }
 
-CXFA_Node* CloneOrMergeInstanceManager(CXFA_Document* document,
-                                       CXFA_Node* pFormParent,
-                                       CXFA_Node* pTemplateNode,
-                                       std::vector<CXFA_Node*>* subforms) {
+CXFA_Node* CloneOrMergeInstanceManager(
+    CXFA_Document* document,
+    CXFA_Node* pFormParent,
+    CXFA_Node* pTemplateNode,
+    std::vector<cppgc::Member<CXFA_Node>>* subforms) {
   WideString wsSubformName =
       pTemplateNode->JSObject()->GetCData(XFA_Attribute::Name);
   WideString wsInstMgrNodeName = L"_" + wsSubformName;
@@ -874,14 +875,17 @@ CXFA_Node* CopyContainer_SubformSet(CXFA_Document* document,
   bool bUseInstanceManager =
       pFormParentNode->GetElementType() != XFA_Element::Area;
   CXFA_Node* pInstMgrNode = nullptr;
-  std::vector<CXFA_Node*> subformArray;
-  std::vector<CXFA_Node*>* pSearchArray = nullptr;
+  cppgc::Persistent<GCedVector<CXFA_Node>> subform_array =
+      cppgc::MakeGarbageCollected<GCedVector<CXFA_Node>>(
+          document->GetHeap()->GetAllocationHandle());
+  std::vector<cppgc::Member<CXFA_Node>>* pSearchArray = nullptr;
   if (!bOneInstance &&
       (eType == XFA_Element::SubformSet || eType == XFA_Element::Subform)) {
-    pInstMgrNode = bUseInstanceManager ? CloneOrMergeInstanceManager(
-                                             document, pFormParentNode,
-                                             pTemplateNode, &subformArray)
-                                       : nullptr;
+    pInstMgrNode = bUseInstanceManager
+                       ? CloneOrMergeInstanceManager(document, pFormParentNode,
+                                                     pTemplateNode,
+                                                     &subform_array->storage)
+                       : nullptr;
     if (CXFA_Occur* pOccurTemplateNode =
             pTemplateNode->GetFirstChildByClass<CXFA_Occur>(
                 XFA_Element::Occur)) {
@@ -898,13 +902,14 @@ CXFA_Node* CopyContainer_SubformSet(CXFA_Document* document,
     }
     if (pInstMgrNode) {
       pInstMgrNode->SetInitializedFlagAndNotify();
-      pSearchArray = &subformArray;
+      pSearchArray = &subform_array->storage;
       if (pFormParentNode->GetElementType() == XFA_Element::PageArea) {
         bOneInstance = true;
-        if (subformArray.empty()) {
+        if (subform_array->storage.empty()) {
           pSearchArray = nullptr;
         }
-      } else if (pTemplateNode->GetNameHash() == 0 && subformArray.empty()) {
+      } else if (pTemplateNode->GetNameHash() == 0 &&
+                 subform_array->storage.empty()) {
         pSearchArray = nullptr;
       }
     }
@@ -931,8 +936,12 @@ CXFA_Node* CopyContainer_SubformSet(CXFA_Document* document,
     if (eType == XFA_Element::SubformSet || eType == XFA_Element::Area) {
       sNodeIterator.MoveToNext();
     } else {
-      std::map<CXFA_Node*, CXFA_Node*> subformMapArray;
-      std::vector<CXFA_Node*> nodeArray;
+      cppgc::Persistent<GCedMap<CXFA_Node, CXFA_Node>> subform_map =
+          cppgc::MakeGarbageCollected<GCedMap<CXFA_Node, CXFA_Node>>(
+              document->GetHeap()->GetAllocationHandle());
+      cppgc::Persistent<GCedVector<CXFA_Node>> node_array =
+          cppgc::MakeGarbageCollected<GCedVector<CXFA_Node>>(
+              document->GetHeap()->GetAllocationHandle());
       for (; iMax < 0 || iCurRepeatIndex < iMax; iCurRepeatIndex++) {
         bool bSelfMatch = false;
         XFA_AttributeValue eBindMatch = XFA_AttributeValue::None;
@@ -952,14 +961,14 @@ CXFA_Node* CopyContainer_SubformSet(CXFA_Document* document,
 
         CreateDataBinding(pSubformNode, pDataNode, true);
         DCHECK(pSubformNode);
-        subformMapArray[pSubformNode] = pDataNode;
-        nodeArray.push_back(pSubformNode);
+        subform_map->storage[pSubformNode] = pDataNode;
+        node_array->storage.push_back(pSubformNode);
       }
 
-      for (CXFA_Node* pSubform : nodeArray) {
+      for (CXFA_Node* pSubform : node_array->storage) {
         CXFA_Node* pDataNode = nullptr;
-        auto it = subformMapArray.find(pSubform);
-        if (it != subformMapArray.end()) {
+        auto it = subform_map->storage.find(pSubform);
+        if (it != subform_map->storage.end()) {
           pDataNode = it->second;
         }
         for (CXFA_Node* pTemplateChild = pTemplateNode->GetFirstChild();
@@ -975,7 +984,7 @@ CXFA_Node* CopyContainer_SubformSet(CXFA_Document* document,
           }
         }
       }
-      subformMapArray.clear();
+      subform_map->storage.clear();
     }
 
     for (; iMax < 0 || iCurRepeatIndex < iMax; iCurRepeatIndex++) {
@@ -1001,7 +1010,9 @@ CXFA_Node* CopyContainer_SubformSet(CXFA_Document* document,
         }
 
         std::vector<RecurseRecord> rgItemMatchList;
-        std::vector<CXFA_Node*> rgItemUnmatchList;
+        cppgc::Persistent<GCedVector<CXFA_Node>> item_unmatch_list =
+            cppgc::MakeGarbageCollected<GCedVector<CXFA_Node>>(
+                document->GetHeap()->GetAllocationHandle());
         for (CXFA_Node* pTemplateChild = pTemplateNode->GetFirstChild();
              pTemplateChild;
              pTemplateChild = pTemplateChild->GetNextSibling()) {
@@ -1027,10 +1038,10 @@ CXFA_Node* CopyContainer_SubformSet(CXFA_Document* document,
                   rgItemMatchList.push_back(sNewRecord);
                 }
               } else {
-                rgItemUnmatchList.push_back(pTemplateChild);
+                item_unmatch_list->storage.push_back(pTemplateChild);
               }
             } else {
-              rgItemUnmatchList.push_back(pTemplateChild);
+              item_unmatch_list->storage.push_back(pTemplateChild);
             }
           }
         }
@@ -1053,7 +1064,7 @@ CXFA_Node* CopyContainer_SubformSet(CXFA_Document* document,
                                                   false, true, true);
               }
             }
-            for (auto* unmatched : rgItemUnmatchList) {
+            for (CXFA_Node* unmatched : item_unmatch_list->storage) {
               document->DataMerge_CopyContainer(unmatched, pSubformSetNode,
                                                 pDataScope, false, true, true);
             }
@@ -1088,7 +1099,7 @@ CXFA_Node* CopyContainer_SubformSet(CXFA_Document* document,
     if (iCurRepeatIndex == 0 && !bAccessedDataDOM) {
       int32_t iLimit = iMax;
       if (pInstMgrNode && pTemplateNode->GetNameHash() == 0) {
-        iLimit = fxcrt::CollectionSize<int32_t>(subformArray);
+        iLimit = fxcrt::CollectionSize<int32_t>(subform_array->storage);
         if (iLimit < iMin) {
           iLimit = iInit;
         }

@@ -9,6 +9,7 @@
 
 #include <vector>
 
+#include "v8/include/cppgc/member.h"
 #include "xfa/fxfa/fxfa_basic.h"
 
 class CXFA_Document;
@@ -21,7 +22,7 @@ CXFA_Node* XFA_NodeMerge_CloneOrMergeContainer(
     CXFA_Node* pFormParent,
     CXFA_Node* pTemplateNode,
     bool bRecursive,
-    std::vector<CXFA_Node*>* pSubformArray);
+    std::vector<cppgc::Member<CXFA_Node>>* pSubformArray);
 CXFA_Node* XFA_DataMerge_FindDataScope(CXFA_Node* pParentFormNode);
 CXFA_Node* XFA_DataMerge_FindFormDOMInstance(CXFA_Document* document,
                                              XFA_Element eType,

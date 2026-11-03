@@ -36,7 +36,7 @@
 #include "core/fxge/dib/cfx_dibitmap.h"
 #include "core/fxge/fx_font.h"
 #include "fxjs/fxv8.h"
-#include "fxjs/gc/container_trace.h"
+#include "fxjs/gc/containers.h"
 #include "fxjs/xfa/cfxjse_engine.h"
 #include "fxjs/xfa/cfxjse_isolatetracker.h"
 #include "fxjs/xfa/cjx_node.h"
@@ -2940,9 +2940,13 @@ CXFA_Node::BoolScriptResult CXFA_Node::ExecuteBoolScript(
   // pinned until ExecuteBoolScript() exits.
   const bool needs_ref_nodes = pEventParam->type_ == XFA_EVENT_InitCalculate ||
                                pEventParam->type_ == XFA_EVENT_Calculate;
-  std::vector<cppgc::Persistent<CXFA_Node>> refNodes;
-  CFXJSE_Engine::ScriptNodeArrayScope node_array_scope(
-      context, needs_ref_nodes ? &refNodes : nullptr);
+  cppgc::Persistent<GCedVector<CXFA_Node>> ref_nodes;
+  if (needs_ref_nodes) {
+    ref_nodes = cppgc::MakeGarbageCollected<GCedVector<CXFA_Node>>(
+        doc->GetHeap()->GetAllocationHandle());
+  }
+  CFXJSE_Engine::ScriptNodeArrayScope node_array_scope(context,
+                                                       std::move(ref_nodes));
 
   CFXJSE_Context::ExecutionResult exec_result;
   {
@@ -2979,15 +2983,17 @@ CXFA_Node::BoolScriptResult CXFA_Node::ExecuteBoolScript(
           pDocView->AddValidateNode(this);
         }
       }
-      for (CXFA_Node* pRefNode : refNodes) {
-        if (pRefNode == this) {
-          continue;
-        }
+      if (context->GetScriptNodeArray()) {
+        for (CXFA_Node* pRefNode : context->GetScriptNodeArray()->storage) {
+          if (pRefNode == this) {
+            continue;
+          }
 
-        CJX_Object::CalcData* pGlobalData =
-            pRefNode->JSObject()->GetOrCreateCalcData(doc->GetHeap());
-        if (!pdfium::Contains(pGlobalData->globals_, this)) {
-          pGlobalData->globals_.push_back(this);
+          CJX_Object::CalcData* pGlobalData =
+              pRefNode->JSObject()->GetOrCreateCalcData(doc->GetHeap());
+          if (!pdfium::Contains(pGlobalData->globals_, this)) {
+            pGlobalData->globals_.push_back(this);
+          }
         }
       }
     }
