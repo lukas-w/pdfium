@@ -584,6 +584,8 @@ skia_source_set("skia_opts") {
     # Conditional and empty body needed to avoid assert below
   } else if (current_cpu == "mipsel" || current_cpu == "mips64el") {
     cflags += [ "-fomit-frame-pointer" ]
+  } else if (current_cpu == "riscv64") {
+    # Conditional and empty body needed to avoid assert() below.
   } else {
     assert(false, "Unsupported target CPU " + current_cpu)
   }
