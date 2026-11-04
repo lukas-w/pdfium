@@ -25,6 +25,7 @@
 #include "core/fxge/dib/fx_dib.h"
 #include "fxjs/gc/gced_tree_node_mixin.h"
 #include "v8/include/cppgc/member.h"
+#include "v8/include/cppgc/persistent.h"
 #include "v8/include/cppgc/visitor.h"
 #include "xfa/fxfa/cxfa_ffwidget_type.h"
 #include "xfa/fxfa/fxfa.h"
@@ -326,8 +327,9 @@ class CXFA_Node : public CXFA_Object, public GCedTreeNodeMixin<CXFA_Node> {
 
   void SetWidgetReady() { is_widget_ready_ = true; }
   bool IsWidgetReady() const { return is_widget_ready_; }
-  std::vector<CXFA_Event*> GetEventByActivity(XFA_AttributeValue iActivity,
-                                              bool bIsFormReady);
+  std::vector<cppgc::Persistent<CXFA_Event>> GetEventsByActivity(
+      XFA_AttributeValue iActivity,
+      bool bIsFormReady);
 
   void ResetData();
   void StartWidgetLayout(CXFA_FFDoc* doc,

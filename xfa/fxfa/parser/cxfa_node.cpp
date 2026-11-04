@@ -2565,13 +2565,16 @@ XFA_EventError CXFA_Node::ProcessEvent(CXFA_FFDocView* pDocView,
     return XFA_EventError::kNotExist;
   }
 
-  std::vector<CXFA_Event*> eventArray =
-      GetEventByActivity(iActivity, pEventParam->is_form_ready_);
+  std::vector<cppgc::Persistent<CXFA_Event>> event_array =
+      GetEventsByActivity(iActivity, pEventParam->is_form_ready_);
   bool first = true;
   XFA_EventError iRet = XFA_EventError::kNotExist;
-  for (CXFA_Event* event : eventArray) {
+  for (const auto& event : event_array) {
+    if (event->GetParent() != this) {
+      continue;
+    }
     XFA_EventError result =
-        ProcessEventInternal(pDocView, iActivity, event, pEventParam);
+        ProcessEventInternal(pDocView, iActivity, event.Get(), pEventParam);
     if (first || result == XFA_EventError::kSuccess) {
       iRet = result;
     }
@@ -3221,10 +3224,10 @@ CFX_RectF CXFA_Node::GetUIMargin() {
                    bottom.value_or(0.0));
 }
 
-std::vector<CXFA_Event*> CXFA_Node::GetEventByActivity(
+std::vector<cppgc::Persistent<CXFA_Event>> CXFA_Node::GetEventsByActivity(
     XFA_AttributeValue iActivity,
     bool bIsFormReady) {
-  std::vector<CXFA_Event*> events;
+  std::vector<cppgc::Persistent<CXFA_Event>> events;
   for (CXFA_Node* node : GetNodeListForType(XFA_Element::Event)) {
     auto* event = static_cast<CXFA_Event*>(node);
     if (event->GetActivity() != iActivity) {

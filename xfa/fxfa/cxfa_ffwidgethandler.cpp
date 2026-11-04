@@ -208,7 +208,7 @@ bool CXFA_FFWidgetHandler::HasEvent(CXFA_Node* pNode,
     default:
       break;
   }
-  return !pNode->GetEventByActivity(kXFAEventActivity[eEventType], false)
+  return !pNode->GetEventsByActivity(kXFAEventActivity[eEventType], false)
               .empty();
 }
 
