@@ -27,13 +27,16 @@ struct IsFXDataPartitionException : std::false_type {};
   template <>                          \
   struct IsFXDataPartitionException<T> : std::true_type {}
 
+template <typename T>
+concept FxDataPartitionType = std::is_arithmetic_v<T> || std::is_enum_v<T> ||
+                              IsFXDataPartitionException<T>::value;
+
 // Allocators for mapping STL containers onto Partition Alloc.
 // Otherwise, replacing e.g. the FX_AllocUninit/FX_Free pairs with STL may
 // undo some of the nice segregation that we get from PartitionAlloc.
 template <class T, void* Alloc(size_t, size_t), void Free(void*)>
 struct FxPartitionAllocAllocator {
-  static_assert(std::is_arithmetic<T>::value || std::is_enum<T>::value ||
-                    IsFXDataPartitionException<T>::value,
+  static_assert(FxDataPartitionType<T>,
                 "Only numeric types allowed in this partition");
 
   using value_type = T;
@@ -85,9 +88,7 @@ struct FxPartitionAllocAllocator {
 
 // Used to put backing store for std::vector<> and such into the
 // general partition, ensuring they contain data only.
-template <typename T>
-  requires(std::is_arithmetic<T>::value || std::is_enum<T>::value ||
-           IsFXDataPartitionException<T>::value)
+template <FxDataPartitionType T>
 using FxAllocAllocator = FxPartitionAllocAllocator<T,
                                                    pdfium::internal::AllocOrDie,
                                                    pdfium::internal::Dealloc>;

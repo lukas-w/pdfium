@@ -23,6 +23,11 @@ struct OnlyNumbers {
 
 FX_DATA_PARTITION_EXCEPTION(OnlyNumbers);
 
+static_assert(FxDataPartitionType<int>);
+static_assert(FxDataPartitionType<float>);
+static_assert(FxDataPartitionType<OnlyNumbers>);
+static_assert(!FxDataPartitionType<std::string>);
+
 TEST(fxcrt, FxFreeDeleter) {
   std::unique_ptr<int, FxFreeDeleter> empty(nullptr);
   std::unique_ptr<int, FxFreeDeleter> thing(FX_Alloc(int, 1));

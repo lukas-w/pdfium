@@ -22,9 +22,7 @@ namespace fxcrt {
 // accessible using spans.
 // It can either initialize its data with zeros, or leave its data
 // uninitialized.
-template <typename T>
-  requires(std::is_arithmetic<T>::value || std::is_enum<T>::value ||
-           IsFXDataPartitionException<T>::value)
+template <FxDataPartitionType T>
 class FixedSizeDataVector {
  public:
   FixedSizeDataVector() = default;

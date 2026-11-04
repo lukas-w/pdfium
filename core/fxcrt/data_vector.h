@@ -13,7 +13,7 @@
 
 namespace fxcrt {
 
-template <typename T>
+template <FxDataPartitionType T>
 using DataVector = std::vector<T, FxAllocAllocator<T>>;
 
 template <typename T = void, typename Range>
