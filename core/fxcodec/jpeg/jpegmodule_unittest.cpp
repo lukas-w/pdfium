@@ -83,6 +83,67 @@ TEST(JpegModuleTest, CreateDecoderValid) {
   EXPECT_GE(scanline0.size(), 360u);
 }
 
+#if !defined(PDF_ENABLE_RUST_JPEG)
+TEST(JpegModuleTest, RewindMismatchedDimensionsFails) {
+  std::vector<uint8_t> jpeg_data = LoadMonaLisa();
+  ASSERT_FALSE(jpeg_data.empty());
+
+  std::unique_ptr<ScanlineDecoder> decoder =
+      JpegModule::CreateDecoder(jpeg_data, 120, 120, 3, true, 1, false);
+  ASSERT_TRUE(decoder);
+  EXPECT_FALSE(decoder->GetScanline(0).empty());
+  EXPECT_FALSE(decoder->GetScanline(1).empty());
+
+  // Find SOF0 marker (0xFF, 0xC0) and mutate the width.
+  ASSERT_EQ(jpeg_data[242], 0xFF);
+  ASSERT_EQ(jpeg_data[243], 0xC0);
+  EXPECT_EQ(jpeg_data[249], 0x00);
+  EXPECT_EQ(jpeg_data[250], 0x78);
+  jpeg_data[249] = 0x01;
+  jpeg_data[250] = 0xF0;
+
+  // Rewind should reject the altered width and fail rather than overflowing.
+  EXPECT_TRUE(decoder->GetScanline(0).empty());
+}
+
+TEST(JpegModuleTest, RewindMismatchedComponentsFails) {
+  std::vector<uint8_t> jpeg_data = LoadMonaLisa();
+  ASSERT_FALSE(jpeg_data.empty());
+
+  std::unique_ptr<ScanlineDecoder> decoder =
+      JpegModule::CreateDecoder(jpeg_data, 120, 120, 3, true, 1, false);
+  ASSERT_TRUE(decoder);
+  EXPECT_FALSE(decoder->GetScanline(0).empty());
+  EXPECT_FALSE(decoder->GetScanline(1).empty());
+
+  // Find SOF0 marker (0xFF, 0xC0) and mutate the component count.
+  ASSERT_EQ(jpeg_data[242], 0xFF);
+  ASSERT_EQ(jpeg_data[243], 0xC0);
+  EXPECT_EQ(jpeg_data[251], 0x03);
+  jpeg_data[251] = 0x01;
+
+  // Rewind should reject the altered component count.
+  EXPECT_TRUE(decoder->GetScanline(0).empty());
+}
+
+TEST(JpegModuleTest, RewindCorruptedDataFails) {
+  std::vector<uint8_t> jpeg_data = LoadMonaLisa();
+  ASSERT_FALSE(jpeg_data.empty());
+
+  std::unique_ptr<ScanlineDecoder> decoder =
+      JpegModule::CreateDecoder(jpeg_data, 120, 120, 3, true, 1, false);
+  ASSERT_TRUE(decoder);
+  EXPECT_FALSE(decoder->GetScanline(0).empty());
+  EXPECT_FALSE(decoder->GetScanline(1).empty());
+
+  // Corrupt the header bytes in the backing buffer.
+  std::ranges::fill(pdfium::span(jpeg_data).first<10>(), 0);
+
+  // Rewind should fail cleanly.
+  EXPECT_TRUE(decoder->GetScanline(0).empty());
+}
+#endif  // !defined(PDF_ENABLE_RUST_JPEG)
+
 TEST(JpegModuleTest, CreateDecoderDownscaled) {
   std::vector<uint8_t> jpeg_data = LoadMonaLisa();
   ASSERT_FALSE(jpeg_data.empty());

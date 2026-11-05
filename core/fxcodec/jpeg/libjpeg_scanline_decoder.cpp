@@ -235,25 +235,59 @@ bool LibjpegScanlineDecoder::CreateImpl(pdfium::span<const uint8_t> src_span,
 }
 
 bool LibjpegScanlineDecoder::Rewind() {
-  if (started_) {
-    jpeg_common_destroy_decompress(&common_);
+  if (started_ || !decompress_created_) {
+    const int expected_orig_width = orig_width_;
+    const int expected_orig_height = orig_height_;
+    const int expected_output_width = output_width_;
+    const int expected_output_height = output_height_;
+    const int expected_comps = comps_;
+    const uint32_t expected_scale_denom = scale_denom_;
+    const bool expected_bgr = scanlines_are_bgr_;
+
+    if (decompress_created_) {
+      jpeg_common_destroy_decompress(&common_);
+      decompress_created_ = false;
+    }
     if (!InitDecode(/*bAcceptKnownBadHeader=*/false)) {
       return false;
     }
+    if (orig_width_ != expected_orig_width ||
+        orig_height_ != expected_orig_height ||
+        output_width_ != expected_output_width ||
+        output_height_ != expected_output_height ||
+        common_.cinfo.num_components != expected_comps ||
+        scale_denom_ != expected_scale_denom ||
+        scanlines_are_bgr_ != expected_bgr) {
+      jpeg_common_destroy_decompress(&common_);
+      decompress_created_ = false;
+      started_ = false;
+      return false;
+    }
   }
+
   // `CreateImpl()` validated `scale_denom_` and, for non-MCU-aligned images,
   // reset it to 1 in `InitDecode()` (called from `CreateImpl()`, and again just
   // above when re-decoding), so it is safe to use as-is here.
   common_.cinfo.scale_denom = scale_denom_;
-  output_width_ = ScaledJpegSize(orig_width_, scale_denom_);
-  output_height_ = ScaledJpegSize(orig_height_, scale_denom_);
   if (!jpeg_common_start_decompress(&common_)) {
     jpeg_common_destroy_decompress(&common_);
+    decompress_created_ = false;
+    started_ = false;
     return false;
   }
-  // `CalcPitch()` sized the scanline buffer for `output_width_` columns,
-  // so libjpeg must not produce more than that per scanline.
-  CHECK_LE(static_cast<int>(common_.cinfo.output_width), output_width_);
+
+  // Ensure libjpeg does not produce more data than `scanline_buf_` can hold.
+  FX_SAFE_SIZE_T scanline_bytes = common_.cinfo.output_width;
+  scanline_bytes *= common_.cinfo.out_color_components;
+  if (!scanline_bytes.IsValid() ||
+      scanline_bytes.ValueOrDie() > scanline_buf_.size() ||
+      static_cast<int>(common_.cinfo.output_width) > output_width_) {
+    jpeg_common_destroy_decompress(&common_);
+    decompress_created_ = false;
+    started_ = false;
+    return false;
+  }
+
   started_ = true;
   return true;
 }
