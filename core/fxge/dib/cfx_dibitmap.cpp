@@ -221,9 +221,10 @@ bool CFX_DIBitmap::TransferBitmap(int width,
   FXDIB_Format dest_format = GetFormat();
   FXDIB_Format src_format = source->GetFormat();
   if (dest_format != src_format) {
+    CHECK_EQ(src_left, 0);
+    CHECK_EQ(src_top, 0);
     return TransferWithUnequalFormats(dest_format, dest_left, dest_top, width,
-                                      height, std::move(source), src_left,
-                                      src_top);
+                                      height, std::move(source));
   }
 
   if (GetBPP() != 1) {
@@ -243,9 +244,7 @@ bool CFX_DIBitmap::TransferWithUnequalFormats(
     int dest_top,
     int width,
     int height,
-    RetainPtr<const CFX_DIBBase> source,
-    int src_left,
-    int src_top) {
+    RetainPtr<const CFX_DIBBase> source) {
   if (HasPalette()) {
     return false;
   }
@@ -263,9 +262,8 @@ bool CFX_DIBitmap::TransferWithUnequalFormats(
 
   pdfium::span<uint8_t> dest_buf = GetWritableBuffer().subspan(
       dest_top * GetPitch() + static_cast<uint32_t>(offset.ValueOrDie()));
-  DataVector<uint32_t> dest_palette =
-      ConvertBuffer(dest_format, dest_buf, GetPitch(), width, height, source,
-                    src_left, src_top);
+  DataVector<uint32_t> dest_palette = ConvertBuffer(
+      dest_format, dest_buf, GetPitch(), width, height, std::move(source));
   CHECK(dest_palette.empty());
   return true;
 }
@@ -1024,8 +1022,7 @@ bool CFX_DIBitmap::ConvertFormat(FXDIB_Format dest_format) {
 
     RetainPtr<CFX_DIBBase> holder(this);
     palette_ = ConvertBuffer(dest_format, dest_span, dest_pitch, GetWidth(),
-                             GetHeight(), holder, /*src_left=*/0,
-                             /*src_top=*/0);
+                             GetHeight(), holder);
 #if defined(PDF_USE_LIBYUV)
   }
 #endif

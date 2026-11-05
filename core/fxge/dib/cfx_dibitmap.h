@@ -212,9 +212,7 @@ class CFX_DIBitmap final : public CFX_DIBBase {
                                   int dest_top,
                                   int width,
                                   int height,
-                                  RetainPtr<const CFX_DIBBase> source,
-                                  int src_left,
-                                  int src_top);
+                                  RetainPtr<const CFX_DIBBase> source);
   void TransferWithMultipleBPP(int dest_left,
                                int dest_top,
                                int width,

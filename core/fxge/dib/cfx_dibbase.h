@@ -146,9 +146,7 @@ class CFX_DIBBase : public Retainable {
       int dest_pitch,
       int width,
       int height,
-      const RetainPtr<const CFX_DIBBase>& pSrcBitmap,
-      int src_left,
-      int src_top);
+      const RetainPtr<const CFX_DIBBase>& pSrcBitmap);
 
   RetainPtr<CFX_DIBitmap> ClipToInternal(const FX_RECT* pClip) const;
   void BuildPalette();
