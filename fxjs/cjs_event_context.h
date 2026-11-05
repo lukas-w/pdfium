@@ -109,6 +109,7 @@ class CJS_EventContext final : public IJS_EventContext {
   CPDFSDK_FormFillEnvironment* GetFormFillEnv() const {
     return form_fill_env_.Get();
   }
+  CJS_Runtime* GetRuntime() const { return runtime_.get(); }
   CJS_Field* SourceField();
   CJS_Field* TargetField();
 
