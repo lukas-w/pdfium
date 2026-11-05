@@ -262,11 +262,10 @@ CJS_Result CJS_App::alert(CJS_Runtime* pRuntime,
     swTitle = JSGetStringFromID(JSMessage::kAlert);
   }
 
-  pRuntime->BeginBlock();
+  CJS_Runtime::BlockingScope scope(pRuntime);
   pFormFillEnv->KillFocusAnnot({});
   v8::Local<v8::Value> ret = pRuntime->NewNumber(
       pFormFillEnv->JS_appAlert(swMsg, swTitle, iType, iIcon));
-  pRuntime->EndBlock();
 
   return CJS_Result::Success(ret);
 }
@@ -282,9 +281,8 @@ CJS_Result CJS_App::beep(CJS_Runtime* pRuntime,
     type = pRuntime->ToInt32Reentrant(params[0]);
   }
 
-  pRuntime->BeginBlock();
+  CJS_Runtime::BlockingScope scope(pRuntime);
   pRuntime->GetFormFillEnv()->JS_appBeep(type);
-  pRuntime->EndBlock();
 
   return CJS_Result::Success();
 }
@@ -488,10 +486,9 @@ CJS_Result CJS_App::mailMsg(CJS_Runtime* pRuntime,
     cMsg = pRuntime->ToWideStringReentrant(newParams[5]);
   }
 
-  pRuntime->BeginBlock();
+  CJS_Runtime::BlockingScope scope(pRuntime);
   pRuntime->GetFormFillEnv()->JS_docmailForm(pdfium::span<const uint8_t>(), bUI,
                                              cTo, cSubject, cCc, cBcc, cMsg);
-  pRuntime->EndBlock();
   return CJS_Result::Success();
 }
 
@@ -583,10 +580,9 @@ CJS_Result CJS_App::response(CJS_Runtime* pRuntime,
   static constexpr int kMaxBytes = kMaxWideChars * sizeof(uint16_t);
   auto buffer = FixedSizeDataVector<uint8_t>::Zeroed(kMaxBytes);
 
-  pRuntime->BeginBlock();
+  CJS_Runtime::BlockingScope scope(pRuntime);
   int byte_length = pRuntime->GetFormFillEnv()->JS_appResponse(
       swQuestion, swTitle, swDefault, swLabel, bPassword, buffer.span());
-  pRuntime->EndBlock();
 
   if (byte_length < 0 || byte_length > kMaxBytes) {
     return CJS_Result::Failure(JSMessage::kParamTooLongError);

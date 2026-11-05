@@ -256,3 +256,27 @@ TEST_F(CJSPublicMethodsEmbedderTest, AFNumberKeystroke) {
   handler->SetRCForTest(nullptr);
   handler->SetStrChangeForTest(nullptr);
 }
+
+TEST_F(CJSPublicMethodsEmbedderTest, BlockingScope) {
+  v8::Isolate::Scope isolate_scope(isolate());
+  v8::HandleScope handle_scope(isolate());
+  v8::Context::Scope context_scope(GetV8Context());
+
+  ASSERT_TRUE(OpenDocument("calculate.pdf"));
+  ScopedPage page = LoadScopedPage(0);
+  ASSERT_TRUE(page);
+
+  CJS_Runtime runtime(
+      CPDFSDKFormFillEnvironmentFromFPDFFormHandle(form_handle()));
+  EXPECT_FALSE(runtime.IsBlocking());
+  {
+    CJS_Runtime::BlockingScope scope1(&runtime);
+    EXPECT_TRUE(runtime.IsBlocking());
+    {
+      CJS_Runtime::BlockingScope scope2(&runtime);
+      EXPECT_TRUE(runtime.IsBlocking());
+    }
+    EXPECT_TRUE(runtime.IsBlocking());
+  }
+  EXPECT_FALSE(runtime.IsBlocking());
+}

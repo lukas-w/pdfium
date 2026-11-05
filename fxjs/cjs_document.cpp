@@ -364,10 +364,9 @@ CJS_Result CJS_Document::mailDoc(CJS_Runtime* pRuntime,
     return CJS_Result::Failure(JSMessage::kBadObjectError);
   }
 
-  pRuntime->BeginBlock();
+  CJS_Runtime::BlockingScope scope(pRuntime);
   form_fill_env_->JS_docmailForm(pdfium::span<const uint8_t>(), bUI, cTo,
                                  cSubject, cCc, cBcc, cMsg);
-  pRuntime->EndBlock();
   return CJS_Result::Success();
 }
 
@@ -424,10 +423,9 @@ CJS_Result CJS_Document::mailForm(CJS_Runtime* pRuntime,
     return CJS_Result::Failure(WideString::FromASCII("Bad FDF format."));
   }
 
-  pRuntime->BeginBlock();
+  CJS_Runtime::BlockingScope scope(pRuntime);
   form_fill_env_->JS_docmailForm(sTextBuf.unsigned_span(), bUI, cTo, cSubject,
                                  cCc, cBcc, cMsg);
-  pRuntime->EndBlock();
   return CJS_Result::Success();
 }
 
@@ -657,9 +655,8 @@ CJS_Result CJS_Document::submitForm(CJS_Runtime* pRuntime,
   CPDF_InteractiveForm* pPDFForm = GetCoreInteractiveForm();
   if (pRuntime->GetArrayLength(aFields) == 0 && bEmpty) {
     if (pPDFForm->CheckRequiredFields(nullptr, true)) {
-      pRuntime->BeginBlock();
+      CJS_Runtime::BlockingScope scope(pRuntime);
       GetSDKInteractiveForm()->SubmitForm(strURL);
-      pRuntime->EndBlock();
     }
     return CJS_Result::Success();
   }
@@ -679,9 +676,8 @@ CJS_Result CJS_Document::submitForm(CJS_Runtime* pRuntime,
   }
 
   if (pPDFForm->CheckRequiredFields(&fieldObjects, true)) {
-    pRuntime->BeginBlock();
+    CJS_Runtime::BlockingScope scope(pRuntime);
     GetSDKInteractiveForm()->SubmitFields(strURL, fieldObjects, true, !bFDF);
-    pRuntime->EndBlock();
   }
   return CJS_Result::Success();
 }
@@ -1494,10 +1490,9 @@ CJS_Result CJS_Document::gotoNamedDest(
 
   CPDF_Dest dest(std::move(dest_array));
   std::vector<float> positions = dest.GetScrollPositionArray();
-  pRuntime->BeginBlock();
+  CJS_Runtime::BlockingScope scope(pRuntime);
   form_fill_env_->DoGoToAction(dest.GetDestPageIndex(document),
                                dest.GetZoomMode(), positions);
-  pRuntime->EndBlock();
   return CJS_Result::Success();
 }
 
