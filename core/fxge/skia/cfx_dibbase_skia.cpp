@@ -7,15 +7,14 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include <memory>
 #include <type_traits>
 #include <utility>
 
 #include "core/fxcrt/check_op.h"
 #include "core/fxcrt/compiler_specific.h"
+#include "core/fxcrt/fixed_size_data_vector.h"
 #include "core/fxcrt/fx_2d_size.h"
 #include "core/fxcrt/fx_memory.h"
-#include "core/fxcrt/fx_memory_wrappers.h"
 #include "core/fxcrt/fx_safe_types.h"
 #include "core/fxcrt/notreached.h"
 #include "core/fxcrt/numerics/safe_conversions.h"
@@ -148,10 +147,9 @@ sk_sp<SkImage> CreateSkiaImageFrom24BppDib(const CFX_DIBBase& source) {
   SkImageInfo info = SkImageInfo::Make(width, height, kBGRA_8888_SkColorType,
                                        kOpaque_SkAlphaType);
   const size_t dst_row_bytes = info.minRowBytes();
-  size_t output_size = Fx2DSizeOrDie(dst_row_bytes, height);
-  std::unique_ptr<uint8_t, FxFreeDeleter> output(
-      FX_TryAlloc(uint8_t, output_size));
-  if (!output) {
+  auto output = FixedSizeDataVector<uint8_t>::TryUninit(
+      Fx2DSizeOrDie(dst_row_bytes, height));
+  if (output.empty()) {
     return nullptr;
   }
 
@@ -160,22 +158,22 @@ sk_sp<SkImage> CreateSkiaImageFrom24BppDib(const CFX_DIBBase& source) {
   DCHECK_LE(min_row_bytes, source.GetPitch());
 
   if (!source.GetBuffer().empty()) {
-    libyuv::RGB24ToARGB(source.GetBuffer().data(), source.GetPitch(),
-                        output.get(), pdfium::checked_cast<int>(dst_row_bytes),
-                        width, height);
+    libyuv::RGB24ToARGB(
+        source.GetBuffer().data(), source.GetPitch(), output.span().data(),
+        pdfium::checked_cast<int>(dst_row_bytes), width, height);
   } else {
-    // SAFETY: `output` allocated with `output_size` bytes above.
-    auto output_span = UNSAFE_BUFFERS(pdfium::span(output.get(), output_size));
     for (int row = 0; row < height; ++row) {
       pdfium::span<const uint8_t> scanline = source.GetScanline(row);
       ValidateScanlineSize(scanline, min_row_bytes);
       libyuv::RGB24ToARGB(
           scanline.data(), 0,
-          output_span.subspan(Fx2DSizeOrDie(row, dst_row_bytes)).data(), 0,
-          width, 1);
+          output.subspan(Fx2DSizeOrDie(row, dst_row_bytes)).data(), 0, width,
+          1);
     }
   }
 
+  // "Leak" allocated memory in `output` to `SkImage`, which will eventually be
+  // freed by ReleaseAllocatedHeldBySkImage().
   return SkImages::RasterFromPixmap(
       SkPixmap(info, output.release(), dst_row_bytes),
       /*rasterReleaseProc=*/ReleaseAllocatedHeldBySkImage,
@@ -202,15 +200,14 @@ sk_sp<SkImage> CreateSkiaImageFromTransformedDib(
   SkImageInfo info = SkImageInfo::Make(width, height, color_type, alpha_type);
   DCHECK_EQ(info.minRowBytes(), width * sizeof(Result));
 
-  size_t output_size = Fx2DSizeOrDie(info.minRowBytes(), height);
-  std::unique_ptr<void, FxFreeDeleter> output(
-      FX_TryAlloc(uint8_t, output_size));
-  if (!output) {
+  auto output = FixedSizeDataVector<uint8_t>::TryUninit(
+      Fx2DSizeOrDie(info.minRowBytes(), height));
+  if (output.empty()) {
     return nullptr;
   }
 
   // Transform source pixels to output pixels. Iterate by individual scanline.
-  Result* output_cursor = reinterpret_cast<Result*>(output.get());
+  Result* output_cursor = reinterpret_cast<Result*>(output.span().data());
   const size_t min_row_bytes =
       fxge::CalculatePitch8OrDie(source.GetBPP(), /*components=*/1, width);
   DCHECK_LE(min_row_bytes, source.GetPitch());
@@ -226,7 +223,8 @@ sk_sp<SkImage> CreateSkiaImageFromTransformedDib(
     }
   }
 
-  // "Leak" allocated memory to `SkImage`.
+  // "Leak" allocated memory in `output` to `SkImage`, which will eventually be
+  // freed by ReleaseAllocatedHeldBySkImage().
   return SkImages::RasterFromPixmap(
       SkPixmap(info, output.release(), info.minRowBytes()),
       /*rasterReleaseProc=*/ReleaseAllocatedHeldBySkImage,

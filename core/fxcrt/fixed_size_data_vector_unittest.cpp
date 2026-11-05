@@ -5,9 +5,11 @@
 #include "core/fxcrt/fixed_size_data_vector.h"
 
 #include <limits>
+#include <memory>
 #include <numeric>
 #include <utility>
 
+#include "core/fxcrt/fx_memory_wrappers.h"
 #include "core/fxcrt/span.h"
 #include "core/fxcrt/stl_util.h"
 #include "testing/gmock/include/gmock/gmock.h"
@@ -179,4 +181,18 @@ TEST(FixedSizeDataVector, Last) {
   ASSERT_EQ(some.size(), 2u);
   EXPECT_EQ(some[0], 0u);
   EXPECT_EQ(some[1], 1u);
+}
+
+TEST(FixedSizeDataVector, Release) {
+  auto vec = FixedSizeDataVector<int>::Uninit(4);
+  ASSERT_EQ(4u, vec.span().size());
+  const int* const original_data_ptr = vec.span().data();
+
+  std::unique_ptr<int, FxFreeDeleter> released(vec.release());
+  EXPECT_EQ(released.get(), original_data_ptr);
+  EXPECT_EQ(0u, vec.size());
+  EXPECT_TRUE(vec.empty());
+  EXPECT_TRUE(vec.span().empty());
+  EXPECT_EQ(nullptr, vec.span().data());
+  EXPECT_EQ(nullptr, vec.release());
 }
