@@ -400,10 +400,10 @@ float CFGAS_Decimal::ToFloat() const {
 }
 
 double CFGAS_Decimal::ToDouble() const {
-  double pow = (double)(1 << 16) * (1 << 16);
-  double base = static_cast<double>(hi_) * pow * pow +
-                static_cast<double>(mid_) * pow + static_cast<double>(lo_);
-  return (neg_ ? -1 : 1) * base * powf(10.0f, -u_scale_);
+  constexpr double kPow32 = static_cast<double>(uint64_t{1} << 32);
+  double base = static_cast<double>(hi_) * kPow32 * kPow32 +
+                static_cast<double>(mid_) * kPow32 + static_cast<double>(lo_);
+  return (neg_ ? -1 : 1) * base * pow(10.0, -u_scale_);
 }
 
 void CFGAS_Decimal::SetScale(uint8_t newscale) {

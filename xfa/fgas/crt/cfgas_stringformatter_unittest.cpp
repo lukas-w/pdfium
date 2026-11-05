@@ -1086,13 +1086,11 @@ TEST_F(CFGASStringFormatterTest, DateTimeParse) {
   EXPECT_EQ(CFX_DateTime(2020, 5, 15, 14, 30, 0, 0), dt);
 
   // DateTime parses date first, then time.
-  // TODO(tsepez): ParseDateTime() inverts wsDatePattern and wsTimePattern for
-  // DateTimeType::kDateTime, passing wsTimePattern to ParseLocaleDate() and
-  // wsDatePattern to ParseLocaleTime(), which causes parsing to fail.
-  EXPECT_FALSE(
-      CFGAS_StringFormatter(L"date{YYYY-MM-DD} time{HH:MM:SS}")
-          .ParseDateTime(Mgr(L"en"), L"2020-05-15 14:30:00",
-                         CFGAS_StringFormatter::DateTimeType::kDateTime, &dt));
+  EXPECT_TRUE(CFGAS_StringFormatter(L"date{YYYY-MM-DD} time{HH:MM:SS}")
+                  .ParseDateTime(Mgr(L"en"), L"2020-05-15 14:30:00",
+                                 CFGAS_StringFormatter::DateTimeType::kDateTime,
+                                 &dt));
+  EXPECT_EQ(CFX_DateTime(2020, 5, 15, 14, 30, 0, 0), dt);
 }
 
 TEST_F(CFGASStringFormatterTest, FormatDateTimeEdgeCases) {

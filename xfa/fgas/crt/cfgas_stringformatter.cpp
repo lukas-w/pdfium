@@ -359,9 +359,6 @@ bool ParseLocaleDate(const WideString& wsDate,
       *cc += symbol.GetLength();
     }
   }
-  if (*cc < spDate.size()) {
-    return false;
-  }
 
   datetime->SetDate(year, month, day);
   return !!(*cc);
@@ -1860,26 +1857,32 @@ bool CFGAS_StringFormatter::ParseDateTime(LocaleMgrIface* pLocaleMgr,
   }
 
   size_t iStart = 0;
+  bool success = false;
   switch (eCategory) {
     case DateTimeType::kDate:
-      return ParseLocaleDate(wsSrcDateTime, wsDatePattern, pLocale, dtValue,
-                             &iStart);
+      success = ParseLocaleDate(wsSrcDateTime, wsDatePattern, pLocale, dtValue,
+                                &iStart);
+      break;
     case DateTimeType::kTime:
-      return ParseLocaleTime(wsSrcDateTime, wsTimePattern, pLocale, dtValue,
-                             &iStart);
+      success = ParseLocaleTime(wsSrcDateTime, wsTimePattern, pLocale, dtValue,
+                                &iStart);
+      break;
     case DateTimeType::kDateTime:
-      return ParseLocaleDate(wsSrcDateTime, wsTimePattern, pLocale, dtValue,
-                             &iStart) &&
-             ParseLocaleTime(wsSrcDateTime, wsDatePattern, pLocale, dtValue,
-                             &iStart);
+      success = ParseLocaleDate(wsSrcDateTime, wsDatePattern, pLocale, dtValue,
+                                &iStart) &&
+                ParseLocaleTime(wsSrcDateTime, wsTimePattern, pLocale, dtValue,
+                                &iStart);
+      break;
     case DateTimeType::kTimeDate:
-      return ParseLocaleTime(wsSrcDateTime, wsTimePattern, pLocale, dtValue,
-                             &iStart) &&
-             ParseLocaleDate(wsSrcDateTime, wsDatePattern, pLocale, dtValue,
-                             &iStart);
+      success = ParseLocaleTime(wsSrcDateTime, wsTimePattern, pLocale, dtValue,
+                                &iStart) &&
+                ParseLocaleDate(wsSrcDateTime, wsDatePattern, pLocale, dtValue,
+                                &iStart);
+      break;
     case DateTimeType::kUnknown:
       return false;
   }
+  return success && iStart == wsSrcDateTime.GetLength();
 }
 
 bool CFGAS_StringFormatter::ParseZero(const WideString& wsSrcText) const {

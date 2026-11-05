@@ -158,16 +158,11 @@ TEST(CFGASDecimalTest, FloatDoubleConversion) {
 
   CFGAS_Decimal pos(L"123.5");
   EXPECT_FLOAT_EQ(123.5f, pos.ToFloat());
-  // TODO(tsepez): powf in ToDouble() truncates precision, causing 123.5 to
-  // return 123.50000184029341 rather than 123.5.
-  EXPECT_NE(123.5, pos.ToDouble());
-  EXPECT_NEAR(123.5, pos.ToDouble(), 1e-4);
+  EXPECT_DOUBLE_EQ(123.5, pos.ToDouble());
 
   CFGAS_Decimal neg(L"-123.5");
   EXPECT_FLOAT_EQ(-123.5f, neg.ToFloat());
-  // TODO(tsepez): Same precision truncation for negative numbers.
-  EXPECT_NE(-123.5, neg.ToDouble());
-  EXPECT_NEAR(-123.5, neg.ToDouble(), 1e-4);
+  EXPECT_DOUBLE_EQ(-123.5, neg.ToDouble());
 }
 
 TEST(CFGASDecimalTest, Multiply) {
