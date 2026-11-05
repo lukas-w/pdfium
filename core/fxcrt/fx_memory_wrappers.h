@@ -20,11 +20,10 @@ struct FxFreeDeleter {
 template <typename T>
 struct IsFXDataPartitionException : std::false_type {};
 
-// Use with caution. No further checks are made to see if `T` is appropriate
-// for the Data Partition (e.g. no pointers, strings, vtables, etc.). This
-// declaration must occur in the top-level namespace.
-#define FX_DATA_PARTITION_EXCEPTION(T) \
-  template <>                          \
+// Use ONLY for external / third-party types (e.g. Skia, Apple CoreGraphics)
+// whose definitions cannot include `kIsDataPartitionSafe`.
+#define FX_EXTERNAL_DATA_PARTITION_SAFE(T) \
+  template <>                              \
   struct IsFXDataPartitionException<T> : std::true_type {}
 
 template <typename T>

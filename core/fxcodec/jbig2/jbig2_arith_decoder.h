@@ -9,13 +9,14 @@
 
 #include <stdint.h>
 
-#include "core/fxcrt/fx_memory_wrappers.h"
 #include "core/fxcrt/unowned_ptr.h"
 
 class CJBig2_BitStream;
 
 class JBig2ArithCtx {
  public:
+  static constexpr bool kIsDataPartitionSafe = true;
+
   struct JBig2ArithQe {
     uint16_t Qe;
     uint8_t NMPS;
@@ -35,7 +36,6 @@ class JBig2ArithCtx {
   bool mps_ = false;
   uint8_t i_ = 0;
 };
-FX_DATA_PARTITION_EXCEPTION(JBig2ArithCtx);
 
 class CJBig2_ArithDecoder {
  public:

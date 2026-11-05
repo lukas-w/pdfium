@@ -16,7 +16,6 @@
 #include "core/fpdfapi/page/cpdf_pageobjectholder.h"
 #include "core/fxcrt/data_vector.h"
 #include "core/fxcrt/fx_coordinates.h"
-#include "core/fxcrt/fx_memory_wrappers.h"
 #include "core/fxcrt/unowned_ptr.h"
 #include "core/fxcrt/widestring.h"
 #include "core/fxcrt/widetext_buffer.h"
@@ -26,11 +25,11 @@ class CPDF_Page;
 class CPDF_TextObject;
 
 struct TextPageCharSegment {
+  static constexpr bool kIsDataPartitionSafe = true;
+
   int index;
   int count;
 };
-
-FX_DATA_PARTITION_EXCEPTION(TextPageCharSegment);
 
 class CPDF_TextPage {
  public:

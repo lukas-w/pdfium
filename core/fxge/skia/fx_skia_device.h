@@ -33,9 +33,9 @@ struct CFX_TextRenderOptions;
 struct TextCharPos;
 
 // Assumes Skia is not going to add non-data members to its fundamental types.
-FX_DATA_PARTITION_EXCEPTION(SkColor4f);
-FX_DATA_PARTITION_EXCEPTION(SkPoint);
-FX_DATA_PARTITION_EXCEPTION(SkRSXform);
+FX_EXTERNAL_DATA_PARTITION_SAFE(SkColor4f);
+FX_EXTERNAL_DATA_PARTITION_SAFE(SkPoint);
+FX_EXTERNAL_DATA_PARTITION_SAFE(SkRSXform);
 
 class CFX_SkiaDeviceDriver final : public RenderDeviceDriverIface {
  public:

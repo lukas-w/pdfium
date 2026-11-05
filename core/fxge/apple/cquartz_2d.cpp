@@ -21,7 +21,7 @@
 #error Expected CGFLOAT_IS_DOUBLE to be defined by CoreGraphics headers
 #endif
 
-FX_DATA_PARTITION_EXCEPTION(CGPoint);
+FX_EXTERNAL_DATA_PARTITION_SAFE(CGPoint);
 
 void* CQuartz2D::CreateGraphics(const RetainPtr<CFX_DIBitmap>& pBitmap) {
   if (!pBitmap) {

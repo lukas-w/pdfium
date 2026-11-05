@@ -11,16 +11,16 @@
 
 #include "core/fpdfapi/page/cpdf_basedcs.h"
 #include "core/fxcrt/data_vector.h"
-#include "core/fxcrt/fx_memory_wrappers.h"
 #include "core/fxcrt/retain_ptr.h"
 
 class CPDF_Document;
 
 struct IndexedColorMinMax {
+  static constexpr bool kIsDataPartitionSafe = true;
+
   float min;
   float max;
 };
-FX_DATA_PARTITION_EXCEPTION(IndexedColorMinMax);
 
 class CPDF_IndexedCS final : public CPDF_BasedCS {
  public:

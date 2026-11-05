@@ -17,7 +17,6 @@
 #include "core/fxcrt/data_vector.h"
 #include "core/fxcrt/fixed_size_data_vector.h"
 #include "core/fxcrt/fx_coordinates.h"
-#include "core/fxcrt/fx_memory_wrappers.h"
 #include "core/fxcrt/fx_system.h"
 #include "core/fxcrt/raw_span.h"
 #include "core/fxcrt/retain_ptr.h"
@@ -41,6 +40,8 @@ class ScanlineComposerIface;
 // count, a short run, or a group whose window does not fit -- take the
 // unchanged per-column path.
 struct StretchHorzGroup {
+  static constexpr bool kIsDataPartitionSafe = true;
+
   size_t src_byte_base;  // Byte offset of the source window in the row.
   // Per-tap gather indices into the window; see the kernel.
   std::array<std::array<uint8_t, 16>, 2> idx;
@@ -49,7 +50,6 @@ struct StretchHorzGroup {
   uint32_t taps;  // 1 or 2.
   bool wide;      // Whether the source window needs 32 bytes, not 16.
 };
-FX_DATA_PARTITION_EXCEPTION(StretchHorzGroup);
 
 // A run of consecutive groups covering 4 * group_count consecutive
 // destination columns from dest_col (an absolute column index, the same
@@ -57,11 +57,12 @@ FX_DATA_PARTITION_EXCEPTION(StretchHorzGroup);
 // [first_group, first_group + group_count) of horz_groups_. The kernel
 // handles a whole run per call.
 struct StretchHorzRun {
+  static constexpr bool kIsDataPartitionSafe = true;
+
   int dest_col;
   size_t first_group;
   size_t group_count;
 };
-FX_DATA_PARTITION_EXCEPTION(StretchHorzRun);
 
 class CStretchEngine {
  public:

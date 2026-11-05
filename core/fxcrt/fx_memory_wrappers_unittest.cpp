@@ -14,14 +14,10 @@
 
 namespace {
 
-struct OnlyNumbers {
-  int x;
-  int y;
-};
-
 struct TaggedType {
   static constexpr bool kIsDataPartitionSafe = true;
-  int a;
+  int x;
+  int y;
 };
 
 template <typename T>
@@ -30,13 +26,15 @@ struct TemplatedTaggedType {
   T a;
 };
 
+struct IncompleteType;
+
 }  // namespace
 
-FX_DATA_PARTITION_EXCEPTION(OnlyNumbers);
+FX_EXTERNAL_DATA_PARTITION_SAFE(IncompleteType);
 
 static_assert(FxDataPartitionType<int>);
 static_assert(FxDataPartitionType<float>);
-static_assert(FxDataPartitionType<OnlyNumbers>);
+static_assert(FxDataPartitionType<IncompleteType>);
 static_assert(FxDataPartitionType<TaggedType>);
 static_assert(FxDataPartitionType<TemplatedTaggedType<int>>);
 static_assert(!FxDataPartitionType<TemplatedTaggedType<std::string>>);
@@ -78,7 +76,7 @@ TEST(fxcrt, FxStringAllocator) {
 }
 
 TEST(fxcrt, FxAllocAllocatorStructException) {
-  std::vector<OnlyNumbers, FxAllocAllocator<OnlyNumbers>> vec;
+  std::vector<TaggedType, FxAllocAllocator<TaggedType>> vec;
   vec.push_back({42, 73});
   EXPECT_EQ(vec.back().x, 42);
   EXPECT_EQ(vec.back().y, 73);
