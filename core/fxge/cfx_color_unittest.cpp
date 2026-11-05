@@ -59,3 +59,89 @@ TEST(CFX_ColorTest, OperatorSlashUnusedComponents) {
   CFX_Color c3 = CFX_Color::MakeGray(0.4f);
   EXPECT_EQ(c2, c3);
 }
+
+TEST(CFX_ColorTest, ConvertColorType) {
+  // Transparent
+  CFX_Color trans;
+  EXPECT_EQ(CFX_Color::Type::kTransparent,
+            trans.ConvertColorType(CFX_Color::Type::kTransparent).nColorType);
+  EXPECT_EQ(CFX_Color::Type::kTransparent,
+            trans.ConvertColorType(CFX_Color::Type::kGray).nColorType);
+  EXPECT_EQ(CFX_Color::Type::kTransparent,
+            trans.ConvertColorType(CFX_Color::Type::kRGB).nColorType);
+  EXPECT_EQ(CFX_Color::Type::kTransparent,
+            trans.ConvertColorType(CFX_Color::Type::kCMYK).nColorType);
+
+  // Gray
+  CFX_Color gray = CFX_Color::MakeGray(0.6f);
+  EXPECT_EQ(CFX_Color::Type::kTransparent,
+            gray.ConvertColorType(CFX_Color::Type::kTransparent).nColorType);
+  EXPECT_EQ(gray, gray.ConvertColorType(CFX_Color::Type::kGray));
+
+  CFX_Color gray_to_rgb = gray.ConvertColorType(CFX_Color::Type::kRGB);
+  EXPECT_EQ(CFX_Color::Type::kRGB, gray_to_rgb.nColorType);
+  EXPECT_FLOAT_EQ(0.6f, gray_to_rgb.fColor1);
+  EXPECT_FLOAT_EQ(0.6f, gray_to_rgb.fColor2);
+  EXPECT_FLOAT_EQ(0.6f, gray_to_rgb.fColor3);
+
+  CFX_Color gray_to_cmyk = gray.ConvertColorType(CFX_Color::Type::kCMYK);
+  EXPECT_EQ(CFX_Color::Type::kCMYK, gray_to_cmyk.nColorType);
+  EXPECT_FLOAT_EQ(0.0f, gray_to_cmyk.fColor1);
+  EXPECT_FLOAT_EQ(0.0f, gray_to_cmyk.fColor2);
+  EXPECT_FLOAT_EQ(0.0f, gray_to_cmyk.fColor3);
+  EXPECT_FLOAT_EQ(0.4f, gray_to_cmyk.fColor4);
+
+  // RGB
+  CFX_Color rgb = CFX_Color::MakeRGB(0.2f, 0.4f, 0.6f);
+  EXPECT_EQ(CFX_Color::Type::kTransparent,
+            rgb.ConvertColorType(CFX_Color::Type::kTransparent).nColorType);
+  EXPECT_EQ(rgb, rgb.ConvertColorType(CFX_Color::Type::kRGB));
+
+  CFX_Color rgb_to_gray = rgb.ConvertColorType(CFX_Color::Type::kGray);
+  EXPECT_EQ(CFX_Color::Type::kGray, rgb_to_gray.nColorType);
+  EXPECT_FLOAT_EQ(0.3f * 0.2f + 0.59f * 0.4f + 0.11f * 0.6f,
+                  rgb_to_gray.fColor1);
+
+  CFX_Color rgb_to_cmyk = rgb.ConvertColorType(CFX_Color::Type::kCMYK);
+  EXPECT_EQ(CFX_Color::Type::kCMYK, rgb_to_cmyk.nColorType);
+  EXPECT_FLOAT_EQ(0.8f, rgb_to_cmyk.fColor1);
+  EXPECT_FLOAT_EQ(0.6f, rgb_to_cmyk.fColor2);
+  EXPECT_FLOAT_EQ(0.4f, rgb_to_cmyk.fColor3);
+  EXPECT_FLOAT_EQ(0.4f, rgb_to_cmyk.fColor4);
+
+  // CMYK
+  CFX_Color cmyk = CFX_Color::MakeCMYK(0.1f, 0.2f, 0.3f, 0.4f);
+  EXPECT_EQ(CFX_Color::Type::kTransparent,
+            cmyk.ConvertColorType(CFX_Color::Type::kTransparent).nColorType);
+  EXPECT_EQ(cmyk, cmyk.ConvertColorType(CFX_Color::Type::kCMYK));
+
+  CFX_Color cmyk_to_gray = cmyk.ConvertColorType(CFX_Color::Type::kGray);
+  EXPECT_EQ(CFX_Color::Type::kGray, cmyk_to_gray.nColorType);
+  EXPECT_FLOAT_EQ(1.0f - (0.3f * 0.1f + 0.59f * 0.2f + 0.11f * 0.3f + 0.4f),
+                  cmyk_to_gray.fColor1);
+
+  CFX_Color cmyk_to_rgb = cmyk.ConvertColorType(CFX_Color::Type::kRGB);
+  EXPECT_EQ(CFX_Color::Type::kRGB, cmyk_to_rgb.nColorType);
+  EXPECT_FLOAT_EQ(0.5f, cmyk_to_rgb.fColor1);
+  EXPECT_FLOAT_EQ(0.4f, cmyk_to_rgb.fColor2);
+  EXPECT_FLOAT_EQ(0.3f, cmyk_to_rgb.fColor3);
+
+  // Out-of-range inputs exercise fallback paths.
+  CFX_Color invalid_gray = CFX_Color::MakeGray(-0.5f);
+  EXPECT_EQ(CFX_Color::MakeRGB(0.0f, 0.0f, 0.0f),
+            invalid_gray.ConvertColorType(CFX_Color::Type::kRGB));
+  EXPECT_EQ(CFX_Color::MakeCMYK(0.0f, 0.0f, 0.0f, 0.0f),
+            invalid_gray.ConvertColorType(CFX_Color::Type::kCMYK));
+
+  CFX_Color invalid_rgb = CFX_Color::MakeRGB(2.0f, 0.0f, 0.0f);
+  EXPECT_EQ(CFX_Color::MakeGray(0.0f),
+            invalid_rgb.ConvertColorType(CFX_Color::Type::kGray));
+  EXPECT_EQ(CFX_Color::MakeCMYK(0.0f, 0.0f, 0.0f, 0.0f),
+            invalid_rgb.ConvertColorType(CFX_Color::Type::kCMYK));
+
+  CFX_Color invalid_cmyk = CFX_Color::MakeCMYK(0.0f, -1.0f, 0.0f, 0.0f);
+  EXPECT_EQ(CFX_Color::MakeGray(0.0f),
+            invalid_cmyk.ConvertColorType(CFX_Color::Type::kGray));
+  EXPECT_EQ(CFX_Color::MakeRGB(0.0f, 0.0f, 0.0f),
+            invalid_cmyk.ConvertColorType(CFX_Color::Type::kRGB));
+}
