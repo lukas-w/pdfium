@@ -11,7 +11,6 @@
 #include <utility>
 
 #include "core/fxcrt/check_op.h"
-#include "core/fxcrt/compiler_specific.h"
 #include "core/fxcrt/fixed_size_data_vector.h"
 #include "core/fxcrt/fx_2d_size.h"
 #include "core/fxcrt/fx_memory.h"
@@ -198,29 +197,29 @@ sk_sp<SkImage> CreateSkiaImageFromTransformedDib(
   const int width = source.GetWidth();
   const int height = source.GetHeight();
   SkImageInfo info = SkImageInfo::Make(width, height, color_type, alpha_type);
-  DCHECK_EQ(info.minRowBytes(), width * sizeof(Result));
+  CHECK_EQ(info.minRowBytes(), width * sizeof(Result));
 
-  auto output = FixedSizeDataVector<uint8_t>::TryUninit(
-      Fx2DSizeOrDie(info.minRowBytes(), height));
+  auto output =
+      FixedSizeDataVector<Result>::TryUninit(Fx2DSizeOrDie(width, height));
   if (output.empty()) {
     return nullptr;
   }
 
   // Transform source pixels to output pixels. Iterate by individual scanline.
-  Result* output_cursor = reinterpret_cast<Result*>(output.span().data());
+  pdfium::span<Result> output_span = output.span();
   const size_t min_row_bytes =
       fxge::CalculatePitch8OrDie(source.GetBPP(), /*components=*/1, width);
-  DCHECK_LE(min_row_bytes, source.GetPitch());
+  CHECK_LE(min_row_bytes, source.GetPitch());
 
-  int line = 0;
   for (int row = 0; row < height; ++row) {
-    pdfium::span<const uint8_t> scanline = source.GetScanline(line++);
+    pdfium::span<const uint8_t> scanline = source.GetScanline(row);
     ValidateScanlineSize(scanline, min_row_bytes);
 
     for (int column = 0; column < width; ++column) {
-      UNSAFE_TODO(*output_cursor++) = Traits::Invoke(
+      output_span[column] = Traits::Invoke(
           std::forward<PixelTransform>(pixel_transform), scanline, column);
     }
+    output_span = output_span.subspan(static_cast<size_t>(width));
   }
 
   // "Leak" allocated memory in `output` to `SkImage`, which will eventually be
