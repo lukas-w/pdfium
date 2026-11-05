@@ -171,7 +171,7 @@ inline void DoGroupImpl(const StretchHorzGroup& group,
   // arm of `if constexpr` is still instantiated for every kBpp, so the
   // kBpp == 4 arm's static_assert would otherwise fire for kBpp == 1 too.
   if constexpr (kBpp == 1) {
-    const hn::Full32<uint8_t> d8x4;
+    const hn::Rebind<uint8_t, D32> d8x4;
     hn::StoreU(hn::U8FromU32(b16), d8x4, dest.data());
   } else {
     const auto g16 = hn::And(hn::ShiftRight<16>(g), m255);
