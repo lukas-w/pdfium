@@ -691,7 +691,12 @@ TEST_F(CFGASStringFormatterTest, NullFormat) {
   static const struct {
     const wchar_t* pattern;
     const wchar_t* output;
-  } kTests[] = {{L"null{'n/a'}", L"n/a"}, {L"null{}", L""}};
+  } kTests[] = {
+      {L"null{'n/a'}", L"n/a"},
+      {L"null{}", L""},
+      {L"null{None}", L"None"},
+      {L"null{'Pre'Post}", L"PrePost"},
+  };
 
   size_t i = 0;
   for (const auto& test : kTests) {
@@ -701,6 +706,9 @@ TEST_F(CFGASStringFormatterTest, NullFormat) {
     EXPECT_EQ(test.output, result) << " TEST: " << i;
     ++i;
   }
+
+  WideString empty_result;
+  EXPECT_FALSE(CFGAS_StringFormatter(L"").FormatNull(&empty_result));
 }
 
 TEST_F(CFGASStringFormatterTest, ZeroParse) {
@@ -715,19 +723,20 @@ TEST_F(CFGASStringFormatterTest, ZeroParse) {
     EXPECT_TRUE(fmt.ParseZero(test.input)) << " TEST: " << i;
     ++i;
   }
+
+  EXPECT_FALSE(CFGAS_StringFormatter(L"zero{'0'}").ParseZero(L"1"));
+  EXPECT_FALSE(CFGAS_StringFormatter(L"zero{0}").ParseZero(L"1"));
 }
 
 TEST_F(CFGASStringFormatterTest, ZeroFormat) {
   static const struct {
-    const wchar_t* input;
     const wchar_t* pattern;
     const wchar_t* output;
-  } kTests[] = {// TODO(dsinclair): The zero format can take a number specifier
-                // which we don't take into account.
-                // {L"", L"zero {9}", L""},
-                // {L"0", L"zero {9}", L"0"},
-                // {L"0.0", L"zero{9}", L"0"},
-                {L"0", L"zero{}", L""}};
+  } kTests[] = {
+      {L"zero{}", L""},
+      {L"zero{'Zero'}", L"Zero"},
+      {L"zero{Zero}", L"Zero"},
+  };
 
   size_t i = 0;
   for (const auto& test : kTests) {
@@ -737,6 +746,9 @@ TEST_F(CFGASStringFormatterTest, ZeroFormat) {
     EXPECT_EQ(test.output, result) << " TEST: " << i;
     ++i;
   }
+
+  WideString empty_result;
+  EXPECT_FALSE(CFGAS_StringFormatter(L"").FormatZero(&empty_result));
 }
 
 TEST_F(CFGASStringFormatterTest, GetCategory) {
@@ -764,4 +776,348 @@ TEST_F(CFGASStringFormatterTest, GetCategory) {
             CFGAS_StringFormatter(L"num(en_GB){}").GetCategory());
   EXPECT_EQ(CFGAS_StringFormatter::Category::kDate,
             CFGAS_StringFormatter(L"date.long{}").GetCategory());
+}
+
+TEST_F(CFGASStringFormatterTest, CanonicalDate) {
+  CFX_DateTime dt;
+
+  // Valid dates.
+  EXPECT_TRUE(FX_DateFromCanonical(WideStringView(L"2020-01-15").span(), &dt));
+  EXPECT_EQ(2020, dt.GetYear());
+  EXPECT_EQ(1, dt.GetMonth());
+  EXPECT_EQ(15, dt.GetDay());
+
+  // Year only defaults to month 1, day 1.
+  EXPECT_TRUE(FX_DateFromCanonical(WideStringView(L"2020").span(), &dt));
+  EXPECT_EQ(2020, dt.GetYear());
+  EXPECT_EQ(1, dt.GetMonth());
+  EXPECT_EQ(1, dt.GetDay());
+
+  // Year-month defaults to day 1.
+  EXPECT_TRUE(FX_DateFromCanonical(WideStringView(L"2020-05").span(), &dt));
+  EXPECT_EQ(2020, dt.GetYear());
+  EXPECT_EQ(5, dt.GetMonth());
+  EXPECT_EQ(1, dt.GetDay());
+
+  // Leap year Feb 29.
+  EXPECT_TRUE(FX_DateFromCanonical(WideStringView(L"2020-02-29").span(), &dt));
+  EXPECT_EQ(29, dt.GetDay());
+
+  // Non-leap year Feb 28.
+  EXPECT_TRUE(FX_DateFromCanonical(WideStringView(L"2021-02-28").span(), &dt));
+  EXPECT_EQ(28, dt.GetDay());
+
+  // Invalid: length > 10.
+  EXPECT_FALSE(
+      FX_DateFromCanonical(WideStringView(L"2020-01-01-extra").span(), &dt));
+
+  // Invalid: year < 1900.
+  EXPECT_FALSE(FX_DateFromCanonical(WideStringView(L"1899-01-01").span(), &dt));
+
+  // Invalid: non-numeric year.
+  EXPECT_FALSE(FX_DateFromCanonical(WideStringView(L"abcd-01-01").span(), &dt));
+
+  // Invalid: month out of range.
+  EXPECT_FALSE(FX_DateFromCanonical(WideStringView(L"2020-00-01").span(), &dt));
+  EXPECT_FALSE(FX_DateFromCanonical(WideStringView(L"2020-13-01").span(), &dt));
+
+  // Invalid: day out of range.
+  EXPECT_FALSE(FX_DateFromCanonical(WideStringView(L"2020-01-00").span(), &dt));
+  EXPECT_FALSE(FX_DateFromCanonical(WideStringView(L"2020-01-32").span(), &dt));
+  EXPECT_FALSE(FX_DateFromCanonical(WideStringView(L"2020-04-31").span(), &dt));
+  EXPECT_FALSE(FX_DateFromCanonical(WideStringView(L"2021-02-29").span(), &dt));
+  EXPECT_FALSE(FX_DateFromCanonical(WideStringView(L"2020-02-30").span(), &dt));
+}
+
+TEST_F(CFGASStringFormatterTest, CanonicalTime) {
+  LocaleIface* locale = Mgr(L"en")->GetDefLocale();
+  CFX_DateTime dt;
+
+  // Valid times.
+  EXPECT_TRUE(
+      FX_TimeFromCanonical(locale, WideStringView(L"14:30:15").span(), &dt));
+  EXPECT_EQ(14, dt.GetHour());
+  EXPECT_EQ(30, dt.GetMinute());
+  EXPECT_EQ(15, dt.GetSecond());
+  EXPECT_EQ(0, dt.GetMillisecond());
+
+  // Hour only.
+  EXPECT_TRUE(FX_TimeFromCanonical(locale, WideStringView(L"14").span(), &dt));
+  EXPECT_EQ(14, dt.GetHour());
+  EXPECT_EQ(0, dt.GetMinute());
+
+  // Hour and minute only.
+  EXPECT_TRUE(
+      FX_TimeFromCanonical(locale, WideStringView(L"14:30").span(), &dt));
+  EXPECT_EQ(14, dt.GetHour());
+  EXPECT_EQ(30, dt.GetMinute());
+
+  // With milliseconds.
+  EXPECT_TRUE(FX_TimeFromCanonical(
+      locale, WideStringView(L"14:30:15.123").span(), &dt));
+  EXPECT_EQ(123, dt.GetMillisecond());
+
+  // With time zone offsets.
+  EXPECT_TRUE(
+      FX_TimeFromCanonical(locale, WideStringView(L"14:30:15Z").span(), &dt));
+  EXPECT_TRUE(FX_TimeFromCanonical(
+      locale, WideStringView(L"14:30:15+02:00").span(), &dt));
+  EXPECT_TRUE(FX_TimeFromCanonical(
+      locale, WideStringView(L"14:30:15-05:00").span(), &dt));
+
+  // Invalid: empty.
+  EXPECT_FALSE(FX_TimeFromCanonical(locale, WideStringView(L"").span(), &dt));
+
+  // Invalid: hour >= 24.
+  EXPECT_FALSE(
+      FX_TimeFromCanonical(locale, WideStringView(L"24:00:00").span(), &dt));
+
+  // Invalid: minute >= 60.
+  EXPECT_FALSE(
+      FX_TimeFromCanonical(locale, WideStringView(L"14:60:00").span(), &dt));
+
+  // Invalid: second >= 60.
+  EXPECT_FALSE(
+      FX_TimeFromCanonical(locale, WideStringView(L"14:30:60").span(), &dt));
+
+  // Invalid: incomplete milliseconds.
+  EXPECT_FALSE(
+      FX_TimeFromCanonical(locale, WideStringView(L"14:30:15.12").span(), &dt));
+}
+
+TEST_F(CFGASStringFormatterTest, TimeParse) {
+  struct {
+    const wchar_t* locale;
+    const wchar_t* input;
+    const wchar_t* pattern;
+    CFX_DateTime output;
+  } kTests[] = {
+      {L"en", L"18:30:45", L"time{HH:MM:SS}",
+       CFX_DateTime(0, 0, 0, 18, 30, 45, 0)},
+      {L"en", L"8:5:6", L"time{H:M:S}", CFX_DateTime(0, 0, 0, 8, 5, 6, 0)},
+      {L"en", L"1:05:10 PM", L"time{h:MM:SS A}",
+       CFX_DateTime(0, 0, 0, 13, 5, 10, 0)},
+      {L"en", L"12:05:10 AM", L"time{h:MM:SS A}",
+       CFX_DateTime(0, 0, 0, 0, 5, 10, 0)},
+      {L"en", L"12:05:10 PM", L"time{h:MM:SS A}",
+       CFX_DateTime(0, 0, 0, 12, 5, 10, 0)},
+      {L"en", L"14:30:45.123", L"time{HH:MM:SS.FFF}",
+       CFX_DateTime(0, 0, 0, 14, 30, 45, 123)},
+      {L"en", L"At 14:30:45", L"time{'At 'HH:MM:SS}",
+       CFX_DateTime(0, 0, 0, 14, 30, 45, 0)},
+      {L"en", L"14:30:45 Z", L"time{HH:MM:SS z}",
+       CFX_DateTime(0, 0, 0, 14, 30, 45, 0)},
+      {L"en", L"14:30:45 EST", L"time{HH:MM:SS Z}",
+       CFX_DateTime(0, 0, 0, 9, 30, 45, 0)},
+  };
+
+  for (const auto& test : kTests) {
+    CFX_DateTime result;
+    CFGAS_StringFormatter fmt(test.pattern);
+    EXPECT_TRUE(fmt.ParseDateTime(Mgr(test.locale), test.input,
+                                  CFGAS_StringFormatter::DateTimeType::kTime,
+                                  &result))
+        << " TEST: " << test.locale << ", " << test.input;
+    EXPECT_EQ(test.output, result)
+        << " TEST: " << test.locale << ", " << test.input;
+  }
+}
+
+TEST_F(CFGASStringFormatterTest, DateTimeSubcategoryFormat) {
+  WideString result;
+
+  // Date subcategories.
+  CFGAS_StringFormatter fmt_date_short(L"date.short{}");
+  EXPECT_TRUE(fmt_date_short.FormatDateTime(
+      Mgr(L"en"), L"2002-10-25", CFGAS_StringFormatter::DateTimeType::kDate,
+      &result));
+  EXPECT_EQ(L"10/25/02", result);
+
+  CFGAS_StringFormatter fmt_date_med(L"date.medium{}");
+  EXPECT_TRUE(fmt_date_med.FormatDateTime(
+      Mgr(L"en"), L"2002-10-25", CFGAS_StringFormatter::DateTimeType::kDate,
+      &result));
+  EXPECT_EQ(L"Oct 25, 2002", result);
+
+  CFGAS_StringFormatter fmt_date_long(L"date.long{}");
+  EXPECT_TRUE(fmt_date_long.FormatDateTime(
+      Mgr(L"en"), L"2002-10-25", CFGAS_StringFormatter::DateTimeType::kDate,
+      &result));
+  EXPECT_EQ(L"October 25, 2002", result);
+
+  CFGAS_StringFormatter fmt_date_full(L"date.full{}");
+  EXPECT_TRUE(fmt_date_full.FormatDateTime(
+      Mgr(L"en"), L"2002-10-25", CFGAS_StringFormatter::DateTimeType::kDate,
+      &result));
+  EXPECT_EQ(L"Friday, October 25, 2002", result);
+
+  // Time subcategories.
+  CFGAS_StringFormatter fmt_time_short(L"time.short{}");
+  EXPECT_TRUE(fmt_time_short.FormatDateTime(
+      Mgr(L"en"), L"14:30:00", CFGAS_StringFormatter::DateTimeType::kTime,
+      &result));
+  EXPECT_EQ(L"2:30 PM", result);
+
+  CFGAS_StringFormatter fmt_time_med(L"time.medium{}");
+  EXPECT_TRUE(fmt_time_med.FormatDateTime(
+      Mgr(L"en"), L"14:30:00", CFGAS_StringFormatter::DateTimeType::kTime,
+      &result));
+  EXPECT_EQ(L"2:30:00 PM", result);
+
+  // DateTime subcategories format with directly concatenated patterns.
+  CFGAS_StringFormatter fmt_dt_short(L"datetime.short{}");
+  EXPECT_TRUE(fmt_dt_short.FormatDateTime(
+      Mgr(L"en"), L"2002-10-25T14:30:00",
+      CFGAS_StringFormatter::DateTimeType::kDateTime, &result));
+  EXPECT_EQ(L"10/25/022:30 PM", result);
+
+  CFGAS_StringFormatter fmt_dt_med(L"datetime.medium{}");
+  EXPECT_TRUE(fmt_dt_med.FormatDateTime(
+      Mgr(L"en"), L"2002-10-25T14:30:00",
+      CFGAS_StringFormatter::DateTimeType::kDateTime, &result));
+  EXPECT_EQ(L"Oct 25, 20022:30:00 PM", result);
+}
+
+TEST_F(CFGASStringFormatterTest, TextFormatAndParseEdgeCases) {
+  WideString result;
+
+  // FormatText empty cases.
+  EXPECT_FALSE(CFGAS_StringFormatter(L"").FormatText(L"abc", &result));
+  EXPECT_FALSE(CFGAS_StringFormatter(L"text{AAA}").FormatText(L"", &result));
+
+  // FormatText character validation.
+  // 'A' requires alpha.
+  EXPECT_FALSE(CFGAS_StringFormatter(L"text{AAA}").FormatText(L"123", &result));
+  // '9' requires digit.
+  EXPECT_FALSE(CFGAS_StringFormatter(L"text{999}").FormatText(L"abc", &result));
+  // 'O' requires alnum.
+  EXPECT_FALSE(CFGAS_StringFormatter(L"text{OOO}").FormatText(L"...", &result));
+  // Length mismatch (input too long).
+  EXPECT_FALSE(CFGAS_StringFormatter(L"text{A}").FormatText(L"AB", &result));
+  // Length mismatch (input too short).
+  EXPECT_FALSE(CFGAS_StringFormatter(L"text{AAA}").FormatText(L"A", &result));
+
+  // ParseText empty cases.
+  EXPECT_FALSE(CFGAS_StringFormatter(L"").ParseText(L"abc", &result));
+  EXPECT_FALSE(CFGAS_StringFormatter(L"text{AAA}").ParseText(L"", &result));
+  EXPECT_FALSE(CFGAS_StringFormatter(L"num{999}").ParseText(L"123", &result));
+
+  // ParseText literal mismatch.
+  EXPECT_FALSE(CFGAS_StringFormatter(L"text{'prefix 'AAA}")
+                   .ParseText(L"other ABC", &result));
+
+  // ParseText non-symbol mismatch.
+  EXPECT_FALSE(
+      CFGAS_StringFormatter(L"text{AAA-999}").ParseText(L"ABC:123", &result));
+}
+
+TEST_F(CFGASStringFormatterTest, NumFormatAndParseEdgeCases) {
+  WideString result;
+
+  // FormatNum empty cases.
+  EXPECT_FALSE(
+      CFGAS_StringFormatter(L"").FormatNum(Mgr(L"en"), L"123", &result));
+  EXPECT_FALSE(
+      CFGAS_StringFormatter(L"num{999}").FormatNum(Mgr(L"en"), L"", &result));
+
+  // ParseNum empty cases.
+  EXPECT_FALSE(
+      CFGAS_StringFormatter(L"").ParseNum(Mgr(L"en"), L"123", &result));
+  EXPECT_FALSE(
+      CFGAS_StringFormatter(L"num{999}").ParseNum(Mgr(L"en"), L"", &result));
+
+  // Integer negative formatting without +/- in pattern.
+  result.clear();
+  EXPECT_TRUE(
+      CFGAS_StringFormatter(L"999").FormatNum(Mgr(L"en"), L"-123", &result));
+  EXPECT_EQ(WideString(L"-123"), result);
+
+  // Integer negative with 'z' suppression.
+  result.clear();
+  EXPECT_TRUE(
+      CFGAS_StringFormatter(L"zzz").FormatNum(Mgr(L"en"), L"-45", &result));
+  EXPECT_EQ(WideString(L"-45"), result);
+
+  // Overflow digits before decimal dot rounds to integer.
+  result.clear();
+  EXPECT_TRUE(
+      CFGAS_StringFormatter(L"99").FormatNum(Mgr(L"en"), L"1234.56", &result));
+  EXPECT_EQ(WideString(L"1,235"), result);
+
+  // Overflow negative before decimal dot.
+  result.clear();
+  EXPECT_TRUE(
+      CFGAS_StringFormatter(L"99").FormatNum(Mgr(L"en"), L"-1234.56", &result));
+  EXPECT_EQ(WideString(L"-1,235"), result);
+
+  // Literal in format pattern with quotes and unicode escapes.
+  result.clear();
+  EXPECT_TRUE(CFGAS_StringFormatter(L"num{'Cost: \\u0024'999.99}")
+                  .FormatNum(Mgr(L"en"), L"123.45", &result));
+  EXPECT_EQ(WideString(L"Cost: $123.45"), result);
+
+  // ParseNum with leading negative sign.
+  result.clear();
+  EXPECT_TRUE(
+      CFGAS_StringFormatter(L"999").ParseNum(Mgr(L"en"), L"-123", &result));
+  EXPECT_EQ(WideString(L"-123"), result);
+
+  // ParseNum with currency symbol.
+  result.clear();
+  EXPECT_TRUE(
+      CFGAS_StringFormatter(L"$999").ParseNum(Mgr(L"en"), L"$123", &result));
+  EXPECT_EQ(WideString(L"123"), result);
+
+  // ParseNum with literal in pattern.
+  result.clear();
+  EXPECT_TRUE(CFGAS_StringFormatter(L"num{'Amt: '999}")
+                  .ParseNum(Mgr(L"en"), L"Amt: 123", &result));
+  EXPECT_EQ(WideString(L"123"), result);
+}
+
+TEST_F(CFGASStringFormatterTest, DateTimeParse) {
+  CFX_DateTime dt;
+
+  // TimeDate parses time first, then date.
+  EXPECT_TRUE(CFGAS_StringFormatter(L"time{HH:MM:SS} date{YYYY-MM-DD}")
+                  .ParseDateTime(Mgr(L"en"), L"14:30:00 2020-05-15",
+                                 CFGAS_StringFormatter::DateTimeType::kTimeDate,
+                                 &dt));
+  EXPECT_EQ(CFX_DateTime(2020, 5, 15, 14, 30, 0, 0), dt);
+
+  // DateTime parses date first, then time.
+  // TODO(tsepez): ParseDateTime() inverts wsDatePattern and wsTimePattern for
+  // DateTimeType::kDateTime, passing wsTimePattern to ParseLocaleDate() and
+  // wsDatePattern to ParseLocaleTime(), which causes parsing to fail.
+  EXPECT_FALSE(
+      CFGAS_StringFormatter(L"date{YYYY-MM-DD} time{HH:MM:SS}")
+          .ParseDateTime(Mgr(L"en"), L"2020-05-15 14:30:00",
+                         CFGAS_StringFormatter::DateTimeType::kDateTime, &dt));
+}
+
+TEST_F(CFGASStringFormatterTest, FormatDateTimeEdgeCases) {
+  WideString result;
+
+  // Empty pattern.
+  EXPECT_FALSE(CFGAS_StringFormatter(L"").FormatDateTime(
+      Mgr(L"en"), L"2020-01-01", CFGAS_StringFormatter::DateTimeType::kDate,
+      &result));
+
+  // Unknown category.
+  EXPECT_FALSE(CFGAS_StringFormatter(L"unknown{}")
+                   .FormatDateTime(
+                       Mgr(L"en"), L"2020-01-01",
+                       CFGAS_StringFormatter::DateTimeType::kUnknown, &result));
+
+  // ParseDateTime empty pattern.
+  CFX_DateTime dt;
+  EXPECT_FALSE(CFGAS_StringFormatter(L"").ParseDateTime(
+      Mgr(L"en"), L"2020-01-01", CFGAS_StringFormatter::DateTimeType::kDate,
+      &dt));
+
+  // ParseDateTime unknown category.
+  EXPECT_FALSE(CFGAS_StringFormatter(L"unknown{}")
+                   .ParseDateTime(Mgr(L"en"), L"2020-01-01",
+                                  CFGAS_StringFormatter::DateTimeType::kUnknown,
+                                  &dt));
 }
