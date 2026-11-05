@@ -594,7 +594,7 @@ size_t CFX_DIBBase::GetEstimatedImageMemoryBurden() const {
   return GetRequiredPaletteSize() * sizeof(uint32_t);
 }
 
-#if BUILDFLAG(IS_WIN) || defined(PDF_USE_SKIA) || defined(PDF_USE_LIBYUV)
+#if BUILDFLAG(IS_WIN) || defined(PDF_USE_SKIA)
 RetainPtr<const CFX_DIBitmap> CFX_DIBBase::RealizeIfNeeded() const {
   return Realize();
 }
@@ -1111,33 +1111,21 @@ RetainPtr<CFX_DIBitmap> CFX_DIBBase::SwapXY(bool bXFlip, bool bYFlip) const {
   const int bytes_per_pixel = GetBPP() / 8;
 #if defined(PDF_USE_LIBYUV)
   if (bytes_per_pixel == 1 || bytes_per_pixel == 4) {
-    RetainPtr<const CFX_DIBitmap> realized = RealizeIfNeeded();
-    if (realized) {
-      const uint8_t* src_buf = realized->GetBuffer().data();
-      const int src_pitch = realized->GetPitch();
-      uint8_t* dst_buf = dest_span.data();
+    pdfium::span<const uint8_t> src_buffer = GetBuffer();
+    if (!src_buffer.empty()) {
+      const int height = bXFlip == bYFlip ? -GetHeight() : GetHeight();
+      const libyuv::RotationMode mode =
+          bYFlip ? libyuv::kRotate270 : libyuv::kRotate90;
       if (bytes_per_pixel == 1) {
-        if (bXFlip && bYFlip) {
-          libyuv::RotatePlane270(realized->GetScanline(GetHeight() - 1).data(),
-                                 -src_pitch, dst_buf, dest_pitch, GetWidth(),
-                                 GetHeight());
-        } else if (bXFlip) {
-          libyuv::RotatePlane90(src_buf, src_pitch, dst_buf, dest_pitch,
-                                GetWidth(), GetHeight());
-        } else if (bYFlip) {
-          libyuv::RotatePlane270(src_buf, src_pitch, dst_buf, dest_pitch,
-                                 GetWidth(), GetHeight());
-        } else {
-          libyuv::TransposePlane(src_buf, src_pitch, dst_buf, dest_pitch,
-                                 GetWidth(), GetHeight());
+        if (libyuv::RotatePlane(src_buffer.data(), GetPitch(), dest_span.data(),
+                                dest_pitch, GetWidth(), height, mode) == 0) {
+          return pTransBitmap;
         }
-        return pTransBitmap;
-      }
-      if (libyuv::ARGBRotate(
-              src_buf, src_pitch, dst_buf, dest_pitch, GetWidth(),
-              bXFlip == bYFlip ? -GetHeight() : GetHeight(),
-              bYFlip ? libyuv::kRotate270 : libyuv::kRotate90) == 0) {
-        return pTransBitmap;
+      } else {
+        if (libyuv::ARGBRotate(src_buffer.data(), GetPitch(), dest_span.data(),
+                               dest_pitch, GetWidth(), height, mode) == 0) {
+          return pTransBitmap;
+        }
       }
     }
   }

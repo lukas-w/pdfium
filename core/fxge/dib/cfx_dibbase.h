@@ -52,7 +52,7 @@ class CFX_DIBBase : public Retainable {
   virtual pdfium::span<const uint8_t> GetScanline(int line) const = 0;
   virtual bool SkipToScanline(int line, PauseIndicatorIface* pPause) const;
   virtual size_t GetEstimatedImageMemoryBurden() const;
-#if BUILDFLAG(IS_WIN) || defined(PDF_USE_SKIA) || defined(PDF_USE_LIBYUV)
+#if BUILDFLAG(IS_WIN) || defined(PDF_USE_SKIA)
   // Calls Realize() if needed. Otherwise, return `this`.
   virtual RetainPtr<const CFX_DIBitmap> RealizeIfNeeded() const;
 #endif

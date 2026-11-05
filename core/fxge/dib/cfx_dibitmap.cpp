@@ -131,7 +131,7 @@ size_t CFX_DIBitmap::GetEstimatedImageMemoryBurden() const {
   return result;
 }
 
-#if BUILDFLAG(IS_WIN) || defined(PDF_USE_SKIA) || defined(PDF_USE_LIBYUV)
+#if BUILDFLAG(IS_WIN) || defined(PDF_USE_SKIA)
 RetainPtr<const CFX_DIBitmap> CFX_DIBitmap::RealizeIfNeeded() const {
   if (GetBuffer().empty()) {
     return Realize();

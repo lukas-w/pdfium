@@ -63,7 +63,7 @@ class CFX_DIBitmap final : public CFX_DIBBase {
   pdfium::span<const uint8_t> GetBuffer() const override;
   pdfium::span<const uint8_t> GetScanline(int line) const override;
   size_t GetEstimatedImageMemoryBurden() const override;
-#if BUILDFLAG(IS_WIN) || defined(PDF_USE_SKIA) || defined(PDF_USE_LIBYUV)
+#if BUILDFLAG(IS_WIN) || defined(PDF_USE_SKIA)
   RetainPtr<const CFX_DIBitmap> RealizeIfNeeded() const override;
 #endif
 
