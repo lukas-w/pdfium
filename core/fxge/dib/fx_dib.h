@@ -9,6 +9,7 @@
 
 #include <stdint.h>
 
+#include <type_traits>
 #include <utility>
 
 #include "core/fxcrt/compiler_specific.h"
@@ -105,6 +106,8 @@ struct FX_CMYK_STRUCT {
 
 template <typename T>
 struct FX_LAB_STRUCT {
+  static constexpr bool kIsDataPartitionSafe = std::is_arithmetic_v<T>;
+
   T lightness_star = 0;
   T a_star = 0;
   T b_star = 0;

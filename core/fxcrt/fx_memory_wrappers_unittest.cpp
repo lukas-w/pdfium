@@ -19,6 +19,17 @@ struct OnlyNumbers {
   int y;
 };
 
+struct TaggedType {
+  static constexpr bool kIsDataPartitionSafe = true;
+  int a;
+};
+
+template <typename T>
+struct TemplatedTaggedType {
+  static constexpr bool kIsDataPartitionSafe = std::is_arithmetic_v<T>;
+  T a;
+};
+
 }  // namespace
 
 FX_DATA_PARTITION_EXCEPTION(OnlyNumbers);
@@ -26,6 +37,9 @@ FX_DATA_PARTITION_EXCEPTION(OnlyNumbers);
 static_assert(FxDataPartitionType<int>);
 static_assert(FxDataPartitionType<float>);
 static_assert(FxDataPartitionType<OnlyNumbers>);
+static_assert(FxDataPartitionType<TaggedType>);
+static_assert(FxDataPartitionType<TemplatedTaggedType<int>>);
+static_assert(!FxDataPartitionType<TemplatedTaggedType<std::string>>);
 static_assert(!FxDataPartitionType<std::string>);
 
 TEST(fxcrt, FxFreeDeleter) {

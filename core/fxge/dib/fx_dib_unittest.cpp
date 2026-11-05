@@ -6,7 +6,11 @@
 
 #include <stdint.h>
 
+#include "core/fxcrt/fx_memory_wrappers.h"
 #include "testing/gtest/include/gtest/gtest.h"
+
+static_assert(FxDataPartitionType<FX_LAB_STRUCT<float>>);
+static_assert(FxDataPartitionType<FX_LAB_STRUCT<uint8_t>>);
 
 TEST(FxDibTest, ArgbToBGRAStruct) {
   FX_BGRA_STRUCT<uint8_t> white = ArgbToBGRAStruct(0xffffffff);

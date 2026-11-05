@@ -29,7 +29,8 @@ struct IsFXDataPartitionException : std::false_type {};
 
 template <typename T>
 concept FxDataPartitionType = std::is_arithmetic_v<T> || std::is_enum_v<T> ||
-                              IsFXDataPartitionException<T>::value;
+                              IsFXDataPartitionException<T>::value ||
+                              requires { requires T::kIsDataPartitionSafe; };
 
 // Allocators for mapping STL containers onto Partition Alloc.
 // Otherwise, replacing e.g. the FX_AllocUninit/FX_Free pairs with STL may
