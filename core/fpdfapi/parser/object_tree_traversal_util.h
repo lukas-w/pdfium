@@ -11,9 +11,8 @@
 
 class CPDF_Document;
 
-// Traverses `document` starting with its trailer, if it has one, or starting at
-// the catalog, which always exists. The trailer should have a reference to the
-// catalog. The traversal avoids cycles.
+// Traverses `document` starting with its trailer, if it has one, and also from
+// the catalog if not reached from the trailer. The traversal avoids cycles.
 // Returns all the PDF objects (not CPDF_Objects) the traversal reached as a set
 // of object numbers.
 std::set<uint32_t> GetObjectsWithReferences(const CPDF_Document* document);

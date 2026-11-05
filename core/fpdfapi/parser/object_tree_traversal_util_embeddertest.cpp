@@ -9,6 +9,8 @@
 #include <set>
 
 #include "core/fpdfapi/parser/cpdf_document.h"
+#include "core/fpdfapi/parser/cpdf_null.h"
+#include "core/fpdfapi/parser/cpdf_parser.h"
 #include "testing/embedder_test.h"
 #include "testing/gmock/include/gmock/gmock.h"
 #include "testing/gtest/include/gtest/gtest.h"
@@ -109,4 +111,23 @@ TEST_F(ObjectTreeTraversalUtilEmbedderTest,
   CPDF_Document* doc = GetCPDFDocument(document());
   std::set<uint32_t> referenced_objects = GetObjectsWithMultipleReferences(doc);
   EXPECT_TRUE(referenced_objects.empty());
+}
+
+TEST_F(ObjectTreeTraversalUtilEmbedderTest,
+       GetObjectsWithReferencesTrailerWithoutRoot) {
+  ASSERT_TRUE(OpenDocument("hello_world.pdf"));
+  CPDF_Document* doc = GetCPDFDocument(document());
+  doc->GetParser()->GetMutableTrailerForTesting()->SetNewFor<CPDF_Null>("Root");
+  std::set<uint32_t> referenced_objects = GetObjectsWithReferences(doc);
+  EXPECT_THAT(referenced_objects,
+              UnorderedElementsAreArray({1, 2, 3, 4, 5, 6}));
+}
+
+TEST_F(ObjectTreeTraversalUtilEmbedderTest,
+       GetObjectsWithMultipleReferencesTrailerWithoutRoot) {
+  ASSERT_TRUE(OpenDocument("hello_world_2_pages.pdf"));
+  CPDF_Document* doc = GetCPDFDocument(document());
+  doc->GetParser()->GetMutableTrailerForTesting()->SetNewFor<CPDF_Null>("Root");
+  std::set<uint32_t> referenced_objects = GetObjectsWithMultipleReferences(doc);
+  EXPECT_THAT(referenced_objects, UnorderedElementsAreArray({5, 6, 7}));
 }

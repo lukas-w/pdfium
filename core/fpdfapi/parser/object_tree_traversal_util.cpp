@@ -29,18 +29,10 @@ class ObjectTreeTraverser {
       : document_(document) {
     const CPDF_Parser* parser = document_->GetParser();
     const CPDF_Dictionary* trailer = parser ? parser->GetTrailer() : nullptr;
-    const CPDF_Dictionary* root = trailer ? trailer : document_->GetRoot();
-    const uint32_t root_object_number =
-        trailer ? parser->GetTrailerObjectNumber() : root->GetObjNum();
-    // If `root` is a trailer, then it may not have an object number, as many
-    // trailers are inlined.
-    if (root_object_number) {
-      referenced_objects_[root_object_number] = 1;
-      object_number_map_[root] = root_object_number;
+    if (trailer) {
+      EnqueueRoot(pdfium::WrapRetain(trailer),
+                  parser->GetTrailerObjectNumber());
     }
-
-    object_queue_.push(pdfium::WrapRetain(root));
-    seen_objects_.insert(root);
   }
   ~ObjectTreeTraverser() = default;
 
@@ -56,8 +48,19 @@ class ObjectTreeTraverser {
     uint32_t referenced_object_number;
   };
 
-  std::vector<ReferenceEntry> GetReferenceEntries() {
-    std::vector<ReferenceEntry> reference_entries;
+  void EnqueueRoot(RetainPtr<const CPDF_Dictionary> root,
+                   uint32_t root_object_number) {
+    if (!root || !seen_objects_.insert(root.Get()).second) {
+      return;
+    }
+    if (root_object_number) {
+      referenced_objects_[root_object_number] = 1;
+      object_number_map_[root.Get()] = root_object_number;
+    }
+    object_queue_.push(std::move(root));
+  }
+
+  void DrainObjectQueue(std::vector<ReferenceEntry>* reference_entries) {
     while (!object_queue_.empty()) {
       RetainPtr<const CPDF_Object> current_object = object_queue_.front();
       object_queue_.pop();
@@ -94,7 +97,7 @@ class ObjectTreeTraverser {
           // Unlike the other object types, CPDF_Reference can point at nullptr.
           if (referenced_object) {
             CHECK(referenced_object_number);
-            reference_entries.push_back(
+            reference_entries->push_back(
                 {ref_object_number, referenced_object_number});
             PushNewObject(ref_object, referenced_object);
           }
@@ -114,6 +117,19 @@ class ObjectTreeTraverser {
           break;
         }
       }
+    }
+  }
+
+  std::vector<ReferenceEntry> GetReferenceEntries() {
+    std::vector<ReferenceEntry> reference_entries;
+    DrainObjectQueue(&reference_entries);
+
+    // Also traverse the catalog if it was not reached from the trailer
+    // (e.g. if the trailer's `/Root` was missing, null, or diverged).
+    const CPDF_Dictionary* catalog = document_->GetRoot();
+    if (catalog && !pdfium::Contains(seen_objects_, catalog)) {
+      EnqueueRoot(pdfium::WrapRetain(catalog), catalog->GetObjNum());
+      DrainObjectQueue(&reference_entries);
     }
     return reference_entries;
   }
