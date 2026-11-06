@@ -31,23 +31,23 @@ class IccTransform {
 
   void Translate(pdfium::span<const float> src_values,
                  pdfium::span<float, 3> dest_values);
-  void TranslateScanline(pdfium::span<uint8_t> pDest,
-                         pdfium::span<const uint8_t> pSrc,
-                         int pixels);
+  void TranslateScanline(pdfium::span<uint8_t> dest,
+                         pdfium::span<const uint8_t> src,
+                         int32_t pixels);
 
-  int components() const { return src_components_; }
+  size_t components() const { return src_components_; }
   bool IsNormal() const { return normal_; }
 
   static bool IsValidIccComponents(int components);
 
  private:
   IccTransform(cmsHTRANSFORM transform,
-               int srcComponents,
+               size_t srcComponents,
                bool bIsLab,
                bool bNormal);
 
   const cmsHTRANSFORM transform_;
-  const int src_components_;
+  const size_t src_components_;
   const bool lab_;
   const bool normal_;
 };

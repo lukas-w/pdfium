@@ -903,15 +903,13 @@ void CPDF_LabCS::TranslateImageLine(pdfium::span<uint8_t> dest_span,
       fxcrt::reinterpret_span<const FX_LAB_STRUCT<uint8_t>>(src_span).first(
           static_cast<size_t>(pixels));
   for (auto [lab_ref, bgr_ref] : fxcrt::Zip(lab_span, bgr_span)) {
-    const float lab[3] = {
-        static_cast<float>(lab_ref.lightness_star * 100) / 255.0f,
-        static_cast<float>(lab_ref.a_star - 128),
-        static_cast<float>(lab_ref.b_star - 128),
-    };
+    const FX_LAB_STRUCT<float> decoded = DecodeLab(lab_ref);
+    auto float_span =
+        fxcrt::reinterpret_span<const float>(pdfium::span_from_ref(decoded));
     // Better code than the equivalent GetRGBOrZerosOnError() since that
     // is implemented in a base class and can't devirtualize the GetRGB()
     // call despite this class being marked final.
-    auto rgb = GetRGB(lab).value_or(FX_RGB_STRUCT<float>{});
+    auto rgb = GetRGB(float_span).value_or(FX_RGB_STRUCT<float>{});
     bgr_ref.blue = static_cast<int32_t>(rgb.blue * 255);
     bgr_ref.green = static_cast<int32_t>(rgb.green * 255);
     bgr_ref.red = static_cast<int32_t>(rgb.red * 255);

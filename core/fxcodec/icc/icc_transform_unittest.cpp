@@ -11,6 +11,8 @@
 
 #include "core/fxcrt/data_vector.h"
 #include "core/fxcrt/span.h"
+#include "core/fxcrt/span_util.h"
+#include "core/fxge/dib/fx_dib.h"
 #include "testing/gtest/include/gtest/gtest.h"
 
 namespace fxcodec {
@@ -81,17 +83,50 @@ TEST(IccTransformTest, SRGBProfile) {
 }
 
 TEST(IccTransformTest, LabProfile) {
-  // cmsCreateTransform currently fails for Lab profiles because
-  // IccTransform::CreateTransformSRGB constructs `srcFormat` with
-  // `BYTES_SH(0)` but omits `FLOAT_SH(1)`, so lcms2 does not recognize it
-  // as `TYPE_Lab_DBL`.
   cmsHPROFILE profile = cmsCreateLab4Profile(nullptr);
   ASSERT_TRUE(profile);
   DataVector<uint8_t> profile_data = SerializeProfile(profile);
   cmsCloseProfile(profile);
   ASSERT_FALSE(profile_data.empty());
 
-  EXPECT_FALSE(IccTransform::CreateTransformSRGB(profile_data));
+  std::unique_ptr<IccTransform> transform =
+      IccTransform::CreateTransformSRGB(profile_data);
+  ASSERT_TRUE(transform);
+
+  // L*=100, a*=0, b*=0 is diffuse white.
+  static constexpr FX_LAB_STRUCT<float> kLabWhite = {100.0f, 0.0f, 0.0f};
+  FX_RGB_STRUCT<float> dst_rgb = {};
+  transform->Translate(
+      fxcrt::reinterpret_span<const float>(pdfium::span_from_ref(kLabWhite)),
+      fxcrt::reinterpret_span<float>(pdfium::span_from_ref(dst_rgb))
+          .first<3>());
+  EXPECT_NEAR(dst_rgb.red, 1.0f, 0.05f);
+  EXPECT_NEAR(dst_rgb.green, 1.0f, 0.05f);
+  EXPECT_NEAR(dst_rgb.blue, 1.0f, 0.05f);
+
+  // Translate scanline with 8-bit Lab samples.
+  // 1 pixel = 3 bytes (L=255, a=128, b=128 is diffuse white).
+  // Note that destination is BGR_8 format per cmsCreateTransform.
+  static constexpr FX_LAB_STRUCT<uint8_t> kLabWhitePixel = {255, 128, 128};
+  FX_BGR_STRUCT<uint8_t> dst_pixel = {};
+  transform->TranslateScanline(pdfium::byte_span_from_ref(dst_pixel),
+                               pdfium::byte_span_from_ref(kLabWhitePixel), 1);
+  EXPECT_EQ(dst_pixel.blue, 255);
+  EXPECT_EQ(dst_pixel.green, 255);
+  EXPECT_EQ(dst_pixel.red, 255);
+
+  // Translate scanline with multiple 8-bit Lab samples (2 pixels).
+  static constexpr std::array<FX_LAB_STRUCT<uint8_t>, 2> kLabTwoPixels = {
+      {{255, 128, 128}, {255, 128, 128}}};
+  std::array<FX_BGR_STRUCT<uint8_t>, 2> dst_two_pixels = {};
+  transform->TranslateScanline(pdfium::byte_span_from_ref(dst_two_pixels),
+                               pdfium::byte_span_from_ref(kLabTwoPixels), 2);
+  EXPECT_EQ(dst_two_pixels[0].blue, 255);
+  EXPECT_EQ(dst_two_pixels[0].green, 255);
+  EXPECT_EQ(dst_two_pixels[0].red, 255);
+  EXPECT_EQ(dst_two_pixels[1].blue, 255);
+  EXPECT_EQ(dst_two_pixels[1].green, 255);
+  EXPECT_EQ(dst_two_pixels[1].red, 255);
 }
 
 TEST(IccTransformTest, GrayProfile) {
