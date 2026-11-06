@@ -106,6 +106,9 @@ TEST(CFGASDecimalTest, FromString) {
 
   CFGAS_Decimal empty_str(L"");
   EXPECT_EQ(L"0", empty_str.ToWideString());
+
+  CFGAS_Decimal blank_str(L"   ");
+  EXPECT_EQ(L"0", blank_str.ToWideString());
 }
 
 TEST(CFGASDecimalTest, FromString28Digits) {
@@ -191,37 +194,44 @@ TEST(CFGASDecimalTest, Multiply) {
   EXPECT_LE(product.GetScale(), 28);
 }
 
-TEST(CFGASDecimalTest, Divide) {
+TEST(CFGASDecimalTest, DivBy10AndDivBy100) {
   CFGAS_Decimal zero;
-  CFGAS_Decimal num(100);
+  zero.DivBy10();
+  EXPECT_EQ(L"0", zero.ToWideString());
+  zero.DivBy100();
+  EXPECT_EQ(L"0", zero.ToWideString());
 
-  // Division by zero.
-  EXPECT_EQ(L"0", (num / zero).ToWideString());
+  CFGAS_Decimal a(100);
+  a.DivBy10();
+  EXPECT_EQ(L"10", a.ToWideString());
+  a.DivBy10();
+  EXPECT_EQ(L"1", a.ToWideString());
+  a.DivBy10();
+  EXPECT_EQ(L"0.1", a.ToWideString());
 
-  // Zero divided by non-zero.
-  EXPECT_EQ(L"0", (zero / num).ToWideString());
+  CFGAS_Decimal b(L"10.0");
+  b.DivBy10();
+  EXPECT_EQ(L"1.0", b.ToWideString());
 
-  // Integer division.
-  EXPECT_EQ(L"25", (num / CFGAS_Decimal(4)).ToWideString());
+  CFGAS_Decimal c(123);
+  c.DivBy10();
+  EXPECT_EQ(L"12.3", c.ToWideString());
 
-  // Smaller scale divided by larger scale.
-  CFGAS_Decimal d1(10);
-  CFGAS_Decimal d2(L"2.5");
-  EXPECT_EQ(L"4", (d1 / d2).ToWideString());
+  CFGAS_Decimal neg(-100);
+  neg.DivBy10();
+  EXPECT_EQ(L"-10", neg.ToWideString());
+  neg.DivBy10();
+  EXPECT_EQ(L"-1", neg.ToWideString());
 
-  // Larger scale divided by smaller scale maintains scale difference.
-  CFGAS_Decimal d3(L"10.0");
-  CFGAS_Decimal d4(2);
-  EXPECT_EQ(L"5.0", (d3 / d4).ToWideString());
+  CFGAS_Decimal pct(50);
+  pct.DivBy100();
+  EXPECT_EQ(L"0.5", pct.ToWideString());
 
-  // Repeating fraction.
-  CFGAS_Decimal one(1);
-  CFGAS_Decimal three(3);
-  CFGAS_Decimal div_result = one / three;
-  EXPECT_EQ(L"0.3333333333333333333333333333", div_result.ToWideString());
+  CFGAS_Decimal pct100(100);
+  pct100.DivBy100();
+  EXPECT_EQ(L"1", pct100.ToWideString());
 
-  // Negative operands.
-  EXPECT_EQ(L"-5", (CFGAS_Decimal(-10) / CFGAS_Decimal(2)).ToWideString());
-  EXPECT_EQ(L"-5", (CFGAS_Decimal(10) / CFGAS_Decimal(-2)).ToWideString());
-  EXPECT_EQ(L"5", (CFGAS_Decimal(-10) / CFGAS_Decimal(-2)).ToWideString());
+  CFGAS_Decimal pct_neg(-75);
+  pct_neg.DivBy100();
+  EXPECT_EQ(L"-0.75", pct_neg.ToWideString());
 }

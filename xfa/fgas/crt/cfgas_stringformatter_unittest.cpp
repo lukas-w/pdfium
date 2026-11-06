@@ -1019,12 +1019,24 @@ TEST_F(CFGASStringFormatterTest, NumFormatAndParseEdgeCases) {
       CFGAS_StringFormatter(L"").FormatNum(Mgr(L"en"), L"123", &result));
   EXPECT_FALSE(
       CFGAS_StringFormatter(L"num{999}").FormatNum(Mgr(L"en"), L"", &result));
+  EXPECT_FALSE(CFGAS_StringFormatter(L"num{999}")
+                   .FormatNum(Mgr(L"en"), L"   ", &result));
+  EXPECT_FALSE(
+      CFGAS_StringFormatter(L"99.999E").FormatNum(Mgr(L"en"), L"   ", &result));
 
   // ParseNum empty cases.
   EXPECT_FALSE(
       CFGAS_StringFormatter(L"").ParseNum(Mgr(L"en"), L"123", &result));
   EXPECT_FALSE(
       CFGAS_StringFormatter(L"num{999}").ParseNum(Mgr(L"en"), L"", &result));
+  EXPECT_FALSE(
+      CFGAS_StringFormatter(L"num{999}").ParseNum(Mgr(L"en"), L"   ", &result));
+  EXPECT_FALSE(
+      CFGAS_StringFormatter(L"99.999E").ParseNum(Mgr(L"en"), L"   ", &result));
+
+  // Exponent threshold overflow error cases.
+  EXPECT_FALSE(CFGAS_StringFormatter(L"99999999999E")
+                   .FormatNum(Mgr(L"en"), L"1", &result));
 
   // Integer negative formatting without +/- in pattern.
   result.clear();

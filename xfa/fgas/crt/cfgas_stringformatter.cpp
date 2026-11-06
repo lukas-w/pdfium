@@ -1684,7 +1684,7 @@ bool CFGAS_StringFormatter::ParseNum(LocaleMgrIface* pLocaleMgr,
       decimal = decimal * CFGAS_Decimal(powf(10, iExponent), 3);
     }
     if (bHavePercentSymbol) {
-      decimal = decimal / CFGAS_Decimal(100);
+      decimal.DivBy100();
     }
     *wsValue = decimal.ToWideString();
   }
@@ -2073,9 +2073,12 @@ bool CFGAS_StringFormatter::FormatNum(LocaleMgrIface* pLocaleMgr,
 
       while (decimal.IsNotZero() &&
              fabs(decimal.ToDouble()) > threshold.ValueOrDie()) {
-        decimal = decimal / CFGAS_Decimal(10);
+        decimal.DivBy10();
         ++exponent;
       }
+    }
+    if (fixed_count > 0 && (bAdjusted || exponent != 0)) {
+      wsSrcNum = decimal.ToWideString();
     }
   }
 

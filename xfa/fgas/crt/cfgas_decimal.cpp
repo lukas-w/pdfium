@@ -64,15 +64,6 @@ inline void decimal_helper_mul10(uint64_t& phi, uint64_t& pmid, uint64_t& plo) {
   pmid = static_cast<uint32_t>(pmid);
 }
 
-inline void decimal_helper_mul10_any(uint64_t nums[], uint8_t numcount) {
-  nums[0] *= 0xA;
-  UNSAFE_TODO({
-    for (int i = 1; i < numcount; i++) {
-      nums[i] = nums[i] * 0xA + Rshift32Bit(nums[i - 1]);
-      nums[i - 1] = static_cast<uint32_t>(nums[i - 1]);
-    }
-  });
-}
 
 inline void decimal_helper_normalize(uint64_t& phi,
                                      uint64_t& pmid,
@@ -98,32 +89,6 @@ inline void decimal_helper_normalize_any(uint64_t nums[], uint8_t len) {
   });
 }
 
-inline int8_t decimal_helper_raw_compare_any(uint64_t a[],
-                                             uint8_t al,
-                                             uint64_t b[],
-                                             uint8_t bl) {
-  int8_t retVal = 0;
-  UNSAFE_TODO({
-    for (int i = std::max(al - 1, bl - 1); i >= 0; i--) {
-      uint64_t l = (i >= al ? 0 : a[i]), r = (i >= bl ? 0 : b[i]);
-      retVal += (l > r ? 1 : (l < r ? -1 : 0));
-      if (retVal) {
-        return retVal;
-      }
-    }
-  });
-  return retVal;
-}
-
-inline void decimal_helper_dec_any(uint64_t a[], uint8_t al) {
-  UNSAFE_TODO({
-    for (int i = 0; i < al; i++) {
-      if (a[i]--) {
-        return;
-      }
-    }
-  });
-}
 
 inline void decimal_helper_inc_any(uint64_t a[], uint8_t al) {
   UNSAFE_TODO({
@@ -166,67 +131,6 @@ inline void decimal_helper_raw_mul(uint64_t a[],
   });
 }
 
-inline void decimal_helper_raw_div(uint64_t a[],
-                                   uint8_t al,
-                                   uint64_t b[],
-                                   uint8_t bl,
-                                   uint64_t c[],
-                                   uint8_t cl) {
-  UNSAFE_TODO({
-    for (int i = 0; i < cl; i++) {
-      c[i] = 0;
-    }
-
-    uint64_t left[16] = {0};
-    uint64_t right[16] = {0};
-    left[0] = 0;
-    for (int i = 0; i < al; i++) {
-      right[i] = a[i];
-    }
-
-    uint64_t tmp[16];
-    while (decimal_helper_raw_compare_any(left, al, right, al) <= 0) {
-      uint64_t cur[16];
-      for (int i = 0; i < al; i++) {
-        cur[i] = left[i] + right[i];
-      }
-
-      for (int i = al - 1; i >= 0; i--) {
-        if (i) {
-          cur[i - 1] += Lshift32Bit(cur[i] % 2);
-        }
-        cur[i] /= 2;
-      }
-
-      decimal_helper_raw_mul(cur, al, b, bl, tmp, 16);
-      switch (decimal_helper_raw_compare_any(tmp, 16, a, al)) {
-        case -1:
-          for (int i = 0; i < 16; i++) {
-            left[i] = cur[i];
-          }
-
-          left[0]++;
-          decimal_helper_normalize_any(left, al);
-          break;
-        case 1:
-          for (int i = 0; i < 16; i++) {
-            right[i] = cur[i];
-          }
-          decimal_helper_dec_any(right, al);
-          break;
-        case 0:
-          for (int i = 0; i < std::min(al, cl); i++) {
-            c[i] = cur[i];
-          }
-          return;
-      }
-    }
-    for (int i = 0; i < std::min(al, cl); i++) {
-      c[i] = left[i];
-    }
-  });
-}
-
 inline bool decimal_helper_outofrange(uint64_t a[], uint8_t al, uint8_t goal) {
   UNSAFE_TODO({
     for (int i = goal; i < al; i++) {
@@ -251,24 +155,6 @@ inline void decimal_helper_shrinkintorange(uint64_t a[],
   if (bRoundUp) {
     decimal_helper_normalize_any(a, goal);
     decimal_helper_inc_any(a, goal);
-  }
-}
-
-inline void decimal_helper_truncate(uint64_t& phi,
-                                    uint64_t& pmid,
-                                    uint64_t& plo,
-                                    uint8_t& scale,
-                                    uint8_t minscale = 0) {
-  while (scale > minscale) {
-    uint64_t thi = phi, tmid = pmid, tlo = plo;
-    if (decimal_helper_div10(thi, tmid, tlo) != 0) {
-      break;
-    }
-
-    phi = thi;
-    pmid = tmid;
-    plo = tlo;
-    scale--;
   }
 }
 
@@ -465,38 +351,41 @@ CFGAS_Decimal CFGAS_Decimal::operator*(const CFGAS_Decimal& val) const {
                        static_cast<uint32_t>(c[2]), neg, scale);
 }
 
-CFGAS_Decimal CFGAS_Decimal::operator/(const CFGAS_Decimal& val) const {
-  if (!val.IsNotZero()) {
-    return CFGAS_Decimal();
-  }
-
-  bool neg = neg_ ^ val.neg_;
-  uint64_t a[7] = {lo_, mid_, hi_}, b[3] = {val.lo_, val.mid_, val.hi_},
-           c[7] = {0};
-  uint8_t scale = 0;
-  if (u_scale_ < val.u_scale_) {
-    for (int i = val.u_scale_ - u_scale_; i > 0; i--) {
-      decimal_helper_mul10_any(a, 7);
-    }
-  } else {
-    scale = u_scale_ - val.u_scale_;
-  }
-
-  uint8_t minscale = scale;
+void CFGAS_Decimal::DivBy10() {
   if (!IsNotZero()) {
-    return CFGAS_Decimal(0, 0, 0, false, minscale);
+    return;
   }
 
-  while (!a[6]) {
-    decimal_helper_mul10_any(a, 7);
-    scale++;
+  uint64_t thi = hi_;
+  uint64_t tmid = mid_;
+  uint64_t tlo = lo_;
+  uint8_t rem = decimal_helper_div10(thi, tmid, tlo);
+  if (rem == 0) {
+    hi_ = static_cast<uint32_t>(thi);
+    mid_ = static_cast<uint32_t>(tmid);
+    lo_ = static_cast<uint32_t>(tlo);
+    return;
   }
 
-  decimal_helper_div10_any(a, 7);
-  scale--;
-  decimal_helper_raw_div(a, 6, b, 3, c, 7);
-  decimal_helper_shrinkintorange(c, 6, 3, scale);
-  decimal_helper_truncate(c[2], c[1], c[0], scale, minscale);
-  return CFGAS_Decimal(static_cast<uint32_t>(c[0]), static_cast<uint32_t>(c[1]),
-                       static_cast<uint32_t>(c[2]), neg, scale);
+  if (u_scale_ < kDecimalScaleLimit) {
+    u_scale_++;
+    return;
+  }
+
+  hi_ = static_cast<uint32_t>(thi);
+  mid_ = static_cast<uint32_t>(tmid);
+  lo_ = static_cast<uint32_t>(tlo);
+  if (rem >= 5) {
+    uint64_t plo = lo_ + 1;
+    uint64_t pmid = mid_ + Rshift32Bit(plo);
+    lo_ = static_cast<uint32_t>(plo);
+    uint64_t phi = hi_ + Rshift32Bit(pmid);
+    mid_ = static_cast<uint32_t>(pmid);
+    hi_ = static_cast<uint32_t>(phi);
+  }
+}
+
+void CFGAS_Decimal::DivBy100() {
+  DivBy10();
+  DivBy10();
 }

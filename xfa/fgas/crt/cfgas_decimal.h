@@ -23,7 +23,8 @@ class CFGAS_Decimal {
   double ToDouble() const;
 
   CFGAS_Decimal operator*(const CFGAS_Decimal& val) const;
-  CFGAS_Decimal operator/(const CFGAS_Decimal& val) const;
+  void DivBy10();
+  void DivBy100();
 
   bool IsNotZero() const { return hi_ || mid_ || lo_; }
   uint8_t GetScale() const { return u_scale_; }
