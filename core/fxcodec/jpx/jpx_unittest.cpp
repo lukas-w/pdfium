@@ -463,4 +463,187 @@ TEST(fxcodec, YUV420ToRGB) {
   FX_Free(img.comps);
 }
 
+TEST(fxcodec, YUV422ToRGB) {
+  opj_image_comp_t u = {
+      .dx = 2,
+      .dy = 1,
+      .w = 16,
+      .h = 16,
+      .prec = 8,
+      .bpp = 8,
+  };
+  opj_image_comp_t v = {
+      .dx = 2,
+      .dy = 1,
+      .w = 16,
+      .h = 16,
+      .prec = 8,
+      .bpp = 8,
+  };
+  opj_image_comp_t y = {
+      .dx = 1,
+      .dy = 1,
+      .w = 32,
+      .h = 16,
+      .prec = 8,
+      .bpp = 8,
+  };
+  opj_image_t img = {
+      .x1 = y.w,
+      .y1 = y.h,
+      .numcomps = 3,
+      .color_space = OPJ_CLRSPC_SYCC,
+      .comps = FX_Alloc(opj_image_comp_t, 3),
+  };
+  y.data = static_cast<OPJ_INT32*>(
+      opj_image_data_alloc(y.w * y.h * sizeof(OPJ_INT32)));
+  v.data = static_cast<OPJ_INT32*>(
+      opj_image_data_alloc(v.w * v.h * sizeof(OPJ_INT32)));
+  u.data = static_cast<OPJ_INT32*>(
+      opj_image_data_alloc(u.w * u.h * sizeof(OPJ_INT32)));
+
+  UNSAFE_TODO({
+    FXSYS_memset(y.data, 1, y.w * y.h * sizeof(OPJ_INT32));
+    FXSYS_memset(u.data, 0, u.w * u.h * sizeof(OPJ_INT32));
+    FXSYS_memset(v.data, 0, v.w * v.h * sizeof(OPJ_INT32));
+    img.comps[0] = y;
+    img.comps[1] = u;
+    img.comps[2] = v;
+    CJPX_Decoder::Sycc422ToRgbForTesting(&img);
+    EXPECT_EQ(32u, img.comps[0].w);
+    EXPECT_EQ(16u, img.comps[0].h);
+    EXPECT_EQ(32u, img.comps[1].w);
+    EXPECT_EQ(16u, img.comps[1].h);
+    EXPECT_EQ(32u, img.comps[2].w);
+    EXPECT_EQ(16u, img.comps[2].h);
+    opj_image_data_free(img.comps[0].data);
+    opj_image_data_free(img.comps[1].data);
+    opj_image_data_free(img.comps[2].data);
+  });
+  FX_Free(img.comps);
+}
+
+TEST(fxcodec, YUV444ToRGB) {
+  opj_image_comp_t u = {
+      .dx = 1,
+      .dy = 1,
+      .w = 16,
+      .h = 16,
+      .prec = 8,
+      .bpp = 8,
+  };
+  opj_image_comp_t v = {
+      .dx = 1,
+      .dy = 1,
+      .w = 16,
+      .h = 16,
+      .prec = 8,
+      .bpp = 8,
+  };
+  opj_image_comp_t y = {
+      .dx = 1,
+      .dy = 1,
+      .w = 16,
+      .h = 16,
+      .prec = 8,
+      .bpp = 8,
+  };
+  opj_image_t img = {
+      .x1 = y.w,
+      .y1 = y.h,
+      .numcomps = 3,
+      .color_space = OPJ_CLRSPC_SYCC,
+      .comps = FX_Alloc(opj_image_comp_t, 3),
+  };
+  y.data = static_cast<OPJ_INT32*>(
+      opj_image_data_alloc(y.w * y.h * sizeof(OPJ_INT32)));
+  v.data = static_cast<OPJ_INT32*>(
+      opj_image_data_alloc(v.w * v.h * sizeof(OPJ_INT32)));
+  u.data = static_cast<OPJ_INT32*>(
+      opj_image_data_alloc(u.w * u.h * sizeof(OPJ_INT32)));
+
+  UNSAFE_TODO({
+    FXSYS_memset(y.data, 1, y.w * y.h * sizeof(OPJ_INT32));
+    FXSYS_memset(u.data, 0, u.w * u.h * sizeof(OPJ_INT32));
+    FXSYS_memset(v.data, 0, v.w * v.h * sizeof(OPJ_INT32));
+    img.comps[0] = y;
+    img.comps[1] = u;
+    img.comps[2] = v;
+    CJPX_Decoder::Sycc444ToRgbForTesting(&img);
+    EXPECT_EQ(16u, img.comps[0].w);
+    EXPECT_EQ(16u, img.comps[0].h);
+    EXPECT_EQ(16u, img.comps[1].w);
+    EXPECT_EQ(16u, img.comps[1].h);
+    EXPECT_EQ(16u, img.comps[2].w);
+    EXPECT_EQ(16u, img.comps[2].h);
+    opj_image_data_free(img.comps[0].data);
+    opj_image_data_free(img.comps[1].data);
+    opj_image_data_free(img.comps[2].data);
+  });
+  FX_Free(img.comps);
+}
+
+TEST(fxcodec, ColorSyccToRGB) {
+  opj_image_t img = {
+      .numcomps = 2,
+      .color_space = OPJ_CLRSPC_SYCC,
+      .comps = FX_Alloc(opj_image_comp_t, 2),
+  };
+  CJPX_Decoder::ColorSyccToRgbForTesting(&img);
+  EXPECT_EQ(OPJ_CLRSPC_GRAY, img.color_space);
+  FX_Free(img.comps);
+
+  opj_image_comp_t u = {
+      .dx = 1,
+      .dy = 1,
+      .w = 16,
+      .h = 16,
+      .prec = 8,
+      .bpp = 8,
+  };
+  opj_image_comp_t v = {
+      .dx = 1,
+      .dy = 1,
+      .w = 16,
+      .h = 16,
+      .prec = 8,
+      .bpp = 8,
+  };
+  opj_image_comp_t y = {
+      .dx = 1,
+      .dy = 1,
+      .w = 16,
+      .h = 16,
+      .prec = 8,
+      .bpp = 8,
+  };
+
+  img = {
+      .numcomps = 3,
+      .color_space = OPJ_CLRSPC_SYCC,
+      .comps = FX_Alloc(opj_image_comp_t, 3),
+  };
+  y.data = static_cast<OPJ_INT32*>(
+      opj_image_data_alloc(y.w * y.h * sizeof(OPJ_INT32)));
+  v.data = static_cast<OPJ_INT32*>(
+      opj_image_data_alloc(v.w * v.h * sizeof(OPJ_INT32)));
+  u.data = static_cast<OPJ_INT32*>(
+      opj_image_data_alloc(u.w * u.h * sizeof(OPJ_INT32)));
+
+  UNSAFE_TODO({
+    FXSYS_memset(y.data, 1, y.w * y.h * sizeof(OPJ_INT32));
+    FXSYS_memset(u.data, 0, u.w * u.h * sizeof(OPJ_INT32));
+    FXSYS_memset(v.data, 0, v.w * v.h * sizeof(OPJ_INT32));
+    img.comps[0] = y;
+    img.comps[1] = u;
+    img.comps[2] = v;
+    CJPX_Decoder::ColorSyccToRgbForTesting(&img);
+    EXPECT_EQ(OPJ_CLRSPC_SRGB, img.color_space);
+    opj_image_data_free(img.comps[0].data);
+    opj_image_data_free(img.comps[1].data);
+    opj_image_data_free(img.comps[2].data);
+  });
+  FX_Free(img.comps);
+}
+
 }  // namespace fxcodec

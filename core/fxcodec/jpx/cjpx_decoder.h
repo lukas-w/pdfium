@@ -50,6 +50,9 @@ class CJPX_Decoder {
       bool strict_mode);
 
   static void Sycc420ToRgbForTesting(opj_image_t* img);
+  static void Sycc422ToRgbForTesting(opj_image_t* img);
+  static void Sycc444ToRgbForTesting(opj_image_t* img);
+  static void ColorSyccToRgbForTesting(opj_image_t* img);
 
   ~CJPX_Decoder();
 

@@ -447,6 +447,21 @@ void CJPX_Decoder::Sycc420ToRgbForTesting(opj_image_t* img) {
   sycc420_to_rgb(img);
 }
 
+// static
+void CJPX_Decoder::Sycc422ToRgbForTesting(opj_image_t* img) {
+  sycc422_to_rgb(img);
+}
+
+// static
+void CJPX_Decoder::Sycc444ToRgbForTesting(opj_image_t* img) {
+  sycc444_to_rgb(img);
+}
+
+// static
+void CJPX_Decoder::ColorSyccToRgbForTesting(opj_image_t* img) {
+  color_sycc_to_rgb(img);
+}
+
 CJPX_Decoder::CJPX_Decoder(ColorSpaceOption option)
     : color_space_option_(option) {}
 
