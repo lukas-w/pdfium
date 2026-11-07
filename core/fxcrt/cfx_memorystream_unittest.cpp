@@ -24,9 +24,6 @@ TEST(CFXMemoryStreamTest, ReadBlockAtOffset) {
 
   ASSERT_TRUE(stream->ReadBlockAtOffset(buffer, 3));
   ASSERT_THAT(buffer, testing::ElementsAre('d', 'e', 'f'));
-
-  ASSERT_FALSE(stream->ReadBlockAtOffset(buffer, 4));
-  ASSERT_THAT(buffer, testing::ElementsAre('d', 'e', 'f'));
 }
 
 TEST(CFXMemoryStreamTest, WriteBlock) {
@@ -55,4 +52,44 @@ TEST(CFXMemoryStreamTest, WriteZeroBytes) {
 
   ASSERT_TRUE(stream->WriteBlock({}));
   ASSERT_THAT(stream->GetSpan(), testing::ElementsAre('a', 'b', 'c'));
+}
+
+TEST(CFXMemoryStreamTest, PositionAndEOF) {
+  auto stream = pdfium::MakeRetain<CFX_MemoryStream>();
+  EXPECT_EQ(0, stream->GetSize());
+  EXPECT_EQ(0, stream->GetPosition());
+  EXPECT_TRUE(stream->IsEOF());
+  EXPECT_TRUE(stream->Flush());
+
+  const uint8_t kData[] = {1, 2, 3, 4};
+  EXPECT_TRUE(stream->WriteBlock(kData));
+  EXPECT_EQ(4, stream->GetSize());
+  EXPECT_EQ(4, stream->GetPosition());
+  EXPECT_TRUE(stream->IsEOF());
+
+  uint8_t buf[2];
+  EXPECT_TRUE(stream->ReadBlockAtOffset(buf, 0));
+  EXPECT_EQ(2, stream->GetPosition());
+  EXPECT_FALSE(stream->IsEOF());
+
+  EXPECT_TRUE(stream->ReadBlockAtOffset(buf, 2));
+  EXPECT_EQ(4, stream->GetPosition());
+  EXPECT_TRUE(stream->IsEOF());
+}
+
+TEST(CFXMemoryStreamTest, ReadBlockAtOffsetInvalid) {
+  auto stream = pdfium::MakeRetain<CFX_MemoryStream>();
+  const uint8_t kData[] = {1, 2, 3};
+  EXPECT_TRUE(stream->WriteBlock(kData));
+
+  // Empty buffer returns false.
+  EXPECT_FALSE(stream->ReadBlockAtOffset({}, 0));
+
+  // Negative offset returns false.
+  uint8_t buf[1];
+  EXPECT_FALSE(stream->ReadBlockAtOffset(buf, -1));
+
+  // Read beyond size returns false.
+  EXPECT_FALSE(stream->ReadBlockAtOffset(buf, 3));
+  EXPECT_FALSE(stream->ReadBlockAtOffset(buf, 10));
 }
