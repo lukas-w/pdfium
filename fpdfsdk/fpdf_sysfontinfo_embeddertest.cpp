@@ -5,6 +5,7 @@
 #include "public/fpdf_sysfontinfo.h"
 
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "build/build_config.h"
@@ -21,6 +22,8 @@ struct TrackingFontInfo {
   FPDF_SYSFONTINFO* wrapped_font_info;
   int* enum_fonts_call_count;
   int* map_font_call_count;
+  std::vector<std::string>* get_font_faces;
+  std::vector<std::pair<std::string, int>>* fonts_to_add;
 };
 
 extern "C" {
@@ -28,6 +31,10 @@ extern "C" {
 void TrackingEnumFonts(FPDF_SYSFONTINFO* sys_font_info, void* mapper) {
   auto* tracking_info = reinterpret_cast<TrackingFontInfo*>(sys_font_info);
   (*tracking_info->enum_fonts_call_count)++;
+  ASSERT_NE(tracking_info->fonts_to_add, nullptr);
+  for (const auto& [face, charset] : *tracking_info->fonts_to_add) {
+    FPDF_AddInstalledFont(mapper, face.c_str(), charset);
+  }
   if (tracking_info->wrapped_font_info &&
       tracking_info->wrapped_font_info->EnumFonts) {
     tracking_info->wrapped_font_info->EnumFonts(
@@ -55,6 +62,7 @@ void* TrackingMapFont(FPDF_SYSFONTINFO* sys_font_info,
 
 void* TrackingGetFont(FPDF_SYSFONTINFO* sys_font_info, const char* face) {
   auto* tracking_info = reinterpret_cast<TrackingFontInfo*>(sys_font_info);
+  tracking_info->get_font_faces->push_back(face);
   if (tracking_info->wrapped_font_info &&
       tracking_info->wrapped_font_info->GetFont) {
     return tracking_info->wrapped_font_info->GetFont(
@@ -239,6 +247,8 @@ class FPDFVersion1Versus2ComparisonTest : public EmbedderTest {
     tracking_font_info_.wrapped_font_info = wrapped_font_info_;
     tracking_font_info_.enum_fonts_call_count = &enum_fonts_call_count_;
     tracking_font_info_.map_font_call_count = &map_font_call_count_;
+    tracking_font_info_.get_font_faces = &get_font_faces_;
+    tracking_font_info_.fonts_to_add = &fonts_to_add_;
 
     FPDF_SetSystemFontInfo(&tracking_font_info_.base);
   }
@@ -262,6 +272,8 @@ class FPDFVersion1Versus2ComparisonTest : public EmbedderTest {
 
   int enum_fonts_call_count_ = 0;
   int map_font_call_count_ = 0;
+  std::vector<std::string> get_font_faces_;
+  std::vector<std::pair<std::string, int>> fonts_to_add_;
   FPDF_SYSFONTINFO* wrapped_font_info_ = nullptr;
   TrackingFontInfo tracking_font_info_ = {};
 };
@@ -282,15 +294,28 @@ TEST_F(FPDFVersion1Versus2ComparisonTest, Version1CallsEnumFonts) {
   EXPECT_GT(enum_fonts_call_count_, 0);
 }
 
+TEST_F(FPDFVersion1Versus2ComparisonTest, AddInstalledFont) {
+  fonts_to_add_ = {
+      {"\x81\x82\x83", FXFONT_DEFAULT_CHARSET},
+  };
+  SetupVersion(1);
+  ASSERT_TRUE(OpenDocument("hello_world.pdf"));
+  ScopedPage page = LoadScopedPage(0);
+  ASSERT_TRUE(page);
+  ScopedFPDFBitmap bitmap = RenderPage(page.get());
+  ASSERT_TRUE(bitmap);
+  EXPECT_GT(enum_fonts_call_count_, 0);
+  EXPECT_THAT(get_font_faces_, testing::Contains("\x81\x82\x83"));
+}
+
 TEST_F(FPDFVersion1Versus2ComparisonTest, Version2SkipsEnumFonts) {
   SetupVersion(2);
 
   ASSERT_TRUE(OpenDocument("hello_world.pdf"));
-  FPDF_PAGE page = LoadPage(0);
+  ScopedPage page = LoadScopedPage(0);
   ASSERT_TRUE(page);
-  ScopedFPDFBitmap bitmap = RenderPage(page);
+  ScopedFPDFBitmap bitmap = RenderPage(page.get());
   ASSERT_TRUE(bitmap);
-  UnloadPage(page);
 
   // Version 2 should NOT call EnumFonts but should call MapFont.
   EXPECT_EQ(enum_fonts_call_count_, 0);
