@@ -22,8 +22,6 @@ constexpr float kDefaultPosition = 0.5f;
 CPDF_IconFit::CPDF_IconFit(RetainPtr<const CPDF_Dictionary> dict)
     : dict_(std::move(dict)) {}
 
-CPDF_IconFit::CPDF_IconFit(const CPDF_IconFit& that) = default;
-
 CPDF_IconFit::~CPDF_IconFit() = default;
 
 CPDF_IconFit::ScaleMethod CPDF_IconFit::GetScaleMethod() const {

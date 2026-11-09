@@ -17,7 +17,8 @@ class CPDF_IconFit {
   enum class ScaleMethod { kAlways = 0, kBigger, kSmaller, kNever };
 
   explicit CPDF_IconFit(RetainPtr<const CPDF_Dictionary> dict);
-  CPDF_IconFit(const CPDF_IconFit& that);
+  CPDF_IconFit(const CPDF_IconFit&) = delete;
+  CPDF_IconFit& operator=(const CPDF_IconFit&) = delete;
   ~CPDF_IconFit();
 
   ScaleMethod GetScaleMethod() const;
