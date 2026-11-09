@@ -67,6 +67,8 @@ inline uint32_t CompositePixelBgra2Bgra(uint32_t src, uint32_t back) {
 //   src a == 0 -> keep dest     else AlphaMerge/AlphaUnion over
 // Byte spans bitcast to u32 lanes -> no 4-byte scanline alignment needed.
 void RunBgra2Bgra(pdfium::span<const uint8_t> src, pdfium::span<uint8_t> dest) {
+  size_t count = src.size() / 4;
+#if HWY_TARGET != HWY_SCALAR
   const hn::ScalableTag<uint32_t> d;
   const hn::ScalableTag<uint8_t> d8;
   const size_t n = hn::Lanes(d);       // pixels/vector
@@ -74,7 +76,6 @@ void RunBgra2Bgra(pdfium::span<const uint8_t> src, pdfium::span<uint8_t> dest) {
   const auto one = hn::Set(d, 1);
   const auto zero = hn::Zero(d);
 
-  size_t count = src.size() / 4;
   while (count >= n) {
     const auto s = hn::BitCast(d, hn::LoadU(d8, src.data()));
     const auto back = hn::BitCast(d, hn::LoadU(d8, dest.data()));
@@ -119,6 +120,7 @@ void RunBgra2Bgra(pdfium::span<const uint8_t> src, pdfium::span<uint8_t> dest) {
     dest = dest.subspan(n * 4);
     count -= n;
   }
+#endif  // HWY_TARGET != HWY_SCALAR
   for (size_t i = 0; i < count; ++i) {
     const uint32_t s = FXARGB_GetDIB(src.first<4u>());
     const uint32_t back = FXARGB_GetDIB(dest.first<4u>());
@@ -132,12 +134,13 @@ void RunBgra2Bgra(pdfium::span<const uint8_t> src, pdfium::span<uint8_t> dest) {
 // order required: src and dest both packed BGRA.
 void RunBgra2BgrxForceOpaque(pdfium::span<const uint8_t> src,
                              pdfium::span<uint8_t> dest) {
+  size_t count = src.size() / 4;
+#if HWY_TARGET != HWY_SCALAR
   const hn::ScalableTag<uint32_t> d;
   const hn::ScalableTag<uint8_t> d8;
   const size_t n = hn::Lanes(d);
   const auto alpha_ff = hn::Set(d, 0xFF000000u);
 
-  size_t count = src.size() / 4;
   while (count >= n) {
     const auto v = hn::BitCast(d, hn::LoadU(d8, src.data()));
     hn::StoreU(hn::BitCast(d8, hn::Or(v, alpha_ff)), d8, dest.data());
@@ -145,6 +148,7 @@ void RunBgra2BgrxForceOpaque(pdfium::span<const uint8_t> src,
     dest = dest.subspan(n * 4);
     count -= n;
   }
+#endif  // HWY_TARGET != HWY_SCALAR
   for (size_t i = 0; i < count; ++i) {
     dest[0] = src[0];
     dest[1] = src[1];
