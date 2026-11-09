@@ -14,6 +14,7 @@
 #include "core/fpdfapi/parser/cpdf_dictionary.h"
 #include "core/fpdfapi/parser/cpdf_simple_parser.h"
 #include "core/fxcrt/check.h"
+#include "core/fxcrt/containers/extend.h"
 #include "core/fxcrt/fx_extension.h"
 #include "core/fxcrt/fx_safe_types.h"
 #include "core/fxcrt/to_underlying.h"
@@ -134,10 +135,7 @@ void CPDF_CMapParser::HandleCodeSpaceRange(ByteStringView word) {
                                                        : CPDF_CMap::OneByte);
   } else if (nSegs > 1) {
     cmap_->SetCodingScheme(CPDF_CMap::MixedFourBytes);
-    ranges_.reserve(nSegs);
-    std::move(pending_ranges_.begin(), pending_ranges_.end(),
-              std::back_inserter(ranges_));
-    pending_ranges_.clear();
+    pdfium::Extend(ranges_, std::move(pending_ranges_));
   }
   status_ = kStart;
 }

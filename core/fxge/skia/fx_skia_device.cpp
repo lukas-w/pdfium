@@ -29,6 +29,7 @@
 #include "core/fxcrt/cfx_bitstream.h"
 #include "core/fxcrt/check.h"
 #include "core/fxcrt/check_op.h"
+#include "core/fxcrt/containers/extend.h"
 #include "core/fxcrt/data_vector.h"
 #include "core/fxcrt/fx_2d_size.h"
 #include "core/fxcrt/fx_coordinates.h"
@@ -541,14 +542,11 @@ void SetupStrokePaint(SkPaint* stroke_paint,
     bool is_even_sized = count % 2 == 0;
     DataVector<float> intervals;
     intervals.reserve(is_even_sized ? count : count * 2);
-    for (float dash_len : dash_array) {
-      if (dash_len <= 0.000001f) {
-        dash_len = 0.1f;
-      }
-      intervals.push_back(dash_len);
-    }
+    pdfium::Extend(intervals, dash_array, [](float dash_len) {
+      return dash_len <= 0.000001f ? 0.1f : dash_len;
+    });
     if (!is_even_sized) {
-      intervals.insert(intervals.end(), intervals.begin(), intervals.end());
+      pdfium::Extend(intervals, intervals);
     }
     stroke_paint->setPathEffect(
         SkDashPathEffect::Make(intervals, stroke_options->dash_phase()));
