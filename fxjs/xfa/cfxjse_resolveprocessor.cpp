@@ -15,10 +15,12 @@
 #include "core/fxcrt/containers/to_vector.h"
 #include "core/fxcrt/fx_extension.h"
 #include "fxjs/fxv8.h"
+#include "fxjs/gc/containers.h"
 #include "fxjs/xfa/cfxjse_engine.h"
 #include "fxjs/xfa/cfxjse_isolatetracker.h"
 #include "fxjs/xfa/cfxjse_nodehelper.h"
 #include "fxjs/xfa/cjx_object.h"
+#include "v8/include/cppgc/persistent.h"
 #include "xfa/fxfa/parser/cxfa_document.h"
 #include "xfa/fxfa/parser/cxfa_localemgr.h"
 #include "xfa/fxfa/parser/cxfa_node.h"
@@ -763,13 +765,17 @@ void CFXJSE_ResolveProcessor::DoPredicateFilter(v8::Isolate* pIsolate,
   } else {
     return;
   }
-
   WideString wsExpression = wsCondition.Substr(2, wsCondition.GetLength() - 3);
+
+  cppgc::Persistent<GCedVector<CXFA_Object>> candidates =
+      cppgc::MakeGarbageCollected<GCedVector<CXFA_Object>>(
+          engine_->GetDocument()->GetHeap()->GetAllocationHandle());
+  candidates->storage = std::move(pRnd->result_.objects);
   for (size_t i = iFoundCount; i > 0; --i) {
     bool bool_val = false;
     CFXJSE_Context::ExecutionResult exec_result =
         engine_->RunScript(eLangType, wsExpression.AsStringView(),
-                           pRnd->result_.objects[i - 1].Get());
+                           candidates->storage[i - 1].Get());
     if (exec_result.status) {
       CFXJSE_ScopeUtil_IsolateHandleRootContext scope(pIsolate);
       v8::Local<v8::Value> local_val =
@@ -777,9 +783,10 @@ void CFXJSE_ResolveProcessor::DoPredicateFilter(v8::Isolate* pIsolate,
       bool_val = fxv8::ReentrantToBooleanHelper(pIsolate, local_val);
     }
     if (!bool_val) {
-      pRnd->result_.objects.erase(pRnd->result_.objects.begin() + i - 1);
+      candidates->storage.erase(candidates->storage.begin() + i - 1);
     }
   }
+  pRnd->result_.objects = std::move(candidates->storage);
 }
 
 CFXJSE_ResolveProcessor::NodeData::NodeData() = default;
