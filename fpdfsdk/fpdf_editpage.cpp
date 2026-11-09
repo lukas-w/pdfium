@@ -859,6 +859,9 @@ FPDF_EXPORT FPDF_BOOL FPDF_CALLCONV FPDFPage_GenerateContent(FPDF_PAGE page) {
     return false;
   }
 
+  // Invalidate any in-flight progressive render context on `pPage` since
+  // mutating page content invalidates the active render state.
+  pPage->ClearRenderContext();
   CPDF_PageContentGenerator CG(pPage);
   CG.GenerateContent();
   return true;

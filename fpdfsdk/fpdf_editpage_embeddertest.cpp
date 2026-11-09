@@ -9,6 +9,7 @@
 
 #include "core/fxcrt/fx_system.h"
 #include "core/fxge/cfx_renderdevice.h"
+#include "public/fpdf_progressive.h"
 #include "testing/embedder_test.h"
 #include "testing/gmock/include/gmock/gmock.h"
 
@@ -16,6 +17,18 @@ using ::testing::Each;
 using ::testing::Eq;
 using ::testing::FloatEq;
 using ::testing::Gt;
+
+namespace {
+
+struct FakePause : public IFSDK_PAUSE {
+  FakePause() {
+    version = 1;
+    user = nullptr;
+    NeedToPauseNow = [](IFSDK_PAUSE*) -> FPDF_BOOL { return true; };
+  }
+};
+
+}  // namespace
 
 class FPDFEditPageEmbedderTest : public EmbedderTest {};
 
@@ -702,4 +715,23 @@ TEST_F(FPDFEditPageEmbedderTest, Bug378464305) {
                        "bug_378464305_saved");
     EXPECT_EQ(kObjectCountWithNewPath, FPDFPage_CountObjects(saved_page.get()));
   }
+}
+
+TEST_F(FPDFEditPageEmbedderTest, GenerateContentClearsRenderContext) {
+  ASSERT_TRUE(OpenDocument("rectangles.pdf"));
+  ScopedPage page = LoadScopedPage(0);
+  ASSERT_TRUE(page);
+
+  ScopedFPDFBitmap bitmap(FPDFBitmap_Create(200, 300, 0));
+  ASSERT_TRUE(bitmap);
+
+  FakePause pause;
+  int rv = FPDF_RenderPageBitmap_Start(bitmap.get(), page.get(), 0, 0, 200, 300,
+                                       0, 0, &pause);
+  EXPECT_EQ(rv, FPDF_RENDER_TOBECONTINUED);
+
+  EXPECT_TRUE(FPDFPage_GenerateContent(page.get()));
+
+  int cont_rv = FPDF_RenderPage_Continue(page.get(), &pause);
+  EXPECT_EQ(cont_rv, FPDF_RENDER_FAILED);
 }
