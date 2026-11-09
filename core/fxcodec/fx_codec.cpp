@@ -11,7 +11,7 @@
 #include "core/fxge/dib/fx_dib.h"
 
 #if defined(PDF_USE_LIBYUV)
-#include "third_party/libyuv/include/libyuv/planar_functions.h"
+#include "core/fxge/fx_libyuv_wrappers.h"
 #else
 #include <utility>
 
@@ -51,14 +51,16 @@ void ReverseRGB(pdfium::span<uint8_t> pDestBuf,
   auto dst_span =
       fxcrt::reinterpret_span<FX_RGB_STRUCT<uint8_t>>(pDestBuf).first(count);
 
+#if defined(PDF_USE_LIBYUV)
+  const auto src_span =
+      fxcrt::reinterpret_span<const FX_BGR_STRUCT<uint8_t>>(pSrcBuf).first(
+          count);
+  pdfium::RGB24ToRAWRow(src_span, dst_span);
+#else
   const auto src_span =
       fxcrt::reinterpret_span<const FX_RGB_STRUCT<uint8_t>>(pSrcBuf).first(
           count);
 
-#if defined(PDF_USE_LIBYUV)
-  libyuv::RGB24ToRAW(pdfium::as_bytes(src_span).data(), 0,
-                     pdfium::as_writable_bytes(dst_span).data(), 0, pixels, 1);
-#else
   if (dst_span.data() == src_span.data()) {
     for (auto& pix : dst_span) {
       std::swap(pix.red, pix.blue);

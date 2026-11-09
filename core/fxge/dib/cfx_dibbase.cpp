@@ -30,11 +30,7 @@
 #include "core/fxge/dib/cfx_imagetransformer.h"
 
 #if defined(PDF_USE_LIBYUV)
-#include "third_party/libyuv/include/libyuv/convert_argb.h"
-#include "third_party/libyuv/include/libyuv/convert_from_argb.h"
-#include "third_party/libyuv/include/libyuv/planar_functions.h"
-#include "third_party/libyuv/include/libyuv/rotate.h"
-#include "third_party/libyuv/include/libyuv/rotate_argb.h"
+#include "core/fxge/fx_libyuv_wrappers.h"
 #endif
 
 namespace {
@@ -49,21 +45,19 @@ void ConvertBuffer_RgbToArgbPremul(
 #if defined(PDF_USE_LIBYUV)
   pdfium::span<const uint8_t> src_buffer = src_bitmap->GetBuffer();
   if (!src_buffer.empty()) {
-    libyuv::RGB24ToARGB(src_buffer.data(), src_bitmap->GetPitch(),
-                        dest_buf.data(), dest_pitch, width, height);
+    pdfium::RGB24ToARGB(src_buffer, src_bitmap->GetPitch(), dest_buf,
+                        dest_pitch, width, height);
     return;
   }
+#endif
 
-  for (int row = 0; row < height; ++row) {
-    auto dest_span = dest_buf.subspan(Fx2DSizeOrDie(row, dest_pitch));
-    auto src_span = src_bitmap->GetScanline(row);
-    libyuv::RGB24ToARGB(src_span.data(), 0, dest_span.data(), 0, width, 1);
-  }
-#else
   for (int row = 0; row < height; ++row) {
     auto dest_span = fxcrt::reinterpret_span<FX_BGRA_STRUCT<uint8_t>>(
         dest_buf.subspan(Fx2DSizeOrDie(row, dest_pitch)));
     auto src_span = src_bitmap->GetScanlineAs<FX_BGR_STRUCT<uint8_t>>(row);
+#if defined(PDF_USE_LIBYUV)
+    pdfium::RGB24ToARGBRow(src_span, dest_span);
+#else
     for (auto [input, output] : fxcrt::Zip(src_span, dest_span)) {
       // Avoid interleaved load/stores.
       const uint8_t blue = input.blue;
@@ -74,8 +68,8 @@ void ConvertBuffer_RgbToArgbPremul(
       output.red = red;
       output.alpha = 255;
     }
-  }
 #endif
+  }
 }
 
 void ConvertBuffer_ArgbPremulToRgb(
@@ -432,19 +426,23 @@ void ConvertBuffer_32bppRgbToRgb24(
 #if defined(PDF_USE_LIBYUV)
   pdfium::span<const uint8_t> src_buffer = pSrcBitmap->GetBuffer();
   if (!src_buffer.empty()) {
-    libyuv::ARGBToRGB24(src_buffer.data(), pSrcBitmap->GetPitch(),
-                        dest_buf.data(), dest_pitch, width, height);
+    pdfium::ARGBToRGB24(src_buffer, pSrcBitmap->GetPitch(), dest_buf,
+                        dest_pitch, width, height);
     return;
   }
 #endif
 
   for (int row = 0; row < height; ++row) {
-    uint8_t* dest_scan =
-        dest_buf.subspan(Fx2DSizeOrDie(row, dest_pitch)).data();
-    const uint8_t* src_scan = pSrcBitmap->GetScanline(row).data();
+    auto dest_span = fxcrt::reinterpret_span<FX_BGR_STRUCT<uint8_t>>(
+        dest_buf.subspan(Fx2DSizeOrDie(row, dest_pitch)));
+    auto src_span =
+        pSrcBitmap->GetScanlineAs<FX_BGRA_STRUCT<uint8_t>>(row).first(
+            static_cast<size_t>(width));
 #if defined(PDF_USE_LIBYUV)
-    libyuv::ARGBToRGB24(src_scan, 0, dest_scan, 0, width, 1);
+    pdfium::ARGBToRGB24Row(src_span, dest_span);
 #else
+    uint8_t* dest_scan = pdfium::as_writable_bytes(dest_span).data();
+    const uint8_t* src_scan = pdfium::as_bytes(src_span).data();
     UNSAFE_TODO({
       for (int col = 0; col < width; ++col) {
         FXSYS_memcpy(dest_scan, src_scan, 3);
@@ -875,9 +873,9 @@ RetainPtr<CFX_DIBitmap> CFX_DIBBase::CloneAlphaMask() const {
   }
 
 #if defined(PDF_USE_LIBYUV)
-  if (!GetBuffer().empty()) {
-    libyuv::ARGBExtractAlpha(GetBuffer().data(), GetPitch(),
-                             pMask->GetWritableBuffer().data(),
+  pdfium::span<const uint8_t> src_buffer = GetBuffer();
+  if (!src_buffer.empty()) {
+    pdfium::ARGBExtractAlpha(src_buffer, GetPitch(), pMask->GetWritableBuffer(),
                              pMask->GetPitch(), GetWidth(), GetHeight());
     return pMask;
   }
@@ -885,9 +883,8 @@ RetainPtr<CFX_DIBitmap> CFX_DIBBase::CloneAlphaMask() const {
 
   for (int row = 0; row < GetHeight(); ++row) {
 #if defined(PDF_USE_LIBYUV)
-    libyuv::ARGBExtractAlpha(GetScanline(row).data(), 0,
-                             pMask->GetWritableScanline(row).data(), 0,
-                             GetWidth(), 1);
+    pdfium::ARGBExtractAlphaRow(GetScanlineAs<FX_BGRA_STRUCT<uint8_t>>(row),
+                                pMask->GetWritableScanlineAs<uint8_t>(row));
 #else
     const uint8_t* src_scan = GetScanline(row).subspan<3u>().data();
     uint8_t* dest_scan = pMask->GetWritableScanline(row).data();
@@ -943,11 +940,13 @@ RetainPtr<CFX_DIBitmap> CFX_DIBBase::FlipImage(bool bXFlip, bool bYFlip) const {
     return pFlipped;
   }
 
+#if defined(PDF_USE_LIBYUV)
+  pdfium::span<const uint8_t> src_buffer = GetBuffer();
+#endif
   if (bytes_per_pixel == 1) {
 #if defined(PDF_USE_LIBYUV)
-    if (!GetBuffer().empty()) {
-      libyuv::MirrorPlane(GetBuffer().data(), GetPitch(),
-                          pFlipped->GetWritableBuffer().data(),
+    if (!src_buffer.empty()) {
+      pdfium::MirrorPlane(src_buffer, GetPitch(), pFlipped->GetWritableBuffer(),
                           pFlipped->GetPitch(), GetWidth(),
                           bYFlip ? -GetHeight() : GetHeight());
       return pFlipped;
@@ -955,14 +954,15 @@ RetainPtr<CFX_DIBitmap> CFX_DIBBase::FlipImage(bool bXFlip, bool bYFlip) const {
 #endif
 
     for (int row = 0; row < GetHeight(); ++row) {
-      const uint8_t* src_scan = GetScanline(row).data();
-      uint8_t* dest_scan =
-          pFlipped->GetWritableScanline(bYFlip ? GetHeight() - row - 1 : row)
-              .data();
+      auto src_span = GetScanlineAs<uint8_t>(row);
+      auto dest_span = pFlipped->GetWritableScanlineAs<uint8_t>(
+          bYFlip ? GetHeight() - row - 1 : row);
 #if defined(PDF_USE_LIBYUV)
-      libyuv::MirrorPlane(src_scan, 0, dest_scan, 0, GetWidth(), 1);
+      pdfium::MirrorPlaneRow(src_span, dest_span);
 #else
       UNSAFE_TODO({
+        const uint8_t* src_scan = src_span.data();
+        uint8_t* dest_scan = dest_span.data();
         dest_scan += (GetWidth() - 1) * bytes_per_pixel;
         for (int col = 0; col < GetWidth(); ++col) {
           *dest_scan = *src_scan;
@@ -977,9 +977,8 @@ RetainPtr<CFX_DIBitmap> CFX_DIBBase::FlipImage(bool bXFlip, bool bYFlip) const {
 
   if (bytes_per_pixel == 3) {
 #if defined(PDF_USE_LIBYUV)
-    if (!GetBuffer().empty()) {
-      libyuv::RGB24Mirror(GetBuffer().data(), GetPitch(),
-                          pFlipped->GetWritableBuffer().data(),
+    if (!src_buffer.empty()) {
+      pdfium::RGB24Mirror(src_buffer, GetPitch(), pFlipped->GetWritableBuffer(),
                           pFlipped->GetPitch(), GetWidth(),
                           bYFlip ? -GetHeight() : GetHeight());
       return pFlipped;
@@ -987,14 +986,15 @@ RetainPtr<CFX_DIBitmap> CFX_DIBBase::FlipImage(bool bXFlip, bool bYFlip) const {
 #endif
 
     for (int row = 0; row < GetHeight(); ++row) {
-      const uint8_t* src_scan = GetScanline(row).data();
-      uint8_t* dest_scan =
-          pFlipped->GetWritableScanline(bYFlip ? GetHeight() - row - 1 : row)
-              .data();
+      auto src_span = GetScanlineAs<FX_BGR_STRUCT<uint8_t>>(row);
+      auto dest_span = pFlipped->GetWritableScanlineAs<FX_BGR_STRUCT<uint8_t>>(
+          bYFlip ? GetHeight() - row - 1 : row);
 #if defined(PDF_USE_LIBYUV)
-      libyuv::RGB24Mirror(src_scan, 0, dest_scan, 0, GetWidth(), 1);
+      pdfium::RGB24MirrorRow(src_span, dest_span);
 #else
       UNSAFE_TODO({
+        const uint8_t* src_scan = pdfium::as_bytes(src_span).data();
+        uint8_t* dest_scan = pdfium::as_writable_bytes(dest_span).data();
         dest_scan += (GetWidth() - 1) * bytes_per_pixel;
         for (int col = 0; col < GetWidth(); ++col) {
           FXSYS_memcpy(dest_scan, src_scan, 3);
@@ -1009,23 +1009,24 @@ RetainPtr<CFX_DIBitmap> CFX_DIBBase::FlipImage(bool bXFlip, bool bYFlip) const {
 
   CHECK_EQ(bytes_per_pixel, 4);
 #if defined(PDF_USE_LIBYUV)
-  if (!GetBuffer().empty()) {
-    libyuv::ARGBMirror(
-        GetBuffer().data(), GetPitch(), pFlipped->GetWritableBuffer().data(),
-        pFlipped->GetPitch(), GetWidth(), bYFlip ? -GetHeight() : GetHeight());
+  if (!src_buffer.empty()) {
+    pdfium::ARGBMirror(src_buffer, GetPitch(), pFlipped->GetWritableBuffer(),
+                       pFlipped->GetPitch(), GetWidth(),
+                       bYFlip ? -GetHeight() : GetHeight());
     return pFlipped;
   }
 #endif
 
   for (int row = 0; row < GetHeight(); ++row) {
-    const uint8_t* src_scan = GetScanline(row).data();
-    uint8_t* dest_scan =
-        pFlipped->GetWritableScanline(bYFlip ? GetHeight() - row - 1 : row)
-            .data();
+    auto src_span = GetScanlineAs<FX_BGRA_STRUCT<uint8_t>>(row);
+    auto dest_span = pFlipped->GetWritableScanlineAs<FX_BGRA_STRUCT<uint8_t>>(
+        bYFlip ? GetHeight() - row - 1 : row);
 #if defined(PDF_USE_LIBYUV)
-    libyuv::ARGBMirror(src_scan, 0, dest_scan, 0, GetWidth(), 1);
+    pdfium::ARGBMirrorRow(src_span, dest_span);
 #else
     UNSAFE_TODO({
+      const uint8_t* src_scan = pdfium::as_bytes(src_span).data();
+      uint8_t* dest_scan = pdfium::as_writable_bytes(dest_span).data();
       dest_scan += (GetWidth() - 1) * bytes_per_pixel;
       for (int col = 0; col < GetWidth(); ++col) {
         const auto* src_scan32 = reinterpret_cast<const uint32_t*>(src_scan);
@@ -1114,19 +1115,16 @@ RetainPtr<CFX_DIBitmap> CFX_DIBBase::SwapXY(bool bXFlip, bool bYFlip) const {
     pdfium::span<const uint8_t> src_buffer = GetBuffer();
     if (!src_buffer.empty()) {
       const int height = bXFlip == bYFlip ? -GetHeight() : GetHeight();
-      const libyuv::RotationMode mode =
-          bYFlip ? libyuv::kRotate270 : libyuv::kRotate90;
+      const pdfium::RotationMode mode =
+          bYFlip ? pdfium::kRotate270 : pdfium::kRotate90;
       if (bytes_per_pixel == 1) {
-        if (libyuv::RotatePlane(src_buffer.data(), GetPitch(), dest_span.data(),
-                                dest_pitch, GetWidth(), height, mode) == 0) {
-          return pTransBitmap;
-        }
+        pdfium::RotatePlane(src_buffer, GetPitch(), dest_span, dest_pitch,
+                            GetWidth(), height, mode);
       } else {
-        if (libyuv::ARGBRotate(src_buffer.data(), GetPitch(), dest_span.data(),
-                               dest_pitch, GetWidth(), height, mode) == 0) {
-          return pTransBitmap;
-        }
+        pdfium::ARGBRotate(src_buffer, GetPitch(), dest_span, dest_pitch,
+                           GetWidth(), height, mode);
       }
+      return pTransBitmap;
     }
   }
 #endif

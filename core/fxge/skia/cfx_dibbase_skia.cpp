@@ -19,6 +19,7 @@
 #include "core/fxcrt/numerics/safe_conversions.h"
 #include "core/fxcrt/retain_ptr.h"
 #include "core/fxcrt/span.h"
+#include "core/fxcrt/span_util.h"
 #include "core/fxge/calculate_pitch.h"
 #include "core/fxge/dib/cfx_dibitmap.h"
 #include "core/fxge/dib/fx_dib.h"
@@ -31,7 +32,7 @@
 #include "third_party/skia/include/core/SkRefCnt.h"
 
 #if defined(PDF_USE_LIBYUV)
-#include "third_party/libyuv/include/libyuv/convert_argb.h"
+#include "core/fxge/fx_libyuv_wrappers.h"
 #endif
 
 namespace {
@@ -152,22 +153,18 @@ sk_sp<SkImage> CreateSkiaImageFrom24BppDib(const CFX_DIBBase& source) {
     return nullptr;
   }
 
-  const size_t min_row_bytes =
-      fxge::CalculatePitch8OrDie(source.GetBPP(), /*components=*/1, width);
-  DCHECK_LE(min_row_bytes, source.GetPitch());
-
-  if (!source.GetBuffer().empty()) {
-    libyuv::RGB24ToARGB(
-        source.GetBuffer().data(), source.GetPitch(), output.span().data(),
-        pdfium::checked_cast<int>(dst_row_bytes), width, height);
+  pdfium::span<const uint8_t> src_buffer = source.GetBuffer();
+  if (!src_buffer.empty()) {
+    pdfium::RGB24ToARGB(src_buffer, source.GetPitch(), output,
+                        pdfium::checked_cast<int>(dst_row_bytes), width,
+                        height);
   } else {
+    auto dst_span =
+        fxcrt::reinterpret_span<FX_BGRA_STRUCT<uint8_t>>(output.span());
     for (int row = 0; row < height; ++row) {
-      pdfium::span<const uint8_t> scanline = source.GetScanline(row);
-      ValidateScanlineSize(scanline, min_row_bytes);
-      libyuv::RGB24ToARGB(
-          scanline.data(), 0,
-          output.subspan(Fx2DSizeOrDie(row, dst_row_bytes)).data(), 0, width,
-          1);
+      pdfium::RGB24ToARGBRow(source.GetScanlineAs<FX_BGR_STRUCT<uint8_t>>(row),
+                             dst_span);
+      dst_span = dst_span.subspan(static_cast<size_t>(width));
     }
   }
 

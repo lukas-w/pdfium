@@ -29,8 +29,7 @@
 #include "core/fxge/dib/cfx_scanlinecompositor.h"
 
 #if defined(PDF_USE_LIBYUV)
-#include "third_party/libyuv/include/libyuv/convert_argb.h"
-#include "third_party/libyuv/include/libyuv/planar_functions.h"
+#include "core/fxge/fx_libyuv_wrappers.h"
 #endif
 
 namespace {
@@ -352,8 +351,8 @@ bool CFX_DIBitmap::MultiplyAlphaMask(RetainPtr<const CFX_DIBitmap> mask) {
     // `FXDIB_Format::kBgraPremul`
 #if defined(PDF_USE_LIBYUV)
     SetFormat(FXDIB_Format::kBgra);
-    libyuv::ARGBCopyYToAlpha(mask->GetBuffer().data(), mask->GetPitch(),
-                             GetWritableBuffer().data(), GetPitch(), GetWidth(),
+    pdfium::ARGBCopyYToAlpha(mask->GetBuffer(), mask->GetPitch(),
+                             GetWritableBuffer(), GetPitch(), GetWidth(),
                              GetHeight());
 #else
     if (!ConvertFormat(FXDIB_Format::kBgra)) {
@@ -1011,8 +1010,8 @@ bool CFX_DIBitmap::ConvertFormat(FXDIB_Format dest_format) {
   const uint32_t dest_pitch = pitch_size.value().pitch;
 #if defined(PDF_USE_LIBYUV)
   if (dest_format == FXDIB_Format::kBgra && GetFormat() == FXDIB_Format::kBgr) {
-    libyuv::RGB24ToARGB(GetBuffer().data(), GetPitch(), dest_span.data(),
-                        dest_pitch, GetWidth(), GetHeight());
+    pdfium::RGB24ToARGB(GetBuffer(), GetPitch(), dest_span, dest_pitch,
+                        GetWidth(), GetHeight());
     palette_.clear();
   } else {
 #endif

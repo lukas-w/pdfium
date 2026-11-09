@@ -251,10 +251,6 @@ source_set("fxcodec") {
     public_deps += [ "//third_party/libjpeg_turbo:libjpeg_headers" ]
     deps += [ "//third_party:jpeg" ]
   }
-
-  if (pdf_use_libyuv) {
-    deps += [ "//third_party/libyuv" ]
-  }
   visibility = [ "../../*" ]
 }
 

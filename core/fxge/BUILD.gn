@@ -220,6 +220,10 @@ source_set("fxge") {
   }
 
   if (pdf_use_libyuv) {
+    sources += [
+      "fx_libyuv_wrappers.cpp",
+      "fx_libyuv_wrappers.h",
+    ]
     deps += [ "//third_party/libyuv" ]
   }
 

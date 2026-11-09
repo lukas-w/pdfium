@@ -23,7 +23,7 @@
 #include "core/fxge/dib/fx_dib.h"
 
 #if defined(PDF_USE_LIBYUV)
-#include "third_party/libyuv/include/libyuv/convert_argb.h"
+#include "core/fxge/fx_libyuv_wrappers.h"
 #endif
 
 #if defined(PDF_USE_SKIA)
@@ -449,14 +449,17 @@ void CompositeRow_Bgr2Bgra_NoBlend_NoClip(
         fxcrt::reinterpret_span<const FX_BGR_STRUCT<uint8_t>>(src_span).first(
             width);
 #if defined(PDF_USE_LIBYUV)
-    const int pixel_count = pdfium::checked_cast<int>(width);
-    const uint8_t* src_bytes = pdfium::as_bytes(bgr_span).data();
-    uint8_t* dest_bytes = pdfium::as_writable_bytes(dest_span).data();
     if constexpr (std::is_same_v<DestPixelStruct, FX_BGRA_STRUCT<uint8_t>>) {
-      libyuv::RGB24ToARGB(src_bytes, 0, dest_bytes, 0, pixel_count, 1);
+      pdfium::RGB24ToARGBRow(bgr_span, dest_span);
     } else {
       static_assert(std::is_same_v<DestPixelStruct, FX_RGBA_STRUCT<uint8_t>>);
-      libyuv::RAWToARGB(src_bytes, 0, dest_bytes, 0, pixel_count, 1);
+      // Treating BGR as RGB and RGBA as BGRA achieves the same channel swap.
+      auto rgb_src =
+          fxcrt::reinterpret_span<const FX_RGB_STRUCT<uint8_t>>(src_span).first(
+              width);
+      auto bgra_dest =
+          fxcrt::reinterpret_span<FX_BGRA_STRUCT<uint8_t>>(dest_span);
+      pdfium::RAWToARGBRow(rgb_src, bgra_dest);
     }
 #else
     CopyRowToOpaqueBgra(dest_span, bgr_span);
@@ -835,6 +838,19 @@ void CompositeRow_Rgb2Rgb_NoBlend_NoClip(pdfium::span<uint8_t> dest_span,
                                          int width,
                                          int dest_Bpp,
                                          int src_Bpp) {
+#if defined(PDF_USE_LIBYUV)
+  if (src_Bpp == 3 && dest_Bpp == 4) {
+    // BGR24 -> BGRx expand; libyuv stamps 4th byte 0xFF vs scalar's
+    // untouched. kBgrx padding, non-displayed: no output impact.
+    auto bgr_src =
+        fxcrt::reinterpret_span<const FX_BGR_STRUCT<uint8_t>>(src_span).first(
+            pdfium::checked_cast<size_t>(width));
+    auto bgra_dest =
+        fxcrt::reinterpret_span<FX_BGRA_STRUCT<uint8_t>>(dest_span);
+    pdfium::RGB24ToARGBRow(bgr_src, bgra_dest);
+    return;
+  }
+#endif
   uint8_t* dest_scan = dest_span.data();
   const uint8_t* src_scan = src_span.data();
   UNSAFE_TODO({
@@ -842,14 +858,6 @@ void CompositeRow_Rgb2Rgb_NoBlend_NoClip(pdfium::span<uint8_t> dest_span,
       FXSYS_memcpy(dest_scan, src_scan, width * dest_Bpp);
       return;
     }
-#if defined(PDF_USE_LIBYUV)
-    if (src_Bpp == 3 && dest_Bpp == 4) {
-      // BGR24 -> BGRx expand; libyuv stamps 4th byte 0xFF vs scalar's
-      // untouched. kBgrx padding, non-displayed: no output impact.
-      libyuv::RGB24ToARGB(src_scan, width * 3, dest_scan, width * 4, width, 1);
-      return;
-    }
-#endif
     for (int col = 0; col < width; col++) {
       FXSYS_memcpy(dest_scan, src_scan, 3);
       dest_scan += dest_Bpp;
