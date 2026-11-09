@@ -8,16 +8,14 @@
 
 #include <stddef.h>
 
-#include <iterator>
+#include <array>
 #include <optional>
 
-#include "core/fxcrt/check.h"
 #include "core/fxcrt/check_op.h"
-#include "core/fxcrt/compiler_specific.h"
 
 namespace {
 
-// Format of uint16_t values in kTextLayoutCodeProperties[].
+// Format of uint16_t values in `kTextLayoutCodeProperties`.
 constexpr uint16_t kBidiClassBitPos = 0;
 constexpr uint16_t kBidiClassBitCount = 5;
 constexpr uint16_t kBidiClassBitMask =
@@ -31,26 +29,23 @@ constexpr uint16_t kMirrorMax = (1 << kMirrorBitCount) - 1;
 #define CHARPROP____(mirror, ct, bd, bt) \
   ((mirror << kMirrorBitPos) |           \
    (static_cast<uint16_t>(BidiClass::bd) << kBidiClassBitPos)),
-constexpr uint16_t kTextLayoutCodeProperties[] = {
+constexpr auto kTextLayoutCodeProperties = std::to_array<uint16_t>({
 #include "core/fxcrt/fx_ucddata.inc"  // NOLINT(build/include)
-};
+});
 #undef CHARPROP____
 
-static_assert(std::size(kTextLayoutCodeProperties) == 65536,
-              "missing characters");
+static_assert(kTextLayoutCodeProperties.size() == 65536, "missing characters");
 
 std::optional<uint16_t> GetUnicodeProperties(wchar_t wch) {
   size_t idx = static_cast<size_t>(wch);
-  if (idx < std::size(kTextLayoutCodeProperties)) {
-    // SAFETY: `std::size(kTextLayoutCodeProperties)` is the size of the table,
-    // so the condition above verifies `idx` is in range.
-    return UNSAFE_BUFFERS(kTextLayoutCodeProperties[idx]);
+  if (idx < kTextLayoutCodeProperties.size()) {
+    return kTextLayoutCodeProperties[idx];
   }
   return std::nullopt;
 }
 
 #ifdef PDF_ENABLE_XFA
-// Format of uint16_t values in kExtendedTextLayoutCodeProperties[].
+// Format of uint16_t values in `kExtendedTextLayoutCodeProperties`.
 constexpr uint16_t kBreakTypeBitPos = 0;
 constexpr uint16_t kBreakTypeBitCount = 6;
 constexpr uint16_t kBreakTypeBitMask =
@@ -65,27 +60,25 @@ constexpr uint16_t kCharTypeBitMask =
 #define CHARPROP____(mirror, ct, bd, bt)                      \
   ((static_cast<uint16_t>(CharType::ct) << kCharTypeBitPos) | \
    (static_cast<uint16_t>(BreakProperty::bt) << kBreakTypeBitPos)),
-constexpr uint16_t kExtendedTextLayoutCodeProperties[] = {
+constexpr auto kExtendedTextLayoutCodeProperties = std::to_array<uint16_t>({
 #include "core/fxcrt/fx_ucddata.inc"  // NOLINT(build/include)
-};
+});
 #undef CHARPROP____
 
-static_assert(std::size(kExtendedTextLayoutCodeProperties) == 65536,
+static_assert(kExtendedTextLayoutCodeProperties.size() == 65536,
               "missing characters");
 
 uint16_t GetExtendedUnicodeProperties(wchar_t wch) {
   size_t idx = static_cast<size_t>(wch);
-  if (idx < std::size(kExtendedTextLayoutCodeProperties)) {
-    // SAFETY: `std::size(kExtendedTextLayoutCodeProperties)` is the size of
-    // the table, so the condition above verifies `idx` is in range.
-    return UNSAFE_BUFFERS(kExtendedTextLayoutCodeProperties[idx]);
+  if (idx < kExtendedTextLayoutCodeProperties.size()) {
+    return kExtendedTextLayoutCodeProperties[idx];
   }
   return 0;
 }
 
 #endif  // PDF_ENABLE_XFA
 
-constexpr uint16_t kFXTextLayoutBidiMirror[] = {
+constexpr auto kFXTextLayoutBidiMirror = std::to_array<uint16_t>({
     0x0029, 0x0028, 0x003E, 0x003C, 0x005D, 0x005B, 0x007D, 0x007B, 0x00BB,
     0x00AB, 0x0F3B, 0x0F3A, 0x0F3D, 0x0F3C, 0x169C, 0x169B, 0x2019, 0x2018,
     0x201D, 0x201C, 0x203A, 0x2039, 0x2046, 0x2045, 0x207E, 0x207D, 0x208E,
@@ -127,13 +120,13 @@ constexpr uint16_t kFXTextLayoutBidiMirror[] = {
     0x3019, 0x3018, 0x301B, 0x301A, 0xFE5A, 0xFE59, 0xFE5C, 0xFE5B, 0xFE5E,
     0xFE5D, 0xFE65, 0xFE64, 0xFF09, 0xFF08, 0xFF1E, 0xFF1C, 0xFF3D, 0xFF3B,
     0xFF5D, 0xFF5B, 0xFF60, 0xFF5F, 0xFF63, 0xFF62,
-};
+});
 
 // Check that the mirror indicies in the fx_ucddata.inc table are in bounds.
 #undef CHARPROP____
-#define CHARPROP____(mirror, ct, bd, bt)                                   \
-  static_assert(                                                           \
-      mirror == kMirrorMax || mirror < std::size(kFXTextLayoutBidiMirror), \
+#define CHARPROP____(mirror, ct, bd, bt)                               \
+  static_assert(                                                       \
+      mirror == kMirrorMax || mirror < kFXTextLayoutBidiMirror.size(), \
       "Bad mirror index");
 #include "core/fxcrt/fx_ucddata.inc"  // NOLINT(build/include)
 #undef CHARPROP____
@@ -151,10 +144,7 @@ wchar_t GetMirrorChar(wchar_t wch) {
   if (idx == kMirrorMax) {
     return wch;
   }
-  CHECK_LT(idx, std::size(kFXTextLayoutBidiMirror));
-  // SAFETY: `std::size(kFXTextLayoutBidiMirror)` is the size of the table, so
-  // the CHECK() above verifies `idx` is in range.
-  return UNSAFE_BUFFERS(kFXTextLayoutBidiMirror[idx]);
+  return kFXTextLayoutBidiMirror[idx];
 }
 
 BidiClass GetBidiClass(wchar_t wch) {
