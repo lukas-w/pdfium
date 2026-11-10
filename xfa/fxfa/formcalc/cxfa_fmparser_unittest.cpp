@@ -41,7 +41,7 @@ TEST_F(CXFAFMParserTest, CommentOnlyIsError) {
 }
 
 TEST_F(CXFAFMParserTest, CommentThenValue) {
-  const wchar_t ret[] =
+  constexpr wchar_t kExpected[] =
       LR"***((function() {
 let pfm_method_runner = function(obj, cb) {
   if (pfm_rt.is_ary(obj)) {
@@ -67,11 +67,11 @@ return pfm_rt.get_val(pfm_ret);
   CXFA_FMToJavaScriptDepth::Reset();
   std::optional<WideTextBuffer> buf = ast->ToJavaScript();
   ASSERT_TRUE(buf.has_value());
-  EXPECT_EQ(ret, buf.value().MakeString());
+  EXPECT_EQ(kExpected, buf.value().MakeString());
 }
 
 TEST_F(CXFAFMParserTest, Parse) {
-  const wchar_t input[] =
+  constexpr wchar_t kInput[] =
       LR"***($ = Avg (-3, 5, -6, 12, -13);
 $ = Avg (Table2..Row[*].Cell1);
 if ($ ne -1)then
@@ -83,7 +83,7 @@ else
 endif
 $)***";
 
-  const wchar_t ret[] =
+  constexpr wchar_t kExpected[] =
       LR"***((function() {
 let pfm_method_runner = function(obj, cb) {
   if (pfm_rt.is_ary(obj)) {
@@ -128,7 +128,7 @@ pfm_ret = this;
 return pfm_rt.get_val(pfm_ret);
 }).call(this);)***";
 
-  CXFA_FMLexer lexer(input);
+  CXFA_FMLexer lexer(kInput);
   CXFA_FMParser parser(heap(), &lexer);
   CXFA_FMAST* ast = parser.Parse();
   ASSERT_TRUE(ast);
@@ -137,7 +137,7 @@ return pfm_rt.get_val(pfm_ret);
   CXFA_FMToJavaScriptDepth::Reset();
   std::optional<WideTextBuffer> buf = ast->ToJavaScript();
   ASSERT_TRUE(buf.has_value());
-  EXPECT_EQ(ret, buf.value().AsStringView());
+  EXPECT_EQ(kExpected, buf.value().AsStringView());
 }
 
 TEST_F(CXFAFMParserTest, MaxParseDepth) {
@@ -168,12 +168,12 @@ TEST_F(CXFAFMParserTest, MultipleAssignmentIsNotAllowed) {
 }
 
 TEST_F(CXFAFMParserTest, ParseFuncWithParams) {
-  const wchar_t input[] =
+  constexpr wchar_t kInput[] =
       LR"***(func MyFunction(param1, param2) do
   param1 * param2
 endfunc)***";
 
-  const wchar_t ret[] =
+  constexpr wchar_t kExpected[] =
       LR"***((function() {
 let pfm_method_runner = function(obj, cb) {
   if (pfm_rt.is_ary(obj)) {
@@ -194,7 +194,7 @@ return pfm_ret;
 return pfm_rt.get_val(pfm_ret);
 }).call(this);)***";
 
-  CXFA_FMLexer lexer(input);
+  CXFA_FMLexer lexer(kInput);
   CXFA_FMParser parser(heap(), &lexer);
   CXFA_FMAST* ast = parser.Parse();
   ASSERT_TRUE(ast);
@@ -203,16 +203,16 @@ return pfm_rt.get_val(pfm_ret);
   CXFA_FMToJavaScriptDepth::Reset();
   std::optional<WideTextBuffer> buf = ast->ToJavaScript();
   ASSERT_TRUE(buf.has_value());
-  EXPECT_EQ(ret, buf.value().MakeString());
+  EXPECT_EQ(kExpected, buf.value().MakeString());
 }
 
 TEST_F(CXFAFMParserTest, ParseFuncWithoutParams) {
-  const wchar_t input[] =
+  constexpr wchar_t kInput[] =
       LR"***(func MyFunction() do
   42
 endfunc)***";
 
-  const wchar_t ret[] =
+  constexpr wchar_t kExpected[] =
       LR"***((function() {
 let pfm_method_runner = function(obj, cb) {
   if (pfm_rt.is_ary(obj)) {
@@ -233,7 +233,7 @@ return pfm_ret;
 return pfm_rt.get_val(pfm_ret);
 }).call(this);)***";
 
-  CXFA_FMLexer lexer(input);
+  CXFA_FMLexer lexer(kInput);
   CXFA_FMParser parser(heap(), &lexer);
   CXFA_FMAST* ast = parser.Parse();
   ASSERT_TRUE(ast);
@@ -242,16 +242,16 @@ return pfm_rt.get_val(pfm_ret);
   CXFA_FMToJavaScriptDepth::Reset();
   std::optional<WideTextBuffer> buf = ast->ToJavaScript();
   ASSERT_TRUE(buf.has_value());
-  EXPECT_EQ(ret, buf.value().MakeString());
+  EXPECT_EQ(kExpected, buf.value().MakeString());
 }
 
 TEST_F(CXFAFMParserTest, ParseFuncWithBadParamsList) {
-  const wchar_t input[] =
+  constexpr wchar_t kInput[] =
       LR"***(func MyFunction(param1,) do
   param1 * param2
 endfunc)***";
 
-  CXFA_FMLexer lexer(input);
+  CXFA_FMLexer lexer(kInput);
   CXFA_FMParser parser(heap(), &lexer);
   CXFA_FMAST* ast = parser.Parse();
   ASSERT_TRUE(ast == nullptr);
@@ -259,8 +259,8 @@ endfunc)***";
 }
 
 TEST_F(CXFAFMParserTest, ParseBadIfExpression) {
-  const wchar_t input[] = L"if ( then";
-  CXFA_FMLexer lexer(input);
+  constexpr wchar_t kInput[] = L"if ( then";
+  CXFA_FMLexer lexer(kInput);
   CXFA_FMParser parser(heap(), &lexer);
   CXFA_FMAST* ast = parser.Parse();
   ASSERT_TRUE(ast == nullptr);
@@ -268,11 +268,11 @@ TEST_F(CXFAFMParserTest, ParseBadIfExpression) {
 }
 
 TEST_F(CXFAFMParserTest, ParseBadElseIfExpression) {
-  const wchar_t input[] =
+  constexpr wchar_t kInput[] =
       LR"***(if ($ ne -1) then"
 elseif( then)***";
 
-  CXFA_FMLexer lexer(input);
+  CXFA_FMLexer lexer(kInput);
   CXFA_FMParser parser(heap(), &lexer);
   CXFA_FMAST* ast = parser.Parse();
   ASSERT_TRUE(ast == nullptr);
@@ -280,10 +280,11 @@ elseif( then)***";
 }
 
 TEST_F(CXFAFMParserTest, ParseDepthWithWideTree) {
-  const wchar_t input[] = L"a <> b <> c <> d <> e <> f <> g <> h <> i <> j";
+  constexpr wchar_t kInput[] =
+      L"a <> b <> c <> d <> e <> f <> g <> h <> i <> j";
 
   {
-    CXFA_FMLexer lexer(input);
+    CXFA_FMLexer lexer(kInput);
     CXFA_FMParser parser(heap(), &lexer);
     CXFA_FMAST* ast = parser.Parse();
     ASSERT_TRUE(ast);
@@ -291,7 +292,7 @@ TEST_F(CXFAFMParserTest, ParseDepthWithWideTree) {
   }
 
   {
-    CXFA_FMLexer lexer(input);
+    CXFA_FMLexer lexer(kInput);
     CXFA_FMParser parser(heap(), &lexer);
     parser.SetMaxParseDepthForTest(5);
     CXFA_FMAST* ast = parser.Parse();
@@ -301,8 +302,8 @@ TEST_F(CXFAFMParserTest, ParseDepthWithWideTree) {
 }
 
 TEST_F(CXFAFMParserTest, ParseCallSmall) {
-  const wchar_t input[] = L"i.f(O)";
-  const wchar_t ret[] =
+  constexpr wchar_t kInput[] = L"i.f(O)";
+  constexpr wchar_t kExpected[] =
       LR"***((function() {
 let pfm_method_runner = function(obj, cb) {
   if (pfm_rt.is_ary(obj)) {
@@ -323,7 +324,7 @@ pfm_ret = pfm_rt.get_val((function() {
 return pfm_rt.get_val(pfm_ret);
 }).call(this);)***";
 
-  CXFA_FMLexer lexer(input);
+  CXFA_FMLexer lexer(kInput);
   CXFA_FMParser parser(heap(), &lexer);
   CXFA_FMAST* ast = parser.Parse();
   EXPECT_FALSE(parser.HasError());
@@ -331,12 +332,12 @@ return pfm_rt.get_val(pfm_ret);
   CXFA_FMToJavaScriptDepth::Reset();
   std::optional<WideTextBuffer> buf = ast->ToJavaScript();
   ASSERT_TRUE(buf.has_value());
-  EXPECT_EQ(ret, buf.value().MakeString());
+  EXPECT_EQ(kExpected, buf.value().MakeString());
 }
 
 TEST_F(CXFAFMParserTest, ParseCallBig) {
-  const wchar_t input[] = L"i.f(O.e(O.e(O)))";
-  const wchar_t ret[] =
+  constexpr wchar_t kInput[] = L"i.f(O.e(O.e(O)))";
+  constexpr wchar_t kExpected[] =
       LR"***((function() {
 let pfm_method_runner = function(obj, cb) {
   if (pfm_rt.is_ary(obj)) {
@@ -365,7 +366,7 @@ pfm_ret = pfm_rt.get_val((function() {
 return pfm_rt.get_val(pfm_ret);
 }).call(this);)***";
 
-  CXFA_FMLexer lexer(input);
+  CXFA_FMLexer lexer(kInput);
   CXFA_FMParser parser(heap(), &lexer);
   CXFA_FMAST* ast = parser.Parse();
   EXPECT_FALSE(parser.HasError());
@@ -373,12 +374,12 @@ return pfm_rt.get_val(pfm_ret);
   CXFA_FMToJavaScriptDepth::Reset();
   std::optional<WideTextBuffer> buf = ast->ToJavaScript();
   ASSERT_TRUE(buf.has_value());
-  EXPECT_EQ(ret, buf.value().MakeString());
+  EXPECT_EQ(kExpected, buf.value().MakeString());
 }
 
 TEST_F(CXFAFMParserTest, ParseVar) {
-  const wchar_t input[] = LR"(var s = "")";
-  const wchar_t ret[] =
+  constexpr wchar_t kInput[] = LR"(var s = "")";
+  constexpr wchar_t kExpected[] =
       LR"***((function() {
 let pfm_method_runner = function(obj, cb) {
   if (pfm_rt.is_ary(obj)) {
@@ -397,7 +398,7 @@ pfm_ret = s;
 return pfm_rt.get_val(pfm_ret);
 }).call(this);)***";
 
-  CXFA_FMLexer lexer(input);
+  CXFA_FMLexer lexer(kInput);
   CXFA_FMParser parser(heap(), &lexer);
   CXFA_FMAST* ast = parser.Parse();
   EXPECT_FALSE(parser.HasError());
@@ -405,12 +406,12 @@ return pfm_rt.get_val(pfm_ret);
   CXFA_FMToJavaScriptDepth::Reset();
   std::optional<WideTextBuffer> buf = ast->ToJavaScript();
   ASSERT_TRUE(buf.has_value());
-  EXPECT_EQ(ret, buf.value().MakeString());
+  EXPECT_EQ(kExpected, buf.value().MakeString());
 }
 
 TEST_F(CXFAFMParserTest, ParseFunctionCallNoArguments) {
-  const wchar_t input[] = L"P.x()";
-  const wchar_t ret[] =
+  constexpr wchar_t kInput[] = L"P.x()";
+  constexpr wchar_t kExpected[] =
       LR"***((function() {
 let pfm_method_runner = function(obj, cb) {
   if (pfm_rt.is_ary(obj)) {
@@ -431,7 +432,7 @@ pfm_ret = pfm_rt.get_val((function() {
 return pfm_rt.get_val(pfm_ret);
 }).call(this);)***";
 
-  CXFA_FMLexer lexer(input);
+  CXFA_FMLexer lexer(kInput);
   CXFA_FMParser parser(heap(), &lexer);
   CXFA_FMAST* ast = parser.Parse();
   EXPECT_FALSE(parser.HasError());
@@ -439,12 +440,12 @@ return pfm_rt.get_val(pfm_ret);
   CXFA_FMToJavaScriptDepth::Reset();
   std::optional<WideTextBuffer> buf = ast->ToJavaScript();
   ASSERT_TRUE(buf.has_value());
-  EXPECT_EQ(ret, buf.value().MakeString());
+  EXPECT_EQ(kExpected, buf.value().MakeString());
 }
 
 TEST_F(CXFAFMParserTest, ParseFunctionCallSingleArgument) {
-  const wchar_t input[] = L"P.x(foo)";
-  const wchar_t ret[] =
+  constexpr wchar_t kInput[] = L"P.x(foo)";
+  constexpr wchar_t kExpected[] =
       LR"***((function() {
 let pfm_method_runner = function(obj, cb) {
   if (pfm_rt.is_ary(obj)) {
@@ -465,7 +466,7 @@ pfm_ret = pfm_rt.get_val((function() {
 return pfm_rt.get_val(pfm_ret);
 }).call(this);)***";
 
-  CXFA_FMLexer lexer(input);
+  CXFA_FMLexer lexer(kInput);
   CXFA_FMParser parser(heap(), &lexer);
   CXFA_FMAST* ast = parser.Parse();
   EXPECT_FALSE(parser.HasError());
@@ -473,12 +474,12 @@ return pfm_rt.get_val(pfm_ret);
   CXFA_FMToJavaScriptDepth::Reset();
   std::optional<WideTextBuffer> buf = ast->ToJavaScript();
   ASSERT_TRUE(buf.has_value());
-  EXPECT_EQ(ret, buf.value().MakeString());
+  EXPECT_EQ(kExpected, buf.value().MakeString());
 }
 
 TEST_F(CXFAFMParserTest, ParseFunctionCallMultipleArguments) {
-  const wchar_t input[] = L"P.x(foo, bar, baz)";
-  const wchar_t ret[] =
+  constexpr wchar_t kInput[] = L"P.x(foo, bar, baz)";
+  constexpr wchar_t kExpected[] =
       LR"***((function() {
 let pfm_method_runner = function(obj, cb) {
   if (pfm_rt.is_ary(obj)) {
@@ -499,7 +500,7 @@ pfm_ret = pfm_rt.get_val((function() {
 return pfm_rt.get_val(pfm_ret);
 }).call(this);)***";
 
-  CXFA_FMLexer lexer(input);
+  CXFA_FMLexer lexer(kInput);
   CXFA_FMParser parser(heap(), &lexer);
   CXFA_FMAST* ast = parser.Parse();
   EXPECT_FALSE(parser.HasError());
@@ -507,12 +508,12 @@ return pfm_rt.get_val(pfm_ret);
   CXFA_FMToJavaScriptDepth::Reset();
   std::optional<WideTextBuffer> buf = ast->ToJavaScript();
   ASSERT_TRUE(buf.has_value());
-  EXPECT_EQ(ret, buf.value().MakeString());
+  EXPECT_EQ(kExpected, buf.value().MakeString());
 }
 
 TEST_F(CXFAFMParserTest, ParseFunctionCallMissingCommas) {
-  const wchar_t input[] = L"P.x(!foo!bar!baz)";
-  CXFA_FMLexer lexer(input);
+  constexpr wchar_t kInput[] = L"P.x(!foo!bar!baz)";
+  CXFA_FMLexer lexer(kInput);
   CXFA_FMParser parser(heap(), &lexer);
   CXFA_FMAST* ast = parser.Parse();
   ASSERT_TRUE(ast == nullptr);
@@ -520,8 +521,8 @@ TEST_F(CXFAFMParserTest, ParseFunctionCallMissingCommas) {
 }
 
 TEST_F(CXFAFMParserTest, ParseFunctionCallTrailingComma) {
-  const wchar_t input[] = L"P.x(foo,bar,baz,)";
-  CXFA_FMLexer lexer(input);
+  constexpr wchar_t kInput[] = L"P.x(foo,bar,baz,)";
+  CXFA_FMLexer lexer(kInput);
   CXFA_FMParser parser(heap(), &lexer);
   CXFA_FMAST* ast = parser.Parse();
   ASSERT_TRUE(ast == nullptr);
@@ -529,10 +530,324 @@ TEST_F(CXFAFMParserTest, ParseFunctionCallTrailingComma) {
 }
 
 TEST_F(CXFAFMParserTest, ParseFunctionCallExtraComma) {
-  const wchar_t input[] = L"P.x(foo,bar,,baz)";
-  CXFA_FMLexer lexer(input);
+  constexpr wchar_t kInput[] = L"P.x(foo,bar,,baz)";
+  CXFA_FMLexer lexer(kInput);
   CXFA_FMParser parser(heap(), &lexer);
   CXFA_FMAST* ast = parser.Parse();
   ASSERT_TRUE(ast == nullptr);
+  EXPECT_TRUE(parser.HasError());
+}
+
+TEST_F(CXFAFMParserTest, ParseWhileLoop) {
+  constexpr wchar_t kInput[] = L"while (i < 10) do\n  i = i + 1\nendwhile";
+  constexpr wchar_t kExpected[] =
+      LR"***((function() {
+let pfm_method_runner = function(obj, cb) {
+  if (pfm_rt.is_ary(obj)) {
+    let pfm_method_return = null;
+    for (var idx = obj.length -1; idx > 1; idx--) {
+      pfm_method_return = cb(obj[idx]);
+    }
+    return pfm_method_return;
+  }
+  return cb(obj);
+};
+var pfm_ret = null;
+pfm_ret = 0;
+while (pfm_rt.lt_op(i, 10))
+{
+if (pfm_rt.is_obj(i))
+{
+pfm_ret = pfm_rt.asgn_val_op(i, pfm_rt.plus_op(i, 1));
+}
+else
+{
+pfm_ret = i = pfm_rt.asgn_val_op(i, pfm_rt.plus_op(i, 1));
+}
+}
+return pfm_rt.get_val(pfm_ret);
+}).call(this);)***";
+  CXFA_FMLexer lexer(kInput);
+  CXFA_FMParser parser(heap(), &lexer);
+  CXFA_FMAST* ast = parser.Parse();
+  ASSERT_TRUE(ast);
+  EXPECT_FALSE(parser.HasError());
+
+  CXFA_FMToJavaScriptDepth::Reset();
+  std::optional<WideTextBuffer> buf = ast->ToJavaScript();
+  ASSERT_TRUE(buf.has_value());
+  EXPECT_EQ(kExpected, buf.value().MakeString());
+}
+
+TEST_F(CXFAFMParserTest, ParseWhileWithBreakAndContinue) {
+  constexpr wchar_t kInput[] =
+      L"while (i < 10) do\n  if (i == 5) then\n    break\n  endif\n  "
+      L"continue\nendwhile";
+  constexpr wchar_t kExpected[] =
+      LR"***((function() {
+let pfm_method_runner = function(obj, cb) {
+  if (pfm_rt.is_ary(obj)) {
+    let pfm_method_return = null;
+    for (var idx = obj.length -1; idx > 1; idx--) {
+      pfm_method_return = cb(obj[idx]);
+    }
+    return pfm_method_return;
+  }
+  return cb(obj);
+};
+var pfm_ret = null;
+pfm_ret = 0;
+while (pfm_rt.lt_op(i, 10))
+{
+if (pfm_rt.get_val(pfm_rt.eq_op(i, 5)))
+{
+pfm_ret = 0;
+break;
+}
+pfm_ret = 0;
+continue;
+}
+return pfm_rt.get_val(pfm_ret);
+}).call(this);)***";
+  CXFA_FMLexer lexer(kInput);
+  CXFA_FMParser parser(heap(), &lexer);
+  CXFA_FMAST* ast = parser.Parse();
+  ASSERT_TRUE(ast);
+  EXPECT_FALSE(parser.HasError());
+
+  CXFA_FMToJavaScriptDepth::Reset();
+  std::optional<WideTextBuffer> buf = ast->ToJavaScript();
+  ASSERT_TRUE(buf.has_value());
+  EXPECT_EQ(kExpected, buf.value().MakeString());
+}
+
+TEST_F(CXFAFMParserTest, ParseForLoopUptoWithStep) {
+  constexpr wchar_t kInput[] =
+      L"for i = 1 upto 10 step 2 do\n  sum = sum + i\nendfor";
+  constexpr wchar_t kExpected[] =
+      LR"***((function() {
+let pfm_method_runner = function(obj, cb) {
+  if (pfm_rt.is_ary(obj)) {
+    let pfm_method_return = null;
+    for (var idx = obj.length -1; idx > 1; idx--) {
+      pfm_method_return = cb(obj[idx]);
+    }
+    return pfm_method_return;
+  }
+  return cb(obj);
+};
+var pfm_ret = null;
+pfm_ret = 0;
+{
+var i = null;
+for (i = pfm_rt.get_val(1); i <= pfm_rt.get_val(10); i += pfm_rt.get_val(2))
+{
+if (pfm_rt.is_obj(sum))
+{
+pfm_ret = pfm_rt.asgn_val_op(sum, pfm_rt.plus_op(sum, i));
+}
+else
+{
+pfm_ret = sum = pfm_rt.asgn_val_op(sum, pfm_rt.plus_op(sum, i));
+}
+}
+}
+return pfm_rt.get_val(pfm_ret);
+}).call(this);)***";
+  CXFA_FMLexer lexer(kInput);
+  CXFA_FMParser parser(heap(), &lexer);
+  CXFA_FMAST* ast = parser.Parse();
+  ASSERT_TRUE(ast);
+  EXPECT_FALSE(parser.HasError());
+
+  CXFA_FMToJavaScriptDepth::Reset();
+  std::optional<WideTextBuffer> buf = ast->ToJavaScript();
+  ASSERT_TRUE(buf.has_value());
+  EXPECT_EQ(kExpected, buf.value().MakeString());
+}
+
+TEST_F(CXFAFMParserTest, ParseForLoopDownto) {
+  constexpr wchar_t kInput[] =
+      L"for i = 10 downto 1 do\n  sum = sum + i\nendfor";
+  constexpr wchar_t kExpected[] =
+      LR"***((function() {
+let pfm_method_runner = function(obj, cb) {
+  if (pfm_rt.is_ary(obj)) {
+    let pfm_method_return = null;
+    for (var idx = obj.length -1; idx > 1; idx--) {
+      pfm_method_return = cb(obj[idx]);
+    }
+    return pfm_method_return;
+  }
+  return cb(obj);
+};
+var pfm_ret = null;
+pfm_ret = 0;
+{
+var i = null;
+for (i = pfm_rt.get_val(10); i >= pfm_rt.get_val(1); i -= 1)
+{
+if (pfm_rt.is_obj(sum))
+{
+pfm_ret = pfm_rt.asgn_val_op(sum, pfm_rt.plus_op(sum, i));
+}
+else
+{
+pfm_ret = sum = pfm_rt.asgn_val_op(sum, pfm_rt.plus_op(sum, i));
+}
+}
+}
+return pfm_rt.get_val(pfm_ret);
+}).call(this);)***";
+  CXFA_FMLexer lexer(kInput);
+  CXFA_FMParser parser(heap(), &lexer);
+  CXFA_FMAST* ast = parser.Parse();
+  ASSERT_TRUE(ast);
+  EXPECT_FALSE(parser.HasError());
+
+  CXFA_FMToJavaScriptDepth::Reset();
+  std::optional<WideTextBuffer> buf = ast->ToJavaScript();
+  ASSERT_TRUE(buf.has_value());
+  EXPECT_EQ(kExpected, buf.value().MakeString());
+}
+
+TEST_F(CXFAFMParserTest, ParseForeachLoop) {
+  constexpr wchar_t kInput[] =
+      L"foreach item in (1, 2, 3)\n  sum = sum + item\nendfor";
+  constexpr wchar_t kExpected[] =
+      LR"***((function() {
+let pfm_method_runner = function(obj, cb) {
+  if (pfm_rt.is_ary(obj)) {
+    let pfm_method_return = null;
+    for (var idx = obj.length -1; idx > 1; idx--) {
+      pfm_method_return = cb(obj[idx]);
+    }
+    return pfm_method_return;
+  }
+  return cb(obj);
+};
+var pfm_ret = null;
+pfm_ret = 0;
+{
+var item = null;
+var pfm_ary = pfm_rt.concat_obj(1, 2, 3);
+var pfm_ary_idx = 0;
+while(pfm_ary_idx < pfm_ary.length)
+{
+item = pfm_ary[pfm_ary_idx++];
+{
+if (pfm_rt.is_obj(sum))
+{
+pfm_ret = pfm_rt.asgn_val_op(sum, pfm_rt.plus_op(sum, item));
+}
+else
+{
+pfm_ret = sum = pfm_rt.asgn_val_op(sum, pfm_rt.plus_op(sum, item));
+}
+}
+}
+}
+return pfm_rt.get_val(pfm_ret);
+}).call(this);)***";
+  CXFA_FMLexer lexer(kInput);
+  CXFA_FMParser parser(heap(), &lexer);
+  CXFA_FMAST* ast = parser.Parse();
+  ASSERT_TRUE(ast);
+  EXPECT_FALSE(parser.HasError());
+
+  CXFA_FMToJavaScriptDepth::Reset();
+  std::optional<WideTextBuffer> buf = ast->ToJavaScript();
+  ASSERT_TRUE(buf.has_value());
+  EXPECT_EQ(kExpected, buf.value().MakeString());
+}
+
+TEST_F(CXFAFMParserTest, ParseDoBlock) {
+  constexpr wchar_t kInput[] = L"do\n  x = 1\nend";
+  constexpr wchar_t kExpected[] =
+      LR"***((function() {
+let pfm_method_runner = function(obj, cb) {
+  if (pfm_rt.is_ary(obj)) {
+    let pfm_method_return = null;
+    for (var idx = obj.length -1; idx > 1; idx--) {
+      pfm_method_return = cb(obj[idx]);
+    }
+    return pfm_method_return;
+  }
+  return cb(obj);
+};
+var pfm_ret = null;
+{
+if (pfm_rt.is_obj(x))
+{
+pfm_ret = pfm_rt.asgn_val_op(x, 1);
+}
+else
+{
+pfm_ret = x = pfm_rt.asgn_val_op(x, 1);
+}
+}
+return pfm_rt.get_val(pfm_ret);
+}).call(this);)***";
+  CXFA_FMLexer lexer(kInput);
+  CXFA_FMParser parser(heap(), &lexer);
+  CXFA_FMAST* ast = parser.Parse();
+  ASSERT_TRUE(ast);
+  EXPECT_FALSE(parser.HasError());
+
+  CXFA_FMToJavaScriptDepth::Reset();
+  std::optional<WideTextBuffer> buf = ast->ToJavaScript();
+  ASSERT_TRUE(buf.has_value());
+  EXPECT_EQ(kExpected, buf.value().MakeString());
+}
+
+TEST_F(CXFAFMParserTest, ParseWhileErrors) {
+  {
+    CXFA_FMLexer lexer(L"while do endwhile");
+    CXFA_FMParser parser(heap(), &lexer);
+    EXPECT_FALSE(parser.Parse());
+    EXPECT_TRUE(parser.HasError());
+  }
+  {
+    CXFA_FMLexer lexer(L"while (i < 10) do i = 1");
+    CXFA_FMParser parser(heap(), &lexer);
+    EXPECT_FALSE(parser.Parse());
+    EXPECT_TRUE(parser.HasError());
+  }
+}
+
+TEST_F(CXFAFMParserTest, ParseForErrors) {
+  {
+    CXFA_FMLexer lexer(L"for i = 1 to 10 do endfor");
+    CXFA_FMParser parser(heap(), &lexer);
+    EXPECT_FALSE(parser.Parse());
+    EXPECT_TRUE(parser.HasError());
+  }
+  {
+    CXFA_FMLexer lexer(L"for i = 1 upto 10 do i = 1");
+    CXFA_FMParser parser(heap(), &lexer);
+    EXPECT_FALSE(parser.Parse());
+    EXPECT_TRUE(parser.HasError());
+  }
+}
+
+TEST_F(CXFAFMParserTest, ParseForeachErrors) {
+  {
+    CXFA_FMLexer lexer(L"foreach item (1, 2) endfor");
+    CXFA_FMParser parser(heap(), &lexer);
+    EXPECT_FALSE(parser.Parse());
+    EXPECT_TRUE(parser.HasError());
+  }
+  {
+    CXFA_FMLexer lexer(L"foreach item in () endfor");
+    CXFA_FMParser parser(heap(), &lexer);
+    EXPECT_FALSE(parser.Parse());
+    EXPECT_TRUE(parser.HasError());
+  }
+}
+
+TEST_F(CXFAFMParserTest, ParseDoErrors) {
+  CXFA_FMLexer lexer(L"do x = 1");
+  CXFA_FMParser parser(heap(), &lexer);
+  EXPECT_FALSE(parser.Parse());
   EXPECT_TRUE(parser.HasError());
 }

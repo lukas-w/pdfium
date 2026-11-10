@@ -171,3 +171,42 @@ s = pfm_rt.var_filter(s);
 )***",
       accumulator.MakeString());
 }
+
+TEST_F(FMExpressionTest, BreakExpression) {
+  CXFA_FMToJavaScriptDepth::Reset();
+  WideTextBuffer accumulator;
+
+  auto* expr = cppgc::MakeGarbageCollected<CXFA_FMBreakExpression>(
+      heap()->GetAllocationHandle());
+  EXPECT_TRUE(expr->ToJavaScript(
+      &accumulator, CXFA_FMAssignExpression::ReturnType::kInferred));
+  EXPECT_EQ(L"pfm_ret = 0;\nbreak;\n", accumulator.MakeString());
+}
+
+TEST_F(FMExpressionTest, ContinueExpression) {
+  CXFA_FMToJavaScriptDepth::Reset();
+  WideTextBuffer accumulator;
+
+  auto* expr = cppgc::MakeGarbageCollected<CXFA_FMContinueExpression>(
+      heap()->GetAllocationHandle());
+  EXPECT_TRUE(expr->ToJavaScript(
+      &accumulator, CXFA_FMAssignExpression::ReturnType::kInferred));
+  EXPECT_EQ(L"pfm_ret = 0;\ncontinue;\n", accumulator.MakeString());
+}
+
+TEST_F(FMExpressionTest, DoExpression) {
+  CXFA_FMToJavaScriptDepth::Reset();
+  WideTextBuffer accumulator;
+
+  std::vector<cppgc::Member<CXFA_FMExpression>> expressions;
+  expressions.push_back(cppgc::MakeGarbageCollected<CXFA_FMBreakExpression>(
+      heap()->GetAllocationHandle()));
+  auto* block = cppgc::MakeGarbageCollected<CXFA_FMBlockExpression>(
+      heap()->GetAllocationHandle(), std::move(expressions));
+  auto* expr = cppgc::MakeGarbageCollected<CXFA_FMDoExpression>(
+      heap()->GetAllocationHandle(), block);
+
+  EXPECT_TRUE(expr->ToJavaScript(
+      &accumulator, CXFA_FMAssignExpression::ReturnType::kInferred));
+  EXPECT_EQ(L"{\npfm_ret = 0;\nbreak;\n}\n", accumulator.MakeString());
+}
