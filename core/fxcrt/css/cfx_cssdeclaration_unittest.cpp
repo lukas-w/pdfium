@@ -61,6 +61,79 @@ TEST(CFXCSSDeclarationTest, RGBEncodingParsing) {
   EXPECT_EQ(0xFF80FF30u, maybe_color.value());
 }
 
+TEST(CFXCSSDeclarationTest, NamedColorParsing) {
+  std::optional<CFX_CSSColor> maybe_color =
+      CFX_CSSDeclaration::ParseCSSColor(L"red");
+  ASSERT_TRUE(maybe_color.has_value());
+  EXPECT_EQ(0xFFFF0000u, maybe_color.value());
+
+  maybe_color = CFX_CSSDeclaration::ParseCSSColor(L"green");
+  ASSERT_TRUE(maybe_color.has_value());
+  EXPECT_EQ(0xFF008000u, maybe_color.value());
+
+  maybe_color = CFX_CSSDeclaration::ParseCSSColor(L"blue");
+  ASSERT_TRUE(maybe_color.has_value());
+  EXPECT_EQ(0xFF0000FFu, maybe_color.value());
+
+  EXPECT_FALSE(CFX_CSSDeclaration::ParseCSSColor(L"notacolor"));
+}
+
+TEST(CFXCSSDeclarationTest, ParseCSSString) {
+  EXPECT_EQ(L"Double Quoted",
+            CFX_CSSDeclaration::ParseCSSString(L"\"Double Quoted\""));
+  EXPECT_EQ(L"Single Quoted",
+            CFX_CSSDeclaration::ParseCSSString(L"'Single Quoted'"));
+  EXPECT_EQ(L"Unquoted", CFX_CSSDeclaration::ParseCSSString(L"Unquoted"));
+  EXPECT_FALSE(CFX_CSSDeclaration::ParseCSSString(L"\"\"").has_value());
+  EXPECT_FALSE(CFX_CSSDeclaration::ParseCSSString(L"").has_value());
+}
+
+TEST(CFXCSSDeclarationTest, AddProperty) {
+  CFX_CSSDeclaration decl;
+  EXPECT_TRUE(decl.empty());
+
+  bool important = false;
+  decl.AddProperty(CFX_CSSData::GetPropertyByEnum(CFX_CSSProperty::Color),
+                   L"red");
+  EXPECT_TRUE(decl.GetProperty(CFX_CSSProperty::Color, &important));
+  EXPECT_FALSE(important);
+
+  important = false;
+  decl.AddProperty(CFX_CSSData::GetPropertyByEnum(CFX_CSSProperty::FontSize),
+                   L"16pt !important");
+  EXPECT_TRUE(decl.GetProperty(CFX_CSSProperty::FontSize, &important));
+  EXPECT_TRUE(important);
+
+  important = false;
+  decl.AddProperty(CFX_CSSData::GetPropertyByEnum(CFX_CSSProperty::FontStyle),
+                   L"italic");
+  EXPECT_TRUE(decl.GetProperty(CFX_CSSProperty::FontStyle, &important));
+  EXPECT_FALSE(important);
+
+  important = false;
+  decl.AddProperty(CFX_CSSData::GetPropertyByEnum(CFX_CSSProperty::FontWeight),
+                   L"bold");
+  EXPECT_TRUE(decl.GetProperty(CFX_CSSProperty::FontWeight, &important));
+  EXPECT_FALSE(important);
+
+  important = false;
+  decl.AddProperty(CFX_CSSData::GetPropertyByEnum(CFX_CSSProperty::TextAlign),
+                   L"center");
+  EXPECT_TRUE(decl.GetProperty(CFX_CSSProperty::TextAlign, &important));
+  EXPECT_FALSE(important);
+
+  decl.AddProperty(CFX_CSSData::GetPropertyByEnum(CFX_CSSProperty::Border),
+                   L"1px");
+  EXPECT_TRUE(decl.GetProperty(CFX_CSSProperty::BorderLeftWidth, &important));
+  EXPECT_TRUE(decl.GetProperty(CFX_CSSProperty::BorderTopWidth, &important));
+  EXPECT_TRUE(decl.GetProperty(CFX_CSSProperty::BorderRightWidth, &important));
+  EXPECT_TRUE(decl.GetProperty(CFX_CSSProperty::BorderBottomWidth, &important));
+
+  decl.AddProperty(L"--custom", L"custom_value");
+  EXPECT_FALSE(decl.empty());
+  EXPECT_EQ(1, std::distance(decl.custom_begin(), decl.custom_end()));
+}
+
 TEST(CFXCSSDeclarationTest, CustomPropertiesInInlineStyle) {
   CFX_CSSStyleSelector selector;
   RetainPtr<CFX_CSSComputedStyle> style = selector.CreateComputedStyle(nullptr);
