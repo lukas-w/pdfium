@@ -67,16 +67,16 @@ inline uint32_t CompositePixelBgra2Bgra(uint32_t src, uint32_t back) {
 //   src a == 0 -> keep dest     else AlphaMerge/AlphaUnion over
 // Byte spans bitcast to u32 lanes -> no 4-byte scanline alignment needed.
 void RunBgra2Bgra(pdfium::span<const uint8_t> src, pdfium::span<uint8_t> dest) {
-  size_t count = src.size() / 4;
 #if HWY_TARGET != HWY_SCALAR
   const hn::ScalableTag<uint32_t> d;
   const hn::ScalableTag<uint8_t> d8;
   const size_t n = hn::Lanes(d);       // pixels/vector
+  const size_t n4 = n * 4;
   const auto m255 = hn::Set(d, 0xFF);  // byte mask and the value 255
   const auto one = hn::Set(d, 1);
   const auto zero = hn::Zero(d);
 
-  while (count >= n) {
+  while (src.size() >= n4) {
     const auto s = hn::BitCast(d, hn::LoadU(d8, src.data()));
     const auto back = hn::BitCast(d, hn::LoadU(d8, dest.data()));
     const auto sa = hn::ShiftRight<24>(s);
@@ -89,9 +89,8 @@ void RunBgra2Bgra(pdfium::span<const uint8_t> src, pdfium::span<uint8_t> dest) {
     if (hn::AllTrue(d, hn::Or(copy_src, keep_dest))) {
       const auto result = hn::IfThenElse(copy_src, s, back);
       hn::StoreU(hn::BitCast(d8, result), d8, dest.data());
-      src = src.subspan(n * 4);
-      dest = dest.subspan(n * 4);
-      count -= n;
+      src = src.subspan(n4);
+      dest = dest.subspan(n4);
       continue;
     }
 
@@ -116,12 +115,11 @@ void RunBgra2Bgra(pdfium::span<const uint8_t> src, pdfium::span<uint8_t> dest) {
     result = hn::IfThenElse(copy_src, s, result);
     hn::StoreU(hn::BitCast(d8, result), d8, dest.data());
 
-    src = src.subspan(n * 4);
-    dest = dest.subspan(n * 4);
-    count -= n;
+    src = src.subspan(n4);
+    dest = dest.subspan(n4);
   }
 #endif  // HWY_TARGET != HWY_SCALAR
-  for (size_t i = 0; i < count; ++i) {
+  while (!src.empty()) {
     const uint32_t s = FXARGB_GetDIB(src.first<4u>());
     const uint32_t back = FXARGB_GetDIB(dest.first<4u>());
     FXARGB_SetDIB(dest.first<4u>(), CompositePixelBgra2Bgra(s, back));
@@ -134,22 +132,21 @@ void RunBgra2Bgra(pdfium::span<const uint8_t> src, pdfium::span<uint8_t> dest) {
 // order required: src and dest both packed BGRA.
 void RunBgra2BgrxForceOpaque(pdfium::span<const uint8_t> src,
                              pdfium::span<uint8_t> dest) {
-  size_t count = src.size() / 4;
 #if HWY_TARGET != HWY_SCALAR
   const hn::ScalableTag<uint32_t> d;
   const hn::ScalableTag<uint8_t> d8;
   const size_t n = hn::Lanes(d);
+  const size_t n4 = n * 4;
   const auto alpha_ff = hn::Set(d, 0xFF000000u);
 
-  while (count >= n) {
+  while (src.size() >= n4) {
     const auto v = hn::BitCast(d, hn::LoadU(d8, src.data()));
     hn::StoreU(hn::BitCast(d8, hn::Or(v, alpha_ff)), d8, dest.data());
-    src = src.subspan(n * 4);
-    dest = dest.subspan(n * 4);
-    count -= n;
+    src = src.subspan(n4);
+    dest = dest.subspan(n4);
   }
 #endif  // HWY_TARGET != HWY_SCALAR
-  for (size_t i = 0; i < count; ++i) {
+  while (!src.empty()) {
     dest[0] = src[0];
     dest[1] = src[1];
     dest[2] = src[2];
