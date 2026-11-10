@@ -39,6 +39,13 @@ void ARGBToRGB24(pdfium::span<const uint8_t> src_span,
                  int width,
                  int height);
 
+void ARGBToRAW(pdfium::span<const uint8_t> src_span,
+               int src_stride,
+               pdfium::span<uint8_t> dst_span,
+               int dst_stride,
+               int width,
+               int height);
+
 void ARGBExtractAlpha(pdfium::span<const uint8_t> src_span,
                       int src_stride,
                       pdfium::span<uint8_t> dst_span,

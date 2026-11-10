@@ -91,6 +91,19 @@ void ARGBToRGB24(pdfium::span<const uint8_t> src_span,
   CHECK_EQ(ret, 0);
 }
 
+void ARGBToRAW(pdfium::span<const uint8_t> src_span,
+               int src_stride,
+               pdfium::span<uint8_t> dst_span,
+               int dst_stride,
+               int width,
+               int height) {
+  CHECK_GE(src_span.size(), GetPlaneBytes(src_stride, width, height, 4));
+  CHECK_GE(dst_span.size(), GetPlaneBytes(dst_stride, width, height, 3));
+  int ret = libyuv::ARGBToRAW(src_span.data(), src_stride, dst_span.data(),
+                              dst_stride, width, height);
+  CHECK_EQ(ret, 0);
+}
+
 void ARGBExtractAlpha(pdfium::span<const uint8_t> src_span,
                       int src_stride,
                       pdfium::span<uint8_t> dst_span,

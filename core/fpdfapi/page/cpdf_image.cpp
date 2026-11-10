@@ -26,10 +26,10 @@
 #include "core/fpdfapi/parser/cpdf_reference.h"
 #include "core/fpdfapi/parser/cpdf_stream.h"
 #include "core/fpdfapi/parser/cpdf_string.h"
+#include "core/fxcodec/fx_codec.h"
 #include "core/fxcodec/jpeg/jpegmodule.h"
 #include "core/fxcrt/check.h"
 #include "core/fxcrt/check_op.h"
-#include "core/fxcrt/compiler_specific.h"
 #include "core/fxcrt/data_vector.h"
 #include "core/fxcrt/fx_2d_size.h"
 #include "core/fxcrt/fx_ceil_div.h"
@@ -39,6 +39,12 @@
 #include "core/fxcrt/stl_util.h"
 #include "core/fxge/dib/cfx_dibitmap.h"
 #include "core/fxge/dib/fx_dib.h"
+
+#if defined(PDF_USE_LIBYUV)
+#include "core/fxge/fx_libyuv_wrappers.h"
+#else
+#include "core/fxcrt/zip.h"
+#endif
 
 // static
 bool CPDF_Image::IsValidJpegComponent(int32_t comps) {
@@ -295,23 +301,33 @@ void CPDF_Image::SetImage(const RetainPtr<CFX_DIBitmap>& pBitmap) {
       dest_span = fxcrt::spancpy(dest_span, src_span.first(dest_pitch));
       src_span = src_span.subspan(static_cast<size_t>(src_pitch));
     }
-  } else {
-    const size_t src_step = bpp == 24 ? 3 : 4;
+  } else if (bpp == 24) {
     for (int32_t row = 0; row < BitmapHeight; row++) {
-      uint8_t* dest_ptr = dest_span.data();
-      const uint8_t* src_ptr = src_span.data();
-      for (int32_t column = 0; column < BitmapWidth; column++) {
-        UNSAFE_TODO({
-          dest_ptr[0] = src_ptr[2];
-          dest_ptr[1] = src_ptr[1];
-          dest_ptr[2] = src_ptr[0];
-          dest_ptr += 3;
-          src_ptr += src_step;
-        });
+      fxcodec::ReverseRGB(dest_span, src_span, BitmapWidth);
+      dest_span = dest_span.subspan(dest_pitch);
+      src_span = src_span.subspan(static_cast<size_t>(src_pitch));
+    }
+  } else {
+#if defined(PDF_USE_LIBYUV)
+    pdfium::ARGBToRAW(src_span, src_pitch, dest_span,
+                      pdfium::checked_cast<int>(dest_pitch), BitmapWidth,
+                      BitmapHeight);
+#else
+    for (int32_t row = 0; row < BitmapHeight; row++) {
+      auto src_row =
+          fxcrt::reinterpret_span<const FX_BGRA_STRUCT<uint8_t>>(src_span)
+              .first(static_cast<size_t>(BitmapWidth));
+      auto dest_row =
+          fxcrt::reinterpret_span<FX_RGB_STRUCT<uint8_t>>(dest_span);
+      for (auto [input, output] : fxcrt::Zip(src_row, dest_row)) {
+        output.red = input.red;
+        output.green = input.green;
+        output.blue = input.blue;
       }
       dest_span = dest_span.subspan(dest_pitch);
       src_span = src_span.subspan(static_cast<size_t>(src_pitch));
     }
+#endif
   }
 
   stream_ =
