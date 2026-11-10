@@ -225,7 +225,7 @@ class CFXJSE_Engine final : public CFX_IsolateWrapper {
       map_variable_to_context_;
   cppgc::Persistent<CXFA_Node> target_;
   UnownedPtr<CXFA_EventParam> event_param_;
-  std::vector<cppgc::Persistent<CXFA_Node>> up_object_array_;
+  cppgc::Persistent<GCedVector<CXFA_Node>> up_object_array_;
   cppgc::Persistent<GCedVector<CXFA_Node>> script_node_array_;
   std::unique_ptr<CFXJSE_NodeHelper> const node_helper_;
   std::unique_ptr<CFXJSE_ResolveProcessor> const resolve_processor_;

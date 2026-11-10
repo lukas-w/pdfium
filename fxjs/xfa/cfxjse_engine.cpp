@@ -151,6 +151,8 @@ CFXJSE_Engine::CFXJSE_Engine(CXFA_Document* document, v8::Isolate* isolate)
                                          &kGlobalClassDescriptor,
                                          document->GetRoot()->JSObject(),
                                          nullptr)),
+      up_object_array_(cppgc::MakeGarbageCollected<GCedVector<CXFA_Node>>(
+          document->GetHeap()->GetAllocationHandle())),
       node_helper_(std::make_unique<CFXJSE_NodeHelper>()),
       resolve_processor_(
           std::make_unique<CFXJSE_ResolveProcessor>(this, node_helper_.get())) {
@@ -615,11 +617,12 @@ CXFA_Script::Type CFXJSE_Engine::GetType() {
 }
 
 void CFXJSE_Engine::AddObjectToUpArray(CXFA_Node* pNode) {
-  up_object_array_.push_back(pNode);
+  up_object_array_->storage.push_back(pNode);
 }
 
 CXFA_Node* CFXJSE_Engine::LastObjectFromUpArray() {
-  return !up_object_array_.empty() ? up_object_array_.back() : nullptr;
+  return !up_object_array_->storage.empty() ? up_object_array_->storage.back()
+                                            : nullptr;
 }
 
 CFXJSE_Context* CFXJSE_Engine::CreateVariablesContext(CXFA_Script* pScriptNode,
@@ -771,10 +774,10 @@ CFXJSE_Engine::ResolveObjectsWithBindNode(CXFA_Object* refObject,
       !!(dwStyles & Mask<XFA_ResolveFlag>{XFA_ResolveFlag::kParent,
                                           XFA_ResolveFlag::kSiblings});
   if (script_type_ != CXFA_Script::Type::Formcalc || bParentOrSiblings) {
-    up_object_array_.clear();
+    up_object_array_->storage.clear();
   }
   if (refObject && refObject->IsNode() && bParentOrSiblings) {
-    up_object_array_.push_back(refObject->AsNode());
+    up_object_array_->storage.push_back(refObject->AsNode());
   }
 
   ResolveResult result;
@@ -873,8 +876,8 @@ CFXJSE_Engine::ResolveObjectsWithBindNode(CXFA_Object* refObject,
           rndFind.result_.objects.front() = ToObject(GetIsolate(), pValue);
         }
       }
-      if (!up_object_array_.empty()) {
-        up_object_array_.pop_back();
+      if (!up_object_array_->storage.empty()) {
+        up_object_array_->storage.pop_back();
       }
       ret_objects->storage.insert(ret_objects->storage.end(),
                                   rndFind.result_.objects.begin(),
