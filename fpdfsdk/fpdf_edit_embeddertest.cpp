@@ -37,6 +37,7 @@
 #include "public/fpdf_annot.h"
 #include "public/fpdf_doc.h"
 #include "public/fpdf_edit.h"
+#include "public/fpdf_transformpage.h"
 #include "public/fpdfview.h"
 #include "testing/embedder_test.h"
 #include "testing/embedder_test_constants.h"
@@ -689,6 +690,36 @@ TEST_F(FPDFEditEmbedderTest, ClipPath) {
   EXPECT_EQ(35, y);
   EXPECT_EQ(FPDF_SEGMENT_LINETO, FPDFPathSegment_GetType(segment));
   EXPECT_FALSE(FPDFPathSegment_GetClose(segment));
+
+  // Null object does not crash.
+  FPDFPageObj_TransformClipPath(nullptr, 2.0, 0.0, 0.0, 3.0, 100.0, 200.0);
+
+  // Transform clip path: scale X by 2, scale Y by 3, translate (100, 200).
+  FPDFPageObj_TransformClipPath(triangle, 2.0, 0.0, 0.0, 3.0, 100.0, 200.0);
+
+  segment = FPDFClipPath_GetPathSegment(clip_path, 0, 0);
+  ASSERT_TRUE(segment);
+  EXPECT_TRUE(FPDFPathSegment_GetPoint(segment, &x, &y));
+  EXPECT_FLOAT_EQ(120.0f, x);
+  EXPECT_FLOAT_EQ(245.0f, y);
+
+  segment = FPDFClipPath_GetPathSegment(clip_path, 0, 1);
+  ASSERT_TRUE(segment);
+  EXPECT_TRUE(FPDFPathSegment_GetPoint(segment, &x, &y));
+  EXPECT_FLOAT_EQ(180.0f, x);
+  EXPECT_FLOAT_EQ(245.0f, y);
+
+  segment = FPDFClipPath_GetPathSegment(clip_path, 0, 2);
+  ASSERT_TRUE(segment);
+  EXPECT_TRUE(FPDFPathSegment_GetPoint(segment, &x, &y));
+  EXPECT_FLOAT_EQ(180.0f, x);
+  EXPECT_FLOAT_EQ(305.0f, y);
+
+  segment = FPDFClipPath_GetPathSegment(clip_path, 0, 3);
+  ASSERT_TRUE(segment);
+  EXPECT_TRUE(FPDFPathSegment_GetPoint(segment, &x, &y));
+  EXPECT_FLOAT_EQ(120.0f, x);
+  EXPECT_FLOAT_EQ(305.0f, y);
 }
 
 TEST_F(FPDFEditEmbedderTest, Bug1399) {

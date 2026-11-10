@@ -331,6 +331,127 @@ TEST_F(FPDFTransformEmbedderTest, SetMediaBox) {
   }
 }
 
+TEST_F(FPDFTransformEmbedderTest, SetBleedBox) {
+  {
+    ASSERT_TRUE(OpenDocument("rectangles.pdf"));
+    ScopedPage page = LoadScopedPage(0);
+    ASSERT_TRUE(page);
+
+    FS_RECTF bleedbox;
+    EXPECT_FALSE(FPDFPage_GetBleedBox(page.get(), &bleedbox.left,
+                                      &bleedbox.bottom, &bleedbox.right,
+                                      &bleedbox.top));
+
+    // Null page does not crash.
+    FPDFPage_SetBleedBox(nullptr, 15, 25, 120, 180);
+
+    FPDFPage_SetBleedBox(page.get(), 15, 25, 120, 180);
+    EXPECT_TRUE(FPDFPage_GetBleedBox(page.get(), &bleedbox.left,
+                                     &bleedbox.bottom, &bleedbox.right,
+                                     &bleedbox.top));
+    EXPECT_EQ(15, bleedbox.left);
+    EXPECT_EQ(25, bleedbox.bottom);
+    EXPECT_EQ(120, bleedbox.right);
+    EXPECT_EQ(180, bleedbox.top);
+  }
+
+  {
+    EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
+    ScopedSavedDoc saved_document = OpenScopedSavedDocument();
+    ASSERT_TRUE(saved_document);
+    ScopedSavedPage saved_page = LoadScopedSavedPage(0);
+    ASSERT_TRUE(saved_page);
+
+    FS_RECTF bleedbox;
+    EXPECT_TRUE(FPDFPage_GetBleedBox(saved_page.get(), &bleedbox.left,
+                                     &bleedbox.bottom, &bleedbox.right,
+                                     &bleedbox.top));
+    EXPECT_EQ(15, bleedbox.left);
+    EXPECT_EQ(25, bleedbox.bottom);
+    EXPECT_EQ(120, bleedbox.right);
+    EXPECT_EQ(180, bleedbox.top);
+  }
+}
+
+TEST_F(FPDFTransformEmbedderTest, SetTrimBox) {
+  {
+    ASSERT_TRUE(OpenDocument("rectangles.pdf"));
+    ScopedPage page = LoadScopedPage(0);
+    ASSERT_TRUE(page);
+
+    FS_RECTF trimbox;
+    EXPECT_FALSE(FPDFPage_GetTrimBox(page.get(), &trimbox.left, &trimbox.bottom,
+                                     &trimbox.right, &trimbox.top));
+
+    // Null page does not crash.
+    FPDFPage_SetTrimBox(nullptr, 20, 30, 110, 170);
+
+    FPDFPage_SetTrimBox(page.get(), 20, 30, 110, 170);
+    EXPECT_TRUE(FPDFPage_GetTrimBox(page.get(), &trimbox.left, &trimbox.bottom,
+                                    &trimbox.right, &trimbox.top));
+    EXPECT_EQ(20, trimbox.left);
+    EXPECT_EQ(30, trimbox.bottom);
+    EXPECT_EQ(110, trimbox.right);
+    EXPECT_EQ(170, trimbox.top);
+  }
+
+  {
+    EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
+    ScopedSavedDoc saved_document = OpenScopedSavedDocument();
+    ASSERT_TRUE(saved_document);
+    ScopedSavedPage saved_page = LoadScopedSavedPage(0);
+    ASSERT_TRUE(saved_page);
+
+    FS_RECTF trimbox;
+    EXPECT_TRUE(FPDFPage_GetTrimBox(saved_page.get(), &trimbox.left,
+                                    &trimbox.bottom, &trimbox.right,
+                                    &trimbox.top));
+    EXPECT_EQ(20, trimbox.left);
+    EXPECT_EQ(30, trimbox.bottom);
+    EXPECT_EQ(110, trimbox.right);
+    EXPECT_EQ(170, trimbox.top);
+  }
+}
+
+TEST_F(FPDFTransformEmbedderTest, SetArtBox) {
+  {
+    ASSERT_TRUE(OpenDocument("rectangles.pdf"));
+    ScopedPage page = LoadScopedPage(0);
+    ASSERT_TRUE(page);
+
+    FS_RECTF artbox;
+    EXPECT_FALSE(FPDFPage_GetArtBox(page.get(), &artbox.left, &artbox.bottom,
+                                    &artbox.right, &artbox.top));
+
+    // Null page does not crash.
+    FPDFPage_SetArtBox(nullptr, 25, 35, 100, 160);
+
+    FPDFPage_SetArtBox(page.get(), 25, 35, 100, 160);
+    EXPECT_TRUE(FPDFPage_GetArtBox(page.get(), &artbox.left, &artbox.bottom,
+                                   &artbox.right, &artbox.top));
+    EXPECT_EQ(25, artbox.left);
+    EXPECT_EQ(35, artbox.bottom);
+    EXPECT_EQ(100, artbox.right);
+    EXPECT_EQ(160, artbox.top);
+  }
+
+  {
+    EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
+    ScopedSavedDoc saved_document = OpenScopedSavedDocument();
+    ASSERT_TRUE(saved_document);
+    ScopedSavedPage saved_page = LoadScopedSavedPage(0);
+    ASSERT_TRUE(saved_page);
+
+    FS_RECTF artbox;
+    EXPECT_TRUE(FPDFPage_GetArtBox(saved_page.get(), &artbox.left,
+                                   &artbox.bottom, &artbox.right, &artbox.top));
+    EXPECT_EQ(25, artbox.left);
+    EXPECT_EQ(35, artbox.bottom);
+    EXPECT_EQ(100, artbox.right);
+    EXPECT_EQ(160, artbox.top);
+  }
+}
+
 TEST_F(FPDFTransformEmbedderTest, ClipPath) {
   ASSERT_TRUE(OpenDocument("hello_world.pdf"));
 
