@@ -355,3 +355,24 @@ TEST_F(CFXXMLParserTest, BadEntity) {
       "</script>";
   ASSERT_TRUE(Parse(input) == nullptr);
 }
+
+TEST_F(CFXXMLParserTest, EmptyInput) {
+  std::unique_ptr<CFX_XMLDocument> doc = Parse("");
+  ASSERT_TRUE(doc);
+  EXPECT_FALSE(doc->GetRoot()->GetFirstChild());
+}
+
+TEST_F(CFXXMLParserTest, InvalidTagNames) {
+  EXPECT_FALSE(Parse("<1tag></1tag>"));
+  EXPECT_FALSE(Parse("<tag></1tag>"));
+  EXPECT_FALSE(Parse("<foo></bar>"));
+}
+
+TEST_F(CFXXMLParserTest, InstructionWithQuestionMarks) {
+  constexpr char kInput[] = "<?acrobat some ? data ?><root></root>";
+  std::unique_ptr<CFX_XMLDocument> doc = Parse(kInput);
+  ASSERT_TRUE(doc);
+  CFX_XMLNode* first = doc->GetRoot()->GetFirstChild();
+  ASSERT_TRUE(first);
+  EXPECT_EQ(CFX_XMLNode::Type::kInstruction, first->GetType());
+}
