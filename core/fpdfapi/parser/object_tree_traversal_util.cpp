@@ -17,15 +17,18 @@
 #include "core/fpdfapi/parser/cpdf_document.h"
 #include "core/fpdfapi/parser/cpdf_reference.h"
 #include "core/fpdfapi/parser/cpdf_stream.h"
+#include "core/fpdfapi/parser/tree_traversal_util.h"
 #include "core/fxcrt/check.h"
 #include "core/fxcrt/containers/contains.h"
 #include "core/fxcrt/unowned_ptr.h"
 
 namespace {
 
-class ObjectTreeTraverser {
+// Traverses the PDF object hierarchy in a document to extract an `AdjacencyMap`
+// and root node IDs.
+class PdfReferenceGraphBuilder {
  public:
-  explicit ObjectTreeTraverser(const CPDF_Document* document)
+  explicit PdfReferenceGraphBuilder(const CPDF_Document* document)
       : document_(document) {
     const CPDF_Parser* parser = document_->GetParser();
     const CPDF_Dictionary* trailer = parser ? parser->GetTrailer() : nullptr;
@@ -34,33 +37,35 @@ class ObjectTreeTraverser {
                   parser->GetTrailerObjectNumber());
     }
   }
-  ~ObjectTreeTraverser() = default;
 
-  void Traverse() { CalculateReferenceCounts(GetReferenceEntries()); }
+  PdfReferenceGraph Build() {
+    DrainObjectQueue();
 
-  const std::map<uint32_t, int>& referenced_objects() {
-    return referenced_objects_;
+    // Also traverse the catalog if it was not reached from the trailer
+    // (e.g. if the trailer's `/Root` was missing, null, or diverged).
+    const CPDF_Dictionary* catalog = document_->GetRoot();
+    if (catalog && !pdfium::Contains(seen_objects_, catalog)) {
+      EnqueueRoot(pdfium::WrapRetain(catalog), catalog->GetObjNum());
+      DrainObjectQueue();
+    }
+
+    return {std::move(roots_), std::move(adj_)};
   }
 
  private:
-  struct ReferenceEntry {
-    uint32_t ref_object_number;
-    uint32_t referenced_object_number;
-  };
-
   void EnqueueRoot(RetainPtr<const CPDF_Dictionary> root,
                    uint32_t root_object_number) {
     if (!root || !seen_objects_.insert(root.Get()).second) {
       return;
     }
     if (root_object_number) {
-      referenced_objects_[root_object_number] = 1;
+      roots_.push_back(root_object_number);
       object_number_map_[root.Get()] = root_object_number;
     }
     object_queue_.push(std::move(root));
   }
 
-  void DrainObjectQueue(std::vector<ReferenceEntry>* reference_entries) {
+  void DrainObjectQueue() {
     while (!object_queue_.empty()) {
       RetainPtr<const CPDF_Object> current_object = object_queue_.front();
       object_queue_.pop();
@@ -97,8 +102,13 @@ class ObjectTreeTraverser {
           // Unlike the other object types, CPDF_Reference can point at nullptr.
           if (referenced_object) {
             CHECK(referenced_object_number);
-            reference_entries->push_back(
-                {ref_object_number, referenced_object_number});
+            if (ref_object_number) {
+              if (referenced_object_number != ref_object_number) {
+                adj_[ref_object_number].push_back(referenced_object_number);
+              }
+            } else {
+              roots_.push_back(referenced_object_number);
+            }
             PushNewObject(ref_object, referenced_object);
           }
           break;
@@ -116,45 +126,6 @@ class ObjectTreeTraverser {
         default: {
           break;
         }
-      }
-    }
-  }
-
-  std::vector<ReferenceEntry> GetReferenceEntries() {
-    std::vector<ReferenceEntry> reference_entries;
-    DrainObjectQueue(&reference_entries);
-
-    // Also traverse the catalog if it was not reached from the trailer
-    // (e.g. if the trailer's `/Root` was missing, null, or diverged).
-    const CPDF_Dictionary* catalog = document_->GetRoot();
-    if (catalog && !pdfium::Contains(seen_objects_, catalog)) {
-      EnqueueRoot(pdfium::WrapRetain(catalog), catalog->GetObjNum());
-      DrainObjectQueue(&reference_entries);
-    }
-    return reference_entries;
-  }
-
-  void CalculateReferenceCounts(
-      const std::vector<ReferenceEntry>& reference_entries) {
-    // Tracks PDF objects that referenced other PDF objects, identified by their
-    // object numbers. Never 0.
-    std::set<uint32_t> seen_ref_objects;
-
-    for (const ReferenceEntry& entry : reference_entries) {
-      // Make sure this is not a self-reference.
-      if (entry.referenced_object_number == entry.ref_object_number) {
-        continue;
-      }
-
-      // Make sure this is not a circular reference.
-      if (pdfium::Contains(seen_ref_objects, entry.ref_object_number) &&
-          pdfium::Contains(seen_ref_objects, entry.referenced_object_number)) {
-        continue;
-      }
-
-      ++referenced_objects_[entry.referenced_object_number];
-      if (entry.ref_object_number) {
-        seen_ref_objects.insert(entry.ref_object_number);
       }
     }
   }
@@ -187,6 +158,8 @@ class ObjectTreeTraverser {
   }
 
   UnownedPtr<const CPDF_Document> const document_;
+  std::vector<pdfium::NodeId> roots_;
+  pdfium::AdjacencyMap adj_;
 
   // Queue of objects to traverse.
   // - Pointers in the queue are non-null.
@@ -203,21 +176,22 @@ class ObjectTreeTraverser {
   // Tracks traversed objects to prevent duplicates from getting into
   // `object_queue_` and `object_number_map_`.
   std::set<const CPDF_Object*> seen_objects_;
-
-  // Tracks which PDF objects are referenced.
-  // Key: object number
-  // Value: number of times referenced
-  std::map<uint32_t, int> referenced_objects_;
 };
 
 }  // namespace
 
+PdfReferenceGraph BuildPdfReferenceGraphForTesting(
+    const CPDF_Document* document) {
+  return PdfReferenceGraphBuilder(document).Build();
+}
+
 std::set<uint32_t> GetObjectsWithReferences(const CPDF_Document* document) {
-  ObjectTreeTraverser traverser(document);
-  traverser.Traverse();
+  PdfReferenceGraph graph = PdfReferenceGraphBuilder(document).Build();
+  std::map<pdfium::NodeId, int> counts =
+      pdfium::CalculateReferenceCounts(graph.roots, graph.adj);
 
   std::set<uint32_t> results;
-  for (const auto& it : traverser.referenced_objects()) {
+  for (const auto& it : counts) {
     results.insert(it.first);
   }
   return results;
@@ -225,11 +199,12 @@ std::set<uint32_t> GetObjectsWithReferences(const CPDF_Document* document) {
 
 std::set<uint32_t> GetObjectsWithMultipleReferences(
     const CPDF_Document* document) {
-  ObjectTreeTraverser traverser(document);
-  traverser.Traverse();
+  PdfReferenceGraph graph = PdfReferenceGraphBuilder(document).Build();
+  std::map<pdfium::NodeId, int> counts =
+      pdfium::CalculateReferenceCounts(graph.roots, graph.adj);
 
   std::set<uint32_t> results;
-  for (const auto& it : traverser.referenced_objects()) {
+  for (const auto& it : counts) {
     if (it.second > 1) {
       results.insert(it.first);
     }

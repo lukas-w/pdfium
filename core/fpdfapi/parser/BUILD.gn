@@ -75,6 +75,8 @@ source_set("parser") {
     "fpdf_parser_utility.h",
     "object_tree_traversal_util.cpp",
     "object_tree_traversal_util.h",
+    "tree_traversal_util.cpp",
+    "tree_traversal_util.h",
   ]
   configs += [ "../../../:pdfium_strict_config" ]
   public_deps = [
@@ -136,6 +138,7 @@ pdfium_unittest_source_set("unittests") {
     "cpdf_syntax_parser_unittest.cpp",
     "fpdf_parser_decode_unittest.cpp",
     "fpdf_parser_utility_unittest.cpp",
+    "tree_traversal_util_unittest.cpp",
   ]
   deps = [
     ":parser",
