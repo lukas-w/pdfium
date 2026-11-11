@@ -69,6 +69,8 @@ inline void CompositePixelBgra2Bgra(const FX_BGRA_STRUCT<uint8_t>& src,
 // Byte loads bitcast to u32 lanes -> no 4-byte scanline alignment needed.
 void RunBgra2Bgra(pdfium::span<const FX_BGRA_STRUCT<uint8_t>> src,
                   pdfium::span<FX_BGRA_STRUCT<uint8_t>> dest) {
+  // Make sure the compiler can see equal span sizes after the dispatch.
+  dest = dest.first(src.size());
 #if HWY_TARGET != HWY_SCALAR
   const hn::ScalableTag<uint32_t> d;
   const hn::ScalableTag<uint8_t> d8;
@@ -133,6 +135,8 @@ void RunBgra2Bgra(pdfium::span<const FX_BGRA_STRUCT<uint8_t>> src,
 // order required: src and dest both packed BGRA.
 void RunBgra2BgrxForceOpaque(pdfium::span<const FX_BGRA_STRUCT<uint8_t>> src,
                              pdfium::span<FX_BGRA_STRUCT<uint8_t>> dest) {
+  // Make sure the compiler can see equal span sizes after the dispatch.
+  dest = dest.first(src.size());
 #if HWY_TARGET != HWY_SCALAR
   const hn::ScalableTag<uint32_t> d;
   const hn::ScalableTag<uint8_t> d8;
