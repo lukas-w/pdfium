@@ -8,7 +8,6 @@
 #include <stdint.h>
 
 #include <map>
-#include <vector>
 
 #include "core/fxcrt/data_vector.h"
 #include "core/fxcrt/span.h"
@@ -21,9 +20,10 @@ using RefcountMap = std::map<NodeId, int>;
 
 // Given roots and an adjacency map of a directed graph, calculates reference
 // counts for all reachable nodes while ignoring self-references and back-edges
-// (cycles). Also traverses any remaining disconnected components in `adj`.
+// (cycles). Also traverses any remaining disconnected components in
+// `adjacency_map`.
 RefcountMap CalculateReferenceCounts(pdfium::span<const NodeId> roots,
-                                     const AdjacencyMap& adjacenty_map);
+                                     const AdjacencyMap& adjacency_map);
 
 }  // namespace pdfium
 

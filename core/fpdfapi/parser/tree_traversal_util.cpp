@@ -16,8 +16,9 @@
 
 namespace pdfium {
 
-std::map<NodeId, int> CalculateReferenceCounts(pdfium::span<const NodeId> roots,
-                                               const AdjacencyMap& adj) {
+std::map<NodeId, int> CalculateReferenceCounts(
+    pdfium::span<const NodeId> roots,
+    const AdjacencyMap& adjacency_map) {
   std::map<NodeId, int> ref_counts;
   for (NodeId root : roots) {
     ++ref_counts[root];
@@ -41,8 +42,8 @@ std::map<NodeId, int> CalculateReferenceCounts(pdfium::span<const NodeId> roots,
       NodeId u = queue.front();
       queue.pop();
 
-      auto it = adj.find(u);
-      if (it == adj.end()) {
+      auto it = adjacency_map.find(u);
+      if (it == adjacency_map.end()) {
         continue;
       }
 
@@ -70,7 +71,7 @@ std::map<NodeId, int> CalculateReferenceCounts(pdfium::span<const NodeId> roots,
   }
   drain_queue();
 
-  for (const auto& it : adj) {
+  for (const auto& it : adjacency_map) {
     if (enqueue(it.first)) {
       drain_queue();
     }
