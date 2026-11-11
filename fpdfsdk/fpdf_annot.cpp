@@ -419,6 +419,9 @@ FPDFPage_CreateAnnot(FPDF_PAGE page, FPDF_ANNOTATION_SUBTYPE subtype) {
 
   RetainPtr<CPDF_Array> pAnnotList = pPage->GetOrCreateAnnotsArray();
   pAnnotList->Append(dict);
+  // ISO 32000-1:2008 spec, table 30: /Annots entries are indirect references.
+  pAnnotList->ConvertToIndirectObjectAt(pAnnotList->size() - 1,
+                                        pPage->GetDocument());
 
   // Caller takes ownership.
   return FPDFAnnotationFromCPDFAnnotContext(pNewAnnot.release());
