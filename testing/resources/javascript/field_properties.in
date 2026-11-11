@@ -14,6 +14,7 @@ function testProperties() {
     var badbutton = this.getField("MyField.MyBadPushButton");
     var radio = this.getField("MyField.MyRadio");
     var list = this.getField("MyField.MyMultiSelect");
+    var single = this.getField("MyField.MySingleSelect");
     var check = this.getField("MyField.MyCheckBox");
     var file = this.getField("MyField.MyFile");
     app.alert('Testing properties under delay');
@@ -28,6 +29,7 @@ function testProperties() {
     testRadioButtonPropertiesCase(radio);
     testCheckBoxPropertiesCase(check);
     testListBoxPropertiesCase(list);
+    testSingleSelectPropertiesCase(single);
     testFileSelectPropertiesCase(file);
   } catch (e) {
     app.alert("Unexpected error: " + e);
@@ -44,35 +46,34 @@ function testFieldPropertiesCase(field) {
 
 function testTextPropertiesCase(field) {
   try {
-    // TODO(tsepez): devise tests and uncomment.
     testRIProperty(field, "alignment", "left", "center");
     testRWProperty(field, "borderStyle", "solid", "inset");
     testRIProperty(field, "calcOrderIndex", -1, 100);
     testRIProperty(field, "charLimit", 0, 100);
     testRIProperty(field, "comb", false, true);
-    // testRIProperty(field, "commitOnSelChange", false, true);
-    // testROProperty(field, "currentValueIndices", "clams");
+    testUnreadableProperty(field, "commitOnSelChange");
+    testUnreadableProperty(field, "currentValueIndices");
     testXXProperty(field, "defaultStyle");
     testRIProperty(field, "defaultValue", "grue", "clams");
     testRIProperty(field, "doNotScroll", false, true);
     testRIProperty(field, "doNotSpellCheck", false, true);
     testRWProperty(field, "display", 2, 3);
     testROProperty(field, "doc", "[object global]");
-    // testROProperty(field, "editable", "clams");
+    testUnreadableProperty(field, "editable");
     testRWProperty(field, "hidden", false, true);
     testRIProperty(field, "fileSelect", false, true);
     testRIProperty(field, "fillColor", "T", ["RGB", 0, 0, 0]);
     testRWProperty(field, "lineWidth", 1, 4);
     testRIProperty(field, "multiline", false, true);
-    // testROProperty(field, "multipleSelection", "clams");
+    testUnreadableProperty(field, "multipleSelection");
     testROProperty(field, "name", "MyField.MyText");
-    // testROProperty(field, "numItems", "clams");
+    testXXProperty(field, "numItems");
     testROProperty(field, "page", 0);
     testRIProperty(field, "password", false, 42);
     testRWProperty(field, "print", true, false);
     testRWProperty(field, "readonly", false, true);
     testROProperty(field, "rect", [200,221,220,201]);
-    // testROProperty(field, "required", "clams");
+    testRIProperty(field, "required", false, true);
     testRIProperty(field, "richText", false, true);
     testRIProperty(field, "richValue", undefined, "clams");
     testRIProperty(field, "rotation", 0, 42);
@@ -80,7 +81,7 @@ function testTextPropertiesCase(field) {
     testRIProperty(field, "strokeColor", "T", ["RGB", 0, 0, 0]);
     testRIProperty(field, "submitName", undefined, "clams");
     testRIProperty(field, "textColor", "T", ["RGB", 0, 0, 0]);
-    // testROProperty(field, "textFont", "clams");
+    testUnreadableProperty(field, "textFont");
     testRIProperty(field, "textSize", 0, 32);
     testROProperty(field, "type", "text");
     testRIProperty(field, "userName", "");
@@ -118,6 +119,7 @@ function testRadioButtonPropertiesCase(field) {
   try {
     testROProperty(field, "exportValues", "Yes");
     testRIProperty(field, "radiosInUnison", false);
+    testRIProperty(field, "required", false, true);
     testRIProperty(field, "style", "circle");
     testROProperty(field, "type", "radiobutton");
     testRIProperty(field, "value", "Off");
@@ -130,6 +132,7 @@ function testRadioButtonPropertiesCase(field) {
 function testCheckBoxPropertiesCase(field) {
   try {
     testROProperty(field, "exportValues", "Yes");
+    testRIProperty(field, "required", false, true);
     testRIProperty(field, "style", "check");
     testROProperty(field, "type", "checkbox");
     testRIProperty(field, "value", "Off");
@@ -142,6 +145,23 @@ function testCheckBoxPropertiesCase(field) {
 function testListBoxPropertiesCase(field) {
   try {
     testRWProperty(field, "currentValueIndices", 2, 1);
+    testROProperty(field, "numItems", 3);
+    testRIProperty(field, "multipleSelection", true, false);
+    testRIProperty(field, "commitOnSelChange", false, true);
+    testRIProperty(field, "required", false, true);
+    testUnreadableProperty(field, "editable");
+  } catch (e) {
+    app.alert("Unexpected error: " + e);
+  }
+}
+
+function testSingleSelectPropertiesCase(field) {
+  try {
+    testROProperty(field, "numItems", 3);
+    testRIProperty(field, "multipleSelection", false, true);
+    testRIProperty(field, "commitOnSelChange", false, true);
+    testRIProperty(field, "required", false, true);
+    testUnreadableProperty(field, "editable");
   } catch (e) {
     app.alert("Unexpected error: " + e);
   }

@@ -54,6 +54,14 @@ try {
   expect("app.beep(1)", undefined);
 
   expectError("app.browseForDoc()");
+  expectError("app.clearInterval()");
+  expectError("app.clearInterval(1, 2)");
+  expect("app.clearInterval(1)", undefined);
+  expect("app.clearInterval({})", undefined);
+  expectError("app.clearTimeOut()");
+  expectError("app.clearTimeOut(1, 2)");
+  expect("app.clearTimeOut(1)", undefined);
+  expect("app.clearTimeOut({})", undefined);
   expect("app.execDialog()", undefined);
   expectError("app.execMenuItem()");
   expect("app.findComponent()", undefined);
@@ -66,6 +74,18 @@ try {
   expect("app.openFDF()", undefined);
   expectError("app.popUpMenuEx()");
   expectError("app.popUpMenu()");
+  expectError("app.setInterval()");
+  expectError("app.setInterval('')");
+  expectError("app.setInterval('foo', 100, 200)");
+  var testInterval = app.setInterval("42", 1000000);
+  expect("typeof testInterval", "object");
+  expect("app.clearInterval(testInterval)", undefined);
+  expectError("app.setTimeOut()");
+  expectError("app.setTimeOut('')");
+  expectError("app.setTimeOut('foo', 100, 200)");
+  var testTimeout = app.setTimeOut("42", 1000000);
+  expect("typeof testTimeout", "object");
+  expect("app.clearTimeOut(testTimeout)", undefined);
 
   expect("app.mailMsg(true)", undefined);
   expect("app.mailMsg(false, 'user@example.com')", undefined);

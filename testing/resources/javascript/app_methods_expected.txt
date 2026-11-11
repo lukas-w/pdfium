@@ -26,6 +26,14 @@ Alert: PASS: app.alert({'color': 'red', 'size': 42}) threw app.alert: Incorrect 
 BEEP!!! 1
 Alert: PASS: app.beep(1) = undefined
 Alert: FAIL: app.browseForDoc() = undefined, expected to throw
+Alert: PASS: app.clearInterval() threw app.clearInterval: Incorrect number of parameters passed to function.
+Alert: PASS: app.clearInterval(1, 2) threw app.clearInterval: Incorrect number of parameters passed to function.
+Alert: PASS: app.clearInterval(1) = undefined
+Alert: PASS: app.clearInterval({}) = undefined
+Alert: PASS: app.clearTimeOut() threw app.clearTimeOut: Incorrect number of parameters passed to function.
+Alert: PASS: app.clearTimeOut(1, 2) threw app.clearTimeOut: Incorrect number of parameters passed to function.
+Alert: PASS: app.clearTimeOut(1) = undefined
+Alert: PASS: app.clearTimeOut({}) = undefined
 Alert: PASS: app.execDialog() = undefined
 Alert: PASS: app.execMenuItem() threw app.execMenuItem: Operation not supported.
 Alert: PASS: app.findComponent() = undefined
@@ -38,6 +46,16 @@ Alert: PASS: app.openDoc() threw app.openDoc: Operation not supported.
 Alert: PASS: app.openFDF() = undefined
 Alert: PASS: app.popUpMenuEx() threw app.popUpMenuEx: Operation not supported.
 Alert: PASS: app.popUpMenu() threw app.popUpMenu: Operation not supported.
+Alert: PASS: app.setInterval() threw app.setInterval: Incorrect number of parameters passed to function.
+Alert: PASS: app.setInterval('') threw app.setInterval: The input value is invalid.
+Alert: PASS: app.setInterval('foo', 100, 200) threw app.setInterval: Incorrect number of parameters passed to function.
+Alert: PASS: typeof testInterval = object
+Alert: PASS: app.clearInterval(testInterval) = undefined
+Alert: PASS: app.setTimeOut() threw app.setTimeOut: Incorrect number of parameters passed to function.
+Alert: PASS: app.setTimeOut('') threw app.setTimeOut: The input value is invalid.
+Alert: PASS: app.setTimeOut('foo', 100, 200) threw app.setTimeOut: Incorrect number of parameters passed to function.
+Alert: PASS: typeof testTimeout = object
+Alert: PASS: app.clearTimeOut(testTimeout) = undefined
 Mail Msg: 1, to=, cc=, bcc=, subject=, body=
 Alert: PASS: app.mailMsg(true) = undefined
 Mail Msg: 0, to=user@example.com, cc=, bcc=, subject=, body=
