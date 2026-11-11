@@ -99,8 +99,6 @@ TEST(FlateModule, CreateDecoderPngPredictorRewind) {
       4, 0,  0,   0,   0, 0, 0,  // Row 1
   };
   static constexpr uint8_t kExpectedRow[] = {80, 140, 200, 80, 140, 200};
-  // TODO(crbug.com/578639452): Rewinding should not change the data.
-  static constexpr uint8_t kWrongRow[] = {160, 24, 144, 160, 24, 144};
 
   DataVector<uint8_t> encoded = FlateModule::Encode(kRawInput);
   std::unique_ptr<ScanlineDecoder> decoder = FlateModule::CreateDecoder(
@@ -112,6 +110,6 @@ TEST(FlateModule, CreateDecoderPngPredictorRewind) {
   EXPECT_THAT(decoder->GetScanline(1), ElementsAreArray(kExpectedRow));
 
   // Reading scanline 0 again rewinds the decoder.
-  EXPECT_THAT(decoder->GetScanline(0), ElementsAreArray(kWrongRow));
-  EXPECT_THAT(decoder->GetScanline(1), ElementsAreArray(kWrongRow));
+  EXPECT_THAT(decoder->GetScanline(0), ElementsAreArray(kExpectedRow));
+  EXPECT_THAT(decoder->GetScanline(1), ElementsAreArray(kExpectedRow));
 }

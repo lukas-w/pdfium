@@ -500,6 +500,7 @@ bool FlatePredictorScanlineDecoder::Rewind() {
   }
 
   left_over_ = 0;
+  std::ranges::fill(last_line_.span(), 0);
   return true;
 }
 
