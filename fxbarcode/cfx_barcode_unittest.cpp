@@ -251,3 +251,182 @@ TEST_F(BarcodeTest, QrCode) {
 #endif
   EXPECT_EQ(kExpectedChecksum, BitmapChecksum());
 }
+
+TEST_F(BarcodeTest, GetType) {
+  Create(BC_TYPE::kCode39);
+  EXPECT_EQ(BC_TYPE::kCode39, barcode()->GetType());
+
+  Create(BC_TYPE::kCodabar);
+  EXPECT_EQ(BC_TYPE::kCodabar, barcode()->GetType());
+
+  Create(BC_TYPE::kCode128);
+  EXPECT_EQ(BC_TYPE::kCode128, barcode()->GetType());
+
+  Create(BC_TYPE::kCode128B);
+  EXPECT_EQ(BC_TYPE::kCode128, barcode()->GetType());
+
+  Create(BC_TYPE::kCode128C);
+  EXPECT_EQ(BC_TYPE::kCode128, barcode()->GetType());
+
+  Create(BC_TYPE::kEAN8);
+  EXPECT_EQ(BC_TYPE::kEAN8, barcode()->GetType());
+
+  Create(BC_TYPE::kUPCA);
+  EXPECT_EQ(BC_TYPE::kUPCA, barcode()->GetType());
+
+  Create(BC_TYPE::kEAN13);
+  EXPECT_EQ(BC_TYPE::kEAN13, barcode()->GetType());
+
+  Create(BC_TYPE::kQRCode);
+  EXPECT_EQ(BC_TYPE::kQRCode, barcode()->GetType());
+
+  Create(BC_TYPE::kPDF417);
+  EXPECT_EQ(BC_TYPE::kPDF417, barcode()->GetType());
+
+  Create(BC_TYPE::kDataMatrix);
+  EXPECT_EQ(BC_TYPE::kDataMatrix, barcode()->GetType());
+}
+
+TEST_F(BarcodeTest, SetStartEndChar) {
+  Create(BC_TYPE::kCodabar);
+  EXPECT_TRUE(barcode()->SetStartChar('A'));
+  EXPECT_TRUE(barcode()->SetStartChar('B'));
+  EXPECT_TRUE(barcode()->SetStartChar('C'));
+  EXPECT_TRUE(barcode()->SetStartChar('D'));
+  EXPECT_TRUE(barcode()->SetStartChar('E'));
+  EXPECT_TRUE(barcode()->SetStartChar('N'));
+  EXPECT_TRUE(barcode()->SetStartChar('T'));
+  EXPECT_TRUE(barcode()->SetStartChar('*'));
+  EXPECT_FALSE(barcode()->SetStartChar('X'));
+  EXPECT_FALSE(barcode()->SetStartChar('0'));
+  EXPECT_FALSE(barcode()->SetStartChar('\0'));
+
+  EXPECT_TRUE(barcode()->SetEndChar('A'));
+  EXPECT_TRUE(barcode()->SetEndChar('B'));
+  EXPECT_TRUE(barcode()->SetEndChar('C'));
+  EXPECT_TRUE(barcode()->SetEndChar('D'));
+  EXPECT_TRUE(barcode()->SetEndChar('E'));
+  EXPECT_TRUE(barcode()->SetEndChar('N'));
+  EXPECT_TRUE(barcode()->SetEndChar('T'));
+  EXPECT_TRUE(barcode()->SetEndChar('*'));
+  EXPECT_FALSE(barcode()->SetEndChar('X'));
+  EXPECT_FALSE(barcode()->SetEndChar('0'));
+  EXPECT_FALSE(barcode()->SetEndChar('\0'));
+
+  Create(BC_TYPE::kCode39);
+  EXPECT_FALSE(barcode()->SetStartChar('A'));
+  EXPECT_FALSE(barcode()->SetEndChar('A'));
+
+  Create(BC_TYPE::kQRCode);
+  EXPECT_FALSE(barcode()->SetStartChar('A'));
+  EXPECT_FALSE(barcode()->SetEndChar('A'));
+}
+
+TEST_F(BarcodeTest, OneDimVsTwoDimProperties) {
+  Create(BC_TYPE::kCode39);
+  EXPECT_TRUE(barcode()->SetPrintChecksum(true));
+  EXPECT_TRUE(barcode()->SetDataLength(10));
+  EXPECT_TRUE(barcode()->SetCalChecksum(true));
+  EXPECT_TRUE(barcode()->SetFontSize(12.0f));
+  EXPECT_TRUE(barcode()->SetFontColor(0xFF000000));
+  EXPECT_TRUE(barcode()->SetWideNarrowRatio(2));
+  EXPECT_TRUE(barcode()->SetWideNarrowRatio(3));
+  EXPECT_FALSE(barcode()->SetWideNarrowRatio(1));
+  EXPECT_FALSE(barcode()->SetWideNarrowRatio(4));
+
+  Create(BC_TYPE::kQRCode);
+  EXPECT_FALSE(barcode()->SetPrintChecksum(true));
+  EXPECT_FALSE(barcode()->SetDataLength(10));
+  EXPECT_FALSE(barcode()->SetCalChecksum(true));
+  EXPECT_FALSE(barcode()->SetFontSize(12.0f));
+  EXPECT_FALSE(barcode()->SetFontColor(0xFF000000));
+  EXPECT_FALSE(barcode()->SetWideNarrowRatio(2));
+
+  Create(BC_TYPE::kPDF417);
+  EXPECT_FALSE(barcode()->SetPrintChecksum(true));
+  EXPECT_FALSE(barcode()->SetDataLength(10));
+  EXPECT_FALSE(barcode()->SetCalChecksum(true));
+  EXPECT_FALSE(barcode()->SetFontSize(12.0f));
+  EXPECT_FALSE(barcode()->SetFontColor(0xFF000000));
+  EXPECT_FALSE(barcode()->SetWideNarrowRatio(2));
+
+  Create(BC_TYPE::kDataMatrix);
+  EXPECT_FALSE(barcode()->SetPrintChecksum(true));
+  EXPECT_FALSE(barcode()->SetDataLength(10));
+  EXPECT_FALSE(barcode()->SetCalChecksum(true));
+  EXPECT_FALSE(barcode()->SetFontSize(12.0f));
+  EXPECT_FALSE(barcode()->SetFontColor(0xFF000000));
+  EXPECT_FALSE(barcode()->SetWideNarrowRatio(2));
+}
+
+TEST_F(BarcodeTest, ErrorCorrectionLevel) {
+  Create(BC_TYPE::kQRCode);
+  EXPECT_TRUE(barcode()->SetErrorCorrectionLevel(0));
+  EXPECT_TRUE(barcode()->SetErrorCorrectionLevel(1));
+  EXPECT_TRUE(barcode()->SetErrorCorrectionLevel(2));
+  EXPECT_TRUE(barcode()->SetErrorCorrectionLevel(3));
+  EXPECT_FALSE(barcode()->SetErrorCorrectionLevel(-1));
+  EXPECT_FALSE(barcode()->SetErrorCorrectionLevel(4));
+
+  Create(BC_TYPE::kPDF417);
+  EXPECT_TRUE(barcode()->SetErrorCorrectionLevel(0));
+  EXPECT_TRUE(barcode()->SetErrorCorrectionLevel(4));
+  EXPECT_TRUE(barcode()->SetErrorCorrectionLevel(8));
+  EXPECT_FALSE(barcode()->SetErrorCorrectionLevel(-1));
+  EXPECT_FALSE(barcode()->SetErrorCorrectionLevel(9));
+
+  Create(BC_TYPE::kDataMatrix);
+  EXPECT_TRUE(barcode()->SetErrorCorrectionLevel(0));
+  EXPECT_TRUE(barcode()->SetErrorCorrectionLevel(3));
+
+  Create(BC_TYPE::kCode39);
+  EXPECT_FALSE(barcode()->SetErrorCorrectionLevel(0));
+}
+
+TEST_F(BarcodeTest, ModuleDimensionsAndTextLocation) {
+  Create(BC_TYPE::kCode39);
+  EXPECT_TRUE(barcode()->SetModuleHeight(1));
+  EXPECT_TRUE(barcode()->SetModuleHeight(5));
+  EXPECT_TRUE(barcode()->SetModuleHeight(10));
+  EXPECT_FALSE(barcode()->SetModuleHeight(0));
+  EXPECT_FALSE(barcode()->SetModuleHeight(11));
+
+  EXPECT_TRUE(barcode()->SetModuleWidth(1));
+  EXPECT_TRUE(barcode()->SetModuleWidth(5));
+  EXPECT_TRUE(barcode()->SetModuleWidth(10));
+  EXPECT_FALSE(barcode()->SetModuleWidth(0));
+  EXPECT_FALSE(barcode()->SetModuleWidth(11));
+
+  barcode()->SetTextLocation(BC_TEXT_LOC::kNone);
+  barcode()->SetTextLocation(BC_TEXT_LOC::kAbove);
+  barcode()->SetTextLocation(BC_TEXT_LOC::kBelow);
+  barcode()->SetTextLocation(BC_TEXT_LOC::kAboveEmbed);
+  barcode()->SetTextLocation(BC_TEXT_LOC::kBelowEmbed);
+}
+
+TEST_F(BarcodeTest, EanTruncation) {
+  Create(BC_TYPE::kEAN8);
+  EXPECT_TRUE(barcode()->Encode(L"1234567890"));
+
+  Create(BC_TYPE::kEAN13);
+  EXPECT_TRUE(barcode()->Encode(L"1234567890123456"));
+
+  Create(BC_TYPE::kUPCA);
+  EXPECT_TRUE(barcode()->Encode(L"1234567890123456"));
+}
+
+TEST_F(BarcodeTest, Code128COddLengthPadded) {
+  Create(BC_TYPE::kCode128C);
+  EXPECT_TRUE(barcode()->Encode(L"123"));
+  RenderDevice();
+}
+
+TEST_F(BarcodeTest, ValidationFailures) {
+  Create(BC_TYPE::kCode128);
+  EXPECT_FALSE(barcode()->Encode(L""));
+  EXPECT_FALSE(barcode()->Encode(L"\""));
+
+  Create(BC_TYPE::kDataMatrix);
+  WideString long_str(std::wstring(3117, L'1').c_str());
+  EXPECT_FALSE(barcode()->Encode(long_str.AsStringView()));
+}
