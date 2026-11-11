@@ -12,6 +12,7 @@
 #include <utility>
 #include <vector>
 
+#include "core/fxcrt/autorestorer.h"
 #include "core/fxcrt/cfx_timer.h"
 #include "core/fxcrt/observed_ptr.h"
 #include "fxjs/cfxjs_engine.h"
@@ -44,8 +45,19 @@ class CJS_Runtime final : public IJS_Runtime,
   bool AddEventToSet(const FieldEvent& event);
   void RemoveEventFromSet(const FieldEvent& event);
 
-  void BeginBlock() { blocking_ = true; }
-  void EndBlock() { blocking_ = false; }
+  class [[maybe_unused, nodiscard]] BlockingScope {
+   public:
+    FX_STACK_ALLOCATED();
+
+    explicit BlockingScope(CJS_Runtime* runtime);
+    BlockingScope(const BlockingScope&) = delete;
+    BlockingScope& operator=(const BlockingScope&) = delete;
+    ~BlockingScope();
+
+   private:
+    AutoRestorer<bool> restorer_;
+  };
+
   bool IsBlocking() const { return blocking_; }
 
   // Attempt to convert the |value| into a number. If successful the number

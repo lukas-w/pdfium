@@ -94,6 +94,11 @@ CJS_Runtime::~CJS_Runtime() {
   }
 }
 
+CJS_Runtime::BlockingScope::BlockingScope(CJS_Runtime* runtime)
+    : restorer_(&runtime->blocking_, true) {}
+
+CJS_Runtime::BlockingScope::~BlockingScope() = default;
+
 void CJS_Runtime::DefineJSObjects() {
   v8::Isolate::Scope isolate_scope(GetIsolate());
   v8::HandleScope handle_scope(GetIsolate());
