@@ -4,7 +4,12 @@
 
 #include "core/fxcodec/flate/flatemodule.h"
 
+#include <stdint.h>
+
+#include <memory>
+
 #include "core/fxcodec/data_and_bytes_consumed.h"
+#include "core/fxcodec/scanlinedecoder.h"
 #include "testing/gmock/include/gmock/gmock.h"
 #include "testing/gtest/include/gtest/gtest.h"
 #include "testing/test_support.h"
@@ -85,4 +90,28 @@ TEST(FlateModule, LZWDecode) {
       /*estimated_size=*/0);
   EXPECT_THAT(result.data, ElementsAreArray(kExpected));
   EXPECT_EQ(5u, result.bytes_consumed);
+}
+
+TEST(FlateModule, CreateDecoderPngPredictorRewind) {
+  // 2x2 RGB image encoded with PNG Paeth filter (tag 4) on each row.
+  static constexpr uint8_t kRawInput[] = {
+      4, 80, 140, 200, 0, 0, 0,  // Row 0
+      4, 0,  0,   0,   0, 0, 0,  // Row 1
+  };
+  static constexpr uint8_t kExpectedRow[] = {80, 140, 200, 80, 140, 200};
+  // TODO(crbug.com/578639452): Rewinding should not change the data.
+  static constexpr uint8_t kWrongRow[] = {160, 24, 144, 160, 24, 144};
+
+  DataVector<uint8_t> encoded = FlateModule::Encode(kRawInput);
+  std::unique_ptr<ScanlineDecoder> decoder = FlateModule::CreateDecoder(
+      encoded, /*width=*/2, /*height=*/2, /*nComps=*/3, /*bpc=*/8,
+      /*predictor=*/15, /*Colors=*/3, /*BitsPerComponent=*/8, /*Columns=*/2);
+  ASSERT_TRUE(decoder);
+
+  EXPECT_THAT(decoder->GetScanline(0), ElementsAreArray(kExpectedRow));
+  EXPECT_THAT(decoder->GetScanline(1), ElementsAreArray(kExpectedRow));
+
+  // Reading scanline 0 again rewinds the decoder.
+  EXPECT_THAT(decoder->GetScanline(0), ElementsAreArray(kWrongRow));
+  EXPECT_THAT(decoder->GetScanline(1), ElementsAreArray(kWrongRow));
 }
