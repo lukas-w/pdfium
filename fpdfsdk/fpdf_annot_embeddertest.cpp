@@ -116,6 +116,70 @@ void VerifyUriActionInLink(FPDF_DOCUMENT doc,
 
 class FPDFAnnotEmbedderTest : public EmbedderTest {};
 
+TEST_F(FPDFAnnotEmbedderTest, IsSupportedSubtype) {
+  EXPECT_FALSE(FPDFAnnot_IsSupportedSubtype(FPDF_ANNOT_UNKNOWN));
+  EXPECT_TRUE(FPDFAnnot_IsSupportedSubtype(FPDF_ANNOT_TEXT));
+  EXPECT_TRUE(FPDFAnnot_IsSupportedSubtype(FPDF_ANNOT_LINK));
+  EXPECT_TRUE(FPDFAnnot_IsSupportedSubtype(FPDF_ANNOT_FREETEXT));
+  EXPECT_FALSE(FPDFAnnot_IsSupportedSubtype(FPDF_ANNOT_LINE));
+  EXPECT_TRUE(FPDFAnnot_IsSupportedSubtype(FPDF_ANNOT_SQUARE));
+  EXPECT_TRUE(FPDFAnnot_IsSupportedSubtype(FPDF_ANNOT_CIRCLE));
+  EXPECT_TRUE(FPDFAnnot_IsSupportedSubtype(FPDF_ANNOT_HIGHLIGHT));
+  EXPECT_TRUE(FPDFAnnot_IsSupportedSubtype(FPDF_ANNOT_UNDERLINE));
+  EXPECT_TRUE(FPDFAnnot_IsSupportedSubtype(FPDF_ANNOT_SQUIGGLY));
+  EXPECT_TRUE(FPDFAnnot_IsSupportedSubtype(FPDF_ANNOT_STRIKEOUT));
+  EXPECT_TRUE(FPDFAnnot_IsSupportedSubtype(FPDF_ANNOT_STAMP));
+  EXPECT_FALSE(FPDFAnnot_IsSupportedSubtype(FPDF_ANNOT_CARET));
+  EXPECT_TRUE(FPDFAnnot_IsSupportedSubtype(FPDF_ANNOT_INK));
+  EXPECT_TRUE(FPDFAnnot_IsSupportedSubtype(FPDF_ANNOT_POPUP));
+  EXPECT_TRUE(FPDFAnnot_IsSupportedSubtype(FPDF_ANNOT_FILEATTACHMENT));
+  EXPECT_FALSE(FPDFAnnot_IsSupportedSubtype(FPDF_ANNOT_SOUND));
+  EXPECT_FALSE(FPDFAnnot_IsSupportedSubtype(FPDF_ANNOT_MOVIE));
+  EXPECT_FALSE(FPDFAnnot_IsSupportedSubtype(FPDF_ANNOT_WIDGET));
+  EXPECT_FALSE(FPDFAnnot_IsSupportedSubtype(FPDF_ANNOT_SCREEN));
+  EXPECT_FALSE(FPDFAnnot_IsSupportedSubtype(FPDF_ANNOT_PRINTERMARK));
+  EXPECT_FALSE(FPDFAnnot_IsSupportedSubtype(FPDF_ANNOT_TRAPNET));
+  EXPECT_FALSE(FPDFAnnot_IsSupportedSubtype(FPDF_ANNOT_WATERMARK));
+  EXPECT_FALSE(FPDFAnnot_IsSupportedSubtype(FPDF_ANNOT_THREED));
+  EXPECT_FALSE(FPDFAnnot_IsSupportedSubtype(FPDF_ANNOT_RICHMEDIA));
+  EXPECT_FALSE(FPDFAnnot_IsSupportedSubtype(FPDF_ANNOT_XFAWIDGET));
+  EXPECT_FALSE(FPDFAnnot_IsSupportedSubtype(FPDF_ANNOT_REDACT));
+  EXPECT_FALSE(FPDFAnnot_IsSupportedSubtype(-1));
+  EXPECT_FALSE(FPDFAnnot_IsSupportedSubtype(999));
+}
+
+TEST_F(FPDFAnnotEmbedderTest, IsObjectSupportedSubtype) {
+  EXPECT_FALSE(FPDFAnnot_IsObjectSupportedSubtype(FPDF_ANNOT_UNKNOWN));
+  EXPECT_FALSE(FPDFAnnot_IsObjectSupportedSubtype(FPDF_ANNOT_TEXT));
+  EXPECT_FALSE(FPDFAnnot_IsObjectSupportedSubtype(FPDF_ANNOT_LINK));
+  EXPECT_FALSE(FPDFAnnot_IsObjectSupportedSubtype(FPDF_ANNOT_FREETEXT));
+  EXPECT_FALSE(FPDFAnnot_IsObjectSupportedSubtype(FPDF_ANNOT_LINE));
+  EXPECT_FALSE(FPDFAnnot_IsObjectSupportedSubtype(FPDF_ANNOT_SQUARE));
+  EXPECT_FALSE(FPDFAnnot_IsObjectSupportedSubtype(FPDF_ANNOT_CIRCLE));
+  EXPECT_FALSE(FPDFAnnot_IsObjectSupportedSubtype(FPDF_ANNOT_HIGHLIGHT));
+  EXPECT_FALSE(FPDFAnnot_IsObjectSupportedSubtype(FPDF_ANNOT_UNDERLINE));
+  EXPECT_FALSE(FPDFAnnot_IsObjectSupportedSubtype(FPDF_ANNOT_SQUIGGLY));
+  EXPECT_FALSE(FPDFAnnot_IsObjectSupportedSubtype(FPDF_ANNOT_STRIKEOUT));
+  EXPECT_TRUE(FPDFAnnot_IsObjectSupportedSubtype(FPDF_ANNOT_STAMP));
+  EXPECT_FALSE(FPDFAnnot_IsObjectSupportedSubtype(FPDF_ANNOT_CARET));
+  EXPECT_TRUE(FPDFAnnot_IsObjectSupportedSubtype(FPDF_ANNOT_INK));
+  EXPECT_FALSE(FPDFAnnot_IsObjectSupportedSubtype(FPDF_ANNOT_POPUP));
+  EXPECT_FALSE(FPDFAnnot_IsObjectSupportedSubtype(FPDF_ANNOT_FILEATTACHMENT));
+  EXPECT_FALSE(FPDFAnnot_IsObjectSupportedSubtype(FPDF_ANNOT_SOUND));
+  EXPECT_FALSE(FPDFAnnot_IsObjectSupportedSubtype(FPDF_ANNOT_MOVIE));
+  EXPECT_FALSE(FPDFAnnot_IsObjectSupportedSubtype(FPDF_ANNOT_WIDGET));
+  EXPECT_FALSE(FPDFAnnot_IsObjectSupportedSubtype(FPDF_ANNOT_SCREEN));
+  EXPECT_FALSE(FPDFAnnot_IsObjectSupportedSubtype(FPDF_ANNOT_PRINTERMARK));
+  EXPECT_FALSE(FPDFAnnot_IsObjectSupportedSubtype(FPDF_ANNOT_TRAPNET));
+  EXPECT_FALSE(FPDFAnnot_IsObjectSupportedSubtype(FPDF_ANNOT_WATERMARK));
+  EXPECT_FALSE(FPDFAnnot_IsObjectSupportedSubtype(FPDF_ANNOT_THREED));
+  EXPECT_FALSE(FPDFAnnot_IsObjectSupportedSubtype(FPDF_ANNOT_RICHMEDIA));
+  EXPECT_FALSE(FPDFAnnot_IsObjectSupportedSubtype(FPDF_ANNOT_XFAWIDGET));
+  EXPECT_FALSE(FPDFAnnot_IsObjectSupportedSubtype(FPDF_ANNOT_REDACT));
+  EXPECT_FALSE(FPDFAnnot_IsObjectSupportedSubtype(-1));
+  EXPECT_FALSE(FPDFAnnot_IsObjectSupportedSubtype(999));
+}
+
 TEST_F(FPDFAnnotEmbedderTest, SetAP) {
   ScopedFPDFDocument doc(FPDF_CreateNewDocument());
   ASSERT_TRUE(doc);
