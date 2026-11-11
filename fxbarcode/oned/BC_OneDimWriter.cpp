@@ -77,10 +77,6 @@ void CBC_OneDimWriter::SetFontSize(float size) {
   font_size_ = size;
 }
 
-void CBC_OneDimWriter::SetFontStyle(int32_t style) {
-  font_style_ = style;
-}
-
 void CBC_OneDimWriter::SetFontColor(FX_ARGB color) {
   font_color_ = color;
 }

@@ -50,10 +50,6 @@ void CBC_OneCode::SetFontSize(float size) {
   GetOneDimWriter()->SetFontSize(size);
 }
 
-void CBC_OneCode::SetFontStyle(int32_t style) {
-  GetOneDimWriter()->SetFontStyle(style);
-}
-
 void CBC_OneCode::SetFontColor(FX_ARGB color) {
   GetOneDimWriter()->SetFontColor(color);
 }

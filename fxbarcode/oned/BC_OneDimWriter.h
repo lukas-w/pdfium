@@ -45,7 +45,6 @@ class CBC_OneDimWriter : public CBC_Writer {
   void SetPrintChecksum(bool checksum);
   void SetCalcChecksum(bool state);
   void SetFontSize(float size);
-  void SetFontStyle(int32_t style);
   void SetFontColor(FX_ARGB color);
 
   virtual DataVector<uint8_t> Encode(const ByteString& contents) = 0;
@@ -84,7 +83,6 @@ class CBC_OneDimWriter : public CBC_Writer {
 
   UnownedPtr<CFX_Font> font_;
   float font_size_ = 10.0f;
-  int32_t font_style_ = 0;
   uint32_t font_color_ = 0xff000000;
   BC_TEXT_LOC loc_text_loc_ = BC_TEXT_LOC::kBelowEmbed;
 
