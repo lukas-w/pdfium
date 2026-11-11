@@ -219,6 +219,7 @@ int CPDFSDK_FormFillEnvironment::JS_appAlert(const WideString& Msg,
 
   ByteString bsMsg = Msg.ToUTF16LE();
   ByteString bsTitle = Title.ToUTF16LE();
+  AutoRestorer<bool> restorer(&in_active_ffi_callback_, true);
   return js_platform->app_alert(js_platform, AsFPDFWideString(&bsMsg),
                                 AsFPDFWideString(&bsTitle), Type, Icon);
 }
@@ -239,6 +240,7 @@ int CPDFSDK_FormFillEnvironment::JS_appResponse(
   ByteString bsTitle = Title.ToUTF16LE();
   ByteString bsDefault = Default.ToUTF16LE();
   ByteString bsLabel = Label.ToUTF16LE();
+  AutoRestorer<bool> restorer(&in_active_ffi_callback_, true);
   return js_platform->app_response(
       js_platform, AsFPDFWideString(&bsQuestion), AsFPDFWideString(&bsTitle),
       AsFPDFWideString(&bsDefault), AsFPDFWideString(&bsLabel), bPassword,
@@ -251,6 +253,7 @@ void CPDFSDK_FormFillEnvironment::JS_appBeep(int nType) {
     return;
   }
 
+  AutoRestorer<bool> restorer(&in_active_ffi_callback_, true);
   js_platform->app_beep(js_platform, nType);
 }
 
