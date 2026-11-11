@@ -505,7 +505,7 @@ float CXFA_TextLayout::Layout(const CFX_SizeF& size) {
   Unload();
   break_ = CreateBreak(true);
   if (loader_) {
-    loader_->iTotalLines = -1;
+    loader_->total_lines.reset();
     loader_->nCharIdx = 0;
   }
 
@@ -524,7 +524,7 @@ bool CXFA_TextLayout::LayoutInternal(size_t szBlockIndex) {
     return false;
   }
 
-  loader_->iTotalLines = -1;
+  loader_->total_lines.reset();
   lines_ = 0;
   float fLinePos = 0;
   CXFA_Node* pNode = nullptr;
@@ -542,8 +542,7 @@ bool CXFA_TextLayout::LayoutInternal(size_t szBlockIndex) {
 
     loader_->nCharIdx = 0;
     if (!blocks_.empty()) {
-      loader_->iTotalLines =
-          pdfium::checked_cast<int32_t>(blocks_[szBlockIndex].szLength);
+      loader_->total_lines = blocks_[szBlockIndex].szLength;
     }
     Loader(szText.width, &fLinePos, true);
     if (blocks_.empty() && loader_->fStartLineOffset < 0.1f) {
@@ -551,8 +550,7 @@ bool CXFA_TextLayout::LayoutInternal(size_t szBlockIndex) {
     }
   } else if (text_data_node_) {
     if (!blocks_.empty() && szBlockIndex < blocks_.size() - 1) {
-      loader_->iTotalLines =
-          pdfium::checked_cast<int32_t>(blocks_[szBlockIndex].szLength);
+      loader_->total_lines = blocks_[szBlockIndex].szLength;
     }
     break_->Reset();
     if (rich_text_) {
@@ -905,7 +903,7 @@ bool CXFA_TextLayout::LoadRichText(const CFX_XMLNode* pXMLNode,
           if (!IsEnd(bSavePieces)) {
             return true;
           }
-          if (loader_ && loader_->iTotalLines > -1) {
+          if (loader_ && loader_->total_lines.has_value()) {
             loader_->pXMLNode = pXMLNode;
             loader_->pParentStyle = pParentStyle;
           }
@@ -959,7 +957,7 @@ bool CXFA_TextLayout::LoadRichText(const CFX_XMLNode* pXMLNode,
     return true;
   }
 
-  if (loader_ && loader_->iTotalLines > -1) {
+  if (loader_ && loader_->total_lines.has_value()) {
     loader_->pXMLNode = pXMLNode->GetNextSibling();
     loader_->pParentStyle = pParentStyle;
   }
@@ -1005,8 +1003,8 @@ bool CXFA_TextLayout::IsEnd(bool bSavePieces) {
   if (!bSavePieces) {
     return false;
   }
-  if (loader_ && loader_->iTotalLines > 0) {
-    return lines_ >= loader_->iTotalLines;
+  if (loader_ && loader_->total_lines.value_or(0) > 0) {
+    return lines_ >= loader_->total_lines;
   }
   return false;
 }

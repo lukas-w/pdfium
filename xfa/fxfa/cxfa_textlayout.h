@@ -8,6 +8,7 @@
 #define XFA_FXFA_CXFA_TEXTLAYOUT_H_
 
 #include <memory>
+#include <optional>
 #include <vector>
 
 #include "core/fxcrt/css/cfx_css.h"
@@ -112,8 +113,7 @@ class CXFA_TextLayout final : public cppgc::GarbageCollected<CXFA_TextLayout> {
     float fLastPos = 0;
     float fStartLineOffset = 0;
     size_t nCharIdx = 0;
-    // TODO(thestig): Make this size_t?
-    int32_t iTotalLines = -1;
+    std::optional<size_t> total_lines;
     UnownedPtr<const CFX_XMLNode> pXMLNode;
     RetainPtr<CFX_CSSComputedStyle> pParentStyle;
     cppgc::Member<CXFA_Node> pNode;
@@ -177,7 +177,7 @@ class CXFA_TextLayout final : public cppgc::GarbageCollected<CXFA_TextLayout> {
 
   bool has_block_ = false;
   bool rich_text_ = false;
-  int32_t lines_ = 0;
+  size_t lines_ = 0;
   float max_width_ = 0;
   std::vector<BlockData> blocks_;
   cppgc::Member<CXFA_FFDoc> const doc_;
