@@ -12,11 +12,14 @@
 #include "core/fxcodec/scanlinedecoder.h"
 #include "core/fxcrt/data_vector.h"
 #include "core/fxcrt/span.h"
+#include "testing/gmock/include/gmock/gmock.h"
 #include "testing/gtest/include/gtest/gtest.h"
 
 namespace fxcodec {
 
 namespace {
+
+using ::testing::ElementsAreArray;
 
 // Real-world 44x46 1-D CCITT Group 3 encoded fax stream (containing 38 rows).
 constexpr uint8_t kFax1DData[] = {
@@ -167,6 +170,32 @@ TEST(FaxModuleTest, Group4_FaxG4Decode) {
       kFaxG4Data, /*starting_bitpos=*/0, kWidth, kHeight, kPitch, dest_buf);
   EXPECT_GT(end_bitpos, 0u);
   EXPECT_LE(end_bitpos, sizeof(kFaxG4Data) * 8);
+}
+
+TEST(FaxModuleTest, EncodedByteAlignRewind) {
+  // 4x2 1-D CCITT Group 3 stream with `EncodedByteAlign` enabled:
+  // - Byte 0 (0xb0 = 1011_0000): 4-bit white run of 4 (1011), padded with four
+  //   zero bits to align to the next byte boundary.
+  // - Byte 1 (0x7f = 0111_11_11): 4-bit white run of 2 (0111) + 2-bit black run
+  //   of 2 (11), followed by non-zero trailing bits (11) that clear
+  //   `byte_align_`.
+  static constexpr uint8_t kInput[] = {0xb0, 0x7f};
+  static constexpr uint8_t kExpectedRow0[] = {0xff, 0xff, 0xff, 0xff};
+  static constexpr uint8_t kExpectedRow1[] = {0xcf, 0xff, 0xff, 0xff};
+  // TODO(crbug.com/584665233): Should be `kExpectedRow1`.
+  static constexpr auto& kWrongRow1 = kExpectedRow0;
+
+  auto decoder = FaxModule::CreateDecoder(
+      kInput, /*width=*/4, /*height=*/2, /*K=*/0, /*EndOfLine=*/false,
+      /*EncodedByteAlign=*/true, /*BlackIs1=*/false, /*Columns=*/4, /*Rows=*/2);
+  ASSERT_TRUE(decoder);
+
+  EXPECT_THAT(decoder->GetScanline(0), ElementsAreArray(kExpectedRow0));
+  EXPECT_THAT(decoder->GetScanline(1), ElementsAreArray(kExpectedRow1));
+
+  // Reading scanline 0 again rewinds the decoder.
+  EXPECT_THAT(decoder->GetScanline(0), ElementsAreArray(kExpectedRow0));
+  EXPECT_THAT(decoder->GetScanline(1), ElementsAreArray(kWrongRow1));
 }
 
 }  // namespace fxcodec
