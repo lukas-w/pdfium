@@ -1,0 +1,125 @@
+{{header}}
+{{object 1 0}} <<
+  /Type /Catalog
+  /Pages 2 0 R
+>>
+endobj
+{{object 2 0}} <<
+  /Type /Pages
+  /Count 1
+  /Kids [3 0 R]
+>>
+endobj
+{{object 3 0}} <<
+  /Type /Page
+  /Contents 4 0 R
+  /Parent 2 0 R
+  /MediaBox [0 0 200 400]
+  /Resources <<
+    /Font <<
+      /F1 5 0 R
+      /F2 6 0 R
+    >>
+  >>
+>>
+endobj
+{{object 4 0}} <<
+  {{streamlen}}
+>>
+stream
+BT
+/F2 12 Tf
+% RTL glyphs without /ActualText.
+20 350 Td
+<010205> Tj
+% RTL glyphs with /ActualText.
+0 -50 Td
+/Span <<
+  /ActualText <FEFF05D105D905DF>
+>> BDC
+<010205> Tj
+EMC
+% RTL glyphs with /ActualText containing neutral punctuation.
+0 -50 Td
+/Span <<
+  /ActualText <FEFF05D1002705D905DF002E>
+>> BDC
+<010205> Tj
+EMC
+% RTL glyphs with /ActualText containing digits.
+0 -50 Td
+/Span <<
+  /ActualText <FEFF05D105D905DF003100320033>
+>> BDC
+<010205> Tj
+EMC
+% Latin text followed by RTL glyphs with /ActualText.
+0 -50 Td
+/F1 12 Tf
+(Hello world ) Tj
+/F2 12 Tf
+/Span <<
+  /ActualText <FEFF05D105D905DF002E>
+>> BDC
+<010205> Tj
+EMC
+% Numbered list item as RTL glyphs with /ActualText.
+0 -50 Td
+/Span <<
+  /ActualText <FEFF0031002D002005D105D905DF>
+>> BDC
+<010205> Tj
+EMC
+ET
+endstream
+endobj
+{{object 5 0}} <<
+  /Type /Font
+  /Subtype /Type1
+  /BaseFont /Helvetica
+>>
+endobj
+{{object 6 0}} <<
+  /Type /Font
+  /Subtype /TrueType
+  /BaseFont /BAAAAA+NotoSansHebrew-Regular
+  /FirstChar 0
+  /FontDescriptor 7 0 R
+  /LastChar 5
+  /ToUnicode 9 0 R
+  /Widths [600 294 235 645 397 542]
+>>
+endobj
+{{object 7 0}} <<
+  /Type /FontDescriptor
+  /Ascent 1069
+  /CapHeight 869
+  /Descent -293
+  /Flags 4
+  /FontBBox [-210 -252 716 869]
+  /FontFile2 8 0 R
+  /FontName /BAAAAA+NotoSansHebrew-Regular
+  /ItalicAngle 0
+  /StemV 80
+>>
+endobj
+{{object 8 0}} <<
+  /Filter [/ASCII85Decode /FlateDecode]
+  {{streamlen}}
+  /Length1 6721
+>>
+stream
+{{include hebrew_truetype_font.fragment}}
+endstream
+endobj
+{{object 9 0}} <<
+  {{streamlen}}
+>>
+stream
+{{include hebrew_cmap.fragment}}
+endstream
+endobj
+{{xref}}
+{{trailer}}
+{{startxref}}
+%%EOF

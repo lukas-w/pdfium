@@ -2524,6 +2524,8 @@ TEST_F(FPDFTextEmbedderTest, ActualTextRtl) {
        // Third line:
        'M', 'i', 'r', 'r', 'o', 'r', 'e', 'd', ' ',
        // ם:
+       // TODO(crbug.com/525087036): Should be {0x05dd, '[', ')'}, since
+       // /ActualText should not be modified.
        0x05dd, ']', '(', '\r', '\n',
        // Pure RTL case:
        // שלום (logical order):
@@ -2571,6 +2573,44 @@ TEST_F(FPDFTextEmbedderTest, ActualTextRtl) {
   static constexpr int kExpectedTextSize = std::size(kExpectedText);
 
   unsigned short buffer[256] = {};
+  EXPECT_EQ(kExpectedTextSize,
+            FPDFText_GetText(text_page.get(), 0, std::size(buffer), buffer));
+  EXPECT_THAT(pdfium::span(buffer).first<kExpectedTextSize>(),
+              ElementsAreArray(kExpectedText));
+}
+
+// Like ActualTextRtl, but the /ActualText spans mark RTL glyphs instead of
+// Latin ones, which takes different code paths in CPDF_TextPage, and the
+// /ActualText also contains numbers and punctuation.
+TEST_F(FPDFTextEmbedderTest, ActualTextOnRtlGlyphsWithNumbersAndPunctuation) {
+  ASSERT_TRUE(OpenDocument("actual_text_rtl_glyphs.pdf"));
+  ScopedPage page = LoadScopedPage(0);
+  ASSERT_TRUE(page);
+
+  ScopedFPDFTextPage text_page(FPDFText_LoadPage(page.get()));
+  ASSERT_TRUE(text_page);
+
+  static constexpr auto kExpectedText = std::to_array<unsigned short>(
+      {// בין (literal text):
+       0x05d1, 0x05d9, 0x05df, '\r', '\n',
+       // TODO(crbug.com/525087036): Should be {0x05d1, 0x05d9, 0x05df}.
+       0x05df, 0x05d9, 0x05d1, '\r', '\n',
+       // TODO(crbug.com/525087036): Should be
+       // {0x05d1, '\'', 0x05d9, 0x05df, '.'}.
+       0x05d1, '\'', 0x05df, 0x05d9, '.', '\r', '\n',
+       // TODO(crbug.com/525087036): Should be
+       // {0x05d1, 0x05d9, 0x05df, '1', '2', '3'}.
+       0x05df, 0x05d9, 0x05d1, '3', '2', '1', '\r', '\n',
+       // TODO(crbug.com/525087036): Should be {'H', 'e', 'l', 'l', 'o', ' ',
+       // 'w', 'o', 'r', 'l', 'd', ' ', 0x05d1, 0x05d9, 0x05df, '.'}.
+       'H', 'e', 'l', 'l', 'o', ' ', 'w', 'o', 'r', 'l', 'd', ' ', '.', 0x05df,
+       0x05d9, 0x05d1, '\r', '\n',
+       // TODO(crbug.com/525087036): Should be
+       // {'1', '-', ' ', 0x05d1, 0x05d9, 0x05df}.
+       '-', '1', ' ', 0x05df, 0x05d9, 0x05d1, '\0'});
+  static constexpr int kExpectedTextSize = std::size(kExpectedText);
+
+  unsigned short buffer[128] = {};
   EXPECT_EQ(kExpectedTextSize,
             FPDFText_GetText(text_page.get(), 0, std::size(buffer), buffer));
   EXPECT_THAT(pdfium::span(buffer).first<kExpectedTextSize>(),
