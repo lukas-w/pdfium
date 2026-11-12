@@ -108,6 +108,23 @@ TEST(CFXRenderDeviceTest, GetClipBoxRect) {
   EXPECT_EQ(FX_RECT(2, 4, 14, 12), device->GetClipBox());
 }
 
+// Regression test for b/582306045: CheckSimpleLinePath should not trigger
+// float-cast-overflow when path points have large coordinate values.
+TEST(CFXRenderDeviceTest, DrawPathSimpleLineLargeCoordinates) {
+  std::unique_ptr<CFX_RenderDevice> device = CreateDeviceForBitmap(16, 16);
+  ASSERT_TRUE(device);
+
+  CFX_Path path;
+  path.AppendPoint(CFX_PointF(1e12f, 1e12f), CFX_Path::Point::Type::kMove);
+  path.AppendPoint(CFX_PointF(1e12f, 1e12f + 10.0f),
+                   CFX_Path::Point::Type::kLine);
+
+  const CFX_FillRenderOptions fill_options(
+      CFX_FillRenderOptions::FillType::kWinding);
+  EXPECT_TRUE(device->DrawPath(path, nullptr, nullptr, 0xFF000000, 0,
+                               fill_options));
+}
+
 TEST(CFXRenderDeviceTest, GetClipBoxEmpty) {
   std::unique_ptr<CFX_RenderDevice> device = CreateDeviceForBitmap(16, 16);
   ASSERT_TRUE(device);

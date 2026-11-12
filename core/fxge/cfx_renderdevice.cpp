@@ -342,8 +342,8 @@ bool CheckSimpleLinePath(pdfium::span<const CFX_Path::Point> points,
         point = matrix->Transform(point);
       }
 
-      point = CFX_PointF(static_cast<int>(point.x) + 0.5f,
-                         static_cast<int>(point.y) + 0.5f);
+      point = CFX_PointF(pdfium::saturated_cast<int>(point.x) + 0.5f,
+                         pdfium::saturated_cast<int>(point.y) + 0.5f);
     }
     new_path->AppendPoint(point, points[i].type_);
   }
