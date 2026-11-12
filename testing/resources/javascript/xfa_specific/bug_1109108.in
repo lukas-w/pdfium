@@ -10,20 +10,6 @@ stream
 <template>
   <subform name="s1">
     <subform name="s5">
-      <field name="field_28">
-        <calculate>
-          <script contentType="application/x-javascript">
-            var f=xfa.resolveNode("xfa.form.s1.s5.s6.field_35");
-            f.relevant ="print";
-          </script>
-        </calculate>
-        <ui>
-          <textEdit/>
-        </ui>
-        <value>
-          <text>CLGT.</text>
-        </value>
-      </field>
       <subform name="s6">
         <field name="field_35">
           <ui>
@@ -41,7 +27,7 @@ stream
           <value>
             <text>apples</text>
           </value>
-          <event activity="change">
+          <event activity="enter">
             <script contentType="application/x-javascript">
               xfa.template.remerge();
               xfa.host.openList(this);

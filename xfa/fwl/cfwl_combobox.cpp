@@ -144,11 +144,14 @@ void CFWL_ComboBox::SetCurSel(int32_t iSel) {
   int32_t iCount = list_box_->CountItems(nullptr);
   bool bClearSel = iSel < 0 || iSel >= iCount;
   if (IsDropDownStyle() && edit_) {
+    // Programmatic (model -> widget) refresh: must not dispatch
+    // TextWillChange/EditChanged, which would run document script from
+    // inside CXFA_FFComboBox::LoadWidget()/UpdateFWLData().
     if (bClearSel) {
-      edit_->SetText(WideString());
+      edit_->SetTextSkipNotify(WideString());
     } else {
       CFWL_ListBox::Item* hItem = list_box_->GetItem(this, iSel);
-      edit_->SetText(hItem ? hItem->GetText() : WideString());
+      edit_->SetTextSkipNotify(hItem ? hItem->GetText() : WideString());
     }
     edit_->Update();
   }
@@ -180,7 +183,9 @@ void CFWL_ComboBox::SetEditText(const WideString& wsText) {
     return;
   }
 
-  edit_->SetText(wsText);
+  // Only called from CXFA_FFComboBox to push the node value into the widget;
+  // use the non-notifying path (see CXFA_FFTextEdit::UpdateFWLData).
+  edit_->SetTextSkipNotify(wsText);
   edit_->Update();
 }
 
@@ -319,7 +324,8 @@ void CFWL_ComboBox::Layout() {
   if (cur_sel_ >= 0) {
     CFWL_ListBox::Item* hItem = list_box_->GetItem(this, cur_sel_);
     ScopedUpdateLock update_lock(edit_);
-    edit_->SetText(hItem ? hItem->GetText() : WideString());
+    // Layout refresh, never user input: do not notify.
+    edit_->SetTextSkipNotify(hItem ? hItem->GetText() : WideString());
   }
   edit_->Update();
 }
