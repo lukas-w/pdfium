@@ -182,8 +182,6 @@ TEST(FaxModuleTest, EncodedByteAlignRewind) {
   static constexpr uint8_t kInput[] = {0xb0, 0x7f};
   static constexpr uint8_t kExpectedRow0[] = {0xff, 0xff, 0xff, 0xff};
   static constexpr uint8_t kExpectedRow1[] = {0xcf, 0xff, 0xff, 0xff};
-  // TODO(crbug.com/584665233): Should be `kExpectedRow1`.
-  static constexpr auto& kWrongRow1 = kExpectedRow0;
 
   auto decoder = FaxModule::CreateDecoder(
       kInput, /*width=*/4, /*height=*/2, /*K=*/0, /*EndOfLine=*/false,
@@ -195,7 +193,7 @@ TEST(FaxModuleTest, EncodedByteAlignRewind) {
 
   // Reading scanline 0 again rewinds the decoder.
   EXPECT_THAT(decoder->GetScanline(0), ElementsAreArray(kExpectedRow0));
-  EXPECT_THAT(decoder->GetScanline(1), ElementsAreArray(kWrongRow1));
+  EXPECT_THAT(decoder->GetScanline(1), ElementsAreArray(kExpectedRow1));
 }
 
 }  // namespace fxcodec

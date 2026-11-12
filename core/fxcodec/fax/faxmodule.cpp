@@ -596,7 +596,9 @@ class FaxDecoder final : public ScanlineDecoder {
 
   const int encoding_;
   uint32_t bitpos_ = 0;
+  // Set to `orig_encoded_byte_align_` in Rewind() before it gets read.
   bool byte_align_ = false;
+  const bool orig_encoded_byte_align_;
   const bool end_of_line_;
   const bool black_;
   const pdfium::raw_span<const uint8_t> src_span_;
@@ -619,7 +621,7 @@ FaxDecoder::FaxDecoder(pdfium::span<const uint8_t> src_span,
                       kFaxBpc,
                       fxge::CalculatePitch32OrDie(kFaxBpc, width)),
       encoding_(K),
-      byte_align_(EncodedByteAlign),
+      orig_encoded_byte_align_(EncodedByteAlign),
       end_of_line_(EndOfLine),
       black_(BlackIs1),
       src_span_(src_span),
@@ -634,6 +636,7 @@ FaxDecoder::~FaxDecoder() {
 bool FaxDecoder::Rewind() {
   std::ranges::fill(ref_buf_, 0xff);
   bitpos_ = 0;
+  byte_align_ = orig_encoded_byte_align_;
   return true;
 }
 
