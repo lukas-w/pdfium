@@ -11,6 +11,7 @@
 
 #include "build/build_config.h"
 #include "core/fxcrt/span.h"
+#include "core/fxcrt/span_util.h"
 #include "core/fxcrt/stl_util.h"
 #include "core/fxcrt/zip.h"
 #include "core/fxge/dib/cfx_scanlinecompositor_hwy.h"
@@ -174,6 +175,47 @@ void CheckBgra2BgrxForceOpaque(size_t width) {
                                           .alpha = 255};
     EXPECT_EQ(want, dest[i]) << "width " << width << " pixel " << i;
   }
+}
+
+void CheckBgra2Mask(size_t width, bool with_clip, size_t offset) {
+  // Byte offsets exercise unaligned BGRA loads as well as narrow mask loads.
+  static_assert(alignof(FX_BGRA_STRUCT<uint8_t>) == 1);
+  std::vector<uint8_t> src_storage(width * 4 + offset + 1, 0xA5);
+  auto src = fxcrt::reinterpret_span<FX_BGRA_STRUCT<uint8_t>>(
+      pdfium::span(src_storage).subspan(offset, width * 4));
+  std::vector<uint8_t> clip_storage(width + offset + 1, 0xA5);
+  auto clip = with_clip ? pdfium::span(clip_storage).subspan(offset, width)
+                        : pdfium::span<uint8_t>();
+  std::vector<uint8_t> dest_storage(width + offset + 1, 0xA5);
+  auto dest = pdfium::span(dest_storage).subspan(offset, width);
+  auto expected = dest_storage;
+  for (size_t i = 0; i < width; ++i) {
+    src[i] = {.blue = static_cast<uint8_t>(i * 7),
+              .green = static_cast<uint8_t>(i * 11),
+              .red = static_cast<uint8_t>(i * 17),
+              .alpha = static_cast<uint8_t>(i * 37 + 1)};
+    if (with_clip) {
+      clip[i] = static_cast<uint8_t>(i * 53 + 9);
+    }
+    dest[i] = static_cast<uint8_t>(i * 19 + 2);
+    const uint32_t alpha = src[i].alpha * (with_clip ? clip[i] : 255) / 255;
+    expected[offset + i] =
+        static_cast<uint8_t>(dest[i] + alpha - dest[i] * alpha / 255);
+  }
+  auto via_public = dest_storage;
+  const auto original_src = src_storage;
+  const auto original_clip = clip_storage;
+  CompositeRowBgra2MaskSimd(src, clip, dest);
+  EXPECT_EQ(dest_storage, expected);
+  CFX_ScanlineCompositor compositor;
+  ASSERT_TRUE(compositor.Init(FXDIB_Format::k8bppMask, FXDIB_Format::kBgra, {},
+                              0, BlendMode::kNormal, false));
+  compositor.CompositeRgbBitmapLine(
+      pdfium::span(via_public).subspan(offset, width), pdfium::as_bytes(src),
+      static_cast<int>(width), clip);
+  EXPECT_EQ(via_public, expected);
+  EXPECT_EQ(src_storage, original_src);
+  EXPECT_EQ(clip_storage, original_clip);
 }
 
 }  // namespace
@@ -999,6 +1041,86 @@ TEST(ScanlineCompositorSimdTest, Bgra2BgrxForceOpaqueMatchesScalar) {
   for (size_t width : {1u,  2u,  3u,  4u,  5u,  6u,  7u,  8u,  9u,   15u,
                        16u, 17u, 31u, 32u, 33u, 63u, 64u, 65u, 100u, 257u}) {
     CheckBgra2BgrxForceOpaque(width);
+  }
+}
+
+TEST(ScanlineCompositorSimdTest, Bgra2MaskMatchesScalar) {
+  for (size_t width :
+       {0u,  1u,  2u,  3u,  4u,  5u,  7u,   8u,   9u,   15u,  16u,  17u,
+        31u, 32u, 33u, 63u, 64u, 65u, 100u, 127u, 128u, 129u, 257u, 65537u}) {
+    for (size_t offset : {0u, 1u, 2u, 3u}) {
+      SCOPED_TRACE(testing::Message()
+                   << "width=" << width << " offset=" << offset);
+      CheckBgra2Mask(width, false, offset);
+      CheckBgra2Mask(width, true, offset);
+    }
+  }
+}
+
+TEST(ScanlineCompositorSimdTest, Bgra2MaskAllSourceAndClipAlphaCombinations) {
+  // A zero destination exposes the clipped alpha, covering every input pair
+  // and the rounding boundaries of the first division by 255.
+  constexpr size_t kWidth = 256 * 256;
+  std::vector<FX_BGRA_STRUCT<uint8_t>> src(kWidth);
+  std::vector<uint8_t> clip(kWidth);
+  std::vector<uint8_t> dest(kWidth);
+  std::vector<uint8_t> expected(kWidth);
+  for (size_t i = 0; i < kWidth; ++i) {
+    const uint32_t alpha = static_cast<uint32_t>(i / 256);
+    const uint32_t clip_alpha = static_cast<uint32_t>(i % 256);
+    src[i] = {
+        .blue = 1, .green = 2, .red = 3, .alpha = static_cast<uint8_t>(alpha)};
+    clip[i] = static_cast<uint8_t>(clip_alpha);
+    expected[i] = static_cast<uint8_t>(alpha * clip_alpha / 255);
+  }
+  CompositeRowBgra2MaskSimd(src, clip, dest);
+  ASSERT_EQ(dest, expected);
+}
+
+TEST(ScanlineCompositorSimdTest, Bgra2MaskAllSourceAndDestAlphaCombinations) {
+  // Without clipping, cover every source/destination alpha pair and the
+  // rounding boundaries of the alpha union's division by 255.
+  constexpr size_t kWidth = 256 * 256;
+  std::vector<FX_BGRA_STRUCT<uint8_t>> src(kWidth);
+  std::vector<uint8_t> dest(kWidth);
+  std::vector<uint8_t> expected(kWidth);
+  for (size_t i = 0; i < kWidth; ++i) {
+    const uint32_t alpha = static_cast<uint32_t>(i / 256);
+    const uint32_t back = static_cast<uint32_t>(i % 256);
+    src[i] = {
+        .blue = 1, .green = 2, .red = 3, .alpha = static_cast<uint8_t>(alpha)};
+    dest[i] = static_cast<uint8_t>(back);
+    expected[i] = static_cast<uint8_t>(back + alpha - back * alpha / 255);
+  }
+  CompositeRowBgra2MaskSimd(src, {}, dest);
+  ASSERT_EQ(dest, expected);
+}
+
+TEST(ScanlineCompositorSimdTest, Bgra2MaskConstantAlphaAndTails) {
+  // Exercise the same extreme inputs in full vectors and scalar tails.
+  static constexpr std::array<uint8_t, 6> kAlpha = {0, 1, 127, 128, 254, 255};
+  for (size_t width : {1u, 3u, 7u, 17u, 33u, 65u}) {
+    std::vector<FX_BGRA_STRUCT<uint8_t>> src(width);
+    std::vector<uint8_t> clip(width);
+    std::vector<uint8_t> dest(width);
+    for (uint8_t a : kAlpha) {
+      for (uint8_t c : kAlpha) {
+        for (uint8_t back : kAlpha) {
+          for (size_t i = 0; i < width; ++i) {
+            src[i].alpha = a;
+            clip[i] = c;
+            dest[i] = back;
+          }
+          const uint32_t alpha = a * c / 255;
+          const uint8_t expected =
+              static_cast<uint8_t>(back + alpha - back * alpha / 255);
+          CompositeRowBgra2MaskSimd(src, clip, dest);
+          for (uint8_t value : dest) {
+            ASSERT_EQ(value, expected) << "width=" << width;
+          }
+        }
+      }
+    }
   }
 }
 

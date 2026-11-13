@@ -23,4 +23,10 @@ void CompositeRowBgra2BgrxForceOpaqueSimd(
     pdfium::span<const FX_BGRA_STRUCT<uint8_t>> src_span,
     pdfium::span<FX_BGRA_STRUCT<uint8_t>> dest_span);
 
+// SIMD replacement for BGRA -> alpha-mask scanlines.
+void CompositeRowBgra2MaskSimd(
+    pdfium::span<const FX_BGRA_STRUCT<uint8_t>> src_span,
+    pdfium::span<const uint8_t> clip_span,
+    pdfium::span<uint8_t> dest_span);
+
 #endif  // CORE_FXGE_DIB_CFX_SCANLINECOMPOSITOR_HWY_H_

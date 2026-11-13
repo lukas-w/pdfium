@@ -189,6 +189,11 @@ void CompositePixelBgra2Mask(const FX_BGRA_STRUCT<uint8_t>& input,
 void CompositeRowBgra2Mask(pdfium::span<const FX_BGRA_STRUCT<uint8_t>> src_span,
                            pdfium::span<const uint8_t> clip_span,
                            pdfium::span<uint8_t> dest_span) {
+  // Short rows do not consistently amortize SIMD dispatch and tail handling.
+  if (src_span.size() >= 128) {
+    CompositeRowBgra2MaskSimd(src_span, clip_span, dest_span);
+    return;
+  }
   if (clip_span.empty()) {
     for (auto [input, output] : fxcrt::Zip(src_span, dest_span)) {
       CompositePixelBgra2Mask(input, /*clip=*/255, output);
