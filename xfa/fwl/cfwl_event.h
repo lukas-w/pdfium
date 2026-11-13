@@ -44,8 +44,8 @@ class CFWL_Event {
 
  private:
   const Type type_;
-  UnownedPtr<CFWL_Widget> const src_target_;
-  UnownedPtr<CFWL_Widget> const dst_target_;
+  CFWL_Widget* const src_target_ = nullptr;
+  CFWL_Widget* const dst_target_ = nullptr;
 };
 
 }  // namespace pdfium

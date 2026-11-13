@@ -41,7 +41,7 @@ class CXFA_FFDocView : public cppgc::GarbageCollected<CXFA_FFDocView> {
     ~UpdateScope();
 
    private:
-    UnownedPtr<CXFA_FFDocView> const doc_view_;
+    CXFA_FFDocView* const doc_view_ = nullptr;
   };
 
   CONSTRUCT_VIA_MAKE_GARBAGE_COLLECTED;

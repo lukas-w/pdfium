@@ -13,6 +13,7 @@
 #include "core/fxcrt/fx_memory.h"
 #include "core/fxcrt/mask.h"
 #include "core/fxcrt/unowned_ptr.h"
+#include "v8/include/cppgc/macros.h"
 #include "xfa/fwl/theme/cfwl_utils.h"
 
 namespace pdfium {
@@ -37,6 +38,8 @@ enum class CFWL_PartState : uint16_t {
 };
 
 class CFWL_ThemePart {
+  CPPGC_STACK_ALLOCATED();
+
  public:
   enum class Part : uint8_t {
     kNone = 0,
@@ -84,8 +87,6 @@ class CFWL_ThemePart {
     kWeekNumSep
   };
 
-  FX_STACK_ALLOCATED();
-
   CFWL_ThemePart(Part iPart, CFWL_Widget* pWidget);
   ~CFWL_ThemePart();
 
@@ -102,7 +103,7 @@ class CFWL_ThemePart {
 
  private:
   const Part part_;
-  UnownedPtr<CFWL_Widget> const widget_;
+  CFWL_Widget* const widget_ = nullptr;
 };
 
 }  // namespace pdfium

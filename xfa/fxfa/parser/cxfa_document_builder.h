@@ -61,8 +61,8 @@ class CXFA_DocumentBuilder {
                         CFX_XMLInstruction* pXMLInstruction,
                         XFA_PacketType ePacketID);
 
-  UnownedPtr<CXFA_Document> node_factory_;  // OK, stack-only.
-  UnownedPtr<CXFA_Node> root_node_;         // OK, stack-only.
+  CXFA_Document* const node_factory_ = nullptr;  // OK, stack-only.
+  CXFA_Node* root_node_ = nullptr;     // OK, stack-only.
   UnownedPtr<CFX_XMLDocument> xml_doc_;
   size_t execute_recursion_depth_ = 0;
 };

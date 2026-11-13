@@ -125,9 +125,9 @@ class CFXJSE_Engine final : public CFX_IsolateWrapper {
     ~EventParamScope();
 
    private:
-    UnownedPtr<CFXJSE_Engine> engine_;
-    UnownedPtr<CXFA_Node> prev_target_;
-    UnownedPtr<CXFA_EventParam> prev_event_param_;
+    const UnownedPtr<CFXJSE_Engine> engine_;
+    CXFA_Node* const prev_target_ = nullptr;
+    const UnownedPtr<CXFA_EventParam> prev_event_param_;
   };
   friend class EventParamScope;
 

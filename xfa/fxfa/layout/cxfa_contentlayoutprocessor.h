@@ -75,8 +75,8 @@ class CXFA_ContentLayoutProcessor
 
     std::optional<float> cur_column_width_;
     UnownedPtr<std::vector<float>> prg_specified_column_widths_;
-    UnownedPtr<CXFA_ContentLayoutProcessor> overflow_processor_;  // OK, stack
-    UnownedPtr<CXFA_Node> overflow_node_;                         // Ok, stack
+    CXFA_ContentLayoutProcessor* overflow_processor_ = nullptr;  // OK, stack
+    CXFA_Node* overflow_node_ = nullptr;                         // Ok, stack
   };
 
   using ContentLayoutItemVector =

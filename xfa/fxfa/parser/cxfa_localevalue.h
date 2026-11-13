@@ -88,7 +88,7 @@ class CXFA_LocaleValue {
                          const WideString& wsPattern,
                          GCedLocaleIface* pLocale);
 
-  UnownedPtr<CXFA_LocaleMgr> locale_mgr_;  // Ok, stack-only.
+  CXFA_LocaleMgr* locale_mgr_ = nullptr;  // Ok, stack-only.
   WideString value_;
   ValueType type_ = ValueType::kNull;
   bool valid_ = true;

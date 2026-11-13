@@ -25,7 +25,7 @@ class CXFA_ReadyNodeIterator {
 
  private:
   CXFA_ContainerIterator content_iterator_;
-  UnownedPtr<CXFA_Node> cur_node_;  // Ok, stack-only.
+  CXFA_Node* cur_node_ = nullptr;  // Ok, stack-only.
 };
 
 #endif  // XFA_FXFA_CXFA_READYNODEITERATOR_H_

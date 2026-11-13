@@ -27,7 +27,7 @@ class CFXJSE_ResolveProcessor {
     NodeData();
     ~NodeData();
 
-    UnownedPtr<CXFA_Object> cur_object_;  // Ok, stack-only.
+    CXFA_Object* cur_object_ = nullptr;  // Ok, stack-only.
     WideString name_;
     WideString condition_;
     XFA_HashCode hash_name_ = XFA_HASHCODE_None;

@@ -34,7 +34,7 @@ class CFWL_Message {
 
  private:
   const Type type_;
-  UnownedPtr<CFWL_Widget> dst_target_;
+  CFWL_Widget* dst_target_ = nullptr;
 };
 
 }  // namespace pdfium

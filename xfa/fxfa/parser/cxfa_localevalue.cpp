@@ -95,9 +95,9 @@ class ScopedLocale {
   ScopedLocale& operator=(const ScopedLocale& that) = delete;
 
  private:
-  UnownedPtr<CXFA_LocaleMgr> const locale_mgr_;    // Ok, stack-only.
-  UnownedPtr<GCedLocaleIface> const new_locale_;   // Ok, stack-only.
-  UnownedPtr<GCedLocaleIface> const orig_locale_;  // Ok, stack-only.
+  CXFA_LocaleMgr* const locale_mgr_ = nullptr;    // Ok, stack-only.
+  GCedLocaleIface* const new_locale_ = nullptr;   // Ok, stack-only.
+  GCedLocaleIface* const orig_locale_ = nullptr;  // Ok, stack-only.
 };
 
 }  // namespace
