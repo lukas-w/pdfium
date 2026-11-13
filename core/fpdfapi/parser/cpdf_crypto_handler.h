@@ -33,6 +33,8 @@ class CPDF_CryptoHandler {
     kAES2 = 3,
   };
 
+  static bool IsValidKeyLength(Cipher cipher, size_t key_len);
+  static bool RequiresPerObjectKeyDerivation(Cipher cipher, size_t key_len);
   static bool IsSignatureDictionary(const CPDF_Dictionary* dictionary);
 
   CPDF_CryptoHandler(Cipher cipher, pdfium::span<const uint8_t> key);

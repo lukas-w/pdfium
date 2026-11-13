@@ -86,20 +86,6 @@ void CalcEncryptKey(const CPDF_Dictionary* pEncrypt,
   fxcrt::Copy(digest_span, key);
 }
 
-bool IsValidKeyLengthForCipher(CPDF_CryptoHandler::Cipher cipher,
-                               size_t keylen) {
-  switch (cipher) {
-    case CPDF_CryptoHandler::Cipher::kAES:
-      return keylen == 16 || keylen == 24 || keylen == 32;
-    case CPDF_CryptoHandler::Cipher::kAES2:
-      return keylen == 32;
-    case CPDF_CryptoHandler::Cipher::kRC4:
-      return keylen >= 5 && keylen <= 16;
-    case CPDF_CryptoHandler::Cipher::kNone:
-      return true;
-  }
-}
-
 int BigOrder64BitsMod3(pdfium::span<const uint8_t> data) {
   uint64_t ret = 0;
   for (int i = 0; i < 4; ++i) {
@@ -283,7 +269,7 @@ static bool LoadCryptInfo(const CPDF_Dictionary* pEncryptDict,
   if (keylen < 0 || keylen > 32) {
     return false;
   }
-  if (!IsValidKeyLengthForCipher(*cipher, keylen)) {
+  if (!CPDF_CryptoHandler::IsValidKeyLength(*cipher, keylen)) {
     return false;
   }
 

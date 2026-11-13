@@ -27,6 +27,7 @@
 #include "core/fxcrt/check.h"
 #include "core/fxcrt/check_op.h"
 #include "core/fxcrt/fx_random.h"
+#include "core/fxcrt/notreached.h"
 #include "core/fxcrt/span_util.h"
 #include "core/fxcrt/stl_util.h"
 
@@ -43,6 +44,36 @@ struct AESCryptContext {
 };
 
 }  // namespace
+
+// static
+bool CPDF_CryptoHandler::IsValidKeyLength(Cipher cipher, size_t key_len) {
+  switch (cipher) {
+    case Cipher::kAES:
+      return key_len == 16 || key_len == 32;
+    case Cipher::kAES2:
+      return key_len == 32;
+    case Cipher::kRC4:
+      return key_len >= 5 && key_len <= 16;
+    case Cipher::kNone:
+      return true;
+  }
+  NOTREACHED();
+}
+
+// static
+bool CPDF_CryptoHandler::RequiresPerObjectKeyDerivation(Cipher cipher,
+                                                        size_t key_len) {
+  switch (cipher) {
+    case Cipher::kNone:
+    case Cipher::kAES2:
+      return false;
+    case Cipher::kRC4:
+      return true;
+    case Cipher::kAES:
+      return key_len == 16;
+  }
+  NOTREACHED();
+}
 
 // static
 bool CPDF_CryptoHandler::IsSignatureDictionary(
@@ -67,7 +98,9 @@ DataVector<uint8_t> CPDF_CryptoHandler::EncryptContent(
   }
   std::array<uint8_t, 16> realkey;
   size_t realkeylen = realkey.size();
-  if (cipher_ != Cipher::kAES || key_len_ != 32) {
+  const bool requires_derivation =
+      RequiresPerObjectKeyDerivation(cipher_, key_len_);
+  if (requires_derivation) {
     std::array<uint8_t, 32> key1;
     PopulateKey(objnum, gennum, key1);
     if (cipher_ == Cipher::kAES) {
@@ -79,11 +112,11 @@ DataVector<uint8_t> CPDF_CryptoHandler::EncryptContent(
     realkeylen = std::min(key_len_ + 5, realkeylen);
   }
   if (cipher_ == Cipher::kAES) {
-    if (key_len_ == 32) {
-      CRYPT_AESSetKey(aes_context_.get(), encrypt_key_);
-    } else {
+    if (requires_derivation) {
       CRYPT_AESSetKey(aes_context_.get(),
                       pdfium::span(realkey).first(key_len_));
+    } else {
+      CRYPT_AESSetKey(aes_context_.get(), encrypt_key_);
     }
 
     static constexpr size_t kIVSize = 16;
@@ -123,7 +156,7 @@ void* CPDF_CryptoHandler::DecryptStart(uint32_t objnum, uint32_t gennum) {
     AESCryptContext* context = FX_Alloc(AESCryptContext, 1);
     context->iv_ = true;
     context->block_offset_ = 0;
-    if (key_len_ == 32) {
+    if (!RequiresPerObjectKeyDerivation(cipher_, key_len_)) {
       CRYPT_AESSetKey(&context->context_, encrypt_key_);
       return context;
     }
@@ -329,10 +362,7 @@ bool CPDF_CryptoHandler::DecryptObjectTree(RetainPtr<CPDF_Object> object) {
 CPDF_CryptoHandler::CPDF_CryptoHandler(Cipher cipher,
                                        pdfium::span<const uint8_t> key)
     : key_len_(std::min<size_t>(key.size(), 32)), cipher_(cipher) {
-  DCHECK(cipher != Cipher::kAES || key.size() == 16 || key.size() == 24 ||
-         key.size() == 32);
-  DCHECK(cipher != Cipher::kAES2 || key.size() == 32);
-  DCHECK(cipher != Cipher::kRC4 || (key.size() >= 5 && key.size() <= 16));
+  DCHECK(IsValidKeyLength(cipher, key.size()));
 
   if (cipher_ != Cipher::kNone) {
     fxcrt::Copy(key.first(key_len_), encrypt_key_);

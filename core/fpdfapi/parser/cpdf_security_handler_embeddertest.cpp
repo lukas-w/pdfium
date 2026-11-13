@@ -657,3 +657,7 @@ TEST_F(CPDFSecurityHandlerEmbedderTest, Bug424613308) {
   // Test passes if CHECK() does not fail.
   ASSERT_FALSE(OpenDocument("bug_424613308.pdf"));
 }
+
+TEST_F(CPDFSecurityHandlerEmbedderTest, Bug585348292) {
+  EXPECT_FALSE(OpenDocument("bug_585348292.pdf"));
+}
