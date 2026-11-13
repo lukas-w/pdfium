@@ -1,0 +1,114 @@
+%PDF-1.7
+%���
+1 0 obj <<
+  /Type /Catalog
+  /Pages 2 0 R
+>>
+endobj
+2 0 obj <<
+  /Type /Pages
+  /Count 1
+  /Kids [3 0 R]
+>>
+endobj
+3 0 obj <<
+  /Type /Page
+  /Parent 2 0 R
+  /Contents 4 0 R
+  /MediaBox [0 0 200 200]
+  /Resources <<
+    /Font <<
+      /F1 5 0 R
+    >>
+  >>
+>>
+endobj
+4 0 obj <<
+  /Length 308
+>>
+stream
+% سلام کلاس لاله in visual order. Code 03 is one glyph that maps to two
+% characters, lam and alef, like the lam-alef ligature.
+BT
+/F1 12 Tf
+20 150 Td
+<0706030102030501040302> Tj
+ET
+% The same words with a mirrored matrix, so in logical order.
+BT
+-1 0 0 1 180 50 Tm
+<0203040105030201030607> Tj
+ET
+endstream
+endobj
+5 0 obj <<
+  /Type /Font
+  /Subtype /TrueType
+  /BaseFont /AAAAAA+Arabic
+  /FirstChar 1
+  /FontDescriptor 6 0 R
+  /LastChar 7
+  /ToUnicode 7 0 R
+  /Widths [318 552 646 483 552 305 483]
+>>
+endobj
+6 0 obj <<
+  /Type /FontDescriptor
+  /Ascent 760
+  /CapHeight 342
+  /Descent -240
+  /Flags 32
+  /FontBBox [-42 -244 755 1028]
+  /FontName /AAAAAA+Arabic
+  /ItalicAngle 0
+  /StemV 80
+>>
+endobj
+7 0 obj <<
+  /Length 400
+>>
+stream
+/CIDInit /ProcSet findresource begin
+12 dict begin
+begincmap
+/CIDSystemInfo <<
+/Registry (Adobe)
+/Ordering (UCS)
+/Supplement 0
+>> def
+/CMapName /AAAA-Arabic def
+/CMapType 2 def
+1 begincodespacerange
+<00> <FF> endcodespacerange
+7 beginbfchar
+<01> <0020>
+<02> <0633>
+<03> <06440627>
+<04> <0645>
+<05> <06A9>
+<06> <0644>
+<07> <0647>
+endbfchar
+endcmap
+CMapName currentdict /CMap defineresource pop
+end
+end
+endstream
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000015 00000 n 
+0000000068 00000 n 
+0000000131 00000 n 
+0000000283 00000 n 
+0000000644 00000 n 
+0000000839 00000 n 
+0000001031 00000 n 
+trailer <<
+  /Root 1 0 R
+  /Size 8
+>>
+startxref
+1484
+%%EOF

@@ -2677,3 +2677,28 @@ TEST_F(FPDFTextEmbedderTest, ArabicActualTextOrdering) {
                 ElementsAreArray(expected_page));
   }
 }
+
+TEST_F(FPDFTextEmbedderTest, RtlMultiCharGlyph) {
+  ASSERT_TRUE(OpenDocument("rtl_multi_char_glyph.pdf"));
+  ScopedPage page = LoadScopedPage(0);
+  ASSERT_TRUE(page);
+
+  ScopedFPDFTextPage text_page(FPDFText_LoadPage(page.get()));
+  ASSERT_TRUE(text_page);
+
+  static constexpr auto kExpectedText = std::to_array<unsigned short>(
+      {// TODO(crbug.com/575985355): Should be سلام کلاس لاله, with lam and
+       // alef in ToUnicode order.
+       0x0633, 0x0627, 0x0644, 0x0645, ' ', 0x06a9, 0x0627, 0x0644, 0x0633, ' ',
+       0x0627, 0x0644, 0x0644, 0x0647, '\r', '\n',
+       // سلام کلاس لاله (mirrored matrix):
+       0x0633, 0x0644, 0x0627, 0x0645, ' ', 0x06a9, 0x0644, 0x0627, 0x0633, ' ',
+       0x0644, 0x0627, 0x0644, 0x0647, '\0'});
+  static constexpr int kExpectedTextSize = std::size(kExpectedText);
+
+  unsigned short buffer[64] = {};
+  EXPECT_EQ(kExpectedTextSize,
+            FPDFText_GetText(text_page.get(), 0, std::size(buffer), buffer));
+  EXPECT_THAT(pdfium::span(buffer).first<kExpectedTextSize>(),
+              ElementsAreArray(kExpectedText));
+}
