@@ -96,6 +96,7 @@ void AlertIfPossible(CJS_EventContext* context,
                      const WideString& wsMsg) {
   CPDFSDK_FormFillEnvironment* pFormFillEnv = context->GetFormFillEnv();
   if (pFormFillEnv) {
+    CJS_Runtime::BlockingScope scope(context->GetRuntime());
     pFormFillEnv->JS_appAlert(wsMsg, wsCaller, JSPLATFORM_ALERT_BUTTON_OK,
                               JSPLATFORM_ALERT_ICON_STATUS);
   }
