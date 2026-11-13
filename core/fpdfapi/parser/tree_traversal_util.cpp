@@ -4,80 +4,120 @@
 
 #include "core/fpdfapi/parser/tree_traversal_util.h"
 
+#include <stddef.h>
 #include <stdint.h>
 
 #include <map>
-#include <queue>
 #include <set>
+#include <utility>
 #include <vector>
 
+#include "core/fxcrt/check.h"
+#include "core/fxcrt/check_op.h"
 #include "core/fxcrt/containers/contains.h"
+#include "core/fxcrt/raw_span.h"
 #include "core/fxcrt/span.h"
+#include "core/fxcrt/unowned_ptr.h"
 
 namespace pdfium {
 
-std::map<NodeId, int> CalculateReferenceCounts(
-    pdfium::span<const NodeId> roots,
-    const AdjacencyMap& adjacency_map) {
-  std::map<NodeId, int> ref_counts;
-  for (NodeId root : roots) {
-    ++ref_counts[root];
+namespace {
+
+// Traverses an `AdjacencyMap` using iterative DFS, ignoring self-references and
+// ancestor back-edges (cycles).
+class DfsTraverser {
+ public:
+  DfsTraverser(pdfium::span<const NodeId> roots,
+               const AdjacencyMap* adjacency_map)
+      : roots_(roots), adjacency_map_(adjacency_map) {}
+
+  RefcountMap Calculate() {
+    for (NodeId root : roots_) {
+      ++ref_counts_[root];
+    }
+    for (NodeId root : roots_) {
+      Traverse(root);
+    }
+    for (const auto& it : *adjacency_map_) {
+      Traverse(it.first);
+    }
+    return std::move(ref_counts_);
   }
 
-  // Tracks nodes that have previously acted as the source of a reference edge.
-  std::set<NodeId> seen_ref_objects;
-  std::set<NodeId> queued_nodes;
-  std::queue<NodeId> queue;
-
-  auto enqueue = [&](NodeId node) {
-    const bool inserted = queued_nodes.insert(node).second;
-    if (inserted) {
-      queue.push(node);
-    }
-    return inserted;
+ private:
+  struct Frame {
+    NodeId node;
+    size_t child_index = 0;
   };
 
-  auto drain_queue = [&]() {
-    while (!queue.empty()) {
-      NodeId u = queue.front();
-      queue.pop();
+  bool IsOnStack(NodeId node) const {
+    return Contains(fast_lookup_for_stack_, node);
+  }
+  bool IsFullyVisited(NodeId node) const {
+    return Contains(fully_visited_, node);
+  }
 
-      auto it = adjacency_map.find(u);
-      if (it == adjacency_map.end()) {
+  void Push(NodeId node) {
+    CHECK(!IsFullyVisited(node));
+    CHECK(fast_lookup_for_stack_.insert(node).second);
+    stack_.push_back({node, 0});
+  }
+
+  void Pop() {
+    CHECK(!stack_.empty());
+    const NodeId node = stack_.back().node;
+    stack_.pop_back();
+    CHECK_EQ(fast_lookup_for_stack_.erase(node), 1u);
+    fully_visited_.insert(node);
+  }
+
+  void Traverse(NodeId root) {
+    if (IsFullyVisited(root)) {
+      return;
+    }
+    Push(root);
+
+    while (!stack_.empty()) {
+      const NodeId current_node = stack_.back().node;
+      const size_t current_child_index = stack_.back().child_index;
+      auto it = adjacency_map_->find(current_node);
+      if (it == adjacency_map_->end() ||
+          current_child_index >= it->second.size()) {
+        Pop();
         continue;
       }
 
-      for (NodeId v : it->second) {
-        // Make sure this is not a self-reference.
-        if (u == v) {
-          continue;
-        }
-
-        // Make sure this is not a circular reference.
-        if (pdfium::Contains(seen_ref_objects, u) &&
-            pdfium::Contains(seen_ref_objects, v)) {
-          continue;
-        }
-
-        ++ref_counts[v];
-        seen_ref_objects.insert(u);
-        enqueue(v);
+      const NodeId child = it->second[current_child_index];
+      stack_.back().child_index++;
+      if (child == current_node || IsOnStack(child)) {
+        // Self-reference or back-edge (cycle).
+        continue;
       }
-    }
-  };
 
-  for (NodeId root : roots) {
-    enqueue(root);
-  }
-  drain_queue();
+      ++ref_counts_[child];
+      if (IsFullyVisited(child)) {
+        // Cross-edge or forward-edge in DAG: already explored.
+        continue;
+      }
 
-  for (const auto& it : adjacency_map) {
-    if (enqueue(it.first)) {
-      drain_queue();
+      // Tree-edge: advance into unvisited node.
+      Push(child);
     }
   }
 
-  return ref_counts;
+  pdfium::raw_span<const NodeId> const roots_;
+  UnownedPtr<const AdjacencyMap> const adjacency_map_;
+  std::vector<Frame> stack_;
+  std::set<NodeId> fast_lookup_for_stack_;
+  std::set<NodeId> fully_visited_;
+  RefcountMap ref_counts_;
+};
+
+}  // namespace
+
+RefcountMap CalculateReferenceCounts(pdfium::span<const NodeId> roots,
+                                     const AdjacencyMap& adjacency_map) {
+  return DfsTraverser(roots, &adjacency_map).Calculate();
 }
 
 }  // namespace pdfium

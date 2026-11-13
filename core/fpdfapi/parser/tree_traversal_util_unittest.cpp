@@ -29,6 +29,12 @@ TEST(TreeTraversalUtilTest, SingleNodeRoot) {
   EXPECT_THAT(counts, ElementsAre(Pair(1, 1)));
 }
 
+TEST(TreeTraversalUtilTest, DuplicateRoots) {
+  AdjacencyMap adj = {{1, {2}}};
+  std::map<NodeId, int> counts = CalculateReferenceCounts({1, 1}, adj);
+  EXPECT_THAT(counts, ElementsAre(Pair(1, 2), Pair(2, 1)));
+}
+
 TEST(TreeTraversalUtilTest, SimpleTree) {
   // 1 -> 2
   // 1 -> 3
@@ -45,6 +51,13 @@ TEST(TreeTraversalUtilTest, DiamondDAGCrossEdge) {
   std::map<NodeId, int> counts = CalculateReferenceCounts({1}, adj);
   EXPECT_THAT(counts,
               ElementsAre(Pair(1, 1), Pair(2, 1), Pair(3, 1), Pair(4, 2)));
+}
+
+TEST(TreeTraversalUtilTest, CycleIgnored) {
+  // 1 -> 2 -> 3 -> 2
+  AdjacencyMap adj = {{1, {2}}, {2, {3}}, {3, {2}}};
+  std::map<NodeId, int> counts = CalculateReferenceCounts({1}, adj);
+  EXPECT_THAT(counts, ElementsAre(Pair(1, 1), Pair(2, 1), Pair(3, 1)));
 }
 
 TEST(TreeTraversalUtilTest, SelfLoopIgnored) {
