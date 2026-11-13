@@ -56,7 +56,7 @@ class LibjpegScanlineDecoder final : public ScanlineDecoder {
   bool HasKnownBadHeaderWithInvalidHeight(size_t dimension_offset) const;
   bool IsSofSegment(size_t marker_offset) const;
   void PatchUpKnownBadHeaderWithInvalidHeight(size_t dimension_offset);
-  // Patch up the JPEG trailer, even if it is correct.
+  // Patch up the JPEG trailer if missing.
   void PatchUpTrailer();
   pdfium::span<uint8_t> GetWritableSrcData();
 
@@ -66,6 +66,7 @@ class LibjpegScanlineDecoder final : public ScanlineDecoder {
   static constexpr size_t kSofMarkerByteOffset = 5;
 
   JpegCommon common_ = {};
+  DataVector<uint8_t> corrected_src_data_;  // Must outlive `src_span_`.
   pdfium::raw_span<const uint8_t> src_span_;
   DataVector<uint8_t> scanline_buf_;
   bool decompress_created_ = false;

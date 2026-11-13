@@ -326,22 +326,30 @@ bool LibjpegScanlineDecoder::IsSofSegment(size_t marker_offset) const {
 
 void LibjpegScanlineDecoder::PatchUpKnownBadHeaderWithInvalidHeight(
     size_t dimension_offset) {
-  DCHECK(src_span_.size() > dimension_offset + 1u);
-  auto pData = GetWritableSrcData().subspan(dimension_offset);
-  pData[0] = (orig_height_ >> 8) & 0xff;
-  pData[1] = orig_height_ & 0xff;
+  auto corrected_span = GetWritableSrcData().subspan(dimension_offset);
+  corrected_span[0] = (orig_height_ >> 8) & 0xff;
+  corrected_span[1] = orig_height_ & 0xff;
 }
 
 void LibjpegScanlineDecoder::PatchUpTrailer() {
-  auto pData = GetWritableSrcData();
-  pData[src_span_.size() - 2] = 0xff;
-  pData[src_span_.size() - 1] = 0xd9;
+  if (src_span_.size() < 2) {
+    return;
+  }
+  auto trailer_span = src_span_.last<2>();
+  if (trailer_span[0] == 0xff && trailer_span[1] == 0xd9) {
+    return;
+  }
+  auto corrected_trailer_span = GetWritableSrcData().last<2>();
+  corrected_trailer_span[0] = 0xff;
+  corrected_trailer_span[1] = 0xd9;
 }
 
 pdfium::span<uint8_t> LibjpegScanlineDecoder::GetWritableSrcData() {
-  // SAFETY: const_cast<> doesn't change size.
-  return UNSAFE_BUFFERS(
-      pdfium::span(const_cast<uint8_t*>(src_span_.data()), src_span_.size()));
+  if (corrected_src_data_.empty()) {
+    corrected_src_data_.assign(src_span_.begin(), src_span_.end());
+    src_span_ = corrected_src_data_;
+  }
+  return corrected_src_data_;
 }
 
 // static
