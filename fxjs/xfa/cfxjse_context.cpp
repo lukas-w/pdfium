@@ -22,6 +22,7 @@
 #include "v8/include/v8-function.h"
 #include "v8/include/v8-message.h"
 #include "v8/include/v8-script.h"
+#include "v8/include/v8-template.h"
 #include "xfa/fxfa/parser/cxfa_thisproxy.h"
 
 namespace {
@@ -120,6 +121,17 @@ v8::Local<v8::Object> CreateReturnValue(v8::Isolate* pIsolate,
 }
 
 }  // namespace
+
+v8::Local<v8::Object> FXJSE_CreateBoundObject(
+    v8::Isolate* isolate,
+    CFXJSE_HostObject* new_binding,
+    v8::Local<v8::FunctionTemplate> function_template) {
+  v8::Local<v8::Object> object = function_template->InstanceTemplate()
+                                     ->NewInstance(isolate->GetCurrentContext())
+                                     .ToLocalChecked();
+  FXJSE_UpdateObjectBinding(object, new_binding);
+  return object;
+}
 
 void FXJSE_UpdateObjectBinding(v8::Local<v8::Object> hObject,
                                CFXJSE_HostObject* pNewBinding) {

@@ -11,7 +11,6 @@
 #include "fxjs/xfa/cfxjse_isolatetracker.h"
 #include "v8/include/v8-isolate.h"
 #include "v8/include/v8-object.h"
-#include "v8/include/v8-template.h"
 
 namespace pdfium::fxjse {
 
@@ -39,17 +38,6 @@ CFXJSE_FormCalcContext* CFXJSE_HostObject::AsFormCalcContext() {
 
 CJX_Object* CFXJSE_HostObject::AsCJXObject() {
   return nullptr;
-}
-
-v8::Local<v8::Object> CFXJSE_HostObject::NewBoundV8Object(
-    v8::Isolate* pIsolate,
-    v8::Local<v8::FunctionTemplate> tmpl) {
-  v8::Local<v8::Object> hObject =
-      tmpl->InstanceTemplate()
-          ->NewInstance(pIsolate->GetCurrentContext())
-          .ToLocalChecked();
-  FXJSE_UpdateObjectBinding(hObject, this);
-  return hObject;
 }
 
 void FXJSE_ThrowMessage(v8::Isolate* pIsolate, ByteStringView utf8Message) {

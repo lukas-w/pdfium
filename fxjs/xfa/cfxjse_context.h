@@ -65,6 +65,11 @@ class CFXJSE_Context {
   cppgc::Persistent<CXFA_ThisProxy> this_proxy_;
 };
 
+v8::Local<v8::Object> FXJSE_CreateBoundObject(
+    v8::Isolate* isolate,
+    CFXJSE_HostObject* new_binding,
+    v8::Local<v8::FunctionTemplate> function_template);
+
 void FXJSE_UpdateObjectBinding(v8::Local<v8::Object> hObject,
                                CFXJSE_HostObject* pNewBinding);
 

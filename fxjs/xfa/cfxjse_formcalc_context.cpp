@@ -5112,9 +5112,9 @@ CFXJSE_FormCalcContext::CFXJSE_FormCalcContext(v8::Isolate* pIsolate,
                                                CFXJSE_Context* pScriptContext,
                                                CXFA_Document* doc)
     : isolate_(pIsolate), document_(doc) {
-  value_.Reset(isolate_,
-               NewBoundV8Object(
-                   isolate_, CFXJSE_Class::Create(pScriptContext,
+  value_.Reset(isolate_, FXJSE_CreateBoundObject(
+                             isolate_, this,
+                             CFXJSE_Class::Create(pScriptContext,
                                                   &kFormCalcDescriptor, false)
                                  ->GetTemplate(isolate_)));
 }
