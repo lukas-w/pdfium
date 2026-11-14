@@ -1004,6 +1004,10 @@ CXFA_Object* CFXJSE_Engine::ToXFAObject(v8::Local<v8::Value> obj) {
 v8::Local<v8::Object> CFXJSE_Engine::NewNormalXFAObject(CXFA_Object* obj) {
   v8::EscapableHandleScope scope(GetIsolate());
   CJX_Object* js_object = obj->JSObject();
+  auto iter = map_object_to_object_.find(js_object);
+  if (iter != map_object_to_object_.end()) {
+    return scope.Escape(v8::Local<v8::Object>::New(GetIsolate(), iter->second));
+  }
   v8::Local<v8::Object> binding = js_object->NewBoundV8Object(
       GetIsolate(), GetJseNormalClass()->GetTemplate(GetIsolate()));
   map_object_to_object_[js_object].Reset(GetIsolate(), binding);

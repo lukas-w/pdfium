@@ -141,8 +141,7 @@ void CJX_Tree::nodes(v8::Isolate* pIsolate,
   doc->GetNodeOwner()->PersistList(pNodeList);
 
   CFXJSE_Engine* pEngine = doc->GetScriptContext();
-  *pValue = pNodeList->JSObject()->NewBoundV8Object(
-      pIsolate, pEngine->GetJseNormalClass()->GetTemplate(pIsolate));
+  *pValue = pEngine->GetOrCreateJSBindingFromMap(pNodeList);
 }
 
 void CJX_Tree::parent(v8::Isolate* pIsolate,
@@ -250,6 +249,5 @@ v8::Local<v8::Value> CJX_Tree::ResolveNodeList(v8::Isolate* pIsolate,
       }
     }
   }
-  return pNodeList->JSObject()->NewBoundV8Object(
-      pIsolate, pScriptContext->GetJseNormalClass()->GetTemplate(pIsolate));
+  return pScriptContext->GetOrCreateJSBindingFromMap(pNodeList);
 }
