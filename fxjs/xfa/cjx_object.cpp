@@ -13,6 +13,7 @@
 #include "core/fxcrt/check.h"
 #include "core/fxcrt/check_op.h"
 #include "core/fxcrt/containers/contains.h"
+#include "core/fxcrt/containers/to_vector.h"
 #include "core/fxcrt/fx_extension.h"
 #include "core/fxcrt/fx_memory.h"
 #include "core/fxcrt/span.h"
@@ -21,12 +22,14 @@
 #include "fxjs/cjs_result.h"
 #include "fxjs/fxv8.h"
 #include "fxjs/gc/container_trace.h"
+#include "fxjs/gc/containers.h"
 #include "fxjs/xfa/cfxjse_engine.h"
 #include "fxjs/xfa/cfxjse_mapmodule.h"
 #include "fxjs/xfa/cjx_boolean.h"
 #include "fxjs/xfa/cjx_draw.h"
 #include "fxjs/xfa/cjx_field.h"
 #include "fxjs/xfa/cjx_instancemanager.h"
+#include "v8/include/cppgc/persistent.h"
 #include "v8/include/v8-forward.h"
 #include "v8/include/v8-object.h"
 #include "v8/include/v8-primitive.h"
@@ -585,18 +588,22 @@ void CJX_Object::SetContent(const WideString& wsContent,
         if (bSyncData && pBind) {
           std::vector<WideString> wsSaveTextArray =
               fxcrt::Split(wsContent, L'\n');
-          std::vector<CXFA_Node*> valueNodes =
-              pBind->GetNodeListForType(XFA_Element::DataValue);
+          cppgc::Persistent<GCedVector<CXFA_Node>> value_nodes =
+              cppgc::MakeGarbageCollected<GCedVector<CXFA_Node>>(
+                  GetDocument()->GetHeap()->GetAllocationHandle());
+          value_nodes->storage = pdfium::ToVector<cppgc::Member<CXFA_Node>>(
+              pBind->GetNodeListForType(XFA_Element::DataValue));
 
           // Adusting node count might have side effects, do not trust that
           // we'll ever actually get there.
           size_t tries = 0;
-          while (valueNodes.size() != wsSaveTextArray.size()) {
+          while (value_nodes->storage.size() != wsSaveTextArray.size()) {
             if (++tries > 4) {
               return;
             }
-            if (valueNodes.size() < wsSaveTextArray.size()) {
-              size_t iAddNodes = wsSaveTextArray.size() - valueNodes.size();
+            if (value_nodes->storage.size() < wsSaveTextArray.size()) {
+              size_t iAddNodes =
+                  wsSaveTextArray.size() - value_nodes->storage.size();
               while (iAddNodes-- > 0) {
                 CXFA_Node* pValueNodes =
                     pBind->CreateSamePacketNode(XFA_Element::DataValue);
@@ -606,16 +613,18 @@ void CJX_Object::SetContent(const WideString& wsContent,
                 pBind->InsertChildAndNotify(pValueNodes, nullptr);
               }
             } else {
-              size_t iDelNodes = valueNodes.size() - wsSaveTextArray.size();
+              size_t iDelNodes =
+                  value_nodes->storage.size() - wsSaveTextArray.size();
               for (size_t i = 0; i < iDelNodes; ++i) {
-                pBind->RemoveChildAndNotify(valueNodes[i], true);
+                pBind->RemoveChildAndNotify(value_nodes->storage[i], true);
               }
             }
-            valueNodes = pBind->GetNodeListForType(XFA_Element::DataValue);
+            value_nodes->storage = pdfium::ToVector<cppgc::Member<CXFA_Node>>(
+                pBind->GetNodeListForType(XFA_Element::DataValue));
           }
-          DCHECK_EQ(valueNodes.size(), wsSaveTextArray.size());
+          DCHECK_EQ(value_nodes->storage.size(), wsSaveTextArray.size());
           size_t i = 0;
-          for (CXFA_Node* pValueNode : valueNodes) {
+          for (CXFA_Node* pValueNode : value_nodes->storage) {
             pValueNode->JSObject()->SetAttributeValue(wsSaveTextArray[i],
                                                       wsSaveTextArray[i]);
             i++;

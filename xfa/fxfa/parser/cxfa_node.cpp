@@ -4705,14 +4705,16 @@ void CXFA_Node::InsertItem(const WideString& wsLabel,
     wsNewValue = wsLabel;
   }
 
-  std::vector<CXFA_Node*> listitems;
+  cppgc::Persistent<GCedVector<CXFA_Node>> listitems =
+      cppgc::MakeGarbageCollected<GCedVector<CXFA_Node>>(
+          GetDocument()->GetHeap()->GetAllocationHandle());
   for (CXFA_Node* pItem = GetFirstChild(); pItem;
        pItem = pItem->GetNextSibling()) {
     if (pItem->GetElementType() == XFA_Element::Items) {
-      listitems.push_back(pItem);
+      listitems->storage.push_back(pItem);
     }
   }
-  if (listitems.empty()) {
+  if (listitems->storage.empty()) {
     CXFA_Node* pItems = CreateSamePacketNode(XFA_Element::Items);
     InsertChildAndNotify(-1, pItems);
     InsertListTextItem(pItems, wsLabel, nIndex);
@@ -4720,9 +4722,9 @@ void CXFA_Node::InsertItem(const WideString& wsLabel,
     InsertChildAndNotify(-1, pSaveItems);
     pSaveItems->JSObject()->SetBoolean(XFA_Attribute::Save, true, false);
     InsertListTextItem(pSaveItems, wsNewValue, nIndex);
-  } else if (listitems.size() > 1) {
+  } else if (listitems->storage.size() > 1) {
     for (int32_t i = 0; i < 2; i++) {
-      CXFA_Node* pNode = listitems[i];
+      CXFA_Node* pNode = listitems->storage[i];
       bool bHasSave = pNode->JSObject()->GetBoolean(XFA_Attribute::Save);
       if (bHasSave) {
         InsertListTextItem(pNode, wsNewValue, nIndex);
@@ -4731,7 +4733,7 @@ void CXFA_Node::InsertItem(const WideString& wsLabel,
       }
     }
   } else {
-    CXFA_Node* pNode = listitems[0];
+    CXFA_Node* pNode = listitems->storage[0];
     pNode->JSObject()->SetBoolean(XFA_Attribute::Save, false, false);
     pNode->JSObject()->SetEnum(XFA_Attribute::Presence,
                                XFA_AttributeValue::Visible, false);
