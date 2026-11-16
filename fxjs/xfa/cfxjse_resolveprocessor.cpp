@@ -15,7 +15,6 @@
 #include "core/fxcrt/containers/to_vector.h"
 #include "core/fxcrt/fx_extension.h"
 #include "fxjs/fxv8.h"
-#include "fxjs/gc/containers.h"
 #include "fxjs/xfa/cfxjse_engine.h"
 #include "fxjs/xfa/cfxjse_isolatetracker.h"
 #include "fxjs/xfa/cfxjse_nodehelper.h"
@@ -124,7 +123,7 @@ bool CFXJSE_ResolveProcessor::ResolveAnyChild(v8::Isolate* pIsolate,
 
   std::vector<CXFA_Node*> siblings = pChild->GetSiblings(bClassName);
   nodes.insert(nodes.end(), siblings.begin(), siblings.end());
-  rnd.result_.objects = pdfium::ToVector<cppgc::Member<CXFA_Object>>(nodes);
+  rnd.result_.objects = pdfium::ToVector<cppgc::Persistent<CXFA_Object>>(nodes);
   FilterCondition(pIsolate, wsCondition, &rnd);
   return !rnd.result_.objects.empty();
 }
@@ -341,7 +340,7 @@ bool CFXJSE_ResolveProcessor::ResolveNormal(v8::Isolate* pIsolate,
         }
         if (upArrayNodes.size() > rnd.result_.objects.size()) {
           CXFA_Object* pSaveObject = rnd.result_.objects.front().Get();
-          rnd.result_.objects = std::vector<cppgc::Member<CXFA_Object>>(
+          rnd.result_.objects = std::vector<cppgc::Persistent<CXFA_Object>>(
               upArrayNodes.begin(), upArrayNodes.end());
           rnd.result_.objects.front() = pSaveObject;
         }
@@ -483,7 +482,7 @@ bool CFXJSE_ResolveProcessor::ResolveNormal(v8::Isolate* pIsolate,
         }
         if (upArrayNodes.size() > rnd.result_.objects.size()) {
           CXFA_Object* pSaveObject = rnd.result_.objects.front().Get();
-          rnd.result_.objects = std::vector<cppgc::Member<CXFA_Object>>(
+          rnd.result_.objects = std::vector<cppgc::Persistent<CXFA_Object>>(
               upArrayNodes.begin(), upArrayNodes.end());
           rnd.result_.objects.front() = pSaveObject;
         }
@@ -669,7 +668,7 @@ void CFXJSE_ResolveProcessor::ConditionArray(size_t iCurIndex,
     }
     pRnd->result_.objects.clear();
   } else {
-    pRnd->result_.objects = std::vector<cppgc::Member<CXFA_Object>>(
+    pRnd->result_.objects = std::vector<cppgc::Persistent<CXFA_Object>>(
         1, pRnd->result_.objects[index]);
   }
 }
@@ -708,7 +707,7 @@ void CFXJSE_ResolveProcessor::FilterCondition(v8::Isolate* pIsolate,
       return;
     }
 
-    pRnd->result_.objects = std::vector<cppgc::Member<CXFA_Object>>(
+    pRnd->result_.objects = std::vector<cppgc::Persistent<CXFA_Object>>(
         1, pRnd->result_.objects[iCurIndex]);
     return;
   }
@@ -766,16 +765,11 @@ void CFXJSE_ResolveProcessor::DoPredicateFilter(v8::Isolate* pIsolate,
     return;
   }
   WideString wsExpression = wsCondition.Substr(2, wsCondition.GetLength() - 3);
-
-  cppgc::Persistent<GCedVector<CXFA_Object>> candidates =
-      cppgc::MakeGarbageCollected<GCedVector<CXFA_Object>>(
-          engine_->GetDocument()->GetHeap()->GetAllocationHandle());
-  candidates->storage = std::move(pRnd->result_.objects);
   for (size_t i = iFoundCount; i > 0; --i) {
     bool bool_val = false;
     CFXJSE_Context::ExecutionResult exec_result =
         engine_->RunScript(eLangType, wsExpression.AsStringView(),
-                           candidates->storage[i - 1].Get());
+                           pRnd->result_.objects[i - 1].Get());
     if (exec_result.status) {
       CFXJSE_ScopeUtil_IsolateHandleRootContext scope(pIsolate);
       v8::Local<v8::Value> local_val =
@@ -783,10 +777,9 @@ void CFXJSE_ResolveProcessor::DoPredicateFilter(v8::Isolate* pIsolate,
       bool_val = fxv8::ReentrantToBooleanHelper(pIsolate, local_val);
     }
     if (!bool_val) {
-      candidates->storage.erase(candidates->storage.begin() + i - 1);
+      pRnd->result_.objects.erase(pRnd->result_.objects.begin() + i - 1);
     }
   }
-  pRnd->result_.objects = std::move(candidates->storage);
 }
 
 CFXJSE_ResolveProcessor::NodeData::NodeData() = default;

@@ -98,7 +98,9 @@ class CXFA_Document final : public cppgc::GarbageCollected<CXFA_Document> {
   CXFA_Object* GetXFAObject(XFA_HashCode wsNodeNameHash);
   CXFA_Node* GetNodeByID(CXFA_Node* pRoot, WideStringView wsID) const;
   CXFA_Node* GetNotBindNode(
-      pdfium::span<cppgc::Member<CXFA_Object>> arrayNodes) const;
+      pdfium::span<const cppgc::Member<CXFA_Object>> array_objects) const;
+  CXFA_Node* GetNotBindNode(
+      pdfium::span<const cppgc::Persistent<CXFA_Object>> array_objects) const;
 
   LayoutProcessorIface* GetLayoutProcessor() const { return layout_processor_; }
   CXFA_Node* GetRoot() const { return root_node_; }

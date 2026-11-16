@@ -1775,15 +1775,29 @@ void CXFA_Document::DataMerge_UpdateBindingRelations(
   UpdateBindingRelations(this, pFormUpdateRoot, pDataScope, true, false);
 }
 
-CXFA_Node* CXFA_Document::GetNotBindNode(
-    pdfium::span<cppgc::Member<CXFA_Object>> arrayObjects) const {
-  for (auto& pObject : arrayObjects) {
+namespace {
+
+template <typename T>
+CXFA_Node* GetNotBindNodeImpl(pdfium::span<const T> array_objects) {
+  for (auto& pObject : array_objects) {
     CXFA_Node* pNode = pObject->AsNode();
     if (pNode && !pNode->HasBindItem()) {
       return pNode;
     }
   }
   return nullptr;
+}
+
+}  // namespace
+
+CXFA_Node* CXFA_Document::GetNotBindNode(
+    pdfium::span<const cppgc::Member<CXFA_Object>> array_objects) const {
+  return GetNotBindNodeImpl(array_objects);
+}
+
+CXFA_Node* CXFA_Document::GetNotBindNode(
+    pdfium::span<const cppgc::Persistent<CXFA_Object>> array_objects) const {
+  return GetNotBindNodeImpl(array_objects);
 }
 
 void CXFA_Document::DoDataMerge() {
