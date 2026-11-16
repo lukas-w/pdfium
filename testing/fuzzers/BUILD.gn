@@ -190,6 +190,24 @@ source_set("fuzzer_utils") {
   include_dirs = [ "../.." ]
 }
 
+source_set("pdf_jpx_fuzzer_common"){
+  testonly = !is_component_build
+  sources = [
+    "pdf_jpx_fuzzer_common.cc",
+    "pdf_jpx_fuzzer_common.h",
+  ]
+  configs += [ ":fuzzer_config" ]
+  public_deps = [
+    "../../core/fxcodec",
+    "../../core/fxcrt",
+  ]
+  deps = [
+    ":fuzzer_utils",
+    "../../core/fpdfapi/page",
+    "../../core/fxge",
+  ]
+}
+
 template("pdfium_fuzzer") {
   is_public = defined(invoker.public_fuzzer) && invoker.public_fuzzer
   if (is_public) {
@@ -568,10 +586,7 @@ pdfium_fuzzer("pdf_hint_table_fuzzer") {
 pdfium_fuzzer("pdf_jpx_fuzzer") {
   sources = [ "pdf_jpx_fuzzer.cc" ]
   deps = [
-    "../../core/fpdfapi/page",
-    "../../core/fxcodec",
-    "../../core/fxcrt",
-    "../../core/fxge",
+    ":pdf_jpx_fuzzer_common",
   ]
 }
 
