@@ -464,8 +464,9 @@ def _CheckTestDuplicates(input_api, output_api):
   for f in input_api.AffectedFiles():
     if f.Action() == 'D':
       continue
-    if not f.LocalPath().startswith(('testing/resources/pixel/',
-        'testing/resources/javascript/')):
+    if not f.LocalPath().startswith(
+        ('testing/resources/drawing/', 'testing/resources/javascript/',
+         'testing/resources/pixel/')):
       continue
     end_len = 0
     if f.LocalPath().endswith('.in'):

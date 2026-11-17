@@ -8,6 +8,7 @@ from dataclasses import dataclass, field
 from datetime import timedelta
 import difflib
 from io import BytesIO
+import itertools
 import multiprocessing
 import os
 import re
@@ -34,7 +35,7 @@ TEST_SEED_TIME = '1399672130'
 TEST_DEFAULT_TIMEZONE = 'America/Los_Angeles'
 
 # List of test types that should run text tests instead of pixel tests.
-TEXT_TESTS = ['javascript']
+TEXT_TESTS = ['drawing', 'javascript']
 
 # Timeout (in seconds) for individual test commands.
 # TODO(crbug.com/42270974): array_buffer.in is slow under MSan, so need a
@@ -318,8 +319,10 @@ class TestRunner:
         processes=self.options.num_workers,
         initializer=_InitializePerProcessState,
         initargs=[self.per_process_config]) as pool:
-      if self.per_process_config.test_type in TEXT_TESTS:
+      if self.per_process_config.test_type == 'javascript':
         test_function = _RunTextTest
+      elif self.per_process_config.test_type == 'drawing':
+        test_function = _RunDrawingTest
       else:
         test_function = _RunPixelTest
       for result in pool.imap(test_function, self.test_cases):
@@ -402,6 +405,15 @@ def _RunTextTest(test_case):
   with test_case_runner:
     test_case_runner.test_result = test_case_runner.GenerateAndTest(
         test_case_runner.TestText)
+  return test_case_runner.test_result
+
+
+def _RunDrawingTest(test_case):
+  """Runs a drawing test case."""
+  test_case_runner = _TestCaseRunner(test_case)
+  with test_case_runner:
+    test_case_runner.test_result = test_case_runner.GenerateAndTest(
+        test_case_runner.TestDrawing)
   return test_case_runner.test_result
 
 
@@ -541,6 +553,7 @@ class _TestCaseRunner:
         self.test_case.input_path)
     self.pdf_path = os.path.join(self.working_dir, f'{self.test_id}.pdf')
     self.actual_images = None
+    self.actual_dumps = None
 
   def __enter__(self):
     self.duration_start = time.perf_counter_ns()
@@ -748,6 +761,106 @@ class _TestCaseRunner:
           comparison_failure=True)
 
     return self.test_case.NewResult(result_types.PASS)
+
+  def _GetActualDumpFiles(self):
+    dumps = []
+    for page in itertools.count():
+      dump_path = os.path.join(self.working_dir,
+                               f'{self.test_id}.pdf.{page}.dump.txt')
+      if os.path.exists(dump_path):
+        dumps.append(dump_path)
+      else:
+        break
+    return dumps
+
+  def _CleanupDrawingTest(self):
+    if self.actual_dumps:
+      for actual_dump in self.actual_dumps:
+        if os.path.exists(actual_dump):
+          os.remove(actual_dump)
+
+  def _DiffDrawingFiles(self):
+    diff_log = []
+    for page, actual_dump in enumerate(self.actual_dumps):
+      expected_dump = os.path.join(
+          self.source_dir, f'{self.test_id}_expected.pdf.{page}.dump.txt')
+      if not os.path.exists(expected_dump):
+        if self.options.regenerate_expected:
+          shutil.copyfile(actual_dump, expected_dump)
+          continue
+        diff_log.append(
+            f'missing expected file: {os.path.basename(expected_dump)}\n')
+        continue
+
+      with open(expected_dump, 'r', errors='backslashreplace') as f1:
+        expected_lines = f1.readlines()
+      with open(actual_dump, 'r', errors='backslashreplace') as f2:
+        actual_lines = f2.readlines()
+
+      diff = list(
+          difflib.unified_diff(
+              expected_lines,
+              actual_lines,
+              fromfile=expected_dump,
+              tofile=actual_dump))
+      if diff:
+        if self.options.regenerate_expected:
+          shutil.copyfile(actual_dump, expected_dump)
+          continue
+        actual_name = os.path.basename(actual_dump)
+        expected_name = os.path.basename(expected_dump)
+        diff_log.append(f'{actual_name} vs. {expected_name}:\n')
+        diff_log.extend(diff)
+
+    extra_page = len(self.actual_dumps)
+    while True:
+      extra_expected = os.path.join(
+          self.source_dir, f'{self.test_id}_expected.pdf.{extra_page}.dump.txt')
+      if os.path.exists(extra_expected):
+        extra_name = os.path.basename(extra_expected)
+        diff_log.append(
+            f'extra expected file for non-existent page: {extra_name}\n')
+        extra_page += 1
+      else:
+        break
+
+    return diff_log
+
+  def TestDrawing(self):
+    self.actual_dumps = self._GetActualDumpFiles()
+    self._CleanupDrawingTest()
+
+    cmd_to_run = [
+        _per_process_state.pdfium_test_path, '--send-events', '--dump',
+        f'--time={TEST_SEED_TIME}'
+    ]
+    cmd_to_run.extend(self._GetFontArgs())
+    cmd_to_run.extend(self._GetCommonFeatureArgs())
+    cmd_to_run.append(self.pdf_path)
+
+    test_result = self.RunCommand(cmd_to_run)
+    if not test_result.IsPass():
+      return test_result
+
+    self.actual_dumps = self._GetActualDumpFiles()
+    if not self.actual_dumps:
+      test_result.status = result_types.FAIL
+      test_result.reason = 'No drawing output generated'
+      test_result.comparison_failure = True
+      return test_result
+
+    diff_log = self._DiffDrawingFiles()
+    if diff_log:
+      test_result.status = result_types.FAIL
+      test_result.reason = 'Drawing commands differ'
+      test_result.comparison_failure = True
+      test_result.log = ''.join(diff_log)
+      return test_result
+
+    if _per_process_state.delete_output_on_success:
+      self._CleanupDrawingTest()
+
+    return test_result
 
   # TODO(crbug.com/42270661): Remove when ready to fully switch over to
   # Skia Gold
