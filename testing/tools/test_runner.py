@@ -6,6 +6,7 @@
 import argparse
 from dataclasses import dataclass, field
 from datetime import timedelta
+import difflib
 from io import BytesIO
 import multiprocessing
 import os
@@ -498,7 +499,6 @@ class _PerProcessState:
     finder = config.NewFinder()
     self.pdfium_test_path = config.GetPdfiumTestPath(finder)
     self.fixup_path = finder.ScriptPath('fixup_pdf_template.py')
-    self.text_diff_path = finder.ScriptPath('text_diff.py')
     self.font_dir = os.path.join(finder.TestingDir(), 'resources', 'fonts')
     self.third_party_font_dir = finder.ThirdPartyFontsDir()
 
@@ -673,6 +673,26 @@ class _TestCaseRunner:
         f'--output-dir={self.working_dir}', template_path
     ])
 
+  def _GetCommonFeatureArgs(self):
+    args = []
+    if self.options.disable_javascript:
+      args.append('--disable-javascript')
+    if self.options.disable_xfa:
+      args.append('--disable-xfa')
+    return args
+
+  def _GetFontArgs(self):
+    if 'use_ahem' in self.source_dir:
+      font_path = os.path.join(_per_process_state.font_dir, 'ahem')
+      return [f'--font-dir={font_path}']
+    if 'use_symbolneu' in self.source_dir:
+      font_path = os.path.join(_per_process_state.font_dir, 'symbolneu')
+      return [f'--font-dir={font_path}']
+    return [
+        f'--font-dir={_per_process_state.third_party_font_dir}',
+        '--croscore-font-names',
+    ]
+
   def TestText(self):
     txt_path = os.path.join(self.working_dir, f'{self.test_id}.txt')
     with open(txt_path, 'w') as outfile:
@@ -680,13 +700,7 @@ class _TestCaseRunner:
           _per_process_state.pdfium_test_path, '--send-events',
           f'--time={TEST_SEED_TIME}'
       ]
-
-      if self.options.disable_javascript:
-        cmd_to_run.append('--disable-javascript')
-
-      if self.options.disable_xfa:
-        cmd_to_run.append('--disable-xfa')
-
+      cmd_to_run.extend(self._GetCommonFeatureArgs())
       cmd_to_run.append(self.pdf_path)
       test_result = self.RunCommand(cmd_to_run, stdout=outfile)
       if not test_result.IsPass():
@@ -702,13 +716,25 @@ class _TestCaseRunner:
     if self.options.disable_javascript:
       return self._VerifyEmptyText(txt_path)
 
-    test_result = self.RunCommand([
-        sys.executable, _per_process_state.text_diff_path, expected_txt_path,
-        txt_path
-    ])
-    # The differ does nothing but compare, so a plain failure is a mismatch.
-    test_result.comparison_failure = test_result.status == result_types.FAIL
-    return test_result
+    with open(expected_txt_path, 'r', errors='backslashreplace') as f1:
+      expected_lines = f1.readlines()
+    with open(txt_path, 'r', errors='backslashreplace') as f2:
+      actual_lines = f2.readlines()
+
+    diff = list(
+        difflib.unified_diff(
+            expected_lines,
+            actual_lines,
+            fromfile=expected_txt_path,
+            tofile=txt_path))
+    if diff:
+      return self.test_case.NewResult(
+          result_types.FAIL,
+          log=''.join(diff),
+          reason='Text output differs',
+          comparison_failure=True)
+
+    return self.test_case.NewResult(result_types.PASS)
 
   def _VerifyEmptyText(self, txt_path):
     with open(txt_path, 'rb') as txt_file:
@@ -736,22 +762,8 @@ class _TestCaseRunner:
         _per_process_state.pdfium_test_path, '--send-events', '--png', '--md5',
         f'--time={TEST_SEED_TIME}'
     ]
-
-    if 'use_ahem' in self.source_dir:
-      font_path = os.path.join(_per_process_state.font_dir, 'ahem')
-      cmd_to_run.append(f'--font-dir={font_path}')
-    elif 'use_symbolneu' in self.source_dir:
-      font_path = os.path.join(_per_process_state.font_dir, 'symbolneu')
-      cmd_to_run.append(f'--font-dir={font_path}')
-    else:
-      cmd_to_run.append(f'--font-dir={_per_process_state.third_party_font_dir}')
-      cmd_to_run.append('--croscore-font-names')
-
-    if self.options.disable_javascript:
-      cmd_to_run.append('--disable-javascript')
-
-    if self.options.disable_xfa:
-      cmd_to_run.append('--disable-xfa')
+    cmd_to_run.extend(self._GetFontArgs())
+    cmd_to_run.extend(self._GetCommonFeatureArgs())
 
     if self.options.render_oneshot:
       cmd_to_run.append('--render-oneshot')
