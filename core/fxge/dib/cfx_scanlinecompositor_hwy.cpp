@@ -160,9 +160,18 @@ void RunBgra2BgrxForceOpaque(pdfium::span<const FX_BGRA_STRUCT<uint8_t>> src,
   }
 }
 
-// Keep the clip decision outside the loop. Both products passed to Div255()
-// are at most 255 * 255, so its exact, truncating division matches
-// AlphaUnion().
+#if HWY_TARGET != HWY_SCALAR
+// Exact floor(x / 255) for uint16_t lanes and x in [0, 65025].
+// x + 1 <= 65026, so the addition does not overflow.
+template <class V>
+HWY_INLINE V Div255U16(V x) {
+  const hn::DFromV<V> d;
+  return hn::MulHigh(hn::Add(x, hn::Set(d, 1)), hn::Set(d, 257));
+}
+#endif
+
+// Keep the clip decision outside the loop. Both products are at most
+// 255 * 255, so the exact, truncating division matches AlphaUnion().
 template <bool kHasClip>
 void Bgra2Mask(pdfium::span<const FX_BGRA_STRUCT<uint8_t>> src,
                pdfium::span<const uint8_t> clip,
@@ -173,26 +182,31 @@ void Bgra2Mask(pdfium::span<const FX_BGRA_STRUCT<uint8_t>> src,
     clip = clip.first(src.size());
   }
 #if HWY_TARGET != HWY_SCALAR
-  const hn::ScalableTag<uint32_t> d;
+  // Use 16-bit products to process twice as many pixels per iteration as
+  // 32-bit lanes. This also avoids emulated multiplication on SSE2 and SSSE3.
+  const hn::ScalableTag<uint32_t> d32;
   const hn::ScalableTag<uint8_t> d8;
+  const hn::ScalableTag<uint16_t> d;
+  const hn::Half<decltype(d)> dh;
   const hn::Rebind<uint8_t, decltype(d)> dn;
   const size_t n = hn::Lanes(d);
   while (src.size() >= n) {
-    // The BGRA load reads 4*n bytes; the narrow descriptor reads/writes n
-    // bytes for clip and dest. The span sizes bound every vector access.
-    const auto packed = hn::BitCast(
-        d, hn::LoadU(d8, reinterpret_cast<const uint8_t*>(src.data())));
-    auto alpha = hn::ShiftRight<24>(packed);
+    // Each load covers n/2 BGRA pixels, together supplying n alpha values.
+    const auto lo = hn::ShiftRight<24>(hn::BitCast(
+        d32, hn::LoadU(d8, reinterpret_cast<const uint8_t*>(src.data()))));
+    const auto hi = hn::ShiftRight<24>(
+        hn::BitCast(d32, hn::LoadU(d8, reinterpret_cast<const uint8_t*>(
+                                           src.subspan(n / 2).data()))));
+    auto alpha = hn::Combine(d, hn::DemoteTo(dh, hi), hn::DemoteTo(dh, lo));
     if constexpr (kHasClip) {
-      alpha =
-          Div255(hn::Mul(alpha, hn::PromoteTo(d, hn::LoadU(dn, clip.data()))));
+      alpha = Div255U16(
+          hn::Mul(alpha, hn::PromoteTo(d, hn::LoadU(dn, clip.data()))));
       clip = clip.subspan(n);
     }
     const auto back = hn::PromoteTo(d, hn::LoadU(dn, dest.data()));
     const auto result =
-        hn::Sub(hn::Add(back, alpha), Div255(hn::Mul(back, alpha)));
-    // Alpha union is in [0, 255], satisfying U8FromU32()'s precondition.
-    hn::StoreU(hn::U8FromU32(result), dn, dest.data());
+        hn::Sub(hn::Add(back, alpha), Div255U16(hn::Mul(back, alpha)));
+    hn::StoreU(hn::DemoteTo(dn, result), dn, dest.data());
     src = src.subspan(n);
     dest = dest.subspan(n);
   }
