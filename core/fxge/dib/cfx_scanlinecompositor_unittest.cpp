@@ -1058,23 +1058,28 @@ TEST(ScanlineCompositorSimdTest, Bgra2MaskMatchesScalar) {
 }
 
 TEST(ScanlineCompositorSimdTest, Bgra2MaskAllSourceAndClipAlphaCombinations) {
-  // A zero destination exposes the clipped alpha, covering every input pair
-  // and the rounding boundaries of the first division by 255.
+  // A zero destination exposes the clipped alpha. Nonzero destination
+  // boundaries also check both successive divisions and their largest products.
   constexpr size_t kWidth = 256 * 256;
   std::vector<FX_BGRA_STRUCT<uint8_t>> src(kWidth);
   std::vector<uint8_t> clip(kWidth);
-  std::vector<uint8_t> dest(kWidth);
-  std::vector<uint8_t> expected(kWidth);
   for (size_t i = 0; i < kWidth; ++i) {
     const uint32_t alpha = static_cast<uint32_t>(i / 256);
     const uint32_t clip_alpha = static_cast<uint32_t>(i % 256);
     src[i] = {
         .blue = 1, .green = 2, .red = 3, .alpha = static_cast<uint8_t>(alpha)};
     clip[i] = static_cast<uint8_t>(clip_alpha);
-    expected[i] = static_cast<uint8_t>(alpha * clip_alpha / 255);
   }
-  CompositeRowBgra2MaskSimd(src, clip, dest);
-  ASSERT_EQ(dest, expected);
+  for (uint8_t back : {0, 1, 127, 128, 254, 255}) {
+    std::vector<uint8_t> dest(kWidth, back);
+    std::vector<uint8_t> expected(kWidth);
+    for (auto [input, cover, want] : fxcrt::Zip(src, clip, expected)) {
+      const uint32_t alpha = input.alpha * cover / 255;
+      want = static_cast<uint8_t>(back + alpha - back * alpha / 255);
+    }
+    CompositeRowBgra2MaskSimd(src, clip, dest);
+    ASSERT_EQ(dest, expected) << "destination alpha=" << static_cast<int>(back);
+  }
 }
 
 TEST(ScanlineCompositorSimdTest, Bgra2MaskAllSourceAndDestAlphaCombinations) {
@@ -1099,7 +1104,7 @@ TEST(ScanlineCompositorSimdTest, Bgra2MaskAllSourceAndDestAlphaCombinations) {
 TEST(ScanlineCompositorSimdTest, Bgra2MaskConstantAlphaAndTails) {
   // Exercise the same extreme inputs in full vectors and scalar tails.
   static constexpr std::array<uint8_t, 6> kAlpha = {0, 1, 127, 128, 254, 255};
-  for (size_t width : {1u, 3u, 7u, 17u, 33u, 65u}) {
+  for (size_t width : {1u, 3u, 7u, 8u, 9u, 15u, 16u, 17u, 31u, 32u, 33u, 65u}) {
     std::vector<FX_BGRA_STRUCT<uint8_t>> src(width);
     std::vector<uint8_t> clip(width);
     std::vector<uint8_t> dest(width);
