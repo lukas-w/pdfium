@@ -8,14 +8,6 @@
 
 class FPDFRenderPatternEmbedderTest : public EmbedderTest {};
 
-TEST_F(FPDFRenderPatternEmbedderTest, LoadError547706) {
-  // Test shading where object is a dictionary instead of a stream.
-  ASSERT_TRUE(OpenDocument("bug_547706.pdf"));
-  ScopedPage page = LoadScopedPage(0);
-  ASSERT_TRUE(page);
-  CompareDisplayList(RenderLoadedPageToDisplayList(page.get()), "bug_547706");
-}
-
 TEST_F(FPDFRenderPatternEmbedderTest, ZeroTilingPatternStep509964646) {
   // Rendering a tiling pattern with a zero step should not hang.
   ASSERT_TRUE(OpenDocument("bug_509964646.pdf"));

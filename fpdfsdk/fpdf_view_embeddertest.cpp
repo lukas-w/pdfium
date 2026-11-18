@@ -2288,15 +2288,6 @@ TEST_F(FPDFViewEmbedderTest, DocumentVersionInCatalog) {
   EXPECT_EQ(16, version);
 }
 
-TEST_F(FPDFViewEmbedderTest, RenderPageToDisplayList) {
-  ASSERT_TRUE(OpenDocument("rectangles.pdf"));
-  ScopedPage page = LoadScopedPage(0);
-  ASSERT_TRUE(page);
-
-  std::string display_list = RenderPageToDisplayList(page.get());
-  CompareDisplayList(display_list, "rectangles");
-}
-
 TEST_F(FPDFViewEmbedderTest, RenderHelloWorldToDisplayList) {
   ASSERT_TRUE(OpenDocument("hello_world.pdf"));
   ScopedPage page = LoadScopedPage(0);

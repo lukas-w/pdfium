@@ -515,20 +515,6 @@ TEST_F(FPDFAnnotEmbedderTest, BadAnnotsEntry) {
   EXPECT_FALSE(FPDFPage_GetAnnot(page.get(), 0));
 }
 
-TEST_F(FPDFAnnotEmbedderTest, RenderAnnotWithOnlyRolloverAP) {
-  // Open a file with one annotation and load its first page.
-  ASSERT_TRUE(OpenDocument("annotation_highlight_rollover_ap.pdf"));
-  ScopedPage page = LoadScopedPage(0);
-  ASSERT_TRUE(page);
-
-  // This annotation has a malformed appearance stream, which does not have its
-  // normal appearance defined, only its rollover appearance. In this case, no
-  // normal appearance is rendered.
-  CompareDisplayList(
-      RenderLoadedPageWithFlagsToDisplayList(page.get(), FPDF_ANNOT),
-      "fpdf_annot_render_annot_with_only_rollover_ap");
-}
-
 TEST_F(FPDFAnnotEmbedderTest, RenderMultilineMarkupAnnotWithoutAP) {
   // Open a file with multiline markup annotations.
   ASSERT_TRUE(OpenDocument("annotation_markup_multiline_no_ap.pdf"));

@@ -20,7 +20,7 @@ inline constexpr char kBlankPage612By792Png[] = "blank_612x792";
 // Expectation file basename for rendering bug_890322.pdf.
 inline constexpr char kBug890322Png[] = "bug_890322";
 
-// Expectation file basename for rendering hello_world.pdf or bug_455199.pdf.
+// Expectation file basename for rendering hello_world.pdf.
 inline constexpr char kHelloWorldPng[] = "hello_world";
 
 // Expectation file basename for rendering many_rectangles.pdf.

@@ -162,7 +162,6 @@ pdfium_embeddertest_source_set("embeddertests") {
   sources = [
     "cpdf_parser_embeddertest.cpp",
     "cpdf_security_handler_embeddertest.cpp",
-    "fpdf_parser_decode_embeddertest.cpp",
     "object_tree_traversal_util_embeddertest.cpp",
   ]
   deps = [

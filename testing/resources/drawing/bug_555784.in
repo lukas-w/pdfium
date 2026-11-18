@@ -1,26 +1,25 @@
-%PDF-1.7
-% ò¤ô
+{{header}}
 
-1 0 obj
+{{object 1 0}}
 <<
   /Pages 2 0 R
 >>
 endobj
 
-2 0 obj
+{{object 2 0}}
 <<
   /Kids [ 3 0 R ]
 >>
 endobj
 
-3 0 obj
+{{object 3 0}}
 <<
   /Contents 6 0 R
   /Resources 5 0 R
 >>
 endobj
 
-6 0 obj
+{{object 6 0}}
 <<>>
 stream
 4178 0.0 0.0 1 0 0 cm
@@ -28,7 +27,7 @@ stream
 endstream
 endobj
 
-5 0 obj
+{{object 5 0}}
 <<
   /XObject <<
     /XBad 7 0 R
@@ -36,7 +35,11 @@ endobj
 >>
 endobj
 
-7 0 obj
+% Tests bad input to the run length decoder that caused a heap overflow.
+% Should not cause a crash when rendered. The image is 81915 pixels wide
+% with 3277 DeviceN components at 16 bits each, which is a valid but
+% enormous pitch, so its one scanline does get decoded and drawn.
+{{object 7 0}}
 <<
   /Type /XObject
   /Subtype /Image
@@ -56,7 +59,7 @@ stream
 endstream
 endobj
 
-10 0 obj
+{{object 10 0}}
 <<
   /FunctionType 2
   /Domain [0.0 1.0 0.0 1.0]
@@ -66,23 +69,7 @@ endobj
 >>
 endobj
 
-xref
-0 11
-0000000000 65535 f 
-0000000016 00000 n 
-0000000053 00000 n 
-0000000093 00000 n 
-0000000000 65535 f 
-0000000221 00000 n 
-0000000152 00000 n 
-0000000278 00000 n 
-0000000000 65535 f 
-0000000000 65535 f 
-0000036227 00000 n 
-trailer <<
-  /Root 1 0 R
-  /Size 11
->>
-startxref
-36335
+{{xref}}
+{{trailer}}
+{{startxref}}
 %%EOF
