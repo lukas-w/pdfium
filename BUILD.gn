@@ -19,7 +19,10 @@ config("pdfium_common_config") {
   cflags = []
   cflags_cc = []
   ldflags = []
-  include_dirs = [ "." ]
+  include_dirs = [
+    ".",
+    target_gen_dir,
+  ]
   inputs = [ "unsafe_buffers_paths.txt" ]
   defines = []
 

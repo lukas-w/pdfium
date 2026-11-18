@@ -63,7 +63,7 @@
 3_interpolate_image.pdf mac * skia * fuzzy
 3bigpreview.pdf mac * agg * diff
 3bigpreview.pdf * * * * fuzzy=21,0.15,25
-3bigpreview.pdf * * * fontations fuzzy=25,0.25,15
+3bigpreview.pdf * * * fontations fuzzy=25,0.25,25
 4_35.pdf mac * agg * diff
 4_35.pdf * * * fontations fuzzy=10,0.1,15
 4_39.pdf mac * agg * diff

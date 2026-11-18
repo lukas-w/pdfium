@@ -10,15 +10,6 @@ if (pdf_enable_fontations) {
   import("//build/rust/rust_static_library.gni")
 }
 
-if (pdf_enable_fontations) {
-  config("skrifa_cxx_config") {
-    include_dirs = [
-      "//core/fxge/skrifa/src",
-      "$root_gen_dir/core/fxge/skrifa/src",
-    ]
-  }
-}
-
 source_set("fxge") {
   sources = [
     "calculate_pitch.cpp",
@@ -176,7 +167,6 @@ source_set("fxge") {
   }
 
   if (pdf_enable_fontations) {
-    configs += [ ":skrifa_cxx_config" ]
     deps += [
       ":skrifa_cxx",
       ":skrifa_cxx_cpp",
@@ -249,10 +239,10 @@ if (pdf_enable_fontations) {
     features = [ "agl" ]
     deps = [
       "//build/rust:cxx_cppdeps",
-      "//third_party/rust/read_fonts/v0_45:lib",
-      "//third_party/rust/skrifa/v0_48:lib",
+      "//third_party/rust/read_fonts/v0_46:lib",
+      "//third_party/rust/skrifa/v0_49:lib",
     ]
-    configs += [ ":skrifa_cxx_config" ]
+    configs += [ "../../:pdfium_common_config" ]
   }
 
   source_set("skrifa_cxx_cpp") {
@@ -267,7 +257,7 @@ if (pdf_enable_fontations) {
     configs -= [ "//build/config/compiler:chromium_code" ]
     configs += [
       "//build/config/compiler:no_chromium_code",
-      ":skrifa_cxx_config",
+      "../../:pdfium_common_config",
     ]
     visibility = [ ":*" ]
   }
@@ -353,7 +343,6 @@ pdfium_unittest_source_set("unittests") {
       ":skrifa_cxx_cpp",
       "//build/rust:cxx_cppdeps",
     ]
-    configs += [ ":skrifa_cxx_config" ]
   }
 }
 
