@@ -5,19 +5,16 @@
 #include "xfa/fde/cfde_textout.h"
 
 #include <memory>
+#include <utility>
 
 #include "build/build_config.h"
-#include "core/fdrm/fx_crypt.h"
 #include "core/fxcrt/bytestring.h"
 #include "core/fxcrt/fx_codepage.h"
 #include "core/fxcrt/fx_coordinates.h"
 #include "core/fxcrt/retain_ptr.h"
-#include "core/fxge/cfx_gemodule.h"
-#include "core/fxge/cfx_glyphcache.h"
 #include "core/fxge/cfx_renderdevice.h"
-#include "core/fxge/dib/cfx_dibitmap.h"
+#include "core/fxge/display_list_device_driver.h"
 #include "testing/gtest/include/gtest/gtest.h"
-#include "testing/utils/hash.h"
 #include "xfa/fgas/font/cfgas_fontmgr.h"
 #include "xfa/fgas/font/cfgas_gefont.h"
 #include "xfa/fgas/font/cfgas_gemodule.h"
@@ -30,12 +27,11 @@ class CFDETextOutTest : public testing::Test {
   ~CFDETextOutTest() override = default;
 
   void SetUp() override {
-    CFX_Size bitmap_size = GetBitmapSize();
-    bitmap_ = MakeRetain<CFX_DIBitmap>();
-    ASSERT_TRUE(bitmap_->Create(bitmap_size.width, bitmap_size.height,
-                                FXDIB_Format::kBgra));
-
-    device_ = CFX_RenderDevice::CreateForBitmap(bitmap_);
+    CFX_Size device_size = GetDeviceSize();
+    auto driver = std::make_unique<DisplayListDeviceDriver>(device_size.width,
+                                                            device_size.height);
+    driver_ = driver.get();
+    device_ = CFX_RenderDevice::CreateWithDriver(std::move(driver));
     ASSERT_TRUE(device_);
 
     font_ = LoadFont();
@@ -45,15 +41,15 @@ class CFDETextOutTest : public testing::Test {
     text_out_->SetFont(font_);
     text_out_->SetFontSize(12.0f);
 
-    EXPECT_EQ(GetEmptyBitmapChecksum(), GetBitmapChecksum());
+    EXPECT_TRUE(driver_->display_list().IsEmpty());
   }
 
   void TearDown() override {
-    // reverse order form SetUp()
+    // reverse order from SetUp()
     text_out_.reset();
     font_.Reset();
+    driver_ = nullptr;
     device_.reset();
-    bitmap_.Reset();
   }
 
   virtual RetainPtr<CFGAS_GEFont> LoadFont() {
@@ -62,69 +58,43 @@ class CFDETextOutTest : public testing::Test {
                                   FX_CodePage::kDefANSI);
   }
 
-  virtual CFX_Size GetBitmapSize() { return CFX_Size(200, 100); }
-
-  virtual const char* GetEmptyBitmapChecksum() {
-    static const char kEmptyBitmapChecksum[] =
-        "a042237c5493fdb9656b94a83608d11a";
-    return kEmptyBitmapChecksum;
-  }
+  virtual CFX_Size GetDeviceSize() { return CFX_Size(200, 100); }
 
   CFX_RenderDevice* device() { return device_.get(); }
+  const ByteString& display_list() const { return driver_->display_list(); }
   CFDE_TextOut& text_out() { return *text_out_; }
 
-  ByteString GetBitmapChecksum() {
-    CryptMd5Context context = CryptMd5Start();
-    for (int i = 0; i < bitmap_->GetHeight(); ++i) {
-      CryptMd5Update(&context, bitmap_->GetScanline(i));
-    }
-    uint8_t digest[16];
-    CryptMd5Finish(&context, digest);
-    return ByteString(CryptToBase16(digest).c_str());
-  }
-
  private:
-  RetainPtr<CFX_DIBitmap> bitmap_;
   std::unique_ptr<CFX_RenderDevice> device_;
+  DisplayListDeviceDriver* driver_ = nullptr;
   RetainPtr<CFGAS_GEFont> font_;
   std::unique_ptr<CFDE_TextOut> text_out_;
 };
 
 TEST_F(CFDETextOutTest, DrawLogicTextBasic) {
   text_out().DrawLogicText(device(), L"foo", CFX_RectF(0, 0, 2100, 100));
-  const char* checksum = []() {
-#if defined(PDF_USE_SKIA)
-    if (CFX_GEModule::IsSkiaRenderer()) {
-#if BUILDFLAG(IS_WIN)
-      return "02c55ce12d3c31ae32fa08fe59c38996";
-#elif defined(PDF_ENABLE_FONTATIONS)
-      if (CFX_GEModule::IsFontations()) {
-        return "8a6b320f8a4ae1febfc6e50513506dcf";
-      }
-#endif
-    }
-#endif
-#if defined(PDF_ENABLE_FONTATIONS)
-    if (CFX_GEModule::IsFontations()) {
-      return "0064590d0532663140d521a2ea6780b1";
-    }
-#endif
-    return "c143f8450f661a489cc9423de7cc1acc";
-  }();
-  EXPECT_EQ(checksum, GetBitmapChecksum());
+  static constexpr char kExpected[] =
+      "SaveState\n"
+      "DrawDeviceText font=\"Arimo\" size=-12.0000 color=0xff000000 "
+      "matrix=[1.0000,0.0000,0.0000,1.0000,0.0000,0.0000] "
+      "glyphs=[(idx=73,origin=(0.0000,9.7312)) "
+      "(idx=82,origin=(3.9960,9.7312)) "
+      "(idx=82,origin=(11.3160,9.7312))]\n"
+      "RestoreState\n";
+  EXPECT_EQ(kExpected, display_list());
 }
 
 TEST_F(CFDETextOutTest, DrawLogicTextEmptyRect) {
   text_out().DrawLogicText(device(), L"foo", CFX_RectF());
-  EXPECT_EQ(GetEmptyBitmapChecksum(), GetBitmapChecksum());
+  EXPECT_TRUE(display_list().IsEmpty());
 }
 
 #if !BUILDFLAG(IS_WIN)
 // This test depends on a particular font being present.
-class CFDETextOutLargeBitmapTest : public CFDETextOutTest {
+class CFDETextOutLargeTest : public CFDETextOutTest {
  public:
-  CFDETextOutLargeBitmapTest() = default;
-  ~CFDETextOutLargeBitmapTest() override = default;
+  CFDETextOutLargeTest() = default;
+  ~CFDETextOutLargeTest() override = default;
 
   RetainPtr<CFGAS_GEFont> LoadFont() override {
     const wchar_t kFontFamily[] = L"DejaVu Sans";
@@ -133,35 +103,37 @@ class CFDETextOutLargeBitmapTest : public CFDETextOutTest {
                                   FX_CodePage::kFailure);
   }
 
-  CFX_Size GetBitmapSize() override { return CFX_Size(2100, 20); }
+  CFX_Size GetDeviceSize() override { return CFX_Size(2100, 20); }
 
-  const char* GetEmptyBitmapChecksum() override {
-    static const char kEmptyLargeBitmapChecksum[] =
-        "101745f76351fd5d916bf3817b71563c";
-    return kEmptyLargeBitmapChecksum;
-  }
-
-  const char* GetLargeTextBlobChecksum() {
-#if defined(PDF_USE_SKIA)
-    if (CFX_GEModule::IsSkiaRenderer()) {
-#if defined(PDF_ENABLE_FONTATIONS)
-      if (CFX_GEModule::IsFontations()) {
-        return "8b657167ef063bca5adb38f6a5d5ae54";
-      }
-#endif
-      return "e9aaffff1ea680bd5dc40a7b8904788d";
-    }
-#endif
-#if defined(PDF_ENABLE_FONTATIONS)
-    if (CFX_GEModule::IsFontations()) {
-      return "78842f43dce9b89af92f17b56d9ceaab";
-    }
-#endif
-    return "add7cf2819b3e1397d8a60a9ec436a86";
-  }
+  static constexpr char kExpectedLargeDisplayList[] =
+      "SaveState\n"
+      "DrawDeviceText font=\"DejaVu Sans\" size=-10.0000 color=0xff000000 "
+      "matrix=[1.0000,0.0000,0.0000,1.0000,0.0000,0.0000] "
+      "glyphs=[(idx=76,origin=(2079.1499,11.9794))]\n"
+      "DrawDeviceText font=\"DejaVu Sans\" size=-10.0000 color=0xff000000 "
+      "matrix=[1.0000,0.0000,0.0000,1.0000,0.0000,0.0000] "
+      "glyphs=[(idx=5300,origin=(1954.7100,11.9794))]\n"
+      "DrawDeviceText font=\"DejaVu Sans\" size=-10.0000 color=0xff000000 "
+      "matrix=[1.0000,0.0000,0.0000,1.0000,0.0000,0.0000] "
+      "glyphs=[(idx=54,origin=(1966.9600,11.9794)) "
+      "(idx=86,origin=(1973.2999,11.9794)) "
+      "(idx=86,origin=(1978.4999,11.9794)) "
+      "(idx=86,origin=(1983.6998,11.9794)) "
+      "(idx=86,origin=(1988.8998,11.9794)) "
+      "(idx=86,origin=(1994.0997,11.9794)) "
+      "(idx=86,origin=(1999.2997,11.9794)) "
+      "(idx=86,origin=(2004.4996,11.9794)) "
+      "(idx=86,origin=(2009.6996,11.9794)) "
+      "(idx=86,origin=(2014.8995,11.9794)) "
+      "(idx=86,origin=(2020.0995,11.9794)) "
+      "(idx=86,origin=(2025.2994,11.9794)) "
+      "(idx=86,origin=(2030.4994,11.9794)) "
+      "(idx=86,origin=(2035.6993,11.9794)) "
+      "(idx=86,origin=(2040.8993,11.9794))]\n"
+      "RestoreState\n";
 };
 
-TEST_F(CFDETextOutLargeBitmapTest, DrawLogicTextBug953881) {
+TEST_F(CFDETextOutLargeTest, DrawLogicTextBug953881) {
   FDE_TextStyle styles;
   styles.single_line_ = true;
   text_out().SetStyles(styles);
@@ -180,10 +152,10 @@ TEST_F(CFDETextOutLargeBitmapTest, DrawLogicTextBug953881) {
       L"iiiiisssss";
   text_out().DrawLogicText(device(), WideString(kText),
                            CFX_RectF(3, 3, 2048, 10));
-  EXPECT_EQ(GetLargeTextBlobChecksum(), GetBitmapChecksum());
+  EXPECT_EQ(kExpectedLargeDisplayList, display_list());
 }
 
-TEST_F(CFDETextOutLargeBitmapTest, DrawLogicTextBug1342078) {
+TEST_F(CFDETextOutLargeTest, DrawLogicTextBug1342078) {
   FDE_TextStyle styles;
   styles.single_line_ = true;
   text_out().SetStyles(styles);
@@ -202,7 +174,7 @@ TEST_F(CFDETextOutLargeBitmapTest, DrawLogicTextBug1342078) {
       L"iiiiiiiiiisssss";
   text_out().DrawLogicText(device(), WideString(kText),
                            CFX_RectF(3, 3, 2048, 10));
-  EXPECT_EQ(GetLargeTextBlobChecksum(), GetBitmapChecksum());
+  EXPECT_EQ(kExpectedLargeDisplayList, display_list());
 }
 #endif  // !BUILDFLAG(IS_WIN)
 

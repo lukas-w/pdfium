@@ -38,8 +38,8 @@ pdfium_unittest_source_set("unittests") {
   ]
   deps = [
     ":fde",
-    "../../core/fdrm",
     "../../core/fxge",
+    "../../core/fxge:test_support",
     "../../testing:test_environments",
     "../../testing:test_support",
     "../fgas/font",
