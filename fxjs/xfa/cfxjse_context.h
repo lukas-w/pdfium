@@ -40,6 +40,7 @@ class CFXJSE_Context {
       CFXJSE_HostObject* pGlobalObject,
       CXFA_ThisProxy* pProxy);
 
+  // Clears the host object binding on the context's global object.
   ~CFXJSE_Context();
 
   v8::Isolate* GetIsolate() const { return isolate_; }
@@ -48,6 +49,8 @@ class CFXJSE_Context {
 
   void AddClass(std::unique_ptr<CFXJSE_Class> pClass);
   CFXJSE_Class* GetClassByName(ByteStringView szName) const;
+
+  // Executes compatibility bootstrap scripts with microtasks suppressed.
   void EnableCompatibleMode();
 
   // Note: `pNewThisObject` may be empty.

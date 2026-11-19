@@ -199,7 +199,7 @@ void DynPropSetterAdapter(v8::Isolate* pIsolate,
                                                 false)
           : FXJSE_ClassPropType::kProperty;
 
-  if (nPropType != FXJSE_ClassPropType::kMethod &&
+  if (nPropType == FXJSE_ClassPropType::kProperty &&
       pClassDescriptor->dynPropSetter) {
     pClassDescriptor->dynPropSetter(pIsolate, pObject, szPropName, value);
   }

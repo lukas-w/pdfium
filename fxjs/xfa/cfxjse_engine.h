@@ -189,8 +189,9 @@ class CFXJSE_Engine final : public CFX_IsolateWrapper {
  private:
   CJS_Runtime* GetCJSRuntime() const;
   CFXJSE_Context* GetJseContext() const { return js_context_.get(); }
-  CFXJSE_Context* CreateVariablesContext(CXFA_Script* pScriptNode,
-                                         CXFA_Node* pSubform);
+  std::unique_ptr<CFXJSE_Context> CreateVariablesContext(
+      CXFA_Script* pScriptNode,
+      CXFA_Node* pSubform);
   void RemoveBuiltInObjs(CFXJSE_Context* context);
   bool QueryNodeByFlag(CXFA_Node* refNode,
                        WideStringView propname,

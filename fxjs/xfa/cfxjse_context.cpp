@@ -20,6 +20,7 @@
 #include "fxjs/xfa/cjx_object.h"
 #include "v8/include/v8-exception.h"
 #include "v8/include/v8-function.h"
+#include "v8/include/v8-isolate.h"
 #include "v8/include/v8-message.h"
 #include "v8/include/v8-script.h"
 #include "v8/include/v8-template.h"
@@ -207,7 +208,15 @@ std::unique_ptr<CFXJSE_Context> CFXJSE_Context::Create(
 CFXJSE_Context::CFXJSE_Context(v8::Isolate* pIsolate, CXFA_ThisProxy* pProxy)
     : isolate_(pIsolate), this_proxy_(pProxy) {}
 
-CFXJSE_Context::~CFXJSE_Context() = default;
+CFXJSE_Context::~CFXJSE_Context() {
+  // Clear the global object binding before dropping `this_proxy_` so any
+  // retained reference to the global object cannot access a destroyed host
+  // object.
+  if (!context_.IsEmpty()) {
+    CFXJSE_ScopeUtil_IsolateHandle scope(GetIsolate());
+    FXJSE_ClearObjectBinding(GetGlobalObject());
+  }
+}
 
 v8::Local<v8::Object> CFXJSE_Context::GetGlobalObject() {
   v8::Isolate::Scope isolate_scope(GetIsolate());
@@ -235,6 +244,9 @@ CFXJSE_Class* CFXJSE_Context::GetClassByName(ByteStringView szName) const {
 }
 
 void CFXJSE_Context::EnableCompatibleMode() {
+  v8::Isolate::Scope isolate_scope(GetIsolate());
+  v8::Isolate::SuppressMicrotaskExecutionScope suppress_microtasks(
+      GetIsolate());
   ExecuteScript(szCompatibleModeScript, v8::Local<v8::Object>());
   ExecuteScript(szConsoleScript, v8::Local<v8::Object>());
 }

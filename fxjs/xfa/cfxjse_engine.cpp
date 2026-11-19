@@ -168,15 +168,13 @@ CFXJSE_Engine::CFXJSE_Engine(CXFA_Document* document, v8::Isolate* isolate)
 CFXJSE_Engine::~CFXJSE_Engine() {
   // This is what ensures that the v8 object bound to a CJX_Object
   // no longer retains that binding since it will outlive that object.
+  // `CFXJSE_Context` and `CFXJSE_FormCalcContext` clear their own bindings on
+  // destruction.
   CFXJSE_ScopeUtil_IsolateHandleContext scope(GetJseContext());
   for (const auto& pair : map_object_to_object_) {
     const v8::Global<v8::Object>& binding = pair.second;
     FXJSE_ClearObjectBinding(v8::Local<v8::Object>::New(GetIsolate(), binding));
   }
-  for (const auto& pair : map_variable_to_context_) {
-    FXJSE_ClearObjectBinding(pair.second->GetGlobalObject());
-  }
-  FXJSE_ClearObjectBinding(js_context_->GetGlobalObject());
 }
 
 CFXJSE_Engine::EventParamScope::EventParamScope(CFXJSE_Engine* pEngine,
@@ -311,6 +309,10 @@ void CFXJSE_Engine::GlobalPropertySetter(v8::Isolate* pIsolate,
                                          ByteStringView szPropName,
                                          v8::Local<v8::Value> pValue) {
   CXFA_Object* pOriginalNode = ToObject(pIsolate, pObject);
+  if (!pOriginalNode) {
+    return;
+  }
+
   CXFA_Document* doc = pOriginalNode->GetDocument();
   CFXJSE_Engine* pScriptContext = doc->GetScriptContext();
   CXFA_Node* pRefNode = ToNode(pScriptContext->GetThisObject());
@@ -347,6 +349,10 @@ v8::Local<v8::Value> CFXJSE_Engine::GlobalPropertyGetter(
     v8::Local<v8::Object> pObject,
     ByteStringView szPropName) {
   CXFA_Object* pOriginalObject = ToObject(pIsolate, pObject);
+  if (!pOriginalObject) {
+    return fxv8::NewUndefinedHelper(pIsolate);
+  }
+
   CXFA_Document* doc = pOriginalObject->GetDocument();
   CFXJSE_Engine* pScriptContext = doc->GetScriptContext();
   WideString wsPropName = WideString::FromUTF8(szPropName);
@@ -625,8 +631,9 @@ CXFA_Node* CFXJSE_Engine::LastObjectFromUpArray() {
                                             : nullptr;
 }
 
-CFXJSE_Context* CFXJSE_Engine::CreateVariablesContext(CXFA_Script* pScriptNode,
-                                                      CXFA_Node* pSubform) {
+std::unique_ptr<CFXJSE_Context> CFXJSE_Engine::CreateVariablesContext(
+    CXFA_Script* pScriptNode,
+    CXFA_Node* pSubform) {
   if (!pScriptNode || !pSubform) {
     return nullptr;
   }
@@ -638,9 +645,7 @@ CFXJSE_Context* CFXJSE_Engine::CreateVariablesContext(CXFA_Script* pScriptNode,
       GetIsolate(), &kVariablesClassDescriptor, proxy->JSObject(), proxy);
   RemoveBuiltInObjs(pNewContext.get());
   pNewContext->EnableCompatibleMode();
-  CFXJSE_Context* pResult = pNewContext.get();
-  map_variable_to_context_[pScriptNode->JSObject()] = std::move(pNewContext);
-  return pResult;
+  return pNewContext;
 }
 
 CXFA_Object* CFXJSE_Engine::GetVariablesThis(CXFA_Object* pObject) {
@@ -681,12 +686,24 @@ void CFXJSE_Engine::RunVariablesScript(CXFA_Script* pScriptNode) {
 
   ByteString btScript = wsScript->ToUTF8();
   CXFA_Node* pThisObject = pParent->GetParent();
-  CFXJSE_Context* pVariablesContext =
+  std::unique_ptr<CFXJSE_Context> pVariablesContext =
       CreateVariablesContext(pScriptNode, pThisObject);
+  if (!pVariablesContext) {
+    return;
+  }
+
+  // Defense-in-depth: avoid overwriting an entry if `CreateVariablesContext()`
+  // ever re-entrantly initialized this node.
+  auto [emplaced_it, inserted] = map_variable_to_context_.try_emplace(
+      pScriptNode->JSObject(), std::move(pVariablesContext));
+  if (!inserted) {
+    return;
+  }
+
   AutoRestorer<cppgc::Persistent<CXFA_Object>> nodeRestorer(&this_object_);
   this_object_ = pThisObject;
-  pVariablesContext->ExecuteScript(btScript.AsStringView(),
-                                   v8::Local<v8::Object>());
+  emplaced_it->second->ExecuteScript(btScript.AsStringView(),
+                                     v8::Local<v8::Object>());
 }
 
 CFXJSE_Context* CFXJSE_Engine::VariablesContextForScriptNode(
