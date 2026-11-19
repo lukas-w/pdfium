@@ -33,6 +33,7 @@
 #include "core/fxcrt/fx_extension.h"
 #include "core/fxcrt/fx_unicode.h"
 #include "core/fxcrt/notreached.h"
+#include "core/fxcrt/numerics/safe_conversions.h"
 #include "core/fxcrt/span.h"
 #include "core/fxcrt/stl_util.h"
 #include "core/fxcrt/zip.h"
@@ -653,8 +654,15 @@ bool CPDF_TextPage::GetRect(int rectIndex, CFX_FloatRect* pRect) const {
 
 CPDF_TextPage::TextOrientation CPDF_TextPage::FindTextlineFlowOrientation()
     const {
-  const int32_t nPageWidth = static_cast<int32_t>(page_->GetPageWidth());
-  const int32_t nPageHeight = static_cast<int32_t>(page_->GetPageHeight());
+  const float page_width = page_->GetPageWidth();
+  const float page_height = page_->GetPageHeight();
+  if (!pdfium::IsValueInRangeForNumericType<int32_t>(page_width) ||
+      !pdfium::IsValueInRangeForNumericType<int32_t>(page_height)) {
+    return TextOrientation::kUnknown;
+  }
+
+  const int32_t nPageWidth = static_cast<int32_t>(page_width);
+  const int32_t nPageHeight = static_cast<int32_t>(page_height);
   if (nPageWidth <= 0 || nPageHeight <= 0) {
     return TextOrientation::kUnknown;
   }
@@ -707,7 +715,8 @@ CPDF_TextPage::TextOrientation CPDF_TextPage::FindTextlineFlowOrientation()
       fLineHeight = rect.Height();
     }
   }
-  const int32_t nDoubleLineHeight = 2 * fLineHeight;
+  const int32_t nDoubleLineHeight =
+      pdfium::saturated_cast<int32_t>(2 * fLineHeight);
   if ((nEndV - nStartV) < nDoubleLineHeight) {
     return TextOrientation::kHorizontal;
   }

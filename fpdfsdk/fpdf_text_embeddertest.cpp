@@ -13,6 +13,7 @@
 #include "core/fxge/fx_font.h"
 #include "public/cpp/fpdf_scopers.h"
 #include "public/fpdf_doc.h"
+#include "public/fpdf_edit.h"
 #include "public/fpdf_text.h"
 #include "public/fpdf_transformpage.h"
 #include "public/fpdfview.h"
@@ -2701,4 +2702,65 @@ TEST_F(FPDFTextEmbedderTest, RtlMultiCharGlyph) {
             FPDFText_GetText(text_page.get(), 0, std::size(buffer), buffer));
   EXPECT_THAT(pdfium::span(buffer).first<kExpectedTextSize>(),
               ElementsAreArray(kExpectedText));
+}
+
+TEST_F(FPDFTextEmbedderTest, OverflowingLineHeight) {
+  CreateEmptyDocument();
+  ScopedFPDFPage page(FPDFPage_New(document(), 0, 500, 750));
+  ASSERT_TRUE(page);
+
+  ScopedFPDFPageObject text_obj(
+      FPDFPageObj_NewTextObj(document(), "Helvetica", 12.0f));
+  ASSERT_TRUE(text_obj);
+  ScopedFPDFWideString text = GetFPDFWideString(L"X");
+  ASSERT_TRUE(FPDFText_SetText(text_obj.get(), text.get()));
+  static constexpr FS_MATRIX kMatrix{1, 0, 0, 200000000.0f, 100, 100};
+  ASSERT_TRUE(FPDFPageObj_SetMatrix(text_obj.get(), &kMatrix));
+  ASSERT_TRUE(FPDFPage_InsertObject(page.get(), text_obj.release()));
+
+  ScopedFPDFTextPage text_page(FPDFText_LoadPage(page.get()));
+  ASSERT_TRUE(text_page);
+
+  static constexpr auto kExpectedText = std::to_array<FPDF_WCHAR>({'X', '\0'});
+  std::array<FPDF_WCHAR, 16> buffer = {};
+  int num_chars = FPDFText_GetText(
+      text_page.get(), 0, static_cast<int>(buffer.size() - 1), buffer.data());
+  ASSERT_EQ(static_cast<int>(kExpectedText.size()), num_chars);
+  EXPECT_THAT(pdfium::span(buffer).first<kExpectedText.size()>(),
+              ElementsAreArray(kExpectedText));
+}
+
+TEST_F(FPDFTextEmbedderTest, OverflowingPageDimensions) {
+  static constexpr std::array<std::pair<double, double>, 2> kPageSizes = {{
+      {3000000000.0, 750.0},
+      {500.0, 3000000000.0},
+  }};
+  static constexpr auto kExpectedText =
+      std::to_array<FPDF_WCHAR>({'H', 'e', 'l', 'l', 'o', '\0'});
+
+  CreateEmptyDocument();
+  int page_index = 0;
+  for (const auto& [width, height] : kPageSizes) {
+    ScopedFPDFPage page(FPDFPage_New(document(), page_index++, width, height));
+    ASSERT_TRUE(page);
+
+    ScopedFPDFPageObject text_obj(
+        FPDFPageObj_NewTextObj(document(), "Helvetica", 12.0f));
+    ASSERT_TRUE(text_obj);
+    ScopedFPDFWideString text = GetFPDFWideString(L"Hello");
+    ASSERT_TRUE(FPDFText_SetText(text_obj.get(), text.get()));
+    static constexpr FS_MATRIX kMatrix{1, 0, 0, 1, 100, 300};
+    ASSERT_TRUE(FPDFPageObj_SetMatrix(text_obj.get(), &kMatrix));
+    ASSERT_TRUE(FPDFPage_InsertObject(page.get(), text_obj.release()));
+
+    ScopedFPDFTextPage text_page(FPDFText_LoadPage(page.get()));
+    ASSERT_TRUE(text_page);
+
+    std::array<FPDF_WCHAR, 16> buffer = {};
+    int num_chars = FPDFText_GetText(
+        text_page.get(), 0, static_cast<int>(buffer.size() - 1), buffer.data());
+    ASSERT_EQ(static_cast<int>(kExpectedText.size()), num_chars);
+    EXPECT_THAT(pdfium::span(buffer).first<kExpectedText.size()>(),
+                ElementsAreArray(kExpectedText));
+  }
 }
