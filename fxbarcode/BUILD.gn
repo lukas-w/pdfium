@@ -157,6 +157,7 @@ pdfium_unittest_source_set("unittests") {
   deps = [
     ":fxbarcode",
     "../core/fxge",
+    "../core/fxge:test_support",
     "../testing:test_support",
   ]
   pdfium_root_dir = "../"
