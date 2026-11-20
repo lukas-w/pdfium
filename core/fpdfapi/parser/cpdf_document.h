@@ -46,6 +46,12 @@ class CPDF_Document : public Observable,
     virtual ~LinkListIface() = default;
   };
 
+  class DestructionObserverIface {
+   public:
+    virtual ~DestructionObserverIface() = default;
+    virtual void OnDocumentDestroyed() = 0;
+  };
+
   class PageDataIface {
    public:
     PageDataIface();
@@ -93,6 +99,9 @@ class CPDF_Document : public Observable,
   void SetExtension(std::unique_ptr<Extension> pExt) {
     extension_ = std::move(pExt);
   }
+
+  void AddDestructionObserver(DestructionObserverIface* observer);
+  void RemoveDestructionObserver(DestructionObserverIface* observer);
 
   CPDF_Parser* GetParser() const { return parser_.get(); }
   const CPDF_Dictionary* GetRoot() const { return root_dict_.Get(); }
@@ -170,6 +179,20 @@ class CPDF_Document : public Observable,
   void ResizePageListForTesting(size_t size);
 
  private:
+  class DestructionNotifier {
+   public:
+    DestructionNotifier();
+    DestructionNotifier(const DestructionNotifier&) = delete;
+    DestructionNotifier& operator=(const DestructionNotifier&) = delete;
+    ~DestructionNotifier();
+
+    void AddObserver(DestructionObserverIface* observer);
+    void RemoveObserver(DestructionObserverIface* observer);
+
+   private:
+    std::set<DestructionObserverIface*> observers_;
+  };
+
   class [[maybe_unused, nodiscard]] StockFontClearer {
    public:
     FX_STACK_ALLOCATED();
@@ -213,6 +236,9 @@ class CPDF_Document : public Observable,
   bool InsertNewPage(int iPage, RetainPtr<CPDF_Dictionary> pPageDict);
   void ResetTraversal();
   CPDF_Parser::Error HandleLoadResult(CPDF_Parser::Error error);
+
+  // Must be first, so it is destroyed after all other members.
+  DestructionNotifier destruction_notifier_;
 
   std::unique_ptr<CPDF_Parser> parser_;
   RetainPtr<CPDF_Dictionary> root_dict_;

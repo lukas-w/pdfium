@@ -84,11 +84,11 @@ CPDF_DataAvail::CPDF_DataAvail(FileAvail* pFileAvail,
 CPDF_DataAvail::~CPDF_DataAvail() {
   hint_tables_.reset();
   if (document_) {
-    document_->RemoveObserver(this);
+    document_->RemoveDestructionObserver(this);
   }
 }
 
-void CPDF_DataAvail::OnObservableDestroyed() {
+void CPDF_DataAvail::OnDocumentDestroyed() {
   document_ = nullptr;
   form_avail_.reset();
   pages_array_.clear();
@@ -1096,7 +1096,7 @@ CPDF_DataAvail::ParseDocument(
   }
   auto document = std::make_unique<CPDF_Document>(std::move(pRenderData),
                                                   std::move(pPageData));
-  document->AddObserver(this);
+  document->AddDestructionObserver(this);
 
   CPDF_ReadValidator::ScopedSession read_session(GetValidator());
   CPDF_Parser::Error error =

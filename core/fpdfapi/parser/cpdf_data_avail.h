@@ -28,7 +28,7 @@ class CPDF_PageObjectAvail;
 class CPDF_ReadValidator;
 class CPDF_SyntaxParser;
 
-class CPDF_DataAvail final : public Observable::ObserverIface {
+class CPDF_DataAvail final : public CPDF_Document::DestructionObserverIface {
  public:
   // Must match PDF_DATA_* definitions in public/fpdf_dataavail.h, but cannot
   // #include that header. fpdfsdk/fpdf_dataavail.cpp has static_asserts
@@ -74,8 +74,8 @@ class CPDF_DataAvail final : public Observable::ObserverIface {
                  RetainPtr<IFX_SeekableReadStream> pFileRead);
   ~CPDF_DataAvail() override;
 
-  // Observable::ObserverIface:
-  void OnObservableDestroyed() override;
+  // CPDF_Document::DestructionObserverIface:
+  void OnDocumentDestroyed() override;
 
   DocAvailStatus IsDocAvail(DownloadHints* pHints);
   DocAvailStatus IsPageAvail(uint32_t dwPage, DownloadHints* pHints);
