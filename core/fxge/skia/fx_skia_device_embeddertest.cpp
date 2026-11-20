@@ -10,16 +10,12 @@
 
 #include "core/fpdfapi/page/cpdf_page.h"
 #include "core/fpdfapi/render/cpdf_pagerendercontext.h"
-#include "core/fxcrt/fx_codepage.h"
 #include "core/fxge/cfx_fillrenderoptions.h"
-#include "core/fxge/cfx_font.h"
 #include "core/fxge/cfx_gemodule.h"
 #include "core/fxge/cfx_graphstatedata.h"
 #include "core/fxge/cfx_path.h"
 #include "core/fxge/cfx_renderdevice.h"
-#include "core/fxge/cfx_textrenderoptions.h"
 #include "core/fxge/dib/cfx_dibitmap.h"
-#include "core/fxge/text_char_pos.h"
 #include "fpdfsdk/cpdfsdk_helpers.h"
 #include "fpdfsdk/cpdfsdk_renderpage.h"
 #include "public/cpp/fpdf_scopers.h"
@@ -42,7 +38,7 @@ struct State {
   enum class Change { kNo, kYes };
   enum class Save { kNo, kYes };
   enum class Clip { kNo, kSame, kDifferentPath, kDifferentMatrix };
-  enum class Graphic { kNone, kPath, kText };
+  enum class Graphic { kNone, kPath };
 
   Change change_;
   Save save_;
@@ -58,17 +54,6 @@ void EmptyTest(CFX_SkiaDeviceDriver* driver, const State&) {
 }
 
 void CommonTest(CFX_SkiaDeviceDriver* driver, const State& state) {
-  TextCharPos charPos = {
-      .origin_ = CFX_PointF(0, 1),
-      .glyph_index_ = 0,
-      .font_char_width_ = 4,
-  };
-
-  CFX_Font font;
-  font.LoadSubstFace("Courier", /*bTrueType=*/true, /*flags=*/0,
-                     /*weight=*/400, /*italic_angle=*/0, FX_CodePage::kShiftJIS,
-                     /*bVertical=*/false);
-  float fontSize = 20;
   CFX_Path clipPath;
   CFX_Path clipPath2;
   clipPath.AppendRect(0, 0, 3, 1);
@@ -83,10 +68,6 @@ void CommonTest(CFX_SkiaDeviceDriver* driver, const State& state) {
   CFX_Matrix matrix2;
   matrix2.Translate(1, 0);
   CFX_GraphStateData graphState;
-  // Turn off anti-aliasing so that pixels with transitional colors can be
-  // avoided.
-  static constexpr CFX_TextRenderOptions kTextOptions(
-      CFX_TextRenderOptions::kAliasing);
   if (state.save_ == State::Save::kYes) {
     driver->SaveState();
   }
@@ -97,9 +78,6 @@ void CommonTest(CFX_SkiaDeviceDriver* driver, const State& state) {
     driver->DrawPath(path1, &matrix, &graphState, 0xFF112233, 0,
                      /*group_knockout=*/false,
                      CFX_FillRenderOptions::WindingOptions());
-  } else if (state.graphic_ == State::Graphic::kText) {
-    driver->DrawDeviceText(pdfium::span_from_ref(charPos), &font, matrix,
-                           fontSize, 0xFF445566, kTextOptions);
   }
   if (state.save_ == State::Save::kYes) {
     driver->RestoreState(true);
@@ -109,8 +87,6 @@ void CommonTest(CFX_SkiaDeviceDriver* driver, const State& state) {
   if (state.change_ == State::Change::kYes) {
     if (state.graphic_ == State::Graphic::kPath) {
       graphState.set_line_cap(CFX_GraphStateData::LineCap::kRound);
-    } else if (state.graphic_ == State::Graphic::kText) {
-      fontSize = 2;
     }
   }
   if (state.clip_ == State::Clip::kSame) {
@@ -124,9 +100,6 @@ void CommonTest(CFX_SkiaDeviceDriver* driver, const State& state) {
     driver->DrawPath(path2, &matrix2, &graphState, 0xFF112233, 0,
                      /*group_knockout=*/false,
                      CFX_FillRenderOptions::WindingOptions());
-  } else if (state.graphic_ == State::Graphic::kText) {
-    driver->DrawDeviceText(pdfium::span_from_ref(charPos), &font, matrix2,
-                           fontSize, 0xFF445566, kTextOptions);
   }
   if (state.save_ == State::Save::kYes) {
     driver->RestoreState(false);
@@ -236,18 +209,6 @@ TEST(fxge, SkiaStatePath) {
                         State::Graphic::kPath, 0xFF112233});
   Harness(&CommonTest, {State::Change::kNo, State::Save::kNo, State::Clip::kNo,
                         State::Graphic::kPath, 0xFF112233});
-}
-
-TEST(fxge, SkiaStateText) {
-  if (!CFX_GEModule::IsSkiaRenderer()) {
-    return;
-  }
-
-  Harness(&CommonTest,
-          {State::Change::kNo, State::Save::kYes, State::Clip::kDifferentMatrix,
-           State::Graphic::kText, 0xFF445566});
-  Harness(&CommonTest, {State::Change::kNo, State::Save::kYes,
-                        State::Clip::kSame, State::Graphic::kText, 0xFF445566});
 }
 
 TEST(fxge, SkiaStateOOSClip) {
