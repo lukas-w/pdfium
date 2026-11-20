@@ -81,12 +81,6 @@ std::unique_ptr<CPWL_Wnd> CFFL_ListBox::NewPWLWindow(
   return pWnd;
 }
 
-bool CFFL_ListBox::OnChar(CPDFSDK_Widget* pWidget,
-                          uint32_t nChar,
-                          Mask<FWL_EVENTFLAG> nFlags) {
-  return CFFL_TextObject::OnChar(pWidget, nChar, nFlags);
-}
-
 bool CFFL_ListBox::IsDataChanged(const CPDFSDK_PageView* pPageView) {
   CPWL_ListBox* pListBox = GetPWLListBox(pPageView);
   if (!pListBox) {

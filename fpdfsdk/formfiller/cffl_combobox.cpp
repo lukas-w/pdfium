@@ -63,12 +63,6 @@ std::unique_ptr<CPWL_Wnd> CFFL_ComboBox::NewPWLWindow(
   return pWnd;
 }
 
-bool CFFL_ComboBox::OnChar(CPDFSDK_Widget* pWidget,
-                           uint32_t nChar,
-                           Mask<FWL_EVENTFLAG> nFlags) {
-  return CFFL_TextObject::OnChar(pWidget, nChar, nFlags);
-}
-
 bool CFFL_ComboBox::IsDataChanged(const CPDFSDK_PageView* pPageView) {
   auto* pWnd = GetPWLComboBox(pPageView);
   if (!pWnd) {

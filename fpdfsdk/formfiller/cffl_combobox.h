@@ -32,9 +32,6 @@ class CFFL_ComboBox final : public CFFL_TextObject {
   std::unique_ptr<CPWL_Wnd> NewPWLWindow(
       const CPWL_Wnd::CreateParams& cp,
       std::unique_ptr<IPWL_FillerNotify::PerWindowData> pAttachedData) override;
-  bool OnChar(CPDFSDK_Widget* pWidget,
-              uint32_t nChar,
-              Mask<FWL_EVENTFLAG> nFlags) override;
   bool IsDataChanged(const CPDFSDK_PageView* pPageView) override;
   void SaveData(const CPDFSDK_PageView* pPageView) override;
   void GetActionData(const CPDFSDK_PageView* pPageView,
