@@ -167,8 +167,8 @@ TEST_F(FPDFPPOEmbedderTest, ImportPageToXObject) {
     ScopedFPDFDocument output_doc(FPDF_CreateNewDocument());
     ASSERT_TRUE(output_doc);
 
-    FPDF_XOBJECT xobject =
-        FPDF_NewXObjectFromPage(output_doc.get(), document(), 0);
+    ScopedFPDFXObject xobject(
+        FPDF_NewXObjectFromPage(output_doc.get(), document(), 0));
     ASSERT_TRUE(xobject);
 
     // After creating `xobject`, the source document is no longer required.
@@ -179,7 +179,8 @@ TEST_F(FPDFPPOEmbedderTest, ImportPageToXObject) {
       ScopedFPDFPage page(FPDFPage_New(output_doc.get(), 0, 612, 792));
       ASSERT_TRUE(page);
 
-      FPDF_PAGEOBJECT page_object = FPDF_NewFormObjectFromXObject(xobject);
+      FPDF_PAGEOBJECT page_object =
+          FPDF_NewFormObjectFromXObject(xobject.get());
       ASSERT_TRUE(page_object);
       EXPECT_EQ(FPDF_PAGEOBJ_FORM, FPDFPageObj_GetType(page_object));
       FPDFPage_InsertObject(page.get(), page_object);
@@ -201,8 +202,6 @@ TEST_F(FPDFPPOEmbedderTest, ImportPageToXObject) {
     }
 
     EXPECT_TRUE(FPDF_SaveAsCopy(output_doc.get(), this, 0));
-
-    FPDF_CloseXObject(xobject);
   }
 
   static constexpr int kExpectedPageCount = 2;
@@ -256,7 +255,7 @@ TEST_F(FPDFPPOEmbedderTest, ImportPageToXObject) {
 TEST_F(FPDFPPOEmbedderTest, ImportPageToXObjectWithSameDoc) {
   ASSERT_TRUE(OpenDocument("rectangles.pdf"));
 
-  FPDF_XOBJECT xobject = FPDF_NewXObjectFromPage(document(), document(), 0);
+  ScopedFPDFXObject xobject(FPDF_NewXObjectFromPage(document(), document(), 0));
   ASSERT_TRUE(xobject);
 
   ScopedPage page = LoadScopedPage(0);
@@ -264,7 +263,7 @@ TEST_F(FPDFPPOEmbedderTest, ImportPageToXObjectWithSameDoc) {
 
   CompareDisplayList(RenderLoadedPageToDisplayList(page.get()), "rectangles");
 
-  FPDF_PAGEOBJECT page_object = FPDF_NewFormObjectFromXObject(xobject);
+  FPDF_PAGEOBJECT page_object = FPDF_NewFormObjectFromXObject(xobject.get());
   ASSERT_TRUE(page_object);
   ASSERT_EQ(FPDF_PAGEOBJ_FORM, FPDFPageObj_GetType(page_object));
 
@@ -276,8 +275,6 @@ TEST_F(FPDFPPOEmbedderTest, ImportPageToXObjectWithSameDoc) {
 
   CompareDisplayList(RenderLoadedPageToDisplayList(page.get()),
                      "import_page_to_xobject_with_same_doc");
-
-  FPDF_CloseXObject(xobject);
 
   EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
 

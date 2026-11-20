@@ -64,4 +64,8 @@ using ScopedFPDFTextPage =
     std::unique_ptr<std::remove_pointer<FPDF_TEXTPAGE>::type,
                     FPDFTextPageDeleter>;
 
+using ScopedFPDFXObject =
+    std::unique_ptr<std::remove_pointer<FPDF_XOBJECT>::type,
+                    FPDFXObjectDeleter>;
+
 #endif  // PUBLIC_CPP_FPDF_SCOPERS_H_
