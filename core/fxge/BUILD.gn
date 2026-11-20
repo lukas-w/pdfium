@@ -169,7 +169,6 @@ source_set("fxge") {
   if (pdf_enable_fontations) {
     deps += [
       ":skrifa_cxx",
-      ":skrifa_cxx_cpp",
       "//build/rust:cxx_cppdeps",
     ]
   }
@@ -230,12 +229,6 @@ source_set("fxge") {
 }
 
 if (pdf_enable_fontations) {
-  source_set("skrifa_cxx_outlines_h") {
-    sources = [ "skrifa/src/outlines.h" ]
-    visibility = [ ":*" ]
-    public_deps = [ "//build/rust:cxx_cppdeps" ]
-  }
-
   rust_static_library("skrifa_cxx") {
     crate_name = "skrifa_cxx"
     allow_unsafe = true
@@ -248,22 +241,7 @@ if (pdf_enable_fontations) {
       "//third_party/rust/read_fonts/v0_47:lib",
       "//third_party/rust/skrifa/v0_50:lib",
     ]
-    public_deps = [ ":skrifa_cxx_outlines_h" ]
     configs += [ "../../:pdfium_common_config" ]
-  }
-
-  source_set("skrifa_cxx_cpp") {
-    sources = [ "skrifa/src/outlines.cpp" ]
-    deps = [
-      ":skrifa_cxx",
-      "//build/rust:cxx_cppdeps",
-    ]
-    configs -= [ "//build/config/compiler:chromium_code" ]
-    configs += [
-      "//build/config/compiler:no_chromium_code",
-      "../../:pdfium_common_config",
-    ]
-    visibility = [ ":*" ]
   }
 }
 
@@ -344,7 +322,6 @@ pdfium_unittest_source_set("unittests") {
     sources += [ "skrifa/fx_skrifa_unittest.cpp" ]
     deps += [
       ":skrifa_cxx",
-      ":skrifa_cxx_cpp",
       "//build/rust:cxx_cppdeps",
     ]
   }

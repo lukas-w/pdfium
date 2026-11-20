@@ -169,12 +169,6 @@ mod skrifa_ffi {
         fn agl_unicode_to_name(unicode: u32, name: &mut [u8]) -> &[u8];
         fn get_num_faces(data: &[u8]) -> u32;
     }
-
-    unsafe extern "C++" {
-        include!("core/fxge/skrifa/src/outlines.h");
-
-        fn run(font_path: &str);
-    }
 }
 
 use skrifa_ffi::{
@@ -1069,7 +1063,4 @@ fn get_num_faces(data: &[u8]) -> u32 {
         return 1;
     }
     0
-}
-fn main() {
-    skrifa_ffi::run("");
 }

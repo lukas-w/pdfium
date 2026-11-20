@@ -3,12 +3,14 @@
 // found in the LICENSE file.
 
 #include <algorithm>
+#include <array>
 #include <memory>
 #include <string>
 #include <vector>
 
 #include "core/fxcrt/cfx_read_only_span_stream.h"
 #include "core/fxcrt/compiler_specific.h"
+#include "core/fxcrt/span.h"
 #include "core/fxge/cfx_face.h"
 #include "core/fxge/cfx_gemodule.h"
 #include "core/fxge/cfx_glyphbitmap.h"
@@ -18,14 +20,58 @@
 #include "core/fxge/fx_font.h"
 #include "core/fxge/fx_fontencoding.h"
 #include "core/fxge/skrifa/src/main.rs.h"
-#include "core/fxge/skrifa/src/outlines.h"
 #include "testing/gtest/include/gtest/gtest.h"
 #include "testing/utils/file_util.h"
 #include "testing/utils/path_service.h"
 
 TEST(FxSkrifaTest, TestFoxitFixedCff) {
   std::string font_path = PathService::GetTestFilePath("fonts/foxit_fixed.cff");
-  skrifa::run(rust::Str(font_path));
+  std::vector<uint8_t> bytes = GetFileContents(font_path.c_str());
+
+  auto font = skrifa::new_font(rust::Slice<const uint8_t>(bytes), 0);
+  ASSERT_TRUE(font->is_ok());
+
+  EXPECT_EQ(font->postscript_name(), "ChromFixedOTF");
+  EXPECT_EQ(font->family_name(), "Chrom Fixed OTF");
+  EXPECT_EQ(font->font_type(), skrifa::FaceFormat::Cff);
+  EXPECT_FALSE(font->is_sfnt());
+  EXPECT_FALSE(font->is_fixed_pitch());
+  EXPECT_EQ(font->units_per_em(), 1000);
+  EXPECT_EQ(font->num_glyphs(), 244u);
+  EXPECT_EQ(font->encoding(), skrifa::PsEncodingKind::Standard);
+  EXPECT_TRUE(font->has_glyph_names());
+
+  uint32_t gid_from_code = font->code_to_gid(120);
+  uint32_t gid = font->unicode_to_gid('x');
+  EXPECT_EQ(gid_from_code, gid);
+  EXPECT_EQ(font->glyph_name(gid), "x");
+  EXPECT_EQ(font->name_index("x"), gid);
+
+  uint32_t gid_a = font->code_to_gid('A');
+  EXPECT_NE(gid_a, 0u);
+  EXPECT_NE(gid_a, gid);
+  EXPECT_EQ(font->unicode_to_gid('A'), gid_a);
+  EXPECT_EQ(font->glyph_name(gid_a), "A");
+
+  skrifa::Outline outline;
+  EXPECT_TRUE(font->unscaled_outline(gid, outline));
+  EXPECT_EQ(outline.verbs.size(), 29u);
+  EXPECT_EQ(outline.points.size(), 28u);
+  EXPECT_FLOAT_EQ(outline.advance_width, 600.0f);
+
+  EXPECT_TRUE(font->scaled_outline(gid, 16.0f, outline));
+  EXPECT_EQ(outline.verbs.size(), 29u);
+  EXPECT_EQ(outline.points.size(), 28u);
+  EXPECT_FLOAT_EQ(outline.advance_width, 9.59375f);
+
+  uint32_t period_unicode = 0;
+  EXPECT_TRUE(skrifa::agl_name_to_unicode("period", period_unicode));
+  EXPECT_EQ(period_unicode, static_cast<uint32_t>('.'));
+
+  std::array<uint8_t, 64> period_name = {};
+  auto period_slice =
+      skrifa::agl_unicode_to_name('.', rust::Slice<uint8_t>(period_name));
+  EXPECT_EQ(ByteStringView(period_slice), "period");
 }
 
 TEST(FxSkrifaTest, TestGetOs2CodePageRange) {
