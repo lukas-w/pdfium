@@ -15,12 +15,12 @@ Observable::~Observable() {
   NotifyObservers();
 }
 
-void Observable::AddObserver(ObserverIface* pObserver) {
+void Observable::AddObserver(ObservedPtrBase* pObserver) {
   DCHECK(!pdfium::Contains(observers_, pObserver));
   observers_.insert(pObserver);
 }
 
-void Observable::RemoveObserver(ObserverIface* pObserver) {
+void Observable::RemoveObserver(ObservedPtrBase* pObserver) {
   DCHECK(pdfium::Contains(observers_, pObserver));
   observers_.erase(pObserver);
 }

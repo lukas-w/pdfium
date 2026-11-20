@@ -14,29 +14,43 @@
 
 namespace fxcrt {
 
+class ObservedPtrBase {
+ public:
+  ObservedPtrBase(const ObservedPtrBase&) = delete;
+  ObservedPtrBase& operator=(const ObservedPtrBase&) = delete;
+
+ protected:
+  ObservedPtrBase() = default;
+  explicit ObservedPtrBase(void* observable) : observable_(observable) {}
+  ~ObservedPtrBase() = default;
+
+  UNOWNED_PTR_EXCLUSION void* observable_ = nullptr;
+
+ private:
+  friend class Observable;
+
+  void OnObservableDestroyed() {
+    DCHECK(observable_);
+    observable_ = nullptr;
+  }
+};
+
 class Observable {
  public:
-  // General-purpose interface for more complicated cleanup.
-  class ObserverIface {
-   public:
-    virtual ~ObserverIface() = default;
-    virtual void OnObservableDestroyed() = 0;
-  };
-
   Observable();
   Observable(const Observable& that) = delete;
   Observable& operator=(const Observable& that) = delete;
   ~Observable();
 
-  void AddObserver(ObserverIface* pObserver);
-  void RemoveObserver(ObserverIface* pObserver);
+  void AddObserver(ObservedPtrBase* pObserver);
+  void RemoveObserver(ObservedPtrBase* pObserver);
   void NotifyObservers();
 
  protected:
   size_t ActiveObserversForTesting() const { return observers_.size(); }
 
  private:
-  std::set<ObserverIface*> observers_;
+  std::set<ObservedPtrBase*> observers_;
 };
 
 // Simple case of a self-nulling pointer.
@@ -46,32 +60,28 @@ class Observable {
 // best practice is to only refer to that object by the UnownedPtr<> and
 // not the original reference.
 template <typename T>
-class ObservedPtr final : public Observable::ObserverIface {
+class ObservedPtr final : public ObservedPtrBase {
  public:
   ObservedPtr() = default;
-  explicit ObservedPtr(T* pObservable) : observable_(pObservable) {
+  explicit ObservedPtr(T* pObservable) : ObservedPtrBase(pObservable) {
     if (observable_) {
-      observable_->AddObserver(this);
+      Get()->AddObserver(this);
     }
   }
   ObservedPtr(const ObservedPtr& that) : ObservedPtr(that.Get()) {}
-  ~ObservedPtr() override {
+  ~ObservedPtr() {
     if (observable_) {
-      observable_->RemoveObserver(this);
+      Get()->RemoveObserver(this);
     }
   }
   void Reset(T* pObservable = nullptr) {
     if (observable_) {
-      observable_->RemoveObserver(this);
+      Get()->RemoveObserver(this);
     }
     observable_ = pObservable;
     if (observable_) {
-      observable_->AddObserver(this);
+      Get()->AddObserver(this);
     }
-  }
-  void OnObservableDestroyed() override {
-    DCHECK(observable_);
-    observable_ = nullptr;
   }
   bool HasObservable() const { return !!observable_; }
   ObservedPtr& operator=(const ObservedPtr& that) {
@@ -85,16 +95,13 @@ class ObservedPtr final : public Observable::ObserverIface {
 
   template <typename U>
   friend inline bool operator==(const ObservedPtr& lhs, const U* rhs) {
-    return lhs.observable_ == rhs;
+    return lhs.Get() == rhs;
   }
 
   explicit operator bool() const { return HasObservable(); }
-  T* Get() const { return observable_; }
-  T& operator*() const { return *observable_; }
-  T* operator->() const { return observable_; }
-
- private:
-  UNOWNED_PTR_EXCLUSION T* observable_ = nullptr;
+  T* Get() const { return static_cast<T*>(observable_); }
+  T& operator*() const { return *Get(); }
+  T* operator->() const { return Get(); }
 };
 
 }  // namespace fxcrt
