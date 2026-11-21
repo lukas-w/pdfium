@@ -345,9 +345,9 @@ class EmbedderTest : public ::testing::Test,
   FPDF_FORMHANDLE SetupFormFillEnvironment(FPDF_DOCUMENT doc,
                                            JavaScriptOption javascript_option);
 
-  // Return the hash of only the pixels in `bitmap`. i.e. Excluding the gap, if
-  // any, at the end of a row where the stride is larger than width * bpp.
-  static std::string HashBitmap(FPDF_BITMAP bitmap);
+  // Returns whether the pixels in `bitmap1` and `bitmap2` match, excluding any
+  // stride padding at the end of each row.
+  static bool BitmapsEqual(FPDF_BITMAP bitmap1, FPDF_BITMAP bitmap2);
 
   // For debugging purposes.
   // Write `bitmap` as a PNG to `filename`.

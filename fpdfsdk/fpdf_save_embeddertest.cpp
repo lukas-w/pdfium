@@ -148,7 +148,7 @@ TEST_F(FPDFSaveEmbedderTest, Bug42271133) {
 
 TEST_F(FPDFSaveEmbedderTest, SaveLinearizedDoc) {
   const int kPageCount = 3;
-  std::array<std::string, kPageCount> original_md5;
+  std::array<ScopedFPDFBitmap, kPageCount> original_bitmaps;
 
   ASSERT_TRUE(OpenDocument("linearized.pdf"));
   for (int i = 0; i < kPageCount; ++i) {
@@ -157,7 +157,7 @@ TEST_F(FPDFSaveEmbedderTest, SaveLinearizedDoc) {
     ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
     EXPECT_EQ(612, FPDFBitmap_GetWidth(bitmap.get()));
     EXPECT_EQ(792, FPDFBitmap_GetHeight(bitmap.get()));
-    original_md5[i] = HashBitmap(bitmap.get());
+    original_bitmaps[i] = std::move(bitmap);
   }
 
   EXPECT_TRUE(FPDF_SaveAsCopy(document(), this, 0));
@@ -178,7 +178,7 @@ TEST_F(FPDFSaveEmbedderTest, SaveLinearizedDoc) {
     ScopedSavedPage page = LoadScopedSavedPage(i);
     ASSERT_TRUE(page);
     ScopedFPDFBitmap bitmap = RenderSavedPage(page.get());
-    EXPECT_EQ(original_md5[i], HashBitmap(bitmap.get()));
+    EXPECT_TRUE(BitmapsEqual(original_bitmaps[i].get(), bitmap.get()));
   }
 }
 
@@ -249,7 +249,6 @@ TEST_F(FPDFSaveEmbedderTest, IncrementalSaveWithModifications) {
 
   // Get the original bitmap for comparison
   ScopedFPDFBitmap original_bitmap = RenderLoadedPage(page.get());
-  std::string original_md5 = HashBitmap(original_bitmap.get());
 
   // Count text objects on a page
   auto count_text_objects = [](FPDF_PAGE page) {
@@ -309,8 +308,7 @@ TEST_F(FPDFSaveEmbedderTest, IncrementalSaveWithModifications) {
 
   // The rendered output should be different from the original
   ScopedFPDFBitmap saved_bitmap = RenderSavedPage(saved_page.get());
-  std::string saved_md5 = HashBitmap(saved_bitmap.get());
-  EXPECT_NE(original_md5, saved_md5);
+  EXPECT_FALSE(BitmapsEqual(original_bitmap.get(), saved_bitmap.get()));
 
   // Verify the text object exists after the save
   EXPECT_EQ(1, count_text_objects(saved_page.get()));

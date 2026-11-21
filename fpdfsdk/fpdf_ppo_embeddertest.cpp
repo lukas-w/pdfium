@@ -35,10 +35,9 @@ namespace {
 
 class FPDFPPOEmbedderTest : public EmbedderTest {
  public:
-  std::string GetPageChecksum(FPDF_DOCUMENT doc, int index) {
+  ScopedFPDFBitmap RenderPageBitmap(FPDF_DOCUMENT doc, int index) {
     ScopedFPDFPage page(FPDF_LoadPage(doc, index));
-    auto bitmap = RenderPage(page.get());
-    return HashBitmap(bitmap.get());
+    return RenderPage(page.get());
   }
 };
 
@@ -696,10 +695,10 @@ TEST_F(FPDFPPOEmbedderTest, XFAImportTest) {
   EXPECT_EQ(FPDF_GetFormType(dest_doc), FORMTYPE_XFA_FOREGROUND);
   EXPECT_EQ(FPDF_GetPageCount(dest_doc), 5);
 
-  // Capture initial checksums of dest_doc (all original pages)
-  std::vector<std::string> dest_doc_checksums;
+  // Capture initial renderings of dest_doc (all original pages)
+  std::vector<ScopedFPDFBitmap> dest_doc_bitmaps;
   for (int i = 0; i < 5; i++) {
-    dest_doc_checksums.push_back(GetPageChecksum(dest_doc, i));
+    dest_doc_bitmaps.push_back(RenderPageBitmap(dest_doc, i));
   }
 
   ScopedFPDFDocument source_doc(FPDF_LoadDocument(
@@ -709,10 +708,10 @@ TEST_F(FPDFPPOEmbedderTest, XFAImportTest) {
   EXPECT_EQ(FPDF_GetFormType(source_doc.get()), FORMTYPE_NONE);
   EXPECT_EQ(FPDF_GetPageCount(source_doc.get()), 5);
 
-  // Capture checksums of source_doc (all pages)
-  std::vector<std::string> source_doc_checksums;
+  // Capture renderings of source_doc (all pages)
+  std::vector<ScopedFPDFBitmap> source_doc_bitmaps;
   for (int i = 0; i < 5; i++) {
-    source_doc_checksums.push_back(GetPageChecksum(source_doc.get(), i));
+    source_doc_bitmaps.push_back(RenderPageBitmap(source_doc.get(), i));
   }
 
   // Insert 3 pages into `dest_doc`
@@ -720,14 +719,19 @@ TEST_F(FPDFPPOEmbedderTest, XFAImportTest) {
   EXPECT_EQ(FPDF_GetPageCount(dest_doc), 8);
 
   for (int i = 0; i < 4; i++) {
-    EXPECT_EQ(GetPageChecksum(dest_doc, i), dest_doc_checksums[i]);
+    EXPECT_TRUE(BitmapsEqual(RenderPageBitmap(dest_doc, i).get(),
+                             dest_doc_bitmaps[i].get()));
   }
 
-  EXPECT_EQ(GetPageChecksum(dest_doc, 4), source_doc_checksums[0]);
-  EXPECT_EQ(GetPageChecksum(dest_doc, 5), source_doc_checksums[3]);
-  EXPECT_EQ(GetPageChecksum(dest_doc, 6), source_doc_checksums[1]);
+  EXPECT_TRUE(BitmapsEqual(RenderPageBitmap(dest_doc, 4).get(),
+                           source_doc_bitmaps[0].get()));
+  EXPECT_TRUE(BitmapsEqual(RenderPageBitmap(dest_doc, 5).get(),
+                           source_doc_bitmaps[3].get()));
+  EXPECT_TRUE(BitmapsEqual(RenderPageBitmap(dest_doc, 6).get(),
+                           source_doc_bitmaps[1].get()));
 
-  EXPECT_EQ(GetPageChecksum(dest_doc, 7), dest_doc_checksums[4]);
+  EXPECT_TRUE(BitmapsEqual(RenderPageBitmap(dest_doc, 7).get(),
+                           dest_doc_bitmaps[4].get()));
 }
 
 TEST_F(FPDFPPOEmbedderTest, XFAMoveTest) {
@@ -737,10 +741,10 @@ TEST_F(FPDFPPOEmbedderTest, XFAMoveTest) {
   EXPECT_EQ(FPDF_GetFormType(document()), FORMTYPE_XFA_FOREGROUND);
   EXPECT_EQ(FPDF_GetPageCount(document()), 5);
 
-  // Capture initial checksums of the document (all original pages)
-  std::vector<std::string> target_doc_checksums;
+  // Capture initial renderings of the document (all original pages)
+  std::vector<ScopedFPDFBitmap> target_doc_bitmaps;
   for (int i = 0; i < 5; i++) {
-    target_doc_checksums.push_back(GetPageChecksum(document(), i));
+    target_doc_bitmaps.push_back(RenderPageBitmap(document(), i));
   }
 
   // Move 3 pages to the start of the PDF
@@ -748,9 +752,14 @@ TEST_F(FPDFPPOEmbedderTest, XFAMoveTest) {
   ASSERT_TRUE(FPDF_MovePages(document(), kPages, std::size(kPages), 0));
   EXPECT_EQ(FPDF_GetPageCount(document()), 5);
 
-  EXPECT_EQ(GetPageChecksum(document(), 0), target_doc_checksums[1]);
-  EXPECT_EQ(GetPageChecksum(document(), 1), target_doc_checksums[2]);
-  EXPECT_EQ(GetPageChecksum(document(), 2), target_doc_checksums[3]);
-  EXPECT_EQ(GetPageChecksum(document(), 3), target_doc_checksums[0]);
-  EXPECT_EQ(GetPageChecksum(document(), 4), target_doc_checksums[4]);
+  EXPECT_TRUE(BitmapsEqual(RenderPageBitmap(document(), 0).get(),
+                           target_doc_bitmaps[1].get()));
+  EXPECT_TRUE(BitmapsEqual(RenderPageBitmap(document(), 1).get(),
+                           target_doc_bitmaps[2].get()));
+  EXPECT_TRUE(BitmapsEqual(RenderPageBitmap(document(), 2).get(),
+                           target_doc_bitmaps[3].get()));
+  EXPECT_TRUE(BitmapsEqual(RenderPageBitmap(document(), 3).get(),
+                           target_doc_bitmaps[0].get()));
+  EXPECT_TRUE(BitmapsEqual(RenderPageBitmap(document(), 4).get(),
+                           target_doc_bitmaps[4].get()));
 }

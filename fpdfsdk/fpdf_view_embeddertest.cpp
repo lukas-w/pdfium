@@ -2054,7 +2054,7 @@ TEST_F(FPDFViewEmbedderTest, Bug2087) {
   FPDF_DestroyLibrary();
   auto* env = EmbedderTestEnvironment::GetInstance();
 
-  std::string agg_checksum;
+  ScopedFPDFBitmap agg_bitmap;
   const FPDF_LIBRARY_CONFIG kAggConfig = {
       .version = 5,
       .m_pUserFontPaths = nullptr,
@@ -2068,13 +2068,12 @@ TEST_F(FPDFViewEmbedderTest, Bug2087) {
   ASSERT_TRUE(OpenDocument("rectangles.pdf"));
   {
     ScopedPage page = LoadScopedPage(0);
-    ScopedFPDFBitmap bitmap = RenderPage(page.get());
-    agg_checksum = HashBitmap(bitmap.get());
+    agg_bitmap = RenderPage(page.get());
   }
   CloseDocument();
   FPDF_DestroyLibrary();
 
-  std::string skia_checksum;
+  ScopedFPDFBitmap skia_bitmap;
   const FPDF_LIBRARY_CONFIG kSkiaConfig = {
       .version = 5,
       .m_pUserFontPaths = nullptr,
@@ -2088,12 +2087,11 @@ TEST_F(FPDFViewEmbedderTest, Bug2087) {
   ASSERT_TRUE(OpenDocument("rectangles.pdf"));
   {
     ScopedPage page = LoadScopedPage(0);
-    ScopedFPDFBitmap bitmap = RenderPage(page.get());
-    skia_checksum = HashBitmap(bitmap.get());
+    skia_bitmap = RenderPage(page.get());
   }
   CloseDocument();
 
-  EXPECT_NE(agg_checksum, skia_checksum);
+  EXPECT_FALSE(BitmapsEqual(agg_bitmap.get(), skia_bitmap.get()));
 
   env->TearDown();
   env->SetUp();
@@ -2105,7 +2103,7 @@ TEST_F(FPDFViewEmbedderTest, ToggleFreetypeFontationsInit) {
   FPDF_DestroyLibrary();
   auto* env = EmbedderTestEnvironment::GetInstance();
 
-  std::string freetype_checksum;
+  ScopedFPDFBitmap freetype_bitmap;
   const FPDF_LIBRARY_CONFIG kFreetypeConfig = {
       .version = 5,
       .m_pUserFontPaths = nullptr,
@@ -2119,13 +2117,12 @@ TEST_F(FPDFViewEmbedderTest, ToggleFreetypeFontationsInit) {
   ASSERT_TRUE(OpenDocument("text_color.pdf"));
   {
     ScopedPage page = LoadScopedPage(0);
-    ScopedFPDFBitmap bitmap = RenderPage(page.get());
-    freetype_checksum = HashBitmap(bitmap.get());
+    freetype_bitmap = RenderPage(page.get());
   }
   CloseDocument();
   FPDF_DestroyLibrary();
 
-  std::string fontations_checksum;
+  ScopedFPDFBitmap fontations_bitmap;
   const FPDF_LIBRARY_CONFIG kFontationsConfig = {
       .version = 5,
       .m_pUserFontPaths = nullptr,
@@ -2139,12 +2136,11 @@ TEST_F(FPDFViewEmbedderTest, ToggleFreetypeFontationsInit) {
   ASSERT_TRUE(OpenDocument("text_color.pdf"));
   {
     ScopedPage page = LoadScopedPage(0);
-    ScopedFPDFBitmap bitmap = RenderPage(page.get());
-    fontations_checksum = HashBitmap(bitmap.get());
+    fontations_bitmap = RenderPage(page.get());
   }
   CloseDocument();
 
-  EXPECT_NE(freetype_checksum, fontations_checksum);
+  EXPECT_FALSE(BitmapsEqual(freetype_bitmap.get(), fontations_bitmap.get()));
 
   env->TearDown();
   env->SetUp();

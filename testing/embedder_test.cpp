@@ -11,7 +11,6 @@
 #include <utility>
 #include <vector>
 
-#include "core/fdrm/fx_crypt.h"
 #include "core/fxcrt/check.h"
 #include "core/fxcrt/check_op.h"
 #include "core/fxcrt/compiler_specific.h"
@@ -39,7 +38,6 @@
 #include "testing/test_loader.h"
 #include "testing/utils/bitmap_saver.h"
 #include "testing/utils/file_util.h"
-#include "testing/utils/hash.h"
 #include "testing/utils/path_service.h"
 #include "testing/utils/pixel_diff_util.h"
 #include "third_party/simdutf/simdutf.h"
@@ -1224,24 +1222,38 @@ FPDF_PAGE EmbedderTest::Delegate::GetPage(FPDF_FORMFILLINFO* info,
 }
 
 // static
-std::string EmbedderTest::HashBitmap(FPDF_BITMAP bitmap) {
-  int stride = FPDFBitmap_GetStride(bitmap);
-  int usable_bytes_per_row =
-      GetBitmapBytesPerPixel(bitmap) * FPDFBitmap_GetWidth(bitmap);
-  int height = FPDFBitmap_GetHeight(bitmap);
-  auto span = UNSAFE_TODO(
-      pdfium::span(static_cast<uint8_t*>(FPDFBitmap_GetBuffer(bitmap)),
-                   static_cast<size_t>(stride) * height));
-
-  CryptMd5Context context = CryptMd5Start();
-  for (int i = 0; i < height; ++i) {
-    CryptMd5Update(&context,
-                   span.subspan(static_cast<size_t>(i * stride),
-                                static_cast<size_t>(usable_bytes_per_row)));
+bool EmbedderTest::BitmapsEqual(FPDF_BITMAP bitmap1, FPDF_BITMAP bitmap2) {
+  if (!bitmap1 || !bitmap2) {
+    return bitmap1 == bitmap2;
   }
-  uint8_t digest[16];
-  CryptMd5Finish(&context, digest);
-  return CryptToBase16(digest);
+  const int width = FPDFBitmap_GetWidth(bitmap1);
+  const int height = FPDFBitmap_GetHeight(bitmap1);
+  const int format = FPDFBitmap_GetFormat(bitmap1);
+  if (width != FPDFBitmap_GetWidth(bitmap2) ||
+      height != FPDFBitmap_GetHeight(bitmap2) ||
+      format != FPDFBitmap_GetFormat(bitmap2)) {
+    return false;
+  }
+  const int stride1 = FPDFBitmap_GetStride(bitmap1);
+  const int stride2 = FPDFBitmap_GetStride(bitmap2);
+  const size_t usable_bytes_per_row =
+      static_cast<size_t>(GetBitmapBytesPerPixel(bitmap1)) * width;
+  auto span1 = UNSAFE_TODO(
+      pdfium::span(static_cast<const uint8_t*>(FPDFBitmap_GetBuffer(bitmap1)),
+                   static_cast<size_t>(stride1) * height));
+  auto span2 = UNSAFE_TODO(
+      pdfium::span(static_cast<const uint8_t*>(FPDFBitmap_GetBuffer(bitmap2)),
+                   static_cast<size_t>(stride2) * height));
+  for (int i = 0; i < height; ++i) {
+    auto row1 =
+        span1.subspan(static_cast<size_t>(i) * stride1, usable_bytes_per_row);
+    auto row2 =
+        span2.subspan(static_cast<size_t>(i) * stride2, usable_bytes_per_row);
+    if (!std::ranges::equal(row1, row2)) {
+      return false;
+    }
+  }
+  return true;
 }
 
 // static

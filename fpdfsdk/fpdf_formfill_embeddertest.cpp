@@ -1689,9 +1689,9 @@ TEST_F(FPDFFormFillEmbedderTest,
   ScopedFPDFBitmap bitmap_ltr = RenderLoadedPage(page.get());
 
   // Rendering should be visually different when the text direction changes.
-  EXPECT_NE(HashBitmap(bitmap_auto.get()), HashBitmap(bitmap_rtl.get()));
-  EXPECT_NE(HashBitmap(bitmap_rtl.get()), HashBitmap(bitmap_ltr.get()));
-  EXPECT_EQ(HashBitmap(bitmap_auto.get()), HashBitmap(bitmap_ltr.get()));
+  EXPECT_FALSE(BitmapsEqual(bitmap_auto.get(), bitmap_rtl.get()));
+  EXPECT_FALSE(BitmapsEqual(bitmap_rtl.get(), bitmap_ltr.get()));
+  EXPECT_TRUE(BitmapsEqual(bitmap_auto.get(), bitmap_ltr.get()));
 }
 
 TEST_F(FPDFFormFillTextFormEmbedderTest, FormTextFieldBiDiLiveEdit) {

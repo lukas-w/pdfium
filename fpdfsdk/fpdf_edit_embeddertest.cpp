@@ -5596,22 +5596,20 @@ TEST_F(FPDFEditEmbedderTest, PageObjTransformFWithBadParameters) {
 
 class FPDFEditMoveEmbedderTest : public EmbedderTest {
  protected:
-  std::vector<std::string> HashesForDocument(int page_count) {
-    std::vector<std::string> hashes;
-    hashes.reserve(page_count);
+  std::vector<ScopedFPDFBitmap> PagesForDocument(int page_count) {
+    std::vector<ScopedFPDFBitmap> pages;
+    pages.reserve(page_count);
     for (int i = 0; i < page_count; ++i) {
-      hashes.push_back(HashForPage(i));
+      pages.push_back(RenderPageByIndex(i));
     }
-    return hashes;
+    return pages;
   }
 
  private:
-  std::string HashForPage(int page_index) {
+  ScopedFPDFBitmap RenderPageByIndex(int page_index) {
     ScopedPage page = LoadScopedPage(page_index);
     EXPECT_TRUE(page);
-    ScopedFPDFBitmap bitmap = RenderLoadedPage(page.get());
-    std::string hash = HashBitmap(bitmap.get());
-    return hash;
+    return RenderLoadedPage(page.get());
   }
 };
 
@@ -5643,29 +5641,22 @@ TEST_F(FPDFEditMoveEmbedderTest, MovePagesTest) {
       ASSERT_THAT(tc.expected_order, testing::SizeIs(0));
     }
 
-    // Cache the original pages' hashes.
-    std::vector<std::string> orig_hashes = HashesForDocument(page_count);
-    ASSERT_THAT(orig_hashes, testing::SizeIs(page_count));
+    // Cache the original rendered pages.
+    std::vector<ScopedFPDFBitmap> orig_pages = PagesForDocument(page_count);
+    ASSERT_THAT(orig_pages, testing::SizeIs(page_count));
 
     EXPECT_EQ(FPDF_MovePages(document(), &tc.page_indices[0],
                              tc.page_indices_len, tc.dest_page_index),
               tc.expected_result)
         << tc;
 
-    if (tc.expected_result) {
-      // Check for updated page order.
-      std::vector<std::string> new_hashes = HashesForDocument(page_count);
-      std::vector<std::string> expected_hashes;
-      expected_hashes.reserve(page_count);
-      for (int i = 0; i < page_count; ++i) {
-        expected_hashes.push_back(orig_hashes[tc.expected_order[i]]);
-      }
-      EXPECT_THAT(new_hashes, testing::ContainerEq(expected_hashes)) << tc;
-    } else {
-      // Check that pages are unchanged.
-      EXPECT_THAT(HashesForDocument(page_count),
-                  testing::ContainerEq(orig_hashes))
-          << tc;
+    std::vector<ScopedFPDFBitmap> new_pages = PagesForDocument(page_count);
+    ASSERT_THAT(new_pages, testing::SizeIs(page_count));
+    for (int i = 0; i < page_count; ++i) {
+      int expected_index = tc.expected_result ? tc.expected_order[i] : i;
+      EXPECT_TRUE(
+          BitmapsEqual(new_pages[i].get(), orig_pages[expected_index].get()))
+          << tc << " page " << i;
     }
 
     CloseDocument();
