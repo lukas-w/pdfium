@@ -236,7 +236,7 @@ class CPDFSDK_FormFillEnvironment final
 #endif  // PDF_ENABLE_XFA
 #endif  // PDF_ENABLE_V8
 
-  WideString GetFilePath() const;
+  WideString GetFilePath();
   ByteString GetAppName() const { return ByteString(); }
   void SubmitForm(pdfium::span<const uint8_t> form_data, const WideString& URL);
 

@@ -657,18 +657,13 @@ void CPDFXFA_DocEnvironment::Print(CXFA_FFDoc* hDoc,
     return;
   }
 
-  IPDF_JSPLATFORM* js_platform = pFormFillEnv->GetJSPlatform();
-  if (!js_platform || !js_platform->Doc_print) {
-    return;
-  }
-
-  js_platform->Doc_print(js_platform, !!(dwOptions & XFA_PrintOpt::kShowDialog),
-                         nStartPage, nEndPage,
-                         !!(dwOptions & XFA_PrintOpt::kCanCancel),
-                         !!(dwOptions & XFA_PrintOpt::kShrinkPage),
-                         !!(dwOptions & XFA_PrintOpt::kAsImage),
-                         !!(dwOptions & XFA_PrintOpt::kReverseOrder),
-                         !!(dwOptions & XFA_PrintOpt::kPrintAnnot));
+  pFormFillEnv->JS_docprint(!!(dwOptions & XFA_PrintOpt::kShowDialog),
+                            nStartPage, nEndPage,
+                            !!(dwOptions & XFA_PrintOpt::kCanCancel),
+                            !!(dwOptions & XFA_PrintOpt::kShrinkPage),
+                            !!(dwOptions & XFA_PrintOpt::kAsImage),
+                            !!(dwOptions & XFA_PrintOpt::kReverseOrder),
+                            !!(dwOptions & XFA_PrintOpt::kPrintAnnot));
 }
 
 FX_ARGB CPDFXFA_DocEnvironment::GetHighlightColor(

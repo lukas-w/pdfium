@@ -263,6 +263,7 @@ WideString CPDFSDK_FormFillEnvironment::JS_fieldBrowse() {
     return WideString();
   }
 
+  AutoRestorer<bool> restorer(&in_active_ffi_callback_, true);
   const int required_len = js_platform->Field_browse(js_platform, nullptr, 0);
   if (required_len <= 0) {
     return WideString();
@@ -300,6 +301,7 @@ void CPDFSDK_FormFillEnvironment::JS_docmailForm(
   ByteString bsCC = CC.ToUTF16LE();
   ByteString bsBcc = BCC.ToUTF16LE();
   ByteString bsMsg = Msg.ToUTF16LE();
+  AutoRestorer<bool> restorer(&in_active_ffi_callback_, true);
   js_platform->Doc_mail(js_platform, const_cast<uint8_t*>(mailData.data()),
                         pdfium::checked_cast<int>(mailData.size()), bUI,
                         AsFPDFWideString(&bsTo), AsFPDFWideString(&bsSubject),
@@ -320,6 +322,7 @@ void CPDFSDK_FormFillEnvironment::JS_docprint(FPDF_BOOL bUI,
     return;
   }
 
+  AutoRestorer<bool> restorer(&in_active_ffi_callback_, true);
   js_platform->Doc_print(js_platform, bUI, nStart, nEnd, bSilent, bShrinkToFit,
                          bPrintAsImage, bReverse, bAnnotations);
 }
@@ -330,6 +333,7 @@ void CPDFSDK_FormFillEnvironment::JS_docgotoPage(int nPageNum) {
     return;
   }
 
+  AutoRestorer<bool> restorer(&in_active_ffi_callback_, true);
   js_platform->Doc_gotoPage(js_platform, nPageNum);
 }
 
@@ -338,12 +342,13 @@ WideString CPDFSDK_FormFillEnvironment::JS_docGetFilePath() {
 }
 #endif  // PDF_ENABLE_V8
 
-WideString CPDFSDK_FormFillEnvironment::GetFilePath() const {
+WideString CPDFSDK_FormFillEnvironment::GetFilePath() {
   IPDF_JSPLATFORM* js_platform = GetJSPlatform();
   if (!js_platform || !js_platform->Doc_getFilePath) {
     return WideString();
   }
 
+  AutoRestorer<bool> restorer(&in_active_ffi_callback_, true);
   const int required_len =
       js_platform->Doc_getFilePath(js_platform, nullptr, 0);
   if (required_len <= 0) {
@@ -373,6 +378,7 @@ void CPDFSDK_FormFillEnvironment::SubmitForm(
   }
 
   ByteString bsUrl = URL.ToUTF16LE();
+  AutoRestorer<bool> restorer(&in_active_ffi_callback_, true);
   js_platform->Doc_submitForm(
       js_platform, const_cast<uint8_t*>(form_data.data()),
       fxcrt::CollectionSize<int>(form_data), AsFPDFWideString(&bsUrl));
