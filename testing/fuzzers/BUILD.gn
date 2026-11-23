@@ -9,7 +9,6 @@ config("fuzzer_config") {
     "../..:pdfium_strict_config",
     "../..:pdfium_noshorten_config",
   ]
-  defines = []
   include_dirs = [ "../.." ]
 }
 
@@ -190,7 +189,7 @@ source_set("fuzzer_utils") {
   include_dirs = [ "../.." ]
 }
 
-source_set("pdf_jpx_fuzzer_common"){
+source_set("pdf_jpx_fuzzer_common") {
   testonly = !is_component_build
   sources = [
     "pdf_jpx_fuzzer_common.cc",
@@ -585,9 +584,7 @@ pdfium_fuzzer("pdf_hint_table_fuzzer") {
 
 pdfium_fuzzer("pdf_jpx_fuzzer") {
   sources = [ "pdf_jpx_fuzzer.cc" ]
-  deps = [
-    ":pdf_jpx_fuzzer_common",
-  ]
+  deps = [ ":pdf_jpx_fuzzer_common" ]
 }
 
 pdfium_fuzzer("pdf_psengine_fuzzer") {

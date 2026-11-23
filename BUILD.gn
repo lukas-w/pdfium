@@ -17,8 +17,6 @@ group("default") {
 
 config("pdfium_common_config") {
   cflags = []
-  cflags_cc = []
-  ldflags = []
   include_dirs = [
     ".",
     target_gen_dir,
@@ -168,7 +166,6 @@ config("pdfium_core_config") {
     ":pdfium_public_config",
     "//build/config/compiler:noshadowing",
   ]
-  defines = []
   if (is_clang) {
     cflags += [
       "-Wcovered-switch-default",
