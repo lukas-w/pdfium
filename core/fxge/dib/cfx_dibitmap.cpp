@@ -26,6 +26,7 @@
 #include "core/fxcrt/span_util.h"
 #include "core/fxge/calculate_pitch.h"
 #include "core/fxge/cfx_gemodule.h"
+#include "core/fxge/dib/cfx_dibitmap_hwy.h"
 #include "core/fxge/dib/cfx_scanlinecompositor.h"
 
 #if defined(PDF_USE_LIBYUV)
@@ -381,9 +382,7 @@ bool CFX_DIBitmap::MultiplyAlphaMask(RetainPtr<const CFX_DIBitmap> mask) {
         static_cast<size_t>(GetWidth()));
     auto mask_scan =
         mask->GetScanline(row).first(static_cast<size_t>(GetWidth()));
-    for (int col = 0; col < GetWidth(); col++) {
-      dest_scan[col].alpha = dest_scan[col].alpha * mask_scan[col] / 255;
-    }
+    MultiplyAlphaMaskSimd(dest_scan, mask_scan);
   }
   return true;
 }
@@ -407,13 +406,11 @@ bool CFX_DIBitmap::MultiplyAlpha(float alpha) {
     return false;
   }
 
-  const int bitmap_alpha = static_cast<int>(alpha * 255.0f);
+  const uint8_t bitmap_alpha = static_cast<uint8_t>(alpha * 255.0f);
   for (int row = 0; row < GetHeight(); row++) {
     auto dest_scan = GetWritableScanlineAs<FX_BGRA_STRUCT<uint8_t>>(row).first(
         static_cast<size_t>(GetWidth()));
-    for (auto& pixel : dest_scan) {
-      pixel.alpha = pixel.alpha * bitmap_alpha / 255;
-    }
+    MultiplyAlphaSimd(dest_scan, bitmap_alpha);
   }
   return true;
 }
