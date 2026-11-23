@@ -240,7 +240,7 @@ bool CXFA_FFDoc::OpenDoc(CFX_XMLDocument* pXML) {
 
   // At this point we've got an XFA document and we want to always return
   // true to signify the load succeeded.
-  pdffont_mgr_ = std::make_unique<CFGAS_PDFFontMgr>(GetPDFDoc());
+  pdffont_mgr_ = std::make_unique<CFGAS_PDFFontMgr>();
   form_type_ = FormType::kXFAForeground;
   CXFA_Node* pConfig = ToNode(document_->GetXFAObject(XFA_HASHCODE_Config));
   if (!pConfig) {
@@ -277,11 +277,11 @@ bool CXFA_FFDoc::OpenDoc(CFX_XMLDocument* pXML) {
 RetainPtr<CFGAS_GEFont> CXFA_FFDoc::GetPDFFont(const WideString& family,
                                                uint32_t styles,
                                                bool strict) {
-  if (!pdffont_mgr_) {
+  if (!pdffont_mgr_ || !pdfdoc_) {
     return nullptr;
   }
 
-  return pdffont_mgr_->GetFont(family, styles, strict);
+  return pdffont_mgr_->GetFont(pdfdoc_.Get(), family, styles, strict);
 }
 
 RetainPtr<CFX_DIBitmap> CXFA_FFDoc::GetPDFNamedImage(WideStringView wsName,
@@ -295,7 +295,7 @@ RetainPtr<CFX_DIBitmap> CXFA_FFDoc::GetPDFNamedImage(WideStringView wsName,
     return it->second.pDibSource.As<CFX_DIBitmap>();
   }
 
-  auto name_tree = CPDF_NameTree::Create(pdfdoc_, "XFAImages");
+  auto name_tree = CPDF_NameTree::Create(pdfdoc_.Get(), "XFAImages");
   size_t count = name_tree ? name_tree->GetCount() : 0;
   if (count == 0) {
     return nullptr;

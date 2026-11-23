@@ -13,6 +13,7 @@
 #include "core/fxcrt/fx_coordinates.h"
 #include "core/fxcrt/fx_stream.h"
 #include "core/fxcrt/mask.h"
+#include "core/fxcrt/observed_ptr.h"
 #include "core/fxcrt/retain_ptr.h"
 #include "core/fxcrt/unowned_ptr.h"
 #include "core/fxge/dib/fx_dib.h"
@@ -62,7 +63,7 @@ class CXFA_FFDoc : public cppgc::GarbageCollected<CXFA_FFDoc> {
     kStopLayout = 4,
   };
 
-  class CallbackIface {
+  class CallbackIface : public Observable {
    public:
     virtual ~CallbackIface() = default;
 
@@ -162,7 +163,7 @@ class CXFA_FFDoc : public cppgc::GarbageCollected<CXFA_FFDoc> {
   FXGC_Heap* GetHeap() const { return heap_; }
   CXFA_Document* GetXFADoc() const { return document_; }
   CXFA_FFApp* GetApp() const { return app_; }
-  CPDF_Document* GetPDFDoc() const { return pdfdoc_; }
+  CPDF_Document* GetPDFDoc() const { return pdfdoc_.Get(); }
   CXFA_FFDocView* GetDocView(CXFA_LayoutProcessor* pLayout);
   CXFA_FFDocView* GetDocView();
   RetainPtr<CFGAS_GEFont> GetPDFFont(const WideString& family,
@@ -182,8 +183,8 @@ class CXFA_FFDoc : public cppgc::GarbageCollected<CXFA_FFDoc> {
              FXGC_Heap* pHeap);
   bool BuildDoc(CFX_XMLDocument* pXML);
 
-  UnownedPtr<CallbackIface> const doc_environment_;
-  UnownedPtr<CPDF_Document> const pdfdoc_;
+  ObservedPtr<CallbackIface> doc_environment_;
+  ObservedPtr<CPDF_Document> pdfdoc_;
   UnownedPtr<FXGC_Heap> const heap_;
   cppgc::Member<CXFA_FFApp> const app_;
   cppgc::Member<CXFA_FFNotify> notify_;

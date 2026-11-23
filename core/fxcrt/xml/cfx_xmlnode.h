@@ -8,12 +8,13 @@
 #define CORE_FXCRT_XML_CFX_XMLNODE_H_
 
 #include "core/fxcrt/fx_stream.h"
+#include "core/fxcrt/observed_ptr.h"
 #include "core/fxcrt/retain_ptr.h"
 #include "core/fxcrt/tree_node.h"
 
 class CFX_XMLDocument;
 
-class CFX_XMLNode : public TreeNode<CFX_XMLNode> {
+class CFX_XMLNode : public Observable, public TreeNode<CFX_XMLNode> {
  public:
   enum class Type {
     kInstruction = 0,

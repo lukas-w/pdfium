@@ -12,7 +12,6 @@
 
 #include "core/fxcrt/fx_string.h"
 #include "core/fxcrt/retain_ptr.h"
-#include "core/fxcrt/unowned_ptr.h"
 #include "xfa/fgas/font/cfgas_fontmgr.h"
 
 class CFGAS_GEFont;
@@ -20,20 +19,21 @@ class CPDF_Document;
 
 class CFGAS_PDFFontMgr final {
  public:
-  explicit CFGAS_PDFFontMgr(const CPDF_Document* doc);
+  CFGAS_PDFFontMgr();
   ~CFGAS_PDFFontMgr();
 
-  RetainPtr<CFGAS_GEFont> GetFont(const WideString& wsFontFamily,
+  RetainPtr<CFGAS_GEFont> GetFont(const CPDF_Document* doc,
+                                  const WideString& wsFontFamily,
                                   uint32_t dwFontStyles,
                                   bool bStrictMatch);
 
  private:
-  RetainPtr<CFGAS_GEFont> FindFont(const ByteString& strFamilyName,
+  RetainPtr<CFGAS_GEFont> FindFont(const CPDF_Document* doc,
+                                   const ByteString& strFamilyName,
                                    bool bBold,
                                    bool bItalic,
                                    bool bStrictMatch);
 
-  UnownedPtr<const CPDF_Document> const doc_;
   std::map<std::pair<WideString, uint32_t>, RetainPtr<CFGAS_GEFont>> font_map_;
 };
 

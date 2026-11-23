@@ -1706,8 +1706,8 @@ void CXFA_Node::InsertChildAndNotify(CXFA_Node* pNode, CXFA_Node* pBeforeNode) {
   }
 
   DCHECK(!pNode->xml_node_->GetParent());
-  xml_node_->InsertBefore(pNode->xml_node_,
-                          pBeforeNode ? pBeforeNode->xml_node_ : nullptr);
+  xml_node_->InsertBefore(pNode->xml_node_.Get(),
+                          pBeforeNode ? pBeforeNode->xml_node_.Get() : nullptr);
 }
 
 void CXFA_Node::RemoveChildAndNotify(CXFA_Node* pNode, bool bNotify) {
@@ -1725,12 +1725,12 @@ void CXFA_Node::RemoveChildAndNotify(CXFA_Node* pNode, bool bNotify) {
   }
 
   if (!pNode->IsAttributeInXML()) {
-    xml_node_->RemoveChild(pNode->xml_node_);
+    xml_node_->RemoveChild(pNode->xml_node_.Get());
     return;
   }
 
-  DCHECK_EQ(pNode->xml_node_, xml_node_);
-  CFX_XMLElement* pXMLElement = ToXMLElement(pNode->xml_node_);
+  DCHECK_EQ(pNode->xml_node_.Get(), xml_node_.Get());
+  CFX_XMLElement* pXMLElement = ToXMLElement(pNode->xml_node_.Get());
   if (pXMLElement) {
     WideString wsAttributeName =
         pNode->JSObject()->GetCData(XFA_Attribute::QualifiedName);
@@ -1747,7 +1747,7 @@ void CXFA_Node::RemoveChildAndNotify(CXFA_Node* pNode, bool bNotify) {
     auto* text = GetXMLDocument()->CreateNode<CFX_XMLText>(wsValue);
     pNewXMLElement->AppendLastChild(text);
   }
-  pNode->xml_node_ = pNewXMLElement;
+  pNode->xml_node_.Reset(pNewXMLElement);
   pNode->JSObject()->SetEnum(XFA_Attribute::Contains,
                              XFA_AttributeValue::Unknown, false);
 }
@@ -1946,12 +1946,16 @@ void CXFA_Node::UpdateNameHash() {
   name_hash_ = FX_HashCode_GetW(wsName.AsStringView());
 }
 
+void CXFA_Node::SetXMLMappingNode(CFX_XMLNode* node) {
+  xml_node_.Reset(node);
+}
+
 CFX_XMLNode* CXFA_Node::CreateXMLMappingNode() {
   if (!xml_node_) {
-    xml_node_ = GetXMLDocument()->CreateNode<CFX_XMLElement>(
-        JSObject()->GetCData(XFA_Attribute::Name));
+    xml_node_.Reset(GetXMLDocument()->CreateNode<CFX_XMLElement>(
+        JSObject()->GetCData(XFA_Attribute::Name)));
   }
-  return xml_node_;
+  return xml_node_.Get();
 }
 
 bool CXFA_Node::IsNeedSavingXMLNode() const {

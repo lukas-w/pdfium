@@ -133,18 +133,18 @@ bool PsNameMatchDRFontName(ByteStringView bsPsName,
 
 }  // namespace
 
-CFGAS_PDFFontMgr::CFGAS_PDFFontMgr(const CPDF_Document* doc) : doc_(doc) {
-  DCHECK(doc);
-}
+CFGAS_PDFFontMgr::CFGAS_PDFFontMgr() = default;
 
 CFGAS_PDFFontMgr::~CFGAS_PDFFontMgr() = default;
 
-RetainPtr<CFGAS_GEFont> CFGAS_PDFFontMgr::FindFont(const ByteString& strPsName,
+RetainPtr<CFGAS_GEFont> CFGAS_PDFFontMgr::FindFont(const CPDF_Document* doc,
+                                                   const ByteString& strPsName,
                                                    bool bBold,
                                                    bool bItalic,
                                                    bool bStrictMatch) {
+  DCHECK(doc);
   RetainPtr<const CPDF_Dictionary> font_set_dict =
-      doc_->GetRoot()->GetDictFor(pdfium::catalog::kAcroForm)->GetDictFor("DR");
+      doc->GetRoot()->GetDictFor(pdfium::catalog::kAcroForm)->GetDictFor("DR");
   if (!font_set_dict) {
     return nullptr;
   }
@@ -157,7 +157,7 @@ RetainPtr<CFGAS_GEFont> CFGAS_PDFFontMgr::FindFont(const ByteString& strPsName,
   ByteString name = strPsName;
   name.Remove(' ');
 
-  auto* pData = CPDF_DocPageData::FromDocument(doc_);
+  auto* pData = CPDF_DocPageData::FromDocument(doc);
   CPDF_DictionaryLocker locker(font_set_dict);
   for (const auto& it : locker) {
     const ByteString& key = it.first;
@@ -183,9 +183,14 @@ RetainPtr<CFGAS_GEFont> CFGAS_PDFFontMgr::FindFont(const ByteString& strPsName,
 }
 
 RetainPtr<CFGAS_GEFont> CFGAS_PDFFontMgr::GetFont(
+    const CPDF_Document* doc,
     const WideString& wsFontFamily,
     uint32_t dwFontStyles,
     bool bStrictMatch) {
+  if (!doc) {
+    return nullptr;
+  }
+
   auto key = std::make_pair(wsFontFamily, dwFontStyles);
   auto it = font_map_.find(key);
   if (it != font_map_.end()) {
@@ -197,7 +202,7 @@ RetainPtr<CFGAS_GEFont> CFGAS_PDFFontMgr::GetFont(
   bool bItalic = FontStyleIsItalic(dwFontStyles);
   ByteString strFontName = PsNameToFontName(bsPsName, bBold, bItalic);
   RetainPtr<CFGAS_GEFont> font =
-      FindFont(strFontName, bBold, bItalic, bStrictMatch);
+      FindFont(doc, strFontName, bBold, bItalic, bStrictMatch);
   if (!font) {
     return nullptr;
   }

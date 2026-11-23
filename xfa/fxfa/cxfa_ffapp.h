@@ -7,7 +7,7 @@
 #ifndef XFA_FXFA_CXFA_FFAPP_H_
 #define XFA_FXFA_CXFA_FFAPP_H_
 
-#include "core/fxcrt/unowned_ptr.h"
+#include "core/fxcrt/observed_ptr.h"
 #include "core/fxcrt/widestring.h"
 #include "fxjs/gc/heap.h"
 #include "v8/include/cppgc/garbage-collected.h"
@@ -26,7 +26,7 @@ class CXFA_FWLTheme;
 class CXFA_FFApp final : public cppgc::GarbageCollected<CXFA_FFApp>,
                          public CFWL_App::AdapterIface {
  public:
-  class CallbackIface {
+  class CallbackIface : public Observable {
    public:
     virtual ~CallbackIface() = default;
 
@@ -143,14 +143,14 @@ class CXFA_FFApp final : public cppgc::GarbageCollected<CXFA_FFApp>,
 
   bool LoadFWLTheme(CXFA_FFDoc* doc);
   CFWL_WidgetMgr* GetFWLWidgetMgr() const { return fwlapp_->GetWidgetMgr(); }
-  CallbackIface* GetAppProvider() const { return provider_; }
+  CallbackIface* GetAppProvider() const { return provider_.Get(); }
   CFWL_App* GetFWLApp() const { return fwlapp_; }
   CXFA_FontMgr* GetXFAFontMgr() const { return xfafont_mgr_; }
 
  private:
   explicit CXFA_FFApp(CallbackIface* pProvider);
 
-  UnownedPtr<CallbackIface> const provider_;
+  ObservedPtr<CallbackIface> provider_;
   cppgc::Member<CXFA_FontMgr> xfafont_mgr_;
   cppgc::Member<CXFA_FWLAdapterWidgetMgr> adapter_widget_mgr_;
   cppgc::Member<pdfium::CXFA_FWLTheme> fwltheme_;

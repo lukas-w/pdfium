@@ -16,10 +16,10 @@
 
 #include "core/fxcrt/fx_coordinates.h"
 #include "core/fxcrt/mask.h"
+#include "core/fxcrt/observed_ptr.h"
 #include "core/fxcrt/raw_span.h"
 #include "core/fxcrt/retain_ptr.h"
 #include "core/fxcrt/span.h"
-#include "core/fxcrt/unowned_ptr.h"
 #include "core/fxcrt/unowned_ptr_exclusion.h"
 #include "core/fxcrt/widestring.h"
 #include "core/fxge/dib/fx_dib.h"
@@ -182,8 +182,8 @@ class CXFA_Node : public CXFA_Object, public GCedTreeNodeMixin<CXFA_Node> {
     return packet_ == XFA_PacketType::Form && IsContainerNode();
   }
 
-  void SetXMLMappingNode(CFX_XMLNode* node) { xml_node_ = node; }
-  CFX_XMLNode* GetXMLMappingNode() const { return xml_node_; }
+  void SetXMLMappingNode(CFX_XMLNode* node);
+  CFX_XMLNode* GetXMLMappingNode() const { return xml_node_.Get(); }
   CFX_XMLNode* CreateXMLMappingNode();
   bool IsNeedSavingXMLNode() const;
 
@@ -533,7 +533,7 @@ class CXFA_Node : public CXFA_Object, public GCedTreeNodeMixin<CXFA_Node> {
   const pdfium::raw_span<const PropertyData> properties_;
   const pdfium::raw_span<const AttributeData> attributes_;
   const Mask<XFA_XDPPACKET> valid_packets_;
-  UnownedPtr<CFX_XMLNode> xml_node_;
+  ObservedPtr<CFX_XMLNode> xml_node_;
   const XFA_PacketType packet_;
   uint8_t execute_recursion_depth_ = 0;
   Mask<XFA_NodeFlag> node_flags_ = XFA_NodeFlag::kNone;
