@@ -35,7 +35,7 @@ WindowsPrintMode CFX_GEModule::GetPrintMode() {
 void CFX_GEModule::Create(
     std::optional<pdfium::span<const char* const>> user_font_paths,
     RendererType renderer_type,
-    CFX_FontMgr::FontBackend font_backend) {
+    FontBackend font_backend) {
   DCHECK(!g_GEModule);
   g_GEModule = new CFX_GEModule(user_font_paths, renderer_type, font_backend);
   g_GEModule->platform_->Init();
@@ -60,14 +60,11 @@ CFX_GEModule* CFX_GEModule::Get() {
 CFX_GEModule::CFX_GEModule(
     std::optional<pdfium::span<const char* const>> user_font_paths,
     RendererType renderer_type,
-    CFX_FontMgr::FontBackend font_backend)
+    FontBackend font_backend)
     : renderer_type_(renderer_type),
-#if defined(PDF_ENABLE_FONTATIONS)
       font_backend_(font_backend),
-#endif
       platform_(PlatformIface::Create()),
       font_mgr_(std::make_unique<CFX_FontMgr>(font_backend)),
-      user_font_paths_(user_font_paths) {
-}
+      user_font_paths_(user_font_paths) {}
 
 CFX_GEModule::~CFX_GEModule() = default;

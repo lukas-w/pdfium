@@ -70,19 +70,16 @@ class CFX_GEModule {
   enum class RendererType {
     kAgg = 0,
     kSkia = 1,
-#if defined(PDF_USE_SKIA)
-    kDefault = kSkia,
-#else
-    kDefault = kAgg,
-#endif
   };
+
+  using FontBackend = CFX_FontMgr::FontBackend;
 
   // Uses other defaults when `user_font_paths` is nullopt, otherwise uses
   // only those in the span, which may lead to using none when empty.
   static void Create(
       std::optional<pdfium::span<const char* const>> user_font_paths,
       RendererType renderer_type,
-      CFX_FontMgr::FontBackend font_backend);
+      FontBackend font_backend);
 
   static void Destroy();
   static CFX_GEModule* Get();
@@ -103,38 +100,48 @@ class CFX_GEModule {
   static WindowsPrintMode GetPrintMode();
 #endif
 
-#if defined(PDF_USE_SKIA)
-  // Runtime check to see if Skia is the renderer variant in use.
+#if defined(PDF_USE_AGG) && defined(PDF_USE_SKIA)
+  static bool IsAggRenderer() {
+    return Get()->renderer_type_ == RendererType::kAgg;
+  }
   static bool IsSkiaRenderer() {
     return Get()->renderer_type_ == RendererType::kSkia;
   }
+#elif defined(PDF_USE_SKIA)
+  static bool IsAggRenderer() { return false; }
+  static bool IsSkiaRenderer() { return true; }
+#elif defined(PDF_USE_AGG)
+  static bool IsAggRenderer() { return true; }
+  static bool IsSkiaRenderer() { return false; }
+#else
+#error "Define PDF_USE_AGG or PDF_USE_SKIA in the build env"
 #endif
 
 #if defined(PDF_ENABLE_FONTATIONS) && defined(PDF_ENABLE_FREETYPE)
   static bool IsFontations() {
-    return Get()->font_backend_ == CFX_FontMgr::FontBackend::kFontations;
+    return Get()->font_backend_ == FontBackend::kFontations;
   }
   static bool IsFreetype() {
-    return Get()->font_backend_ == CFX_FontMgr::FontBackend::kFreeType;
+    return Get()->font_backend_ == FontBackend::kFreeType;
   }
 #elif defined(PDF_ENABLE_FONTATIONS)
   static bool IsFontations() { return true; }
+  static bool IsFreetype() { return false; }
 #elif defined(PDF_ENABLE_FREETYPE)
+  static bool IsFontations() { return false; }
   static bool IsFreetype() { return true; }
 #else
-#error "Neither freetype nor fontations available"
+#error "Define PDF_ENABLE_FREETYPE or PDF_ENABLE_FONTATIONS in the build env"
 #endif
 
  private:
   CFX_GEModule(std::optional<pdfium::span<const char* const>> user_font_paths,
                RendererType renderer_type,
-               CFX_FontMgr::FontBackend font_backend);
+               FontBackend font_backend);
   ~CFX_GEModule();
 
-  const RendererType renderer_type_;
-#if defined(PDF_ENABLE_FONTATIONS)
-  const CFX_FontMgr::FontBackend font_backend_;
-#endif
+  [[maybe_unused]] const RendererType renderer_type_;
+  [[maybe_unused]] const FontBackend font_backend_;
   std::unique_ptr<PlatformIface> const platform_;  // Must outlive `font_mgr_`.
   std::unique_ptr<CFX_FontMgr> const font_mgr_;
   std::optional<pdfium::span<const char* const>> user_font_paths_;

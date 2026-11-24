@@ -205,42 +205,52 @@ FPDF_InitLibraryWithConfig(const FPDF_LIBRARY_CONFIG* config) {
   }
   CFX_Timer::InitializeGlobals();
 
-  CFX_GEModule::RendererType renderer_type =
-      CFX_GEModule::RendererType::kDefault;
+#if defined(PDF_USE_SKIA) && defined(PDF_USE_AGG)
+  CFX_GEModule::RendererType renderer_type = CFX_GEModule::RendererType::kSkia;
   if (config && config->version >= 4) {
-#if defined(PDF_USE_SKIA)
     CHECK(config->m_RendererType == FPDF_RENDERERTYPE_AGG ||
           config->m_RendererType == FPDF_RENDERERTYPE_SKIA);
-    renderer_type =
-        static_cast<CFX_GEModule::RendererType>(config->m_RendererType);
-#else
-    // AGG-only builds should always use `FPDF_RENDERERTYPE_AGG`.
-    CHECK_EQ(config->m_RendererType, FPDF_RENDERERTYPE_AGG);
-#endif
+    if (config->m_RendererType == FPDF_RENDERERTYPE_AGG) {
+      renderer_type = CFX_GEModule::RendererType::kAgg;
+    }
   }
+#elif defined(PDF_USE_SKIA)
+  CFX_GEModule::RendererType renderer_type = CFX_GEModule::RendererType::kSkia;
+  if (config && config->version >= 4) {
+    CHECK_EQ(config->m_RendererType, FPDF_RENDERERTYPE_SKIA);
+  }
+#elif defined(PDF_USE_AGG)
+  CFX_GEModule::RendererType renderer_type = CFX_GEModule::RendererType::kAgg;
+  if (config && config->version >= 4) {
+    CHECK_EQ(config->m_RendererType, FPDF_RENDERERTYPE_AGG);
+  }
+#else
+#error "Define PDF_USE_AGG or PDF_USE_SKIA in the build env"
+#endif
 
 #if defined(PDF_ENABLE_FONTATIONS) && defined(PDF_ENABLE_FREETYPE)
-  CFX_FontMgr::FontBackend backend = CFX_FontMgr::FontBackend::kFreeType;
+  CFX_GEModule::FontBackend backend = CFX_GEModule::FontBackend::kFreeType;
   if (config && config->version >= 5) {
     CHECK(config->m_FontLibraryType == FPDF_FONTBACKENDTYPE_FREETYPE ||
           config->m_FontLibraryType == FPDF_FONTBACKENDTYPE_FONTATIONS);
     if (config->m_FontLibraryType == FPDF_FONTBACKENDTYPE_FONTATIONS) {
-      backend = CFX_FontMgr::FontBackend::kFontations;
+      backend = CFX_GEModule::FontBackend::kFontations;
     }
   }
 #elif defined(PDF_ENABLE_FONTATIONS)
-  CFX_FontMgr::FontBackend backend = CFX_FontMgr::FontBackend::kFontations;
+  CFX_GEModule::FontBackend backend = CFX_GEModule::FontBackend::kFontations;
   if (config && config->version >= 5) {
     CHECK_EQ(config->m_FontLibraryType, FPDF_FONTBACKENDTYPE_FONTATIONS);
   }
 #elif defined(PDF_ENABLE_FREETYPE)
-  CFX_FontMgr::FontBackend backend = CFX_FontMgr::FontBackend::kFreeType;
+  CFX_GEModule::FontBackend backend = CFX_GEModule::FontBackend::kFreeType;
   if (config && config->version >= 5) {
     CHECK_EQ(config->m_FontLibraryType, FPDF_FONTBACKENDTYPE_FREETYPE);
   }
 #else
-#error "Neither FreeType nor Fontations enabled"
+#error "Define PDF_ENABLE_FREETYPE or PDF_ENABLE_FONTATIONS in the build env"
 #endif
+
 #if defined(PDF_ENABLE_BROTLI)
   BrotliDecoder::SetBrotliEnabled(config && config->version >= 6 &&
                                   config->m_BrotliEnabled);
@@ -277,6 +287,7 @@ FPDF_InitLibraryWithConfig(const FPDF_LIBRARY_CONFIG* config) {
     IJS_Runtime::Initialize(config->m_v8EmbedderSlot, config->m_pIsolate,
                             platform, isolate_per_document);
   }
+
   g_bLibraryInitialized = true;
 }
 

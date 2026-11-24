@@ -37,7 +37,9 @@ class SkTypeface;
 
 class CFX_FontMgr {
  public:
-  enum class FontBackend { kFreeType, kFontations };
+  // This internal definition of font backends must stay updated with respect
+  // to the public definition of `FPDF_FONT_BACKEND_TYPE` in `fpdfview.h`.
+  enum class FontBackend { kFreeType = 0, kFontations = 1 };
 
   explicit CFX_FontMgr(FontBackend backend);
   ~CFX_FontMgr();
@@ -49,7 +51,6 @@ class CFX_FontMgr {
 
 #if defined(PDF_ENABLE_FREETYPE)
   FXFT_LibraryRec* GetFTLibrary() const { return ft_library_.get(); }
-
   bool FTLibrarySupportsHinting() const { return ft_library_supports_hinting_; }
 #endif
 
@@ -63,7 +64,6 @@ class CFX_FontMgr {
   ScopedFXFTLibraryRec const ft_library_;
 #endif
 #if defined(PDF_USE_SKIA)
-  const FontBackend font_backend_;
   sk_sp<SkFontMgr> skia_fontmgr_;
   sk_sp<SkFontMgr> skia_fontmgr_fallback_;
 #endif

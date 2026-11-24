@@ -11,6 +11,7 @@
 #include "core/fxge/cfx_face.h"
 #include "core/fxge/cfx_font.h"
 #include "core/fxge/cfx_fontmapper.h"
+#include "core/fxge/cfx_gemodule.h"
 #include "core/fxge/cfx_glyphcache.h"
 #include "core/fxge/fx_font.h"
 #include "core/fxge/systemfontinfo_iface.h"
@@ -73,8 +74,7 @@ CFX_FontMgr::CFX_FontMgr([[maybe_unused]] FontBackend backend)
       ft_library_(InitializeFreeType()),
 #endif
 #if defined(PDF_USE_SKIA)
-      font_backend_(backend),
-      skia_fontmgr_(CreateSkiaFontManager(font_backend_)),
+      skia_fontmgr_(CreateSkiaFontManager(backend)),
 #endif
       builtin_mapper_(std::make_unique<CFX_FontMapper>())
 #if defined(PDF_ENABLE_FREETYPE)
@@ -111,7 +111,9 @@ sk_sp<SkTypeface> CFX_FontMgr::MakeSkTypeface(
   // If DirectWrite or CoreText didn't work, try a fallback font manager.
   if (!result) {
     if (!skia_fontmgr_fallback_) {
-      skia_fontmgr_fallback_ = CreateSkiaFontManagerFallback(font_backend_);
+      skia_fontmgr_fallback_ = CreateSkiaFontManagerFallback(
+          CFX_GEModule::IsFontations() ? FontBackend::kFontations
+                                       : FontBackend::kFreeType);
     }
     result = skia_fontmgr_fallback_->makeFromStream(
         std::make_unique<SkMemoryStream>(font_span.data(), font_span.size()));
