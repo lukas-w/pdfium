@@ -17,16 +17,28 @@
 #include "core/fpdfapi/page/cpdf_textobject.h"
 #include "core/fpdfapi/page/cpdf_textstate.h"
 #include "core/fpdfapi/page/test_with_page_module.h"
+#include "core/fpdfapi/parser/cpdf_array.h"
 #include "core/fpdfapi/parser/cpdf_dictionary.h"
 #include "core/fpdfapi/parser/cpdf_document.h"
 #include "core/fpdfapi/parser/cpdf_name.h"
 #include "core/fpdfapi/parser/cpdf_parser.h"
 #include "core/fpdfapi/parser/cpdf_reference.h"
 #include "core/fpdfapi/parser/cpdf_stream.h"
+#include "core/fpdfapi/parser/cpdf_stream_acc.h"
 #include "core/fpdfapi/parser/cpdf_test_document.h"
 #include "core/fxcrt/data_vector.h"
 #include "core/fxge/cfx_fillrenderoptions.h"
 #include "testing/gtest/include/gtest/gtest.h"
+
+namespace {
+
+ByteString GetStreamData(RetainPtr<const CPDF_Stream> stream) {
+  auto acc = pdfium::MakeRetain<CPDF_StreamAcc>(std::move(stream));
+  acc->LoadAllDataFiltered();
+  return ByteString(ByteStringView(acc->GetSpan()));
+}
+
+}  // namespace
 
 class CPDFPageContentGeneratorTest : public TestWithPageModule {
  protected:
@@ -515,4 +527,227 @@ TEST_F(CPDFPageContentGeneratorTest, ProcessContentMarksWithProperties) {
   ByteString content(buf);
 
   EXPECT_TRUE(content.Contains("/M1 /Property#20Name#20With#20Space BDC"));
+}
+
+TEST_F(CPDFPageContentGeneratorTest,
+       GenerateContentWrapsStreamWithoutLeadingSave) {
+  auto doc = std::make_unique<CPDF_TestDocument>();
+  doc->CreateNewDoc();
+
+  RetainPtr<CPDF_Dictionary> page_dict(doc->CreateNewPage(0));
+  static constexpr ByteStringView kOriginalContents =
+      "-100 Tz q 10 5 3 25 re f Q\n";
+  auto original_stream =
+      doc->NewIndirect<CPDF_Stream>(kOriginalContents.unsigned_span());
+  page_dict->SetNewFor<CPDF_Reference>("Contents", doc.get(),
+                                       original_stream->GetObjNum());
+
+  auto test_page = pdfium::MakeRetain<CPDF_Page>(doc.get(), page_dict);
+  test_page->ParseContent();
+  ASSERT_EQ(1u, test_page->GetPageObjectCount());
+  EXPECT_EQ(0, test_page->GetPageObjectByIndex(0)->GetContentStream());
+
+  auto path_obj = std::make_unique<CPDF_PathObject>();
+  path_obj->set_filltype(CFX_FillRenderOptions::FillType::kWinding);
+  path_obj->path().AppendRect(0, 0, 10, 10);
+  path_obj->SetDirty(true);
+  test_page->AppendPageObject(std::move(path_obj));
+
+  CPDF_PageContentGenerator generator(test_page.Get());
+  generator.GenerateContent();
+
+  RetainPtr<const CPDF_Array> contents_array =
+      page_dict->GetArrayFor("Contents");
+  ASSERT_TRUE(contents_array);
+  // TODO(crbug.com/578639452): GenerateContent() should wrap
+  // `kOriginalContents` in "q\n" and "Q\n" streams so bottom-most graphics
+  // state changes do not leak into the newly appended stream.
+  ASSERT_EQ(2u, contents_array->size());
+
+  EXPECT_EQ(kOriginalContents, GetStreamData(contents_array->GetStreamAt(0)));
+  EXPECT_EQ(
+      "q\n0 0 0 RG 0 0 0 rg 1 w 0 J 0 j\n/FXE1 gs q 0 0 10 10 re f Q\nQ\n",
+      GetStreamData(contents_array->GetStreamAt(1)));
+
+  ASSERT_EQ(2u, test_page->GetPageObjectCount());
+  EXPECT_EQ(0, test_page->GetPageObjectByIndex(0)->GetContentStream());
+  EXPECT_EQ(1, test_page->GetPageObjectByIndex(1)->GetContentStream());
+}
+
+TEST_F(CPDFPageContentGeneratorTest, GenerateContentBalancesUnmatchedSaves) {
+  auto doc = std::make_unique<CPDF_TestDocument>();
+  doc->CreateNewDoc();
+
+  RetainPtr<CPDF_Dictionary> page_dict(doc->CreateNewPage(0));
+  static constexpr ByteStringView kOriginalContents =
+      "q -100 Tz q 10 5 3 25 re f Q\n";
+  auto original_stream =
+      doc->NewIndirect<CPDF_Stream>(kOriginalContents.unsigned_span());
+  page_dict->SetNewFor<CPDF_Reference>("Contents", doc.get(),
+                                       original_stream->GetObjNum());
+
+  auto test_page = pdfium::MakeRetain<CPDF_Page>(doc.get(), page_dict);
+  test_page->ParseContent();
+  ASSERT_EQ(1u, test_page->GetPageObjectCount());
+  EXPECT_EQ(0, test_page->GetPageObjectByIndex(0)->GetContentStream());
+
+  auto path_obj = std::make_unique<CPDF_PathObject>();
+  path_obj->set_filltype(CFX_FillRenderOptions::FillType::kWinding);
+  path_obj->path().AppendRect(0, 0, 10, 10);
+  path_obj->SetDirty(true);
+  test_page->AppendPageObject(std::move(path_obj));
+
+  CPDF_PageContentGenerator generator(test_page.Get());
+  generator.GenerateContent();
+
+  RetainPtr<const CPDF_Array> contents_array =
+      page_dict->GetArrayFor("Contents");
+  ASSERT_TRUE(contents_array);
+  // TODO(crbug.com/578639452): GenerateContent() should append a "Q\n" stream
+  // before the new stream to close the unmatched "q" operator in
+  // `kOriginalContents`.
+  ASSERT_EQ(2u, contents_array->size());
+
+  EXPECT_EQ(kOriginalContents, GetStreamData(contents_array->GetStreamAt(0)));
+  EXPECT_EQ(
+      "q\n0 0 0 RG 0 0 0 rg 1 w 0 J 0 j\n/FXE1 gs q 0 0 10 10 re f Q\nQ\n",
+      GetStreamData(contents_array->GetStreamAt(1)));
+
+  ASSERT_EQ(2u, test_page->GetPageObjectCount());
+  EXPECT_EQ(0, test_page->GetPageObjectByIndex(0)->GetContentStream());
+  EXPECT_EQ(1, test_page->GetPageObjectByIndex(1)->GetContentStream());
+}
+
+TEST_F(CPDFPageContentGeneratorTest,
+       GenerateContentBalancesUnmatchedSavesWithCTM) {
+  auto doc = std::make_unique<CPDF_TestDocument>();
+  doc->CreateNewDoc();
+
+  RetainPtr<CPDF_Dictionary> page_dict(doc->CreateNewPage(0));
+  static constexpr ByteStringView kStream0 =
+      "q 1 0 0 1 50 50 cm 10 5 3 25 re f\n";
+  static constexpr ByteStringView kStream1 = "30 30 10 10 re f\n";
+  auto stream0 = doc->NewIndirect<CPDF_Stream>(kStream0.unsigned_span());
+  auto stream1 = doc->NewIndirect<CPDF_Stream>(kStream1.unsigned_span());
+  auto contents = doc->NewIndirect<CPDF_Array>();
+  contents->AppendNew<CPDF_Reference>(doc.get(), stream0->GetObjNum());
+  contents->AppendNew<CPDF_Reference>(doc.get(), stream1->GetObjNum());
+  page_dict->SetNewFor<CPDF_Reference>("Contents", doc.get(),
+                                       contents->GetObjNum());
+
+  auto test_page = pdfium::MakeRetain<CPDF_Page>(doc.get(), page_dict);
+  test_page->ParseContent();
+  ASSERT_EQ(2u, test_page->GetPageObjectCount());
+  EXPECT_EQ(0, test_page->GetPageObjectByIndex(0)->GetContentStream());
+  EXPECT_EQ(1, test_page->GetPageObjectByIndex(1)->GetContentStream());
+
+  auto path_obj = std::make_unique<CPDF_PathObject>();
+  path_obj->set_filltype(CFX_FillRenderOptions::FillType::kWinding);
+  path_obj->path().AppendRect(0, 0, 10, 10);
+  path_obj->SetDirty(true);
+  test_page->AppendPageObject(std::move(path_obj));
+
+  {
+    CPDF_PageContentGenerator generator(test_page.Get());
+    generator.GenerateContent();
+  }
+
+  RetainPtr<const CPDF_Array> contents_array =
+      page_dict->GetArrayFor("Contents");
+  ASSERT_TRUE(contents_array);
+  // TODO(crbug.com/578639452): GenerateContent() should append a "Q\n" stream
+  // at index 2 to close the unmatched "q" operator and restore the CTM to
+  // identity before appending the new stream.
+  ASSERT_EQ(3u, contents_array->size());
+
+  EXPECT_EQ(kStream0, GetStreamData(contents_array->GetStreamAt(0)));
+  EXPECT_EQ(kStream1, GetStreamData(contents_array->GetStreamAt(1)));
+  EXPECT_EQ(
+      "q\n1 0 0 1 -50 -50 cm\n0 0 0 RG 0 0 0 rg 1 w 0 J 0 j\n/FXE1 gs "
+      "q 0 0 10 10 re f Q\nQ\n",
+      GetStreamData(contents_array->GetStreamAt(2)));
+
+  // Stream 1 has no CTM operators of its own, so its end CTM must still match
+  // stream 0's CTM even after a "Q\n" stream is appended at index 2.
+  const CFX_Matrix expected_ctm(1, 0, 0, 1, 50, 50);
+  EXPECT_EQ(expected_ctm, test_page->GetCTMAtEndOfStream(0));
+  EXPECT_EQ(expected_ctm, test_page->GetCTMAtEndOfStream(1));
+  // TODO(crbug.com/578639452): Once a "Q\n" stream is appended at index 2, its
+  // end CTM should be the identity matrix instead of `expected_ctm`.
+  EXPECT_EQ(expected_ctm, test_page->GetCTMAtEndOfStream(2));
+
+  // Regenerating stream 1 must invert `expected_ctm` inside its own `q ... Q`,
+  // without emitting a trailing `cm` operator after `Q`.
+  test_page->GetPageObjectByIndex(1)->SetDirty(true);
+  {
+    CPDF_PageContentGenerator generator(test_page.Get());
+    generator.GenerateContent();
+  }
+
+  // TODO(crbug.com/578639452): Should be 4 streams with "Q\n" at index 2 and
+  // the new object's stream (without inverse `cm`) at index 3.
+  ASSERT_EQ(3u, contents_array->size());
+  EXPECT_EQ(kStream0, GetStreamData(contents_array->GetStreamAt(0)));
+  EXPECT_EQ(
+      "q\n1 0 0 1 -50 -50 cm\n0 0 0 RG 0 0 0 rg 1 w 0 J 0 j\n/FXE1 gs "
+      "q 0 0 0 rg 0 0 0 RG 1 0 0 1 50 50 cm 30 30 10 10 re f Q\nQ\n",
+      GetStreamData(contents_array->GetStreamAt(1)));
+  EXPECT_EQ(
+      "q\n1 0 0 1 -50 -50 cm\n0 0 0 RG 0 0 0 rg 1 w 0 J 0 j\n/FXE1 gs "
+      "q 0 0 10 10 re f Q\nQ\n",
+      GetStreamData(contents_array->GetStreamAt(2)));
+}
+
+TEST_F(CPDFPageContentGeneratorTest,
+       GenerateContentRemovesStreamAndAddsNewObject) {
+  auto doc = std::make_unique<CPDF_TestDocument>();
+  doc->CreateNewDoc();
+
+  RetainPtr<CPDF_Dictionary> page_dict(doc->CreateNewPage(0));
+  static constexpr ByteStringView kStream0 = "q 10 5 3 25 re f Q\n";
+  static constexpr ByteStringView kStream1 = "-100 Tz 30 30 10 10 re f\n";
+  auto stream0 = doc->NewIndirect<CPDF_Stream>(kStream0.unsigned_span());
+  auto stream1 = doc->NewIndirect<CPDF_Stream>(kStream1.unsigned_span());
+  auto contents = doc->NewIndirect<CPDF_Array>();
+  contents->AppendNew<CPDF_Reference>(doc.get(), stream0->GetObjNum());
+  contents->AppendNew<CPDF_Reference>(doc.get(), stream1->GetObjNum());
+  page_dict->SetNewFor<CPDF_Reference>("Contents", doc.get(),
+                                       contents->GetObjNum());
+
+  auto test_page = pdfium::MakeRetain<CPDF_Page>(doc.get(), page_dict);
+  test_page->ParseContent();
+  ASSERT_EQ(2u, test_page->GetPageObjectCount());
+  EXPECT_EQ(0, test_page->GetPageObjectByIndex(0)->GetContentStream());
+  EXPECT_EQ(1, test_page->GetPageObjectByIndex(1)->GetContentStream());
+
+  // Remove the only object from stream 0 so stream 0 will be deleted, and add
+  // a new streamless object in the same GenerateContent() call.
+  ASSERT_TRUE(test_page->RemovePageObject(test_page->GetPageObjectByIndex(0)));
+
+  auto path_obj = std::make_unique<CPDF_PathObject>();
+  path_obj->set_filltype(CFX_FillRenderOptions::FillType::kWinding);
+  path_obj->path().AppendRect(0, 0, 10, 10);
+  path_obj->SetDirty(true);
+  test_page->AppendPageObject(std::move(path_obj));
+
+  CPDF_PageContentGenerator generator(test_page.Get());
+  generator.GenerateContent();
+
+  RetainPtr<const CPDF_Array> contents_array =
+      page_dict->GetArrayFor("Contents");
+  ASSERT_TRUE(contents_array);
+  // TODO(crbug.com/578639452): Deleting stream 0 makes `kStream1` (which lacks
+  // a leading "q") the first stream. GenerateContent() should wrap `kStream1`
+  // in "q\n" and "Q\n" streams before appending the newly added object's
+  // stream.
+  ASSERT_EQ(2u, contents_array->size());
+
+  EXPECT_EQ(kStream1, GetStreamData(contents_array->GetStreamAt(0)));
+  EXPECT_EQ(
+      "q\n0 0 0 RG 0 0 0 rg 1 w 0 J 0 j\n/FXE1 gs q 0 0 10 10 re f Q\nQ\n",
+      GetStreamData(contents_array->GetStreamAt(1)));
+
+  ASSERT_EQ(2u, test_page->GetPageObjectCount());
+  EXPECT_EQ(0, test_page->GetPageObjectByIndex(0)->GetContentStream());
+  EXPECT_EQ(1, test_page->GetPageObjectByIndex(1)->GetContentStream());
 }
