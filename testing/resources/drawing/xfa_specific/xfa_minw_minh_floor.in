@@ -1,0 +1,51 @@
+{{header}}
+{{include ../../xfa_catalog_1_0.fragment}}
+{{include ../../xfa_object_2_0.fragment}}
+{{include ../../xfa_preamble_3_0.fragment}}
+{{include ../../xfa_config_4_0.fragment}}
+{{object 5 0}} <<
+  {{streamlen}}
+>>
+stream
+<template xmlns="http://www.xfa.org/schema/xfa-template/3.3/">
+  <subform name="form1" layout="tb" locale="en_US" restoreState="auto">
+    <pageSet>
+      <pageArea name="Page1" id="Page1">
+        <contentArea x="18pt" y="18pt" w="576pt" h="756pt"/>
+        <medium stock="default" short="612pt" long="792pt"/>
+      </pageArea>
+    </pageSet>
+    <!-- Auto-sizing subform with minW="250pt" and minH="150pt".
+         Inner content is only 60pt x 40pt.
+         Correct behavior: Container enforces the 250pt x 150pt floor for its border.
+         Buggy behavior: Container ignores minW/minH and collapses to 60pt x 40pt. -->
+    <subform name="floorContainer" layout="tb" minW="250pt" minH="150pt">
+      <border>
+        <edge stroke="solid" thickness="2pt">
+          <color value="0,150,0"/>
+        </edge>
+      </border>
+      <draw name="smallContent" w="60pt" h="40pt">
+        <value>
+          <rectangle>
+            <edge stroke="solid" thickness="1pt">
+              <color value="0,0,0"/>
+            </edge>
+            <fill>
+              <color value="255,200,200"/>
+            </fill>
+          </rectangle>
+        </value>
+      </draw>
+    </subform>
+  </subform>
+</template>
+endstream
+endobj
+{{include ../../xfa_locale_6_0.fragment}}
+{{include ../../xfa_postamble_7_0.fragment}}
+{{include ../../xfa_pages_8_0.fragment}}
+{{xref}}
+{{trailer}}
+{{startxref}}
+%%EOF

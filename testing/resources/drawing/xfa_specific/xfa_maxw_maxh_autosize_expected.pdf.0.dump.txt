@@ -1,0 +1,54 @@
+SetClip_PathFill rule=winding matrix=none points=[move(0.0000,792.0000) line(0.0000,0.0000) line(612.0000,0.0000) line(612.0000,792.0000) line(0.0000,792.0000,close)]
+SaveState
+DrawPath fill=0x00000000 stroke=0xff000000 rule=no-fill stroke_state=[width=0.0000 cap=butt join=miter miter=10.0000] matrix=[1.0000,0.0000,0.0000,1.0000,0.0000,0.0000] points=[move(18.0000,18.0000) line(18.0000,18.0000) line(18.0000,18.0000)]
+RestoreState
+SaveState
+DrawPath fill=0x00000000 stroke=0xffff0000 rule=no-fill stroke_state=[width=2.0000 cap=butt join=miter miter=10.0000] matrix=[1.0000,0.0000,0.0000,1.0000,0.0000,0.0000] points=[move(17.0000,18.0000) line(319.0000,18.0000)]
+RestoreState
+SaveState
+DrawPath fill=0x00000000 stroke=0xff000000 rule=no-fill stroke_state=[width=0.0000 cap=butt join=miter miter=10.0000] matrix=[1.0000,0.0000,0.0000,1.0000,0.0000,0.0000] points=[move(318.0000,18.0000) line(318.0000,18.0000) line(318.0000,18.0000)]
+RestoreState
+SaveState
+DrawPath fill=0x00000000 stroke=0xffff0000 rule=no-fill stroke_state=[width=2.0000 cap=butt join=miter miter=10.0000] matrix=[1.0000,0.0000,0.0000,1.0000,0.0000,0.0000] points=[move(318.0000,17.0000) line(318.0000,219.0000)]
+RestoreState
+SaveState
+DrawPath fill=0x00000000 stroke=0xff000000 rule=no-fill stroke_state=[width=0.0000 cap=butt join=miter miter=10.0000] matrix=[1.0000,0.0000,0.0000,1.0000,0.0000,0.0000] points=[move(318.0000,218.0000) line(318.0000,218.0000) line(318.0000,218.0000)]
+RestoreState
+SaveState
+DrawPath fill=0x00000000 stroke=0xffff0000 rule=no-fill stroke_state=[width=2.0000 cap=butt join=miter miter=10.0000] matrix=[1.0000,0.0000,0.0000,1.0000,0.0000,0.0000] points=[move(319.0000,218.0000) line(17.0000,218.0000)]
+RestoreState
+SaveState
+DrawPath fill=0x00000000 stroke=0xff000000 rule=no-fill stroke_state=[width=0.0000 cap=butt join=miter miter=10.0000] matrix=[1.0000,0.0000,0.0000,1.0000,0.0000,0.0000] points=[move(18.0000,218.0000) line(18.0000,218.0000) line(18.0000,218.0000)]
+RestoreState
+SaveState
+DrawPath fill=0x00000000 stroke=0xffff0000 rule=no-fill stroke_state=[width=2.0000 cap=butt join=miter miter=10.0000] matrix=[1.0000,0.0000,0.0000,1.0000,0.0000,0.0000] points=[move(18.0000,219.0000) line(18.0000,17.0000)]
+RestoreState
+SaveState
+SaveState
+FillRect [18,18,118,68] color=0xffc8c8ff
+RestoreState
+RestoreState
+SaveState
+DrawPath fill=0x00000000 stroke=0xff000000 rule=no-fill stroke_state=[width=0.0000 cap=butt join=miter miter=10.0000] matrix=[1.0000,0.0000,0.0000,1.0000,0.0000,0.0000] points=[move(18.0000,18.0000) line(18.0000,18.0000) line(18.0000,18.0000)]
+RestoreState
+SaveState
+DrawPath fill=0x00000000 stroke=0xff0000ff rule=no-fill stroke_state=[width=1.0000 cap=butt join=miter miter=10.0000] matrix=[1.0000,0.0000,0.0000,1.0000,0.0000,0.0000] points=[move(17.5000,18.0000) line(118.5000,18.0000)]
+RestoreState
+SaveState
+DrawPath fill=0x00000000 stroke=0xff000000 rule=no-fill stroke_state=[width=0.0000 cap=butt join=miter miter=10.0000] matrix=[1.0000,0.0000,0.0000,1.0000,0.0000,0.0000] points=[move(118.0000,18.0000) line(118.0000,18.0000) line(118.0000,18.0000)]
+RestoreState
+SaveState
+DrawPath fill=0x00000000 stroke=0xff0000ff rule=no-fill stroke_state=[width=1.0000 cap=butt join=miter miter=10.0000] matrix=[1.0000,0.0000,0.0000,1.0000,0.0000,0.0000] points=[move(118.0000,17.5000) line(118.0000,68.5000)]
+RestoreState
+SaveState
+DrawPath fill=0x00000000 stroke=0xff000000 rule=no-fill stroke_state=[width=0.0000 cap=butt join=miter miter=10.0000] matrix=[1.0000,0.0000,0.0000,1.0000,0.0000,0.0000] points=[move(118.0000,68.0000) line(118.0000,68.0000) line(118.0000,68.0000)]
+RestoreState
+SaveState
+DrawPath fill=0x00000000 stroke=0xff0000ff rule=no-fill stroke_state=[width=1.0000 cap=butt join=miter miter=10.0000] matrix=[1.0000,0.0000,0.0000,1.0000,0.0000,0.0000] points=[move(118.5000,68.0000) line(17.5000,68.0000)]
+RestoreState
+SaveState
+DrawPath fill=0x00000000 stroke=0xff000000 rule=no-fill stroke_state=[width=0.0000 cap=butt join=miter miter=10.0000] matrix=[1.0000,0.0000,0.0000,1.0000,0.0000,0.0000] points=[move(18.0000,68.0000) line(18.0000,68.0000) line(18.0000,68.0000)]
+RestoreState
+SaveState
+DrawPath fill=0x00000000 stroke=0xff0000ff rule=no-fill stroke_state=[width=1.0000 cap=butt join=miter miter=10.0000] matrix=[1.0000,0.0000,0.0000,1.0000,0.0000,0.0000] points=[move(18.0000,68.5000) line(18.0000,17.5000)]
+RestoreState
