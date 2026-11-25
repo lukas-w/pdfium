@@ -8,6 +8,7 @@
 
 #include "core/fpdfapi/page/cpdf_occontext.h"
 #include "core/fpdfapi/page/cpdf_page.h"
+#include "core/fpdfapi/page/ipdf_page.h"
 #include "core/fpdfapi/parser/cpdf_document.h"
 #include "core/fpdfapi/render/cpdf_pagerendercontext.h"
 #include "core/fpdfapi/render/cpdf_renderoptions.h"
@@ -52,17 +53,20 @@ bool DisplayListRenderer::Start() {
   if (!device_) {
     return false;
   }
-  CPDF_Page* cpdf_page = CPDFPageFromFPDFPage(page_);
-  if (!cpdf_page) {
+  IPDF_Page* ipdf_page = IPDFPageFromFPDFPage(page_);
+  if (!ipdf_page) {
     return false;
   }
   context_ = std::make_unique<CPDF_PageRenderContext>();
   context_->device_ = std::move(device_);
-  CPDFSDK_RenderPageWithContext(context_.get(), cpdf_page, /*start_x=*/0,
-                                /*start_y=*/0, /*size_x=*/width_,
-                                /*size_y=*/height_, /*rotate=*/0,
-                                /*flags=*/flags_, nullptr,
-                                /*need_to_restore=*/true, nullptr);
+  CPDF_Page* cpdf_page = ipdf_page->AsPDFPage();
+  if (cpdf_page) {
+    CPDFSDK_RenderPageWithContext(context_.get(), cpdf_page, /*start_x=*/0,
+                                  /*start_y=*/0, /*size_x=*/width_,
+                                  /*size_y=*/height_, /*rotate=*/0,
+                                  /*flags=*/flags_, nullptr,
+                                  /*need_to_restore=*/true, nullptr);
+  }
   return true;
 }
 
@@ -75,9 +79,8 @@ void DisplayListRenderer::Finish(FPDF_FORMHANDLE form) {
       CPDFSDK_PageView* page_view =
           form_fill_env->GetOrCreatePageView(ipdf_page);
       if (page_view) {
-        CPDF_Page* cpdf_page = CPDFPageFromFPDFPage(page_);
         const FX_RECT rect(0, 0, width_, height_);
-        CFX_Matrix matrix = cpdf_page->GetDisplayMatrixForRect(rect, 0);
+        CFX_Matrix matrix = ipdf_page->GetDisplayMatrixForRect(rect, 0);
         CPDF_RenderOptions options;
         options.GetOptions().bClearType = !!(flags_ & FPDF_LCD_TEXT);
         if (flags_ & FPDF_GRAYSCALE) {
@@ -85,7 +88,7 @@ void DisplayListRenderer::Finish(FPDF_FORMHANDLE form) {
         }
         options.SetDrawAnnots(flags_ & FPDF_ANNOT);
         options.SetOCContext(pdfium::MakeRetain<CPDF_OCContext>(
-            cpdf_page->GetDocument(), CPDF_OCContext::kView));
+            ipdf_page->GetDocument(), CPDF_OCContext::kView));
         page_view->PageView_OnDraw(context_->device_.get(), matrix, &options,
                                    rect);
       }
