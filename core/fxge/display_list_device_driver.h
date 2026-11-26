@@ -40,6 +40,7 @@ class DisplayListDeviceDriver final : public RenderDeviceDriverIface {
   int GetPixelWidth() const override;
   int GetPixelHeight() const override;
   int GetBitsPerPixel() const override;
+  bool RenderCapAlphaImage() const override;
   bool RenderCapAlphaOutput() const override;
 #if defined(PDF_USE_SKIA)
   bool RenderCapFillStrokePath() const override;

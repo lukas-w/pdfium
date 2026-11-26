@@ -245,9 +245,8 @@ void CFGAS_GEGraphics::FillPathWithPattern(
     const CFGAS_GEPath& path,
     const CFX_FillRenderOptions& fill_options,
     const CFX_Matrix& matrix) {
-  RetainPtr<const CFX_DIBitmap> bitmap = render_device_->GetBitmap();
-  int32_t width = bitmap->GetWidth();
-  int32_t height = bitmap->GetHeight();
+  int32_t width = render_device_->GetWidth();
+  int32_t height = render_device_->GetHeight();
   auto bmp = pdfium::MakeRetain<CFX_DIBitmap>();
   // TODO(crbug.com/355630556): Consider adding support for
   // `FXDIB_Format::kBgraPremul`
@@ -288,9 +287,8 @@ void CFGAS_GEGraphics::FillPathWithShading(
     const CFGAS_GEPath& path,
     const CFX_FillRenderOptions& fill_options,
     const CFX_Matrix& matrix) {
-  RetainPtr<const CFX_DIBitmap> bitmap = render_device_->GetBitmap();
-  int32_t width = bitmap->GetWidth();
-  int32_t height = bitmap->GetHeight();
+  int32_t width = render_device_->GetWidth();
+  int32_t height = render_device_->GetHeight();
   float start_x = info_.fillColor.GetShading()->GetBeginPoint().x;
   float start_y = info_.fillColor.GetShading()->GetBeginPoint().y;
   float end_x = info_.fillColor.GetShading()->GetEndPoint().x;

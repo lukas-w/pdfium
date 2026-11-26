@@ -44,5 +44,6 @@ SaveState
 DrawPath fill=0xffff2968 stroke=0x00000000 rule=winding stroke_state=[width=1.0000 cap=butt join=miter miter=10.0000] matrix=[1.0000,0.0000,0.0000,-1.0000,349.5274,234.3295] points=[move(7.5274,4.6705) bezier(7.5274,3.0136) bezier(6.1843,1.6705) bezier(4.5274,1.6705) bezier(2.8706,1.6705) bezier(1.5274,3.0136) bezier(1.5274,4.6705) bezier(1.5274,6.3273) bezier(2.8706,7.6705) bezier(4.5274,7.6705) bezier(6.1843,7.6705) bezier(7.5274,6.3273) bezier(7.5274,4.6705,close)]
 RestoreState
 SaveState
+SetDIBits size=[200,200] bpp=32 dest=(200,42) src=[0,0,200,200] color=0x00000000
 RestoreState
 RestoreState

@@ -3,5 +3,6 @@ SetBaseClip [0,0,612,792]
 SetClip_PathFill rule=winding matrix=none points=[move(0.0000,792.0000) line(0.0000,0.0000) line(612.0000,0.0000) line(612.0000,792.0000) line(0.0000,792.0000,close)]
 SaveState
 RestoreState
+SetDIBits size=[479,26] bpp=32 dest=(2,766) src=[0,0,479,26] color=0x00000000
 RestoreState
 RestoreState

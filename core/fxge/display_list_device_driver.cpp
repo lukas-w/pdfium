@@ -142,6 +142,10 @@ int DisplayListDeviceDriver::GetBitsPerPixel() const {
   return 32;
 }
 
+bool DisplayListDeviceDriver::RenderCapAlphaImage() const {
+  return true;
+}
+
 bool DisplayListDeviceDriver::RenderCapAlphaOutput() const {
   return true;
 }

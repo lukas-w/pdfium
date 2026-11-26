@@ -1611,6 +1611,29 @@ TEST_F(FPDFFormFillEmbedderTest, HasFormFieldAtPointForXFADoc) {
             FPDFPage_HasFormFieldAtPoint(form_handle(), page.get(), 50, 30));
 }
 
+#ifdef PDF_ENABLE_XFA
+TEST_F(FPDFFormFillEmbedderTest, RenderXfaPageToDisplayList) {
+  ASSERT_TRUE(OpenDocument("simple_xfa.pdf"));
+  ScopedPage page = LoadScopedPage(0);
+  ASSERT_TRUE(page);
+
+  std::string display_list = RenderLoadedPageToDisplayList(page.get());
+  EXPECT_NE(std::string::npos,
+            display_list.find("FillRect [18,18,342,54] color=0x64dde4ff"));
+  EXPECT_NE(std::string::npos,
+            display_list.find("FillRect [18,54,253,90] color=0x64dde4ff"));
+}
+
+TEST_F(FPDFFormFillEmbedderTest, RenderXfaImageToDisplayList) {
+  ASSERT_TRUE(OpenDocument("xfa/xfa_image_edit.pdf"));
+  ScopedPage page = LoadScopedPage(0);
+  ASSERT_TRUE(page);
+
+  std::string display_list = RenderLoadedPageToDisplayList(page.get());
+  EXPECT_NE(std::string::npos, display_list.find("StartDIBits"));
+}
+#endif  // PDF_ENABLE_XFA
+
 TEST_F(FPDFFormFillEmbedderTest, SelectAllText) {
   ASSERT_TRUE(OpenDocument("text_form.pdf"));
   ScopedPage page = LoadScopedPage(0);
